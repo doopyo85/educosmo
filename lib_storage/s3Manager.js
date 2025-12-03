@@ -8,6 +8,9 @@ class S3Manager {
         const s3Config = {
             region: config.S3.REGION
         };
+        console.log('🔍 S3Manager 생성 - NODE_ENV:', process.env.NODE_ENV);
+        console.log('🔍 AWS_ACCESS_KEY_ID 존재:', !!process.env.AWS_ACCESS_KEY_ID);
+        console.log('🔍 AWS_SECRET_ACCESS_KEY 존재:', !!process.env.AWS_SECRET_ACCESS_KEY);
 
         // 개발 환경에서만 환경 변수 사용 (프로덕션에서는 IAM Role 사용)
         if (process.env.NODE_ENV === 'development' && process.env.AWS_ACCESS_KEY_ID) {
@@ -35,7 +38,7 @@ class S3Manager {
             // 🔥 prefix가 scope, prefix, filters 형태로 오는 경우 처리 (S3BrowserRouter 호환)
             let actualPrefix = prefix;
             let actualDelimiter = delimiter;
-            
+
             // scope, prefix, filters 형태로 호출되었을 경우
             if (typeof delimiter === 'object') {
                 // browse(scope, prefix, filters) 형태
@@ -43,7 +46,7 @@ class S3Manager {
                 actualDelimiter = '/';  // delimiter 기본값
                 // filters는 무시 (권한 필터링은 라우터에서 처리)
             }
-            
+
             const command = new ListObjectsV2Command({
                 Bucket: this.bucketName,
                 Prefix: actualPrefix,
@@ -69,13 +72,13 @@ class S3Manager {
                 .filter(item => {
                     // 현재 폴더 자체는 제외
                     if (item.Key === actualPrefix) return false;
-                    
+
                     // 🔥 .json, .meta.json 파일 숨김
                     const fileName = item.Key.toLowerCase();
                     if (fileName.endsWith('.json') || fileName.endsWith('.meta.json')) {
                         return false;
                     }
-                    
+
                     return true;
                 })
                 .map(item => {
@@ -120,14 +123,14 @@ class S3Manager {
      */
     generateBreadcrumbs(path) {
         const breadcrumbs = [{ name: 'Root', path: '' }];
-        
+
         if (!path || path === '') {
             return breadcrumbs;
         }
-        
+
         const parts = path.split('/').filter(p => p);
         let currentPath = '';
-        
+
         parts.forEach(part => {
             currentPath += part + '/';
             breadcrumbs.push({
@@ -135,7 +138,7 @@ class S3Manager {
                 path: currentPath
             });
         });
-        
+
         return breadcrumbs;
     }
 
@@ -156,7 +159,7 @@ class S3Manager {
 
             const s3Url = `https://${this.bucketName}.s3.${config.S3.REGION}.amazonaws.com/${s3Key}`;
             console.log(`✅ S3 업로드 완료: ${s3Url}`);
-            
+
             return s3Url;
         } catch (error) {
             console.error('❌ S3 업로드 실패:', error);
@@ -175,15 +178,15 @@ class S3Manager {
             });
 
             const response = await this.s3Client.send(command);
-            
+
             const chunks = [];
             for await (const chunk of response.Body) {
                 chunks.push(chunk);
             }
-            
+
             const buffer = Buffer.concat(chunks);
             console.log(`✅ S3 다운로드 완료: ${s3Key}`);
-            
+
             return buffer;
         } catch (error) {
             console.error('❌ S3 다운로드 실패:', error);
@@ -269,7 +272,7 @@ class S3Manager {
 
             await this.s3Client.send(command);
             console.log(`✅ S3 사용자 프로젝트 삭제 완료: ${s3Key}`);
-            
+
             return {
                 success: true,
                 message: '파일이 삭제되었습니다.',
@@ -303,12 +306,12 @@ class S3Manager {
             });
 
             const response = await this.s3Client.send(command);
-            
+
             const deletedCount = response.Deleted?.length || 0;
             const errorCount = response.Errors?.length || 0;
 
             console.log(`✅ S3 일괄 삭제 완료 - 성공: ${deletedCount}, 실패: ${errorCount}`);
-            
+
             return {
                 success: true,
                 message: `${deletedCount}개 파일 삭제 완료${errorCount > 0 ? `, ${errorCount}개 실패` : ''}`,
@@ -345,7 +348,7 @@ class S3Manager {
     async uploadUserProject(userID, platform, filename, buffer, targetFolder = '') {
         try {
             let s3Key;
-            
+
             // targetFolder가 있으면 그 경로 사용, 없으면 기본 경로 생성
             if (targetFolder) {
                 // targetFolder 끝에 / 없으면 추가
@@ -372,9 +375,9 @@ class S3Manager {
             await this.s3Client.send(command);
 
             const s3Url = `https://${this.bucketName}.s3.${config.S3.REGION}.amazonaws.com/${s3Key}`;
-            
+
             console.log(`✅ S3 사용자 프로젝트 업로드 완료: ${s3Key}`);
-            
+
             return {
                 success: true,
                 s3Key: s3Key,
