@@ -1,0 +1,467 @@
+/**
+ * ppt-viewer.css
+ * PPT 뷰어 컴포넌트의 스타일
+ */
+
+/* ===================================
+   PPT 뷰어 컴포넌트 기본 스타일
+   =================================== */
+
+/* PPT 뷰어 컴포넌트 */
+.ppt-viewer-component {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #f5f5f5;
+  overflow: hidden;
+  display: none;
+}
+
+/* 활성화된 PPT 뷰어 */
+.ppt-viewer-component.active,
+.ppt-viewer.active {
+  display: block;
+}
+
+/* ===================================
+   iframe 컨테이너
+   =================================== */
+
+/* iframe 컨테이너 */
+.ppt-frame-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* PPT iframe */
+#ppt-iframe,
+.ppt-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background-color: white;
+}
+
+/* ===================================
+   로딩 인디케이터
+   =================================== */
+
+/* 로딩 인디케이터 */
+.ppt-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 2;
+}
+
+/* 로딩 스피너 */
+.ppt-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  animation: pptSpin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes pptSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 로딩 텍스트 */
+.ppt-loading p {
+  margin-top: 10px;
+  font-size: 18px;
+  color: #333;
+}
+
+/* ===================================
+   플레이스홀더
+   =================================== */
+
+/* PPT 미선택/없음 플레이스홀더 */
+.ppt-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8f9fa;
+  z-index: 1;
+}
+
+/* 플레이스홀더 내용 */
+.placeholder-content {
+  text-align: center;
+  padding: 20px;
+  max-width: 400px;
+}
+
+/* 플레이스홀더 아이콘 */
+.placeholder-content i {
+  font-size: 5rem;
+  color: #adb5bd;
+  margin-bottom: 20px;
+}
+
+/* 플레이스홀더 텍스트 */
+.placeholder-content p {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-bottom: 10px;
+}
+
+/* ===================================
+   전체화면 버튼
+   =================================== */
+
+/* 전체화면 버튼 */
+.fullscreen-ppt-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: background-color 0.2s;
+}
+
+.fullscreen-ppt-btn:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.fullscreen-ppt-btn i {
+  font-size: 20px;
+}
+
+/* ===================================
+   전체화면 모드
+   =================================== */
+
+/* PPT 뷰어가 전체화면일 때 */
+body.ppt-fullscreen .ppt-viewer-component,
+body.ppt-fullscreen .ppt-viewer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+}
+
+.ppt-viewer-component.fullscreen,
+.ppt-viewer.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+}
+
+/* ===================================
+   내비게이션 컨트롤
+   =================================== */
+
+/* PPT 내비게이션 컨트롤 */
+.ppt-nav-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 8px 12px;
+  border-radius: 25px;
+  z-index: 3;
+}
+
+/* 이전/다음 버튼 */
+.ppt-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: white;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.ppt-nav-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.ppt-nav-btn i {
+  font-size: 18px;
+}
+
+/* 페이지 인디케이터 */
+.ppt-page-indicator {
+  color: white;
+  font-size: 14px;
+  margin: 0 10px;
+}
+
+/* ===================================
+   오류 상태
+   =================================== */
+
+/* PPT 로드 오류 */
+.ppt-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8f9fa;
+  z-index: 2;
+  padding: 20px;
+  text-align: center;
+}
+
+/* 오류 아이콘 */
+.ppt-error-icon {
+  font-size: 4rem;
+  color: #dc3545;
+  margin-bottom: 20px;
+}
+
+/* 오류 메시지 */
+.ppt-error-message {
+  font-size: 1.2rem;
+  color: #dc3545;
+  margin-bottom: 10px;
+}
+
+/* 오류 상세 정보 */
+.ppt-error-details {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 20px;
+  max-width: 500px;
+}
+
+/* 재시도 버튼 */
+.ppt-retry-btn {
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.ppt-retry-btn:hover {
+  background-color: #0b5ed7;
+}
+
+/* ===================================
+   PDF 특정 스타일 (선택적)
+   =================================== */
+
+/* PDF 뷰어 */
+.pdf-viewer {
+  width: 100%;
+  height: 100%;
+}
+
+/* PDF 페이지 컨테이너 */
+.pdf-page-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: #525659;
+}
+
+/* PDF 페이지 */
+.pdf-page {
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  background-color: white;
+}
+
+/* PDF 페이지 캔버스 */
+.pdf-page canvas {
+  display: block;
+}
+
+/* PDF 줌 컨트롤 */
+.pdf-zoom-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 5px;
+  border-radius: 25px;
+  z-index: 3;
+}
+
+/* 줌 버튼 */
+.pdf-zoom-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: white;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.pdf-zoom-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ===================================
+   반응형 레이아웃
+   =================================== */
+
+/* 태블릿 레이아웃 */
+@media (max-width: 992px) {
+  .placeholder-content i {
+    font-size: 3rem;
+  }
+  
+  .placeholder-content p {
+    font-size: 0.9rem;
+  }
+  
+  .fullscreen-ppt-btn {
+    width: 36px;
+    height: 36px;
+    bottom: 15px;
+    right: 15px;
+  }
+  
+  .fullscreen-ppt-btn i {
+    font-size: 18px;
+  }
+  
+  .ppt-nav-controls {
+    bottom: 15px;
+    padding: 6px 10px;
+  }
+  
+  .ppt-nav-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .ppt-nav-btn i {
+    font-size: 16px;
+  }
+}
+
+/* 모바일 레이아웃 */
+@media (max-width: 576px) {
+  .placeholder-content i {
+    font-size: 2.5rem;
+  }
+  
+  .placeholder-content p {
+    font-size: 0.85rem;
+  }
+  
+  .fullscreen-ppt-btn {
+    width: 32px;
+    height: 32px;
+    bottom: 10px;
+    right: 10px;
+  }
+  
+  .fullscreen-ppt-btn i {
+    font-size: 16px;
+  }
+  
+  .ppt-nav-controls {
+    bottom: 10px;
+    padding: 5px 8px;
+  }
+  
+  .ppt-nav-btn {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .ppt-nav-btn i {
+    font-size: 14px;
+  }
+  
+  .ppt-page-indicator {
+    font-size: 12px;
+    margin: 0 8px;
+  }
+  
+  .ppt-error-message {
+    font-size: 1rem;
+  }
+  
+  .ppt-error-details {
+    font-size: 0.8rem;
+  }
+}
+
+/* ===================================
+   애니메이션 및 전환 효과
+   =================================== */
+
+/* 페이드 인 애니메이션 */
+@keyframes pptFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ppt-fadeIn {
+  animation: pptFadeIn 0.3s ease-in;
+}
+
+/* 슬라이드 전환 애니메이션 */
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.ppt-slideIn {
+  animation: slideIn 0.3s ease-out;
+}

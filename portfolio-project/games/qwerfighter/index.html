@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QwerFighter - Pygame 샘플 게임</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #111;
+            color: #eee;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #333, #111);
+            border-bottom: 3px solid #0088ff;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 3em;
+            text-transform: uppercase;
+            color: #0088ff;
+            text-shadow: 0 0 10px rgba(0, 136, 255, 0.5);
+        }
+        
+        h2 {
+            color: #0088ff;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .game-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 40px 0;
+        }
+        
+        .game-img {
+            width: 100%;
+            max-width: 600px;
+            border: 3px solid #333;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: #0088ff;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        
+        .btn:hover {
+            background: #00aaff;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 136, 255, 0.4);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+        
+        .feature {
+            background: #222;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: #0088ff;
+        }
+        
+        .controls {
+            background: #222;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 40px 0;
+        }
+        
+        .controls table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .controls th, .controls td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        
+        .controls th {
+            font-weight: bold;
+            color: #0088ff;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            border-top: 2px solid #333;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>QwerFighter</h1>
+        <p>간단하고 재미있는 스페이스 슈팅 게임</p>
+    </header>
+    
+    <div class="container">
+        <div class="game-preview">
+            <img src="image/preview.png" alt="QwerFighter 게임 미리보기" class="game-img" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAADICAMAAABlASxnAAAAb1BMVEUAAAAbGxspKSk1NTVCQkJLS0tSUlJaWlpjY2NqampycnJ5eXmAgICIiIiPj4+VlZWcnJyioqKpqamurq60tLS6urq/v7/ExMTJycnNzc3S0tLW1tba2trf39/j4+Pn5+fr6+vv7+/z8/P39/f7+/tK0O5TAAAACXBIWXMAAAsTAAALEwEAmpwYAAADQUlEQVR4Ae3dbXabMBCFYcfYwQ0JbkshJE3aNPd/jZWTLZhFGX+MZO88v4F3fsBIQpaHIemHMEj0M5JS3s5PTwghhJBP6XK5XK7X6+12u91uF/WW+nt8rr/H5Xq9/LckRo1S551z3nv/qDkXvPfeOeecE5FCUkpKKYnI+9/pdnt0Wy8f+rFcr7fb7XaR/JWbPigPJUSkaZrpdDqbzebzl9n38nXxDZ/NZs3TRCJ1B4Y/FBhCk1JKSimJ0tqE4DWH73+J0lqLgtdg4T1YeA8W3oOF92DhPViDh/dg4T1YeA8W3oOF92DhPVh4Dxbeg4X3YOE9WHgPFt6Dhfdg4T1YeA8W3oOF92DhPVh4Dxbeg4X3YOE9WHgPFt7rgEVRhBAe/5+UlFLT6XQ6nWaz2Xw+X7x8+55/12+Lp9l0OmlKSTHG54WFCGFSSkmU1jpE773XnXqvtQ4RkRTfTxlJxhhTTinl/+bbdrt/lf3Y7w/5T04ppZxNMVYxuq6LMXaNMcbQGGO0Mcb3z/fO9K+M0docYxUjxljMHrMYo7FU/1YzjDZWMboui1HnM0qGYkXIZvQXVzHaLMbs3VeobNZgmSzGLg+X4RXDKCyTxWhzEQ2nGKJNLyzZdXX6yofiGCVWMbIcE8qn4li1isG7vOzMIIthO0PFmBBYgzJUDLHmQKziGMblU8UYkLE5j9FVQ8VIdjDFUI1pz2J0w9pdTCqfKkZ7ajH8cDbX8VtY1Zwwxrg3FNPwXiHmfKoYw7uFiE+zGIP57bMXo/qK4cxetZ1ZjJ1S7WHJbr+3Gg9OjJ3aU+nNLdpfdV0xuvL2YriKIXvFKMamUkoxqhhuE6MxMZXSVCnGRtkiiuGKUYxcxZh0ZSnF2MQYhVaMjeqqGHUWw1ax9r8cbuQWw9ZQDLFEMbLtdoxiiGI0RWTz3Yei80QxbP76MpEqhvKuPYuRBn1Xr4uhqhhuMojz4mKI7fKnCLFDMRSWqWLIjlEMsSK2iqGwWiyG7ADFUL5LMDKMYjDuwTJYeA8W3oOF92DhPVh4Dxbeg4X3YOE9P/CTUuQZ5cXe0TzOHN6pHE/F3oUcBJ6LXQIffwEJBQvEb7R1dwAAAABJRU5ErkJggg=='">
+            <a href="/portfolio/run/qwerfighter" class="btn">게임 실행하기</a>
+        </div>
+        
+        <h2>게임 소개</h2>
+        <p>QwerFighter는 Pygame을 사용하여 개발된 간단한 스페이스 슈팅 게임입니다. 적기를 피하고 미사일로 격추시켜 점수를 얻으세요!</p>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🎮</div>
+                <h3>간단한 조작</h3>
+                <p>방향키와 스페이스바만으로 즐길 수 있는 직관적인 조작</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🚀</div>
+                <h3>역동적인 전투</h3>
+                <p>다양한 적과 화려한 폭발 효과로 게임의 재미 극대화</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <h3>점수 시스템</h3>
+                <p>적을 격추하면 점수를 획득, 자신의 최고 기록에 도전해보세요</p>
+            </div>
+        </div>
+        
+        <h2>게임 조작법</h2>
+        <div class="controls">
+            <table>
+                <tr>
+                    <th>키</th>
+                    <th>동작</th>
+                </tr>
+                <tr>
+                    <td>방향키 ←→</td>
+                    <td>좌우 이동</td>
+                </tr>
+                <tr>
+                    <td>방향키 ↑↓</td>
+                    <td>상하 이동</td>
+                </tr>
+                <tr>
+                    <td>스페이스바</td>
+                    <td>미사일 발사</td>
+                </tr>
+                <tr>
+                    <td>R 키</td>
+                    <td>게임 오버 시 재시작</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2>샘플 프로젝트 활용법</h2>
+        <p>이 프로젝트는 Pygame을 활용한 게임 개발의 기본 구조를 보여주는 샘플입니다. 다음과 같은 부분을 학습해볼 수 있습니다:</p>
+        <ul>
+            <li>Pygame을 이용한 기본 게임 루프 구현</li>
+            <li>이미지 로드 및 화면 그리기</li>
+            <li>사용자 입력 처리</li>
+            <li>충돌 감지 알고리즘</li>
+            <li>게임 상태 관리 및 점수 시스템</li>
+        </ul>
+        <p>소스 코드를 확인하고 직접 수정하여 나만의 게임을 만들어보세요!</p>
+    </div>
+    
+    <footer>
+        <p>QwerFighter - 학생 포트폴리오 샘플 프로젝트 © 2025</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>QwerFighter 포트폴리오</title>
+  <link rel="stylesheet" href="/portfolio/static/css/style.css">
+</head>
+<body>
+  <h1>🎮 QwerFighter</h1>
+  <p>학생 ID: <%= userID %></p>
+  <p>게임 설명: 적을 무찌르고 보스를 처치하는 액션 슈팅 게임입니다.</p>
+  <img src="/portfolio/games/qwerfighter/image/fighter.png" width="100" />
+  <br><br>
+  <form action="/portfolio/run/qwerfighter" method="POST">
+    <button type="submit">게임 실행</button>
+  </form>
+</body>
+</html>

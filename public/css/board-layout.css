@@ -1,0 +1,226 @@
+/* =============================================
+   📌 게시판 통합 레이아웃 CSS (공통)
+   ============================================= */
+
+/* 전체 게시판 컨테이너 */
+.board-layout-container {
+    max-width: 1400px;
+    margin: 20px auto;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 0 15px;
+}
+
+/* 왼쪽 네비게이션 (항상 고정) */
+.board-sidebar {
+    width: 250px;
+    min-width: 250px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 80px; /* 헤더 높이만큼 여백 */
+    height: fit-content;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 메인 콘텐츠 영역 (고정 너비) */
+.board-main-content {
+    flex: 1;
+    max-width: 900px;
+    min-width: 900px;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 🔥 오른쪽 버튼 그룹 (상단 고정으로 수정) */
+.board-action-buttons {
+    width: 100px;
+    min-width: 100px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 80px; /* 헤더 높이만큼 여백 (사이드바와 동일) */
+    height: fit-content;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100;
+}
+
+/* ========== 사이드바 스타일 ========== */
+.board-sidebar-header {
+    background-color: #495057;
+    color: white;
+    padding: 15px;
+    font-weight: bold;
+    border-radius: 8px 8px 0 0;
+}
+
+.board-category-item {
+    padding: 12px 20px;
+    border-bottom: 1px solid #f1f3f4;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    color: #6c757d;
+    text-decoration: none;
+    display: block;
+}
+
+.board-category-item:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+    text-decoration: none;
+}
+
+.board-category-item.active {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    font-weight: 500;
+}
+
+.board-category-item i {
+    margin-right: 8px;
+    width: 16px;
+}
+
+/* ========== 액션 버튼 스타일 ========== */
+.board-floating-btn {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    padding: 10px 16px;
+    color: #333;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.board-floating-btn:hover {
+    background-color: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+    transform: translateX(-3px);
+    text-decoration: none;
+}
+
+.board-floating-btn i {
+    font-size: 14px;
+}
+
+.board-floating-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ========== 반응형 ========== */
+@media (max-width: 1200px) {
+    .board-layout-container {
+        max-width: 100%;
+        margin: 10px;
+    }
+    
+    .board-main-content {
+        min-width: auto;
+        max-width: none;
+    }
+}
+
+@media (max-width: 992px) {
+    .board-layout-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .board-sidebar {
+        width: 100%;
+        position: static;
+        max-height: none;
+    }
+    
+    .board-action-buttons {
+        position: fixed;
+        right: 15px;
+        bottom: 20px;
+        top: auto;
+        transform: none;
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: auto;
+        z-index: 1000;
+    }
+    
+    .board-floating-btn .btn-text {
+        display: none;
+    }
+    
+    .board-floating-btn {
+        min-width: 50px;
+        padding: 10px;
+        border-radius: 50%;
+    }
+}
+
+@media (max-width: 768px) {
+    .board-layout-container {
+        margin: 5px;
+        padding: 0 5px;
+    }
+    
+    .board-sidebar {
+        order: 2;
+    }
+    
+    .board-main-content {
+        order: 1;
+    }
+}
+
+/* ========== 모바일 토글 기능 ========== */
+@media (max-width: 992px) {
+    .board-sidebar.collapsed {
+        display: none;
+    }
+    
+    .sidebar-toggle-btn {
+        display: block;
+        background-color: #495057;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        cursor: pointer;
+    }
+}
+
+@media (min-width: 993px) {
+    .sidebar-toggle-btn {
+        display: none;
+    }
+}
+
+/* ========== 🔥 추가: 버튼 그룹 상단 여백 ========== */
+.board-action-buttons .board-floating-btn:first-child {
+    margin-top: 0;
+}
+
+/* 버튼 간격 조정 */
+.board-action-buttons {
+    padding-top: 10px;
+}

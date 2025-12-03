@@ -1,0 +1,476 @@
+/* ============================================================
+   common-content.css - 콘텐츠 컴포넌트 영역 스타일
+   ============================================================ */
+
+/* 콘텐츠 컨테이너 기본 스타일 - common-layout.css와 연동 */
+.content-container {
+    /* 크기는 common-layout.css에서 제어 */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden; /* 내부 스크롤은 problem-container에서 처리 */
+    background-color: #ffffff;
+    border-right: 1px solid #dee2e6;
+    box-sizing: border-box;
+    transition: width 0.3s ease, flex 0.3s ease;
+}
+
+/* mainArea 내부 컴포넌트들 기본 스타일 */
+.mainArea {
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 60px);
+    flex: 1;
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+
+/* 상단 네비게이션 바 - 60px 높이 통일 */
+.problem-top-nav {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+    height: 60px;
+    min-height: 60px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    position: relative;
+    z-index: var(--z-content);
+    gap: 0; /* 🔥 모든 gap 제거 */
+    flex-wrap: nowrap;
+}
+
+/* 문제 제목 스타일 */
+.problem-title,
+#problem-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 0 0 20%; /* 🔥 15%에서 20%로 증가 */
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+/* 문제 네비게이션 컨테이너 */
+.problem-navigation-container,
+#problem-navigation-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 0 0 60%; /* 🔥 85%를 60%로 되돌리기 */
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+/* 🔥 새로 추가: 헤더 컨트롤 그룹 (폰트 + 레이아웃 버튼) */
+.header-controls-group {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex: 0 0 20% !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    gap: 4px !important; /* 🔥 버튼 간 간격 추가 */
+}
+
+/* Bootstrap 버튼 그룹 스타일 커스터마이징 */
+.header-controls-group .btn-group {
+    display: flex !important;
+    align-items: center !important;
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important; /* 🔥 그룹 테두리 제거 */
+    overflow: visible !important; /* 🔥 개별 테두리를 위해 */
+    box-shadow: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    gap: 4px !important; /* 🔥 버튼 간 간격 */
+}
+
+/* 버튼 그룹 내부 버튼 통일 스타일 - 개별 테두리 */
+.header-controls-group .btn,
+.header-controls-group .header-control-btn {
+    border: 1px solid #dee2e6 !important;
+    background-color: #ffffff !important;
+    color: #495057 !important;
+    padding: 6px 10px !important;
+    font-size: 14px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 6px !important; /* 🔥 각 버튼마다 둥근 테두리 */
+    margin: 0 !important;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important; /* 🔥 개별 그림자 */
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* 🔥 버튼 그룹 테두리 스타일 제거 (개별 테두리 사용) */
+/* 맨 첫 번째, 마지막, 가운데 버튼 모두 동일한 스타일 */
+.header-controls-group .btn:first-child,
+.header-controls-group .header-control-btn:first-child,
+.header-controls-group .btn:last-child,
+.header-controls-group .header-control-btn:last-child,
+.header-controls-group .btn:not(:first-child):not(:last-child),
+.header-controls-group .header-control-btn:not(:first-child):not(:last-child) {
+    border-radius: 6px !important; /* 🔥 모든 버튼에 동일한 둥근 테두리 */
+    border: 1px solid #dee2e6 !important;
+}
+
+/* 버튼 호버 효과 */
+.header-controls-group .btn:hover,
+.header-controls-group .header-control-btn:hover {
+    background-color: #f8f9fa !important;
+    border-color: #adb5bd !important;
+    color: #212529 !important;
+    z-index: 1;
+    transform: none !important;
+}
+
+/* 버튼 클릭 효과 */
+.header-controls-group .btn:active,
+.header-controls-group .btn.active,
+.header-controls-group .header-control-btn:active,
+.header-controls-group .header-control-btn.active {
+    background-color: #e9ecef !important;
+    border-color: #6c757d !important;
+    color: #212529 !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 아이콘 크기 통일 */
+.header-controls-group .btn i,
+.header-controls-group .header-control-btn i {
+    font-size: 14px !important;
+    line-height: 1 !important;
+}
+
+/* 포커스 스타일 */
+.header-controls-group .btn:focus,
+.header-controls-group .header-control-btn:focus {
+    outline: 2px solid #0d6efd !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+}
+
+/* 문제 네비게이션 */
+.problem-navigation,
+#problem-navigation {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* 🔥 문제 번호 간격 */
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* 네비게이션 아이콘 스타일 */
+.problem-icon,
+#prev-problem,
+#next-problem {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    transition: color 0.2s;
+    padding: 5px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.problem-icon:hover,
+#prev-problem:hover,
+#next-problem:hover {
+    color: #333; /* 🔥 파란색에서 검정색으로 변경 */
+}
+
+/* 문제 네비게이션 컨테이너 내부 아이콘들 */
+.problem-navigation-container i {
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+.problem-navigation-container i:hover {
+    color: #333; /* 🔥 파란색에서 검정색으로 변경 */
+}
+
+/* 문제 컨테이너 - 메인 콘텐츠 영역 */
+.problem-container,
+#problem-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    height: calc(100% - 60px); /* 상단 네비게이션 바 제외 */
+    background-color: #ffffff;
+    box-sizing: border-box;
+}
+
+/* iframe 스타일 표준화 - 가장 중요한 부분 */
+.content-iframe,
+#iframeContent {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    display: block !important;
+    position: relative !important;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* 레이아웃 컨트롤 - 기존 코드 유지하되 새로운 스타일과 충돌하지 않도록 조정 */
+.layout-controls {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.layout-controls .btn {
+    padding: 4px 8px;
+    font-size: 0.875rem;
+    border-radius: 4px;
+}
+
+/* 컴포넌트 가시성 - common-ide.css와 충돌하지 않도록 수정 */
+.component-visible {
+    display: flex !important;
+}
+
+.component-hidden {
+    display: none !important;
+}
+
+/* 레이아웃별 컴포넌트 표시/숨김 제어 */
+.layout-ide #ide-component {
+    display: flex !important;
+    flex: 1 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.layout-ide #content-component {
+    display: flex !important;
+    flex: 1 !important;
+}
+
+.layout-ide #quiz-component {
+    display: none !important;
+}
+
+.layout-ide #ppt-viewer-component {
+    display: none !important;
+}
+
+/* 로딩 애니메이션 */
+.loading-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: #09f;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* iframe 로딩 상태 */
+.content-iframe.loading,
+#iframeContent.loading {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="20" fill="none" stroke="%23007bff" stroke-width="2" stroke-dasharray="31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dasharray" dur="2s" values="0 31.416;15.708 15.708;0 31.416" repeatCount="indefinite"/><animate attributeName="stroke-dashoffset" dur="2s" values="0;-15.708;-31.416" repeatCount="indefinite"/></circle></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 40px 40px;
+}
+
+/* 콘텐츠 로딩 메시지 */
+.content-loading-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    z-index: 10;
+}
+
+.content-loading-message .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+/* 오류 메시지 표시 */
+.content-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 40px 20px;
+    text-align: center;
+    color: #6c757d;
+}
+
+.content-error-icon {
+    font-size: 4rem;
+    color: #dee2e6;
+    margin-bottom: 20px;
+}
+
+.content-error-message {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+.content-error-details {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 992px) {
+    /* 태블릿에서 네비게이션 바 조정 */
+    .problem-top-nav {
+        flex-wrap: wrap;
+        height: auto;
+        min-height: 60px;
+        padding: 8px 12px;
+        gap: 8px;
+    }
+    
+    .problem-title,
+    #problem-title {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 8px;
+        font-size: 1.1rem;
+        flex: 1 1 100%;
+    }
+    
+    .problem-navigation-container,
+    #problem-navigation-container {
+        flex: 1 1 70%;
+        justify-content: center;
+    }
+    
+    .header-controls-group {
+        flex: 1 1 30%;
+        justify-content: center;
+    }
+    
+    .header-controls-group .btn {
+        min-width: 28px !important;
+        height: 28px !important;
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+    }
+    
+    .problem-container,
+    #problem-container {
+        height: calc(100% - 80px);
+    }
+}
+
+@media (max-width: 768px) {
+    /* 모바일에서 더 컴팩트한 네비게이션 */
+    .problem-top-nav {
+        padding: 6px 10px;
+        min-height: 50px;
+        flex-wrap: wrap;
+    }
+    
+    .problem-title,
+    #problem-title {
+        font-size: 1rem;
+        margin-bottom: 6px;
+        flex: 1 1 100%;
+        order: 1;
+    }
+    
+    .problem-navigation-container,
+    #problem-navigation-container {
+        flex: 1 1 60%;
+        order: 2;
+    }
+    
+    .header-controls-group {
+        flex: 1 1 40%;
+        order: 3;
+    }
+    
+    .header-controls-group .btn {
+        min-width: 24px !important;
+        height: 24px !important;
+        padding: 2px 6px !important;
+        font-size: 11px !important;
+    }
+    
+    .header-controls-group .btn i {
+        font-size: 12px !important;
+    }
+    
+    .problem-icon,
+    #prev-problem,
+    #next-problem {
+        font-size: 1.25rem;
+    }
+    
+    .problem-container,
+    #problem-container {
+        height: calc(100% - 70px);
+    }
+}
+
+/* 접근성 개선 */
+.problem-icon:focus,
+#prev-problem:focus,
+#next-problem:focus {
+    outline: 2px solid #333; /* 🔥 파란색에서 검정색으로 변경 */
+    outline-offset: 2px;
+}
+
+/* 인쇄 스타일 */
+@media print {
+    .problem-top-nav {
+        display: none;
+    }
+    
+    .problem-container,
+    #problem-container {
+        height: 100%;
+    }
+}

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>두더지 잡기 게임</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      display: flex;
+      flex-direction: row;
+      font-family: "Arial", sans-serif;
+      justify-content: center;
+      gap: 30px;
+      padding: 20px;
+    }
+
+    .left-panel {
+      text-align: center;
+    }
+
+    #game-area {
+      width: 600px;
+      height: 400px;
+      position: relative;
+      background-color: #d3f8d3;
+      border: 2px solid #4CAF50;
+      border-radius: 10px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .mole {
+      width: 60px;
+      height: 60px;
+      position: absolute;
+      font-size: 50px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s;
+    }
+    
+    .mole:active {
+      transform: scale(0.9);
+    }
+
+    #score {
+      font-size: 24px;
+      margin: 10px;
+    }
+
+    #timer {
+      font-size: 20px;
+    }
+
+    #start-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    #start-button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+
+    #ranking {
+      width: 300px;
+      border-left: 2px dashed #aaa;
+      padding-left: 20px;
+    }
+
+    #ranking h2 {
+      margin-top: 0;
+    }
+
+    .ranking-entry {
+      font-size: 16px;
+      margin: 10px 0;
+      padding: 8px;
+      background-color: #f5f5f5;
+      border-radius: 5px;
+    }
+    
+    .ranking-entry.current-user {
+      background-color: #e7f5e7;
+      border-left: 3px solid #4CAF50;
+    }
+    
+    .game-info {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .user-info {
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 15% auto;
+      padding: 20px;
+      width: 300px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    
+    .trophy {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="left-panel">
+    <h1>🐾 두더지 잡기 게임</h1>
+    <div class="game-info">
+      <div class="user-info" id="user-info">로그인 중...</div>
+      <div id="score">점수: 0</div>
+      <div id="timer">남은 시간: 30초</div>
+    </div>
+    <button id="start-button" class="btn btn-success">게임 시작</button>
+    <div id="game-area"></div>
+  </div>
+
+  <div id="ranking">
+    <h2>🏆 랭킹</h2>
+    <div id="ranking-list">
+      <p>로딩 중...</p>
+    </div>
+  </div>
+  
+  <div id="game-end-modal" class="modal">
+    <div class="modal-content">
+      <div class="trophy">🏆</div>
+      <h3>게임 종료!</h3>
+      <p id="final-score">최종 점수: 0점</p>
+      <button id="close-modal" class="btn btn-primary">확인</button>
+    </div>
+  </div>
+
+  <script>
+    // 사용자 정보 가져오기
+    let currentUserID = '';
+    let highestScore = 0;
+    
+    // 세션에서 사용자 정보 가져오기
+    async function getCurrentUser() {
+      try {
+        const response = await fetch('/api/get-user-session');
+        const data = await response.json();
+        
+        if (data.is_logined) {
+          currentUserID = data.userID;
+          document.getElementById('user-info').textContent = `플레이어: ${currentUserID}`;
+          return data.userID;
+        } else {
+          document.getElementById('user-info').textContent = '게스트 플레이어';
+          return 'guest';
+        }
+      } catch (error) {
+        console.error('사용자 정보를 가져오는 중 오류가 발생했습니다:', error);
+        document.getElementById('user-info').textContent = '게스트 플레이어';
+        return 'guest';
+      }
+    }
+    
+    // 랭킹 가져오기
+    async function getRankings() {
+      try {
+        const response = await fetch('/api/mole-game/rankings');
+        return await response.json();
+      } catch (error) {
+        console.error('랭킹을 가져오는 중 오류가 발생했습니다:', error);
+        return [];
+      }
+    }
+    
+    // 점수 저장하기
+    async function saveScore(score) {
+      try {
+        const response = await fetch('/api/mole-game/save-score', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ score }),
+        });
+        return await response.json();
+      } catch (error) {
+        console.error('점수를 저장하는 중 오류가 발생했습니다:', error);
+        return { success: false };
+      }
+    }
+    
+    // 랭킹 표시하기
+    async function displayRankings() {
+      const rankings = await getRankings();
+      const rankingList = document.getElementById('ranking-list');
+      
+      if (rankings.length === 0) {
+        rankingList.innerHTML = '<p>아직 랭킹이 없습니다.</p>';
+        return;
+      }
+      
+      let rankingHTML = '';
+      rankings.forEach((entry, index) => {
+        const isCurrentUser = entry.userID === currentUserID;
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
+        
+        rankingHTML += `
+          <div class="ranking-entry ${isCurrentUser ? 'current-user' : ''}">
+            <div>${medal} ${entry.userID} — ${entry.score}점</div>
+          </div>
+        `;
+        
+        // 현재 사용자의 최고 점수 저장
+        if (isCurrentUser && entry.score > highestScore) {
+          highestScore = entry.score;
+        }
+      });
+      
+      rankingList.innerHTML = rankingHTML;
+    }
+
+    const gameArea = document.getElementById('game-area');
+    const scoreDisplay = document.getElementById('score');
+    const timerDisplay = document.getElementById('timer');
+    const startButton = document.getElementById('start-button');
+    const modal = document.getElementById('game-end-modal');
+    const finalScoreDisplay = document.getElementById('final-score');
+    const closeModalButton = document.getElementById('close-modal');
+
+    const animals = [
+      { emoji: '🐰', score: 1, duration: 1500 },
+      { emoji: '🐹', score: 2, duration: 1200 },
+      { emoji: '🐸', score: 3, duration: 900 },
+      { emoji: '🦊', score: 5, duration: 600 }
+    ];
+
+    let score = 0;
+    let timeLeft = 30;
+    let gameInterval;
+    let timerInterval;
+    let animalClicked = false;
+
+    function spawnRandomAnimal() {
+      const randomAnimal = animals[Math.floor(Math.random() * animals.length)];
+
+      const mole = document.createElement('div');
+      mole.classList.add('mole');
+      mole.innerText = randomAnimal.emoji;
+
+      // 화면 크기에 맞게 위치 조정
+      const x = Math.random() * (gameArea.clientWidth - 60);
+      const y = Math.random() * (gameArea.clientHeight - 60);
+      mole.style.left = `${x}px`;
+      mole.style.top = `${y}px`;
+
+      mole.addEventListener('click', () => {
+        score += randomAnimal.score;
+        scoreDisplay.textContent = `점수: ${score}`;
+        mole.remove();
+        animalClicked = true;
+        
+        // 클릭 효과음 재생 (나중에 추가 가능)
+        // new Audio('/resource/sounds/click.mp3').play();
+      });
+
+      gameArea.appendChild(mole);
+
+      setTimeout(() => mole.remove(), randomAnimal.duration);
+    }
+
+    async function startGame() {
+      // 게임 시작 전 사용자 확인
+      await getCurrentUser();
+      
+      score = 0;
+      timeLeft = 30;
+      scoreDisplay.textContent = `점수: ${score}`;
+      timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+      startButton.disabled = true;
+      document.getElementById('ranking-list').innerHTML = `<p>게임 진행 중...</p>`;
+      
+      // 게임 영역 초기화
+      gameArea.innerHTML = '';
+
+      // 동물 생성 간격 설정
+      gameInterval = setInterval(() => {
+        spawnRandomAnimal();
+      }, 1000); // 1초마다 등장
+
+      // 타이머 시작
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          clearInterval(gameInterval);
+          endGame();
+        }
+      }, 1000);
+    }
+
+    async function endGame() {
+      // 게임 종료 처리
+      gameArea.innerHTML = '';
+      
+      // 점수 저장
+      if (currentUserID !== 'guest') {
+        await saveScore(score);
+      }
+      
+      // 랭킹 업데이트
+      await displayRankings();
+      
+      // 모달 표시
+      finalScoreDisplay.textContent = `최종 점수: ${score}점`;
+      
+      // 새 기록인지 확인
+      if (score > highestScore && currentUserID !== 'guest') {
+        finalScoreDisplay.textContent += ' (새 기록!)';
+      }
+      
+      modal.style.display = 'block';
+      startButton.disabled = false;
+    }
+
+    // 이벤트 리스너 등록
+    startButton.addEventListener('click', startGame);
+    
+    closeModalButton.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    // 페이지 로드 시 초기화
+    window.addEventListener('load', async () => {
+      await getCurrentUser();
+      await displayRankings();
+    });
+  </script>
+</body>
+</html>

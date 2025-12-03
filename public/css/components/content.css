@@ -1,0 +1,347 @@
+/**
+ * content.css
+ * 콘텐츠 컴포넌트의 스타일
+ */
+
+/* ===================================
+   콘텐츠 컴포넌트 기본 스타일
+   =================================== */
+
+/* 콘텐츠 컴포넌트 컨테이너 */
+.content-component {
+  width: 50%;
+  height: 100%;
+  flex: 0.5;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+  background-color: #fff;
+  transition: width 0.3s ease, flex 0.3s ease;
+}
+
+/* 콘텐츠 컨테이너 */
+.content-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ===================================
+   상단 내비게이션 바
+   =================================== */
+
+/* 문제 상단 내비게이션 */
+.problem-top-nav {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  height: 60px;
+  min-height: 60px;
+  width: 100%;
+}
+
+.problem-top-nav > div {
+  display: flex;
+  align-items: center;
+}
+
+/* 문제 제목 */
+.problem-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #343a40;
+  margin-right: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 50%;
+}
+
+/* 문제 네비게이션 컨테이너 */
+.problem-navigation-container {
+  display: flex;
+  align-items: center;
+  margin: 0 auto;
+}
+
+/* 이전/다음 버튼 */
+.problem-navigation-container i.bi-chevron-left,
+.problem-navigation-container i.bi-chevron-right {
+  font-size: 1.5rem;
+  color: #495057;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: color 0.2s ease;
+}
+
+.problem-navigation-container i.bi-chevron-left:hover,
+.problem-navigation-container i.bi-chevron-right:hover {
+  color: #0d6efd;
+}
+
+.problem-navigation-container i.bi-chevron-left:disabled,
+.problem-navigation-container i.bi-chevron-right:disabled {
+  color: #adb5bd;
+  cursor: not-allowed;
+}
+
+/* 문제 네비게이션 */
+.problem-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px;
+}
+
+/* 문제 아이콘 */
+.problem-icon {
+  font-size: 1.3rem;
+  color: #6c757d;
+  margin: 0 5px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.problem-icon:hover {
+  color: #0d6efd;
+}
+
+/* 현재 문제 아이콘 */
+.problem-icon.bi-1-circle-fill,
+.problem-icon.bi-2-circle-fill,
+.problem-icon.bi-3-circle-fill,
+.problem-icon.bi-4-circle-fill,
+.problem-icon.bi-5-circle-fill,
+.problem-icon.bi-6-circle-fill,
+.problem-icon.bi-7-circle-fill,
+.problem-icon.bi-8-circle-fill,
+.problem-icon.bi-9-circle-fill,
+.problem-icon.bi-0-circle-fill {
+  color: #0d6efd;
+}
+
+/* 해결된 문제 아이콘 */
+.problem-icon.text-success {
+  color: #28a745 !important;
+}
+
+/* IDE 토글 스위치 */
+.ide-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.ide-toggle .toggle-label {
+  font-size: 0.9rem;
+  margin-right: 8px;
+  font-weight: 500;
+}
+
+/* ===================================
+   문제 컨테이너
+   =================================== */
+
+/* 문제 컨테이너 */
+.problem-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* iframe 컨테이너 */
+iframe#iframeContent {
+  width: 100%;
+  height: 100%;
+  border: none;
+  flex: 1;
+}
+
+/* ===================================
+   폰트 컨트롤 스타일
+   =================================== */
+
+/* 콘텐츠 폰트 컨트롤 */
+.content-font-controls {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 5px;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.font-control-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.font-control-btn:hover {
+  background-color: #e0e0e0;
+}
+
+/* ===================================
+   반응형 레이아웃
+   =================================== */
+
+/* 태블릿 레이아웃 */
+@media (max-width: 992px) {
+  .content-component {
+    height: 50%;
+    width: 100% !important;
+    flex: 0.5 !important;
+  }
+  
+  .problem-title {
+    max-width: 30%;
+    font-size: 1.1rem;
+  }
+  
+  .problem-icon {
+    font-size: 1.1rem;
+    margin: 0 3px;
+  }
+}
+
+/* 모바일 레이아웃 */
+@media (max-width: 576px) {
+  .problem-top-nav {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 60px;
+    padding: 5px 10px;
+  }
+  
+  .problem-title {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 5px;
+    font-size: 1rem;
+  }
+  
+  .problem-navigation-container {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .problem-icon {
+    font-size: 1rem;
+    margin: 0 2px;
+  }
+  
+  .content-font-controls {
+    top: 10px;
+    right: 10px;
+  }
+}
+
+/* ===================================
+   애니메이션 및 전환 효과
+   =================================== */
+
+/* 컨텐츠 로드 애니메이션 */
+@keyframes contentFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.content-fadeIn {
+  animation: contentFadeIn 0.5s ease-in;
+}
+
+/* ===================================
+   상태 표시 스타일
+   =================================== */
+
+/* 로딩 상태 */
+.content-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background-color: #fff;
+}
+
+.content-loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #0d6efd;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 오류 상태 */
+.content-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background-color: #fff;
+  padding: 20px;
+  text-align: center;
+}
+
+.content-error-icon {
+  font-size: 3rem;
+  color: #dc3545;
+  margin-bottom: 20px;
+}
+
+.content-error-message {
+  font-size: 1.2rem;
+  color: #dc3545;
+  margin-bottom: 10px;
+}
+
+.content-error-details {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 20px;
+}
+
+.content-error-button {
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.content-error-button:hover {
+  background-color: #0b5ed7;
+}

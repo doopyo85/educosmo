@@ -1,0 +1,758 @@
+/* ============================================================
+   ide-editor.css - 툴바, ACE 에디터, 버튼 스타일 (거터 고정)
+   ============================================================ */
+
+/* ============================================================
+   상단 툴바 - IDE 내부에만 적용
+   ============================================================ */
+
+.ide-container .code-editor-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 60px;
+  padding: 10px 15px;
+  background-color: var(--vscode-bg-secondary);
+  border-bottom: var(--vscode-border-width) solid var(--vscode-border);
+  box-sizing: border-box;
+  flex-shrink: 0;
+  font-family: var(--vscode-font-ui);
+}
+
+.ide-container .code-editor-title {
+  font-weight: 400;
+  font-size: 18px;
+  color: var(--vscode-text-primary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ============================================================
+   IDE 헤더 버튼 통일 스타일 - HTML ID와 매칭
+   ============================================================ */
+
+/* 에디터 버튼 그룹 */
+.ide-container .editor-button-group {
+  display: flex !important;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* 🔥 수정: 복원 버튼 슬롯 */
+.ide-container #restore-button-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  flex-shrink: 0;
+}
+
+/* 복원 버튼 - IDE 컨트롤 스타일 적용 */
+.ide-container #restore-example-btn {
+  /* IDE 컨트롤 버튼 기본 스타일 상속 */
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  
+  /* 같은 배경과 테두리 */
+  background-color: var(--vscode-bg-secondary) !important;
+  color: var(--vscode-text-primary) !important;
+  border: 1px solid var(--vscode-border) !important;
+  border-radius: var(--vscode-border-radius) !important;
+  
+  /* 기본 설정 */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  flex-shrink: 0 !important;
+  
+  /* 폰트 설정 */
+  font-family: var(--vscode-font-ui) !important;
+  font-weight: normal !important;
+  line-height: 1 !important;
+}
+
+/* 복원 버튼 비활성화 상태 */
+.ide-container #restore-example-btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  background-color: var(--vscode-bg-secondary) !important;
+  border-color: var(--vscode-border) !important;
+  color: var(--vscode-text-muted) !important;
+}
+
+/* 복원 버튼 호버 효과 - 다른 IDE 컨트롤 버튼과 동일 */
+.ide-container #restore-example-btn:not(:disabled):hover {
+  background-color: var(--vscode-bg-tertiary) !important;
+  border-color: var(--vscode-border-light) !important;
+  color: var(--vscode-text-primary) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  z-index: 1 !important;
+}
+
+/* 복원 버튼 활성 상태 - 다른 버튼과 동일한 색상 */
+.ide-container #restore-example-btn.btn-outline-info {
+  background-color: var(--vscode-bg-secondary) !important;
+  border-color: var(--vscode-border-light) !important;
+  color: var(--vscode-text-primary) !important;
+}
+
+.ide-container #restore-example-btn.btn-outline-info:hover {
+  background-color: var(--vscode-bg-tertiary) !important;
+  border-color: var(--vscode-border-light) !important;
+  color: var(--vscode-text-primary) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 복원 버튼 아이콘 */
+.ide-container #restore-example-btn .bi {
+  margin: 0 !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  color: inherit !important;
+}
+
+/* 복원 버튼 텍스트 숨김 */
+.ide-container #restore-example-btn .btn-text {
+  display: none !important;
+}
+
+/* 다운로드 버튼 - HTML ID: download-code-btn */
+.ide-container #download-code-btn {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  background-color: var(--vscode-bg-secondary) !important;
+  color: var(--vscode-text-primary) !important;
+  border: 1px solid var(--vscode-border) !important;
+  border-radius: var(--vscode-border-radius) !important;
+  font-size: 16px !important;
+  min-width: 32px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.ide-container #download-code-btn:hover {
+  background-color: var(--vscode-bg-tertiary) !important;
+  border-color: var(--vscode-border-light) !important;
+  transform: translateY(-1px) !important;
+}
+
+.ide-container #download-code-btn .btn-text {
+  display: none !important;
+}
+
+.ide-container #download-code-btn .bi {
+  margin: 0 !important;
+}
+
+/* 해설 버튼 - HTML ID: ide-explanation-btn - 🔥 높이 조정 */
+.ide-container #ide-explanation-btn {
+  background-color: var(--vscode-bg-secondary) !important;
+  color: var(--vscode-text-primary) !important;
+  border: 1px solid var(--vscode-border) !important;
+  padding: 4px 12px !important; /* 🔥 패딩 축소 */
+  border-radius: var(--vscode-border-radius) !important;
+  font-size: 14px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  height: 32px !important; /* 🔥 명시적 높이 설정 */
+  max-height: 32px !important;
+  min-height: 32px !important;
+  box-sizing: border-box !important;
+}
+
+.ide-container #ide-explanation-btn:hover {
+  background-color: var(--vscode-bg-tertiary) !important;
+  border-color: var(--vscode-border-light) !important;
+  transform: translateY(-1px) !important;
+}
+
+.ide-container #ide-explanation-btn i {
+  color: #f39c12; /* 전구 아이콘 노란색 */
+}
+
+/* 정답보기 버튼 - HTML ID: showAnswerBtn - 🔥 높이 조정 */
+.ide-container #showAnswerBtn {
+  background-color: var(--vscode-bg-secondary) !important;
+  color: var(--vscode-text-primary) !important;
+  border: 1px solid var(--vscode-border) !important;
+  padding: 4px 12px !important; /* 🔥 패딩 축소 */
+  border-radius: var(--vscode-border-radius) !important;
+  font-size: 14px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  height: 32px !important; /* 🔥 명시적 높이 설정 */
+  max-height: 32px !important;
+  min-height: 32px !important;
+  box-sizing: border-box !important;
+}
+
+.ide-container #showAnswerBtn:hover {
+  background-color: var(--vscode-bg-tertiary) !important;
+  border-color: var(--vscode-border-light) !important;
+  transform: translateY(-1px) !important;
+}
+
+.ide-container #showAnswerBtn i {
+  color: #3498db; /* 눈 아이콘 파란색 */
+}
+
+/* 코드실행 버튼 - 강조 스타일 유지 */
+.ide-container #runCodeBtn {
+  background-color: var(--vscode-accent) !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: var(--vscode-border-radius) !important;
+  cursor: pointer !important;
+  font-family: var(--vscode-font-ui) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease;
+}
+
+.ide-container #runCodeBtn:hover:not(:disabled) {
+  background-color: var(--vscode-accent-hover) !important;
+  transform: translateY(-1px) !important;
+}
+
+.ide-container #runCodeBtn:disabled {
+  background-color: var(--vscode-text-muted) !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* 터미널 버튼 */
+.ide-container #clearOutputBtn {
+  background-color: var(--vscode-bg-secondary);
+  color: var(--vscode-text-primary);
+  border: var(--vscode-border-width) solid var(--vscode-border);
+  padding: 8px 16px;
+  border-radius: var(--vscode-border-radius);
+  cursor: pointer;
+  font-family: var(--vscode-font-ui);
+}
+
+.ide-container #clearOutputBtn:hover {
+  background-color: var(--vscode-bg-tertiary);
+  border-color: var(--vscode-border-light);
+}
+
+/* ============================================================
+   에디터 영역 - IDE 내부에만 적용
+   ============================================================ */
+
+.ide-container #editor {
+  width: 100%;
+  flex: 1 1 auto !important;
+  min-height: 200px !important;
+  max-height: calc(80vh - 60px) !important;
+  order: 1 !important;
+  margin: 0;
+  border: none;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 5;
+  background-color: var(--vscode-bg-primary);
+  overflow: hidden;
+  font-family: var(--vscode-font-editor);
+  font-size: var(--editor-font-size, 16px);
+}
+
+/* ============================================================
+   ACE 에디터 VSCode 테마 + 거터 60px 고정
+   ============================================================ */
+
+.ide-container .ace_editor {
+  background-color: var(--vscode-bg-primary) !important;
+  color: var(--vscode-text-primary) !important;
+  font-family: var(--vscode-font-editor) !important;
+  font-size: var(--editor-font-size, 16px) !important;
+  line-height: 1.4 !important;
+  border: none !important;
+  position: relative !important;
+}
+
+/* 🔥 거터 60px 고정 - 최우선 적용 */
+.ide-container .ace_gutter {
+  background-color: var(--vscode-bg-primary) !important;
+  color: var(--vscode-text-muted) !important;
+  border-right: 1px solid var(--vscode-border) !important;
+  font-family: var(--vscode-font-editor) !important;
+  font-size: calc(var(--editor-font-size, 16px) - 1px) !important;
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  z-index: 10 !important;
+}
+
+/* 🔥 코드 영역 60px 시작 - 최우선 적용 */
+.ide-container .ace_scroller {
+  background-color: var(--vscode-bg-primary) !important;
+  margin-left: 0px !important;
+  padding-left: 0 !important;
+}
+
+.ide-container .ace_content {
+  margin-left: 34px !important;
+  padding-left: 0 !important;
+}
+
+.ide-container .ace_layer {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.ide-container .ace_gutter-cell {
+  color: #858585 !important;
+  text-align: right !important;
+  padding-left: 4px !important;
+  padding-right: 8px !important;
+}
+
+.ide-container .ace_gutter-cell.ace_gutter-active-line {
+  color: #cccccc !important;
+  background-color: var(--vscode-bg-secondary) !important;
+}
+
+.ide-container .ace_line {
+  padding-left: 4px !important;
+}
+
+.ide-container .ace_active-line {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.ide-container .ace_cursor {
+  color: var(--vscode-text-primary) !important;
+  border-left: 2px solid var(--vscode-text-primary) !important;
+}
+
+.ide-container .ace_selection {
+  background-color: rgba(0, 122, 204, 0.2) !important;
+}
+
+/* ============================================================
+   Python 구문 강조 스타일
+   ============================================================ */
+
+.ide-container .ace_keyword {
+  color: #569cd6 !important;
+  font-weight: normal !important;
+}
+
+.ide-container .ace_string {
+  color: #ce9178 !important;
+}
+
+.ide-container .ace_comment {
+  color: #6a9955 !important;
+  font-style: italic !important;
+}
+
+.ide-container .ace_constant.ace_numeric {
+  color: #b5cea8 !important;
+}
+
+.ide-container .ace_function {
+  color: #dcdcaa !important;
+}
+
+.ide-container .ace_variable {
+  color: #9cdcfe !important;
+}
+
+.ide-container .ace_support.ace_function {
+  color: #4ec9b0 !important;
+}
+
+/* ============================================================
+   IDE 선택기 스타일 - 숨김 처리
+   ============================================================ */
+
+.ide-container .ide-selector {
+  display: none;
+  align-items: center;
+}
+
+.ide-container .ide-selector .btn-group {
+  border-radius: var(--vscode-border-radius);
+  overflow: hidden;
+}
+
+.ide-container #ace-btn,
+.ide-container #jupyter-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--vscode-border-width) solid var(--vscode-border);
+  background-color: var(--vscode-bg-secondary);
+  color: var(--vscode-text-primary);
+  font-family: var(--vscode-font-ui);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ide-container #ace-btn.active,
+.ide-container #jupyter-btn.active {
+  background-color: var(--vscode-accent);
+  border-color: var(--vscode-accent);
+  color: white;
+}
+
+.ide-container #ace-btn:hover:not(.active),
+.ide-container #jupyter-btn:hover:not(.active) {
+  background-color: var(--vscode-bg-tertiary);
+  border-color: var(--vscode-border-light);
+}
+
+/* ============================================================
+   IDE 폰트 및 톨 컨트롤 버튼 그룹 - 또르각한 버튼들
+   ============================================================ */
+
+/* IDE 폰트 컨트롤 그룹 */
+.ide-container .ide-font-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ide-container .ide-font-controls .btn-group {
+  display: flex;
+  align-items: center;
+  gap: 2px; /* 버튼 간 작은 간격 */
+  background: none;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+}
+
+/* IDE 컨트롤 버튼 통일 스타일 - 또르각한 너비 */
+.ide-container .ide-control-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  
+  /* 또르각한 배경과 테두리 */
+  background-color: var(--vscode-bg-secondary) !important;
+  color: var(--vscode-text-primary) !important;
+  border: 1px solid var(--vscode-border) !important;
+  border-radius: var(--vscode-border-radius) !important;
+  
+  /* 기본 설정 */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  flex-shrink: 0 !important;
+  
+  /* 폰트 설정 */
+  font-family: var(--vscode-font-ui) !important;
+  font-weight: normal !important;
+  line-height: 1 !important;
+}
+
+/* IDE 컨트롤 버튼 호버 효과 */
+.ide-container .ide-control-btn:hover {
+  background-color: var(--vscode-bg-tertiary) !important;
+  border-color: var(--vscode-border-light) !important;
+  color: var(--vscode-text-primary) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  z-index: 1 !important;
+}
+
+/* IDE 컨트롤 버튼 클릭 효과 */
+.ide-container .ide-control-btn:active,
+.ide-container .ide-control-btn.active {
+  background-color: var(--vscode-accent) !important;
+  border-color: var(--vscode-accent) !important;
+  color: white !important;
+  transform: translateY(0px) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* IDE 컨트롤 버튼 아이콘 */
+.ide-container .ide-control-btn i {
+  font-size: 14px !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  color: inherit !important;
+}
+
+/* IDE 컨트롤 버튼 포커스 */
+.ide-container .ide-control-btn:focus {
+  outline: 2px solid var(--vscode-accent) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 0.2rem rgba(var(--vscode-accent-rgb), 0.25) !important;
+}
+
+/* 버튼 그룹 내 특정 버튼들 개별 스타일링 */
+
+/* 폰트 축소 버튼 */
+.ide-container #font-decrease {
+  /* 기본 스타일 상속 */
+}
+
+/* 폰트 증가 버튼 */
+.ide-container #font-increase {
+  /* 기본 스타일 상속 */
+}
+
+/* 새로고침 버튼 */
+.ide-container #ide-refresh-btn {
+  /* 기본 스타일 상속 */
+}
+
+/* 다운로드 버튼 - 이미 위에 정의되어 있지만 그룹에서 사용시 오버라이드 */
+.ide-container .ide-font-controls #download-code-btn {
+  /* 그룹 내에서는 또르각한 너비로 설정 */
+  width: 32px !important;
+  height: 32px !important;
+}
+
+/* ============================================================
+   기존 IDE 폰트 크기 표시 숨김
+   ============================================================ */
+.ide-container #font-size-display {
+  display: none !important;
+}
+
+/* ============================================================
+   반응형 스타일 - IDE 컨트롤 버튼
+   ============================================================ */
+@media (max-width: 768px) {
+  .ide-container .ide-control-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    font-size: 12px !important;
+  }
+  
+  .ide-container .ide-control-btn i {
+    font-size: 12px !important;
+  }
+}
+
+.ide-container .ace_autocomplete {
+  background-color: var(--vscode-bg-secondary) !important;
+  border: var(--vscode-border-width) solid var(--vscode-border) !important;
+  border-radius: var(--vscode-border-radius) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  font-family: var(--vscode-font-editor) !important;
+  font-size: var(--editor-font-size, 16px) !important;
+  max-height: 300px !important;
+  min-width: 250px !important;
+}
+
+.ide-container .ace_autocomplete .ace_line {
+  color: var(--vscode-text-primary) !important;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  cursor: pointer !important;
+  font-size: calc(var(--editor-font-size, 16px) - 1px) !important;
+}
+
+.ide-container .ace_autocomplete .ace_line:last-child {
+  border-bottom: none !important;
+}
+
+.ide-container .ace_autocomplete .ace_line.ace_selected {
+  background-color: var(--vscode-accent) !important;
+  color: white !important;
+}
+
+.ide-container .ace_autocomplete .ace_completion-meta {
+  color: var(--vscode-text-secondary) !important;
+  margin-left: 8px !important;
+  font-size: 12px !important;
+}
+
+/* ============================================================
+   JupyterHub 컨테이너
+   ============================================================ */
+
+.ide-container #jupyter-ide-container {
+  width: 100%;
+  height: 100%;
+  border: none;
+  overflow: hidden;
+  flex-direction: column;
+  display: none;
+  box-sizing: border-box;
+  background-color: var(--vscode-bg-primary);
+}
+
+.ide-container #jupyter-ide-container.active {
+  display: flex;
+}
+
+.ide-container #jupyter-frame {
+  flex: 1;
+  border: none;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: none;
+  background-color: #ffffff;
+}
+
+.ide-container #jupyter-auth-message {
+  padding: 20px;
+  background-color: var(--vscode-bg-secondary);
+  border: var(--vscode-border-width) solid var(--vscode-border);
+  border-radius: var(--vscode-border-radius);
+  margin: 15px;
+  text-align: center;
+  color: var(--vscode-text-primary);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   반응형 스타일
+   ============================================================ */
+
+@media (max-width: 992px) {
+  .ide-container .code-editor-title {
+    font-size: 16px;
+  }
+  
+  .ide-container #editor {
+    min-height: 200px;
+    font-size: 16px;
+  }
+  
+  .ide-container .ace_editor {
+    font-size: 16px !important;
+  }
+  
+  .ide-container .ace_gutter {
+    font-size: 16px !important;
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+  }
+  
+  .ide-container .ace_scroller {
+    margin-left: 60px !important;
+  }
+  
+  .ide-container .ace_content {
+    margin-left: 60px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .ide-container .code-editor-title {
+    font-size: 12px;
+  }
+  
+  .ide-container #editor {
+    min-height: 150px;
+    font-size: 14px;
+  }
+  
+  .ide-container .ace_editor {
+    font-size: 16px !important;
+  }
+  
+  .ide-container .ace_gutter {
+    font-size: 16px !important;
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+  }
+
+  .ide-container #runCodeBtn,
+  .ide-container #clearOutputBtn,
+  .ide-container #showAnswerBtn {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .ide-container #restore-example-btn,
+  .ide-container #download-code-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+  }
+  
+  .ide-container #ide-explanation-btn {
+    padding: 3px 8px !important; /* 🔥 모바일에서 패딩 축소 */
+    font-size: 12px !important;
+    height: 28px !important; /* 🔥 모바일 높이 조정 */
+    min-height: 28px !important;
+    max-height: 28px !important;
+  }
+  
+  .ide-container #showAnswerBtn {
+    padding: 3px 8px !important; /* 🔥 모바일에서 패딩 축소 */
+    font-size: 12px !important;
+    height: 28px !important; /* 🔥 모바일 높이 조정 */
+    min-height: 28px !important;
+    max-height: 28px !important;
+  }
+  
+  .ide-container .ace_scroller {
+    margin-left: 60px !important;
+  }
+  
+  .ide-container .ace_content {
+    margin-left: 60px !important;
+  }
+}
+
+/* ============================================================
+   포커스 스타일
+   ============================================================ */
+
+.ide-container #runCodeBtn:focus,
+.ide-container #clearOutputBtn:focus,
+.ide-container #showAnswerBtn:focus,
+.ide-container #ace-btn:focus,
+.ide-container #jupyter-btn:focus {
+  outline: 2px solid var(--vscode-accent);
+  outline-offset: 2px;
+}

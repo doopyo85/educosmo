@@ -1,0 +1,637 @@
+/* 🔥 추가: 토글 버튼 스타일 */
+.layout-toggle-container {
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+}
+
+.layout-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: white;
+  color: #495057;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.layout-toggle-btn:hover {
+  background: #f8f9fa;
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+.layout-toggle-btn i {
+  font-size: 14px;
+}
+
+/* 🔥 추가: 콘텐츠 폰트사이즈 조절 버튼 스타일 */
+.content-font-controls {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 4px 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.content-font-controls .btn {
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.content-font-controls .font-size-display {
+  font-size: 12px;
+  color: #6c757d;
+  min-width: 30px;
+  text-align: center;
+}
+
+/* 🔥 추가: IDE 해설 버튼 스타일 */
+#ide-explanation-btn {
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+#ide-explanation-btn i {
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+#ide-explanation-btn:hover {
+  background-color: #0ea5e9;
+}
+
+/* 🔥 추가: IDE 다운로드 버튼 스타일 */
+#download-code-btn {
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+#download-code-btn i {
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+#download-code-btn:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+
+#download-code-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* 🔥 수정: problem-container 상대 위치 설정 */
+.problem-container {
+  position: relative;
+}/* ============================================================
+   common-layout.css - 컴포넌트 시스템 기본 레이아웃 구조
+   ============================================================ */
+
+/* 기본 설정 - 헤더 높이 고려 */
+body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 16px;
+}
+
+/* z-index 체계 정립 */
+:root {
+    --z-header: 100;
+    --z-navigation: 10;
+    --z-content: 5;
+    --z-modals: 200;
+    --z-tooltips: 300;
+}
+
+/* 메인 컨테이너 - 헤더 아래 전체 영역 */
+.main-container {
+    display: flex;
+    height: 100vh;
+    margin-top: 0; /* 🔥 수정: body padding에 맡김 */
+    max-height: calc(100vh - 70px); /* 🔥 수정: 헤더 높이 70px */
+    overflow: hidden;
+}
+
+/* 네비게이션 영역 - 고정 너비 */
+.nav-container {
+    width: 250px;
+    min-width: 250px;
+    height: 100%;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    position: relative;
+    z-index: var(--z-navigation);
+    flex-shrink: 0;
+}
+
+/* 네비게이션 메뉴 스타일 */
+.nav-container ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-container .menu-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.nav-container .menu-item:hover {
+    background-color: #e9ecef;
+}
+
+.nav-container .menu-item.active {
+    background-color: #e7f1ff;
+    color: #0d6efd;
+}
+
+.nav-container .menu-item a {
+    color: #333;
+    text-decoration: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-container .menu-item a:hover {
+    color: #007bff;
+}
+
+/* mainArea - 메인 콘텐츠 영역 (표준화된 flex 레이아웃) */
+.mainArea {
+    display: flex;
+    flex: 1;
+    height: 100%;
+    width: calc(100% - 250px); /* 네비게이션 제외 */
+    position: relative;
+    overflow: hidden;
+    flex-wrap: nowrap; /* 컴포넌트들이 줄바꿈 되지 않도록 */
+    align-items: stretch; /* 모든 컴포넌트가 같은 높이를 가지도록 */
+}
+
+/* 컴포넌트 기본 스타일 */
+.component {
+    position: relative;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+/* 컴포넌트 가시성 제어 */
+.component-visible {
+    display: flex !important;
+}
+
+.component-hidden {
+    display: none !important;
+    width: 0 !important;
+    flex: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+/* 콘텐츠 컨테이너 - 문제/내용 표시 영역 */
+.content-container {
+    width: 50% !important;
+    height: 100% !important;
+    flex: 0 0 50% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
+    z-index: var(--z-content) !important;
+    overflow: hidden !important;
+    background-color: #ffffff !important;
+    border-right: 1px solid #dee2e6 !important;
+    box-sizing: border-box !important;
+}
+
+/* IDE 컨테이너 - 코드 편집 영역 (기본 표시 상태로 변경) */
+.ide-container {
+width: 50%; /* 기본값: 콘텐츠와 1:1 비율 */
+height: 100%;
+flex: 0 0 50%; /* flex-grow: 0, flex-shrink: 0, flex-basis: 50% */
+display: flex; /* 🔥 기본 표시로 변경 - ACE 에디터 초기화 문제 해결 */
+flex-direction: column;
+position: relative;
+overflow: hidden;
+background-color: #1e1e1e;
+color: #d4d4d4;
+}
+
+/* 퀴즈 컨테이너 - 문제 풀이 영역 */
+.quiz-container {
+    width: 50%; /* 기본값: 콘텐츠와 1:1 비율 */
+    height: 100%;
+    flex: 0 0 50%; /* flex-grow: 0, flex-shrink: 0, flex-basis: 50% */
+    display: none; /* 기본은 숨김 */
+    flex-direction: column;
+    position: relative;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    border-left: 1px solid #dee2e6;
+}
+
+/* PPT 뷰어 컨테이너 */
+.ppt-viewer {
+    width: 100%; /* PPT는 전체 화면 사용 */
+    height: 100%;
+    flex: 1;
+    display: none; /* 기본은 숨김 */
+    position: relative;
+    overflow: hidden;
+    background-color: #ffffff;
+}
+
+/* 레이아웃 상태별 스타일 */
+
+/* HTML 레이아웃: 콘텐츠만 표시 (강화) */
+.layout-html .content-container {
+    width: 100% !important;
+    flex: 1 !important;
+    max-width: 100% !important;
+}
+
+.layout-html .ide-container,
+.layout-html .quiz-container,
+.layout-html .ppt-viewer {
+    display: none !important;
+    width: 0 !important;
+    flex: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+/* IDE 레이아웃: 콘텐츠 + IDE */
+.layout-ide .content-container {
+    width: 50% !important;
+    flex: 0 0 50% !important;
+}
+
+.layout-ide .ide-container {
+    display: flex !important;
+    width: 50% !important;
+    flex: 0 0 50% !important;
+}
+
+.layout-ide .quiz-container,
+.layout-ide .ppt-viewer {
+    display: none !important;
+    width: 0 !important;
+    flex: 0 !important;
+}
+
+/* 퀴즈 레이아웃: 콘텐츠 + 퀴즈 */
+.layout-quiz .content-container {
+    width: 50% !important;
+    flex: 0 0 50% !important;
+}
+
+.layout-quiz .quiz-container {
+    display: flex !important;
+    width: 50% !important;
+    flex: 0 0 50% !important;
+}
+
+.layout-quiz .ide-container,
+.layout-quiz .ppt-viewer {
+    display: none !important;
+    width: 0 !important;
+    flex: 0 !important;
+}
+
+/* PPT 레이아웃: PPT만 표시 */
+.layout-ppt .ppt-viewer {
+    display: block !important;
+    width: 100% !important;
+    flex: 1 !important;
+}
+
+.layout-ppt .content-container,
+.layout-ppt .ide-container,
+.layout-ppt .quiz-container {
+    display: none !important;
+    width: 0 !important;
+    flex: 0 !important;
+}
+
+/* 기본 스크롤바 스타일 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 다크 테마 스크롤바 (IDE 영역) */
+.ide-container::-webkit-scrollbar-track {
+    background: #2d2d2d;
+}
+
+.ide-container::-webkit-scrollbar-thumb {
+    background: #555;
+}
+
+.ide-container::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+/* 반응형 레이아웃 */
+@media (max-width: 1200px) {
+    /* 중간 화면에서는 네비게이션 축소 */
+    .nav-container {
+        width: 200px;
+        min-width: 200px;
+    }
+    
+    .mainArea {
+        width: calc(100% - 200px);
+    }
+}
+
+@media (max-width: 992px) {
+    /* 태블릿에서는 세로 레이아웃 */
+    .mainArea {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .content-container,
+    .ide-container,
+    .quiz-container {
+        width: 100% !important;
+        height: 50% !important;
+        flex: 0 0 50% !important;
+    }
+    
+    /* 레이아웃별 반응형 조정 */
+    .layout-html .content-container {
+        height: 100% !important;
+        flex: 1 !important;
+    }
+    
+    .layout-ppt .ppt-viewer {
+        height: 100% !important;
+        flex: 1 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    /* 모바일에서는 전체 화면 단일 컴포넌트 */
+    .main-container {
+        flex-direction: column;
+        margin-top: 0;
+        max-height: 100vh;
+    }
+    
+    .nav-container {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        max-height: 150px;
+        order: -1; /* 네비게이션을 맨 위로 */
+    }
+    
+    .mainArea {
+        width: 100%;
+        height: calc(100vh - 150px);
+        flex-direction: column;
+    }
+    
+    .content-container,
+    .ide-container,
+    .quiz-container,
+    .ppt-viewer {
+        width: 100% !important;
+        height: 100% !important;
+        flex: 1 !important;
+    }
+    
+    /* 모바일에서는 한 번에 하나의 컴포넌트만 표시 */
+    .layout-ide .content-container {
+        display: none !important;
+    }
+    
+    .layout-quiz .content-container {
+        display: none !important;
+    }
+}
+
+/* 🔥 추가: 동적 너비 조절 CSS 변수 시스템 */
+:root {
+  --content-width: 50%;
+  --ide-width: 50%;
+}
+
+/* 🔥 추가: 커스텀 레이아웃 - 동적 너비 조절 */
+.custom-layout .content-container {
+    width: var(--content-width) !important;
+    flex: 0 0 var(--content-width) !important;
+}
+
+.custom-layout .ide-container {
+    width: var(--ide-width) !important;
+    flex: 0 0 var(--ide-width) !important;
+}
+
+/* 🔥 추가: IDE 토글 버튼 스타일 */
+.ide-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+.ide-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.ide-toggle-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+.ide-toggle-btn i {
+    font-size: 16px;
+}
+
+.ide-toggle-btn .btn-text {
+    font-size: 13px;
+}
+
+/* 🔥 추가: 너비 조절 핸들 스타일 */
+.content-width-resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 8px;
+    height: 100%;
+    background: transparent;
+    cursor: col-resize;
+    z-index: 10;
+    transition: background-color 0.2s ease;
+}
+
+.content-width-resize-handle:hover {
+    background: rgba(0, 123, 255, 0.1);
+}
+
+.content-width-resize-handle:hover .resize-handle-grip {
+    opacity: 1;
+    transform: scaleY(1.2);
+}
+
+.content-width-resize-handle .resize-handle-grip {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 3px;
+    height: 40px;
+    background: #007bff;
+    border-radius: 2px;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+/* 🔥 추가: 리사이즈 중일 때 커서 고정 */
+body.resizing,
+body.resizing * {
+    cursor: col-resize !important;
+    user-select: none !important;
+}
+
+/* 🔥 추가: 문제 상단 네비게이션 레이아웃 개선 */
+.problem-top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    gap: 16px;
+}
+
+.problem-top-nav .problem-title {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+}
+
+.problem-navigation-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 컴포넌트 전환 애니메이션 */
+@media (prefers-reduced-motion: no-preference) {
+    .content-container,
+    .ide-container,
+    .quiz-container,
+    .ppt-viewer {
+        transition: width 0.3s ease, flex 0.3s ease, opacity 0.2s ease;
+    }
+    
+    /* 🔥 추가: 리사이즈 핸들 애니메이션 */
+    .content-width-resize-handle {
+        transition: background-color 0.2s ease;
+    }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+    .content-container,
+    .ide-container,
+    .quiz-container,
+    .ppt-viewer {
+        transition: none;
+    }
+    
+    .content-width-resize-handle {
+        transition: none;
+    }
+}
+
+/* 포커스 스타일 */
+.nav-container .menu-item:focus {
+    outline: 2px solid #0d6efd;
+    outline-offset: -2px;
+}
+
+/* 🔥 추가: IDE 토글 버튼 포커스 스타일 */
+.ide-toggle-btn:focus {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+/* 🔥 추가: 리사이즈 핸들 접근성 */
+.content-width-resize-handle:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* 🔥 추가: 너비 조절 중 시각적 피드백 */
+.custom-layout .content-container {
+    transition: width 0.1s ease;
+}
+
+.custom-layout .ide-container {
+    transition: width 0.1s ease;
+}
+
+/* 🔥 추가: 최소/최대 너비 제한 시각적 표시 */
+.content-container[data-width-limit="min"] {
+    box-shadow: inset 3px 0 0 #ff6b6b;
+}
+
+.content-container[data-width-limit="max"] {
+    box-shadow: inset -3px 0 0 #ff6b6b;
+}

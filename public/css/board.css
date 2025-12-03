@@ -1,0 +1,240 @@
+/* =============================================
+   📌 기본 레이아웃 스타일
+   ============================================= */
+   body {
+    background: #F5F5F5; /* 연한 회색 배경 */
+  }
+  
+  /* =============================================
+     📌 채팅 컨테이너 스타일
+     ============================================= */
+  .direct-message {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    height: 80vh; /* 🔥 화면 높이에 맞춰 고정 */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* 📌 메시지 목록 (스크롤 가능하도록 설정) */
+  .messages {
+    flex-grow: 1; /* 🔥 가변 크기 */
+    overflow-y: auto; /* 🔥 내부 스크롤 활성화 */
+    max-height: 70vh; /* 🔥 컨테이너보다 커지지 않도록 설정 */
+    padding-right: 10px; /* 🔥 스크롤바 여백 */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+  
+  /* =============================================
+     📌 메시지 및 말풍선 스타일
+     ============================================= */
+  /* 📌 메시지 컨테이너 (프로필 왼쪽 정렬) */
+  .message-container {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+  
+  /* 📌 프로필 이미지 (왼쪽 정렬 유지) */
+  .profile-wrapper {
+    margin-right: 8px; /* 말풍선과 간격 조정 */
+  }
+  
+  .favicon {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+  }
+  
+  /* 📌 메시지 컨텐츠 영역 */
+  .message-content {
+    flex-grow: 1;
+    min-width: 0; /* flexbox 내에서 오버플로우를 적절히 처리 */
+    max-width: calc(100% - 50px); /* 프로필 이미지와 여백 고려 */
+  }
+  
+  /* 🔥 말풍선 너비 조정 - 내용에 맞게 자동 조절되도록 수정 */
+  .message-bubble {
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    word-wrap: break-word;
+    min-width: 150px; /* 최소 너비 설정 */
+  }
+  
+  /* 📌 보낸 메시지 스타일 */
+  .message-container.to .message-bubble {
+    background: #E8EAF6;
+    color: black;
+  }
+  
+  /* 🔥 메시지 헤더 (아이디 + 날짜) */
+  .message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  
+  /* 📌 날짜 스타일 */
+  .message-time {
+    font-size: 12px;
+    color: gray;
+    text-align: right;
+    margin-left: 10px; /* 🔥 아이디와 간격 */
+  }
+  
+  /* 📌 삭제 버튼 스타일 */
+  .delete-btn {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    color: inherit;
+    text-decoration: none;
+    opacity: 0.7;
+  }
+  
+  .delete-btn:hover {
+    opacity: 1;
+    color: darkred;
+  }
+  
+  /* =============================================
+     📌 입력창 스타일
+     ============================================= */
+  /* 📌 입력창 컨테이너 */
+  .new {
+    background: white;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+  }
+  
+  /* 📌 입력 필드 */
+  .new-input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: #F5F5F5;
+    border-radius: 20px;
+    font-size: 16px;
+    outline: none;
+  }
+  
+  /* 📌 전송 버튼 */
+  .material-button {
+    background: green; /* 초록색 */
+    color: white;
+    border: none;
+    padding: 10px 20px; /* 가로 길이 조정 */
+    border-radius: 10px; /* 둥근 네모 */
+    cursor: pointer;
+    margin-left: 8px;
+    font-size: 16px;
+  }
+  
+  /* =============================================
+     📌 업무 카드 스타일
+     ============================================= */
+  /* 📌 업무 카드 컨테이너 */
+  .task-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  
+  /* 📌 업무 카드 스타일 */
+  .task-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+    width: 100%;
+    max-width: 400px; /* 카드 최대 너비 */
+  }
+  
+  /* 📌 업무명 (A열) */
+  .card-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  
+  /* 📌 코멘트 (B열) */
+  .card-comment {
+    font-size: 0.9rem;
+    color: gray;
+    margin-bottom: 10px;
+  }
+  
+  /* 📌 진행률 바 */
+  .progress {
+    height: 10px;
+    background: #e0e0e0;
+    border-radius: 5px;
+  }
+  
+  .progress-bar {
+    background: #4CAF50;
+    height: 100%;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    color: white;
+    text-align: center;
+  }
+  
+  /* =============================================
+     📌 너구리 이미지 및 말풍선 스타일
+     ============================================= */
+  /* ✅ 너구리 이미지 크기 및 둥근 테두리 */
+  .naguri-img {
+    width: 250px;  /* 이미지 크기 조정 */
+    height: auto;
+    border-radius: 15px; /* 둥근 사각형 테두리 */
+    display: block;
+    margin: 0 auto;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+  }
+  
+  /* ✅ 말풍선 스타일 */
+  .speech-bubble {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+    box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* ✅ 말풍선 꼬리 추가 */
+  .speech-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 8px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.7) transparent transparent transparent;
+  }

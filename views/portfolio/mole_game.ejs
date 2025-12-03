@@ -1,0 +1,247 @@
+<!-- views/portfolio/mole_game.ejs -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>동물 클릭 게임</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .game-container {
+      padding: 20px;
+      margin-bottom: 100px;
+    }
+    
+    .game-content {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      gap: 30px;
+      padding: 20px;
+    }
+
+    .left-panel {
+      text-align: center;
+    }
+
+    .game-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f8f9fa;
+      padding: 10px 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+    }
+    
+    .control-item {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    #user-info {
+      color: #4CAF50;
+    }
+    
+    #click-game-area {
+      width: 600px;
+      height: 400px;
+      position: relative;
+      background-color: #d3f8d3;
+      border: 2px solid #4CAF50;
+      border-radius: 10px;
+      margin-top: 10px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+    }
+    
+    .grid-cell {
+      position: relative;
+      border: 1px dashed #7FC77F;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #e8f8e8;
+    }
+    
+    .grid-cell:nth-child(odd) {
+      background-color: #d3f8d3;
+    }
+
+    .mole {
+      width: 60px;
+      height: 60px;
+      position: absolute;
+      font-size: 50px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s;
+      z-index: 10;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .mole:active {
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+
+    #ranking {
+      width: 300px;
+      border-left: 2px dashed #aaa;
+      padding-left: 20px;
+    }
+
+    #ranking h2 {
+      margin-top: 0;
+    }
+
+    .ranking-entry {
+      font-size: 16px;
+      margin: 10px 0;
+      padding: 8px;
+      background-color: #f5f5f5;
+      border-radius: 5px;
+    }
+    
+    .ranking-entry.current-user {
+      background-color: #e7f5e7;
+      border-left: 3px solid #4CAF50;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 15% auto;
+      padding: 20px;
+      width: 300px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    
+    .trophy {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+    
+    .game-instructions {
+      background-color: #f8f9fa;
+      padding: 10px 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      text-align: left;
+    }
+    
+    @keyframes pop {
+      0% { transform: translate(-50%, -50%) scale(0.5); }
+      50% { transform: translate(-50%, -50%) scale(1.1); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+    
+    .mole {
+      animation: pop 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <%- include('../partials/header') %>
+  
+  <div class="container game-container">
+    <div class="game-content">
+      <div class="left-panel">
+        <h1>🐾 동물 클릭 게임 👀</h1>
+        
+        <div class="game-controls">
+          <div class="control-item" id="user-info">로그인 중...</div>
+          <div class="control-item" id="score">점수: 0</div>
+          <div class="control-item" id="timer">남은 시간: 30초</div>
+          <button id="start-button" class="btn btn-success">게임 시작</button>
+        </div>
+        <div id="click-game-area">
+          <!-- 격자 셀은 자바스크립트로 생성됩니다 -->
+        </div>
+      </div>
+
+      <div id="ranking">
+        <h2>🏆 게임 랭킹</h2>
+        
+        <div class="game-instructions">
+          <p><strong>[클릭 게임]</strong> 화면에 나타나는 동물들을 빠르게 클릭하세요! 더 빨리 움직이는 동물일수록 높은 점수를 얻을 수 있습니다. 거북이(🐢)는 오래 머물지만 가장 높은 점수를 줍니다.</p>
+        </div>
+        
+        <div id="ranking-list">
+          <p>로딩 중...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="game-end-modal" class="modal">
+    <div class="modal-content">
+      <div class="trophy">🏆</div>
+      <h3>게임 종료!</h3>
+      <p id="final-score">최종 점수: 0점</p>
+      <button id="close-modal" class="btn btn-primary">확인</button>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // 공통 변수
+    let currentUserID = '';
+    
+    // 사용자 정보 가져오기
+    async function getCurrentUser() {
+      try {
+        document.getElementById('user-info').textContent = '게스트 플레이어';
+        
+        const response = await fetch('/api/get-user-session');
+        if (!response.ok) {
+          console.error('세션 정보를 가져오는데 실패했습니다:', response.status);
+          return 'guest';
+        }
+        
+        const data = await response.json();
+        
+        if (data.is_logined) {
+          currentUserID = data.userID;
+          document.getElementById('user-info').textContent = `플레이어: ${currentUserID}`;
+          return data.userID;
+        } else {
+          return 'guest';
+        }
+      } catch (error) {
+        console.error('사용자 정보를 가져오는 중 오류가 발생했습니다:', error);
+        return 'guest';
+      }
+    }
+    
+    // 페이지 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', async () => {
+      await getCurrentUser();
+    });
+  </script>
+  
+  <script src="/js/games/click_game.js"></script>
+</body>
+</html>

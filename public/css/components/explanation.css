@@ -1,0 +1,904 @@
+/**
+ * explanation.css - 해설 팝업 기능 스타일시트
+ * 플로팅 버튼과 해설 팝업의 모든 스타일을 정의합니다.
+ * 
+ * 작성일: 2025년 6월 29일
+ * 버전: 1.2.0 - 투명 배경 + 회색 테두리 스타일
+ */
+
+/* =====================================================
+   🔥 플로팅 해설 버튼 스타일 (레거시)
+   ===================================================== */
+
+.explanation-floating-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  z-index: 100;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+/* =====================================================
+   🔥 네비게이션 해설 버튼 스타일 (NEW)
+   ===================================================== */
+
+.explanation-nav-btn {
+  /* 기본 스타일 */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  
+  /* 🔥 수정: 투명 배경 + 회색 테두리 */
+  border: 2px solid #6c757d;
+  border-radius: 8px;
+  background: transparent;
+  color: #6c757d;
+  
+  /* 텍스트 */
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  
+  /* 커서 및 애니메이션 */
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* 초기 숨김 상태 */
+  opacity: 0.7;
+  transform: scale(0.95);
+}
+
+/* 해설 버튼 활성화 상태 */
+.explanation-nav-btn.active {
+  opacity: 1;
+  transform: scale(1);
+  /* 🔥 수정: 활성화 시 파란색 테두리 */
+  border-color: #0d6efd;
+  color: #0d6efd;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);
+}
+
+/* 해설 버튼 호버 효과 */
+.explanation-nav-btn:hover {
+  /* 🔥 수정: 호버 시 연한 파란색 배경 */
+  background: rgba(13, 110, 253, 0.1);
+  border-color: #0d6efd;
+  color: #0d6efd;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+  text-decoration: none;
+}
+
+/* 해설 버튼 클릭 효과 */
+.explanation-nav-btn:active {
+  transform: translateY(0) scale(0.98);
+  /* 🔥 수정: 클릭 시 진한 파란색 배경 */
+  background: rgba(13, 110, 253, 0.2);
+  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
+}
+
+/* 해설 버튼 포커스 효과 */
+.explanation-nav-btn:focus {
+  outline: none;
+  /* 🔥 수정: 포커스 링 색상 조정 */
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+
+/* 비활성화 상태 */
+.explanation-nav-btn:disabled,
+.explanation-nav-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  /* 🔥 수정: 비활성화 시 회색 유지 */
+  background: transparent;
+  border-color: #6c757d;
+  color: #6c757d;
+  transform: none;
+  box-shadow: none;
+}
+
+.explanation-nav-btn:disabled:hover,
+.explanation-nav-btn.disabled:hover {
+  /* 🔥 수정: 비활성화 호버 시 변화 없음 */
+  background: transparent;
+  border-color: #6c757d;
+  color: #6c757d;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 해설 버튼 아이콘 */
+.explanation-nav-btn i {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.explanation-nav-btn:hover i {
+  transform: scale(1.1);
+}
+
+/* 해설 없음 상태 */
+.explanation-nav-btn.no-explanation {
+  /* 🔥 수정: 해설 없음 시도 깨끗한 회색 */
+  background: transparent;
+  border-color: #adb5bd;
+  color: #adb5bd;
+  cursor: help;
+}
+
+.explanation-nav-btn.no-explanation:hover {
+  /* 🔥 수정: 호버 시 약간 진하게 */
+  background: rgba(173, 181, 189, 0.1);
+  border-color: #6c757d;
+  color: #6c757d;
+  transform: none;
+}
+
+/* =====================================================
+   🔥 팝업 활성화 시 버튼 상태 변경
+   ===================================================== */
+
+/* 팝업이 열린 상태의 버튼 */
+.explanation-nav-btn.popup-open {
+  /* 🔥 수정: 팝업 열린 상태는 빨간색 */
+  background: rgba(220, 53, 69, 0.1);
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.explanation-nav-btn.popup-open:hover {
+  background: rgba(220, 53, 69, 0.2);
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+/* =====================================================
+   🔥 툴팁 스타일 (해설 없음 상태용)
+   ===================================================== */
+
+.explanation-nav-btn[data-tooltip] {
+  position: relative;
+}
+
+.explanation-nav-btn[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  
+  /* 툴팁 스타일 */
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  
+  /* 애니메이션 */
+  opacity: 0;
+  animation: tooltip-fade-in 0.2s ease forwards;
+}
+
+.explanation-nav-btn[data-tooltip]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  
+  /* 화살표 */
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid rgba(0, 0, 0, 0.8);
+  z-index: 1001;
+  
+  /* 애니메이션 */
+  opacity: 0;
+  animation: tooltip-fade-in 0.2s ease forwards;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* =====================================================
+   🔥 해설 팝업 스타일
+   ===================================================== */
+
+.explanation-popup {
+  /* 기본 위치 및 크기 */
+  position: fixed;
+  width: 700px; /* 🔥 수정: 500px → 700px */
+  max-width: 90vw;
+  max-height: 80vh;
+  
+  /* 모양 */
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  
+  /* 그림자 및 테두리 */
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e3f2fd;
+  
+  /* 레이어 */
+  z-index: 1050;
+  
+  /* 애니메이션 */
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  
+  /* 초기 상태 */
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+/* 말풍선 화살표 */
+.explanation-popup::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 40px;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 12px solid #e3f2fd;
+  z-index: 1;
+}
+
+.explanation-popup::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 41px;
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
+  border-bottom: 11px solid white;
+  z-index: 2;
+}
+
+/* =====================================================
+   🔥 팝업 헤더 스타일
+   ===================================================== */
+
+.explanation-popup .popup-header {
+  /* 레이아웃 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  
+  /* 🔥 수정: 배경색 개선 (시인성 향상) */
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-bottom: 1px solid #e0e0e0;
+  
+  /* 드래그 가능 표시 */
+  cursor: move;
+  user-select: none;
+}
+
+.explanation-popup .popup-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.explanation-popup .popup-title i {
+  color: #667eea;
+  font-size: 20px;
+}
+
+.explanation-popup .popup-close-btn {
+  /* 크기 및 모양 */
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  
+  /* 배경 및 색상 */
+  background: rgba(255, 255, 255, 0.8);
+  color: #666;
+  
+  /* 레이아웃 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* 커서 및 애니메이션 */
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.explanation-popup .popup-close-btn:hover {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  transform: scale(1.1);
+}
+
+.explanation-popup .popup-close-btn:active {
+  transform: scale(0.95);
+}
+
+/* =====================================================
+   🔥 팝업 콘텐츠 스타일
+   ===================================================== */
+
+.explanation-popup .popup-content {
+  /* 크기 및 스크롤 */
+  max-height: calc(80vh - 80px);
+  overflow-y: auto;
+  
+  /* 스크롤바 스타일 */
+  scrollbar-width: thin;
+  scrollbar-color: #ccc #f5f5f5;
+}
+
+.explanation-popup .popup-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.explanation-popup .popup-content::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.explanation-popup .popup-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.explanation-popup .popup-content::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* =====================================================
+   🔥 해설 본문 스타일
+   ===================================================== */
+
+.explanation-popup .explanation-body {
+  padding: 24px;
+  line-height: 1.7;
+  font-size: 15px;
+  /* 🔥 수정: 배경색과 텍스트 색상 개선 */
+  background: #ffffff;
+  color: #1a202c !important; /* 더 진한 색상으로 변경 + !important 추가 */
+}
+
+/* 🔥 전체 텍스트 요소의 색상을 강제 지정 */
+.explanation-popup .explanation-body *:not(code):not(pre) {
+  color: #2d3748 !important;
+}
+
+/* 제목 스타일 */
+.explanation-popup .explanation-body h1,
+.explanation-popup .explanation-body h2,
+.explanation-popup .explanation-body h3,
+.explanation-popup .explanation-body h4,
+.explanation-popup .explanation-body h5,
+.explanation-popup .explanation-body h6 {
+  /* 🔥 수정: 제목 색상 개선 */
+  color: #1a202c !important;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.explanation-popup .explanation-body h1 {
+  font-size: 24px;
+  /* 🔥 수정: 경계선 색상 개선 */
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.explanation-popup .explanation-body h2 {
+  font-size: 20px;
+  /* 🔥 수정: h2 색상 개선 */
+  color: #3182ce !important;
+}
+
+.explanation-popup .explanation-body h3 {
+  font-size: 18px;
+  color: #4a5568 !important;
+}
+
+/* 문단 스타일 */
+.explanation-popup .explanation-body p {
+  margin-bottom: 16px;
+  text-align: justify;
+  /* 🔥 수정: 문단 텍스트 색상 명시적 지정 */
+  color: #2d3748 !important;
+}
+
+/* 리스트 스타일 */
+.explanation-popup .explanation-body ul,
+.explanation-popup .explanation-body ol {
+  margin: 16px 0;
+  padding-left: 24px;
+  /* 🔥 수정: 리스트 텍스트 색상 */
+  color: #2d3748 !important;
+}
+
+.explanation-popup .explanation-body li {
+  margin-bottom: 8px;
+  /* 🔥 수정: 리스트 아이템 텍스트 색상 */
+  color: #2d3748 !important;
+}
+
+/* 코드 블록 스타일 */
+.explanation-popup .explanation-body pre {
+  /* 🔥 수정: 코드 블록 배경 개선 */
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  overflow-x: auto;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.explanation-popup .explanation-body code {
+  /* 🔥 수정: 인라인 코드 스타일 개선 */
+  background: #edf2f7;
+  color: #e53e3e;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.explanation-popup .explanation-body pre code {
+  background: none;
+  color: #2d3748;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* 인용구 스타일 */
+.explanation-popup .explanation-body blockquote {
+  /* 🔥 수정: 인용구 스타일 개선 */
+  border-left: 4px solid #3182ce;
+  margin: 16px 0;
+  padding: 12px 16px;
+  background: #f7fafc;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: #4a5568;
+}
+
+/* 표 스타일 */
+.explanation-popup .explanation-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+  /* 🔥 수정: 표 배경색 개선 */
+  background: #ffffff;
+}
+
+.explanation-popup .explanation-body th,
+.explanation-popup .explanation-body td {
+  /* 🔥 수정: 표 셀 스타일 개선 */
+  border: 1px solid #cbd5e0;
+  padding: 12px 16px;
+  text-align: left;
+  color: #2d3748;
+}
+
+.explanation-popup .explanation-body th {
+  /* 🔥 수정: 헤더 셀 스타일 개선 */
+  background: #edf2f7;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.explanation-popup .explanation-body tr:nth-child(even) {
+  /* 🔥 수정: 번갈아 가며 나오는 행 스타일 개선 */
+  background: #f7fafc;
+}
+
+.explanation-popup .explanation-body tr:nth-child(odd) {
+  background: #ffffff;
+}
+
+/* 링크 스타일 */
+.explanation-popup .explanation-body a {
+  /* 🔥 수정: 링크 색상 개선 */
+  color: #3182ce;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(49, 130, 206, 0.3);
+  transition: all 0.2s ease;
+}
+
+.explanation-popup .explanation-body a:hover {
+  color: #2c5282;
+  border-bottom-color: #2c5282;
+}
+
+/* 이미지 스타일 */
+.explanation-popup .explanation-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* =====================================================
+   🔥 로딩 및 오류 상태 스타일
+   ===================================================== */
+
+.explanation-popup .explanation-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  color: #666;
+}
+
+.explanation-popup .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.explanation-popup .explanation-loading p {
+  margin: 0;
+  font-size: 15px;
+}
+
+.explanation-popup .explanation-error {
+  padding: 24px;
+  text-align: center;
+  color: #dc3545;
+}
+
+.explanation-popup .explanation-error p {
+  margin: 0;
+  font-size: 15px;
+}
+
+/* =====================================================
+   🔥 네비게이션 버튼 반응형 디자인
+   ===================================================== */
+
+/* 태블릿 (768px 이하) */
+@media (max-width: 768px) {
+  .explanation-nav-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    gap: 6px;
+  }
+  
+  .explanation-nav-btn i {
+    font-size: 14px;
+  }
+  
+  .explanation-popup {
+    width: 95vw;
+    max-height: 85vh;
+    border-radius: 12px;
+  }
+  
+  .explanation-popup .popup-header {
+    padding: 16px 20px;
+  }
+  
+  .explanation-popup .popup-title {
+    font-size: 16px;
+  }
+  
+  .explanation-popup .explanation-body {
+    padding: 20px;
+    font-size: 14px;
+  }
+  
+  .explanation-popup .explanation-body h1 {
+    font-size: 20px;
+  }
+  
+  .explanation-popup .explanation-body h2 {
+    font-size: 18px;
+  }
+  
+  .explanation-popup .explanation-body h3 {
+    font-size: 16px;
+  }
+}
+
+/* 모바일 (480px 이하) */
+@media (max-width: 480px) {
+  .explanation-nav-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+    gap: 4px;
+    border-radius: 6px;
+  }
+  
+  .explanation-nav-btn i {
+    font-size: 13px;
+  }
+  
+  /* 작은 화면에서는 텍스트 숨기고 아이콘만 표시 */
+  .explanation-nav-btn .btn-text {
+    display: none;
+  }
+  
+  .explanation-nav-btn {
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+    justify-content: center;
+  }
+  
+  .explanation-popup {
+    width: 98vw;
+    max-height: 90vh;
+    border-radius: 8px;
+    margin: 10px;
+  }
+  
+  .explanation-popup .popup-header {
+    padding: 12px 16px;
+  }
+  
+  .explanation-popup .popup-title {
+    font-size: 15px;
+    gap: 8px;
+  }
+  
+  .explanation-popup .popup-close-btn {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .explanation-popup .explanation-body {
+    padding: 16px;
+    font-size: 13px;
+  }
+  
+  .explanation-popup .explanation-body pre {
+    padding: 12px;
+    font-size: 12px;
+  }
+  
+  .explanation-popup .explanation-body code {
+    font-size: 12px;
+  }
+}
+
+/* =====================================================
+   🔥 다크 모드 지원 (선택적)
+   ===================================================== */
+
+@media (prefers-color-scheme: dark) {
+  .explanation-nav-btn {
+    /* 🔥 수정: 다크모드에서도 투명 배경 */
+    background: transparent;
+    border-color: #adb5bd;
+    color: #adb5bd;
+  }
+  
+  .explanation-nav-btn:hover {
+    background: rgba(13, 110, 253, 0.15);
+    border-color: #0d6efd;
+    color: #0d6efd;
+  }
+  
+  .explanation-nav-btn.active {
+    border-color: #0d6efd;
+    color: #0d6efd;
+  }
+  
+  .explanation-nav-btn.no-explanation {
+    background: transparent;
+    border-color: #6c757d;
+    color: #6c757d;
+  }
+  
+  .explanation-nav-btn.popup-open {
+    background: rgba(220, 53, 69, 0.15);
+    border-color: #dc3545;
+    color: #dc3545;
+  }
+  
+  .explanation-popup {
+    background: #2c3e50;
+    border-color: #34495e;
+    color: #ecf0f1;
+  }
+  
+  .explanation-popup .popup-header {
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+    border-bottom-color: #4a5f7a;
+  }
+  
+  .explanation-popup .popup-title {
+    color: #ecf0f1;
+  }
+  
+  .explanation-popup .popup-close-btn {
+    background: rgba(236, 240, 241, 0.1);
+    color: #bdc3c7;
+  }
+  
+  .explanation-popup .popup-close-btn:hover {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+  }
+  
+  .explanation-popup .explanation-body {
+    color: #ecf0f1;
+  }
+  
+  .explanation-popup .explanation-body h1,
+  .explanation-popup .explanation-body h2,
+  .explanation-popup .explanation-body h3,
+  .explanation-popup .explanation-body h4,
+  .explanation-popup .explanation-body h5,
+  .explanation-popup .explanation-body h6 {
+    color: #ecf0f1;
+  }
+  
+  .explanation-popup .explanation-body h1 {
+    border-bottom-color: #4a5f7a;
+  }
+  
+  .explanation-popup .explanation-body h2 {
+    color: #7c8af0;
+  }
+  
+  .explanation-popup .explanation-body pre {
+    background: #34495e;
+    border-color: #4a5f7a;
+  }
+  
+  .explanation-popup .explanation-body code {
+    background: #4a5f7a;
+    color: #e74c3c;
+  }
+  
+  .explanation-popup .explanation-body blockquote {
+    background: #34495e;
+    border-left-color: #7c8af0;
+    color: #bdc3c7;
+  }
+  
+  .explanation-popup .explanation-body th {
+    background: #34495e;
+    color: #ecf0f1;
+  }
+  
+  .explanation-popup .explanation-body td {
+    border-color: #4a5f7a;
+  }
+  
+  .explanation-popup .explanation-body tr:nth-child(even) {
+    background: #34495e;
+  }
+  
+  .explanation-popup .explanation-body a {
+    color: #7c8af0;
+    border-bottom-color: rgba(124, 138, 240, 0.3);
+  }
+  
+  .explanation-popup .explanation-body a:hover {
+    color: #9bb5ff;
+    border-bottom-color: #9bb5ff;
+  }
+}
+
+/* =====================================================
+   🔥 접근성 및 포커스 개선
+   ===================================================== */
+
+/* 키보드 포커스 표시 */
+.explanation-popup .popup-close-btn:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .explanation-popup {
+    border: 3px solid #000;
+  }
+  
+  .explanation-floating-btn,
+  .explanation-nav-btn {
+    border: 2px solid #000;
+  }
+  
+  .explanation-popup .popup-close-btn {
+    border: 1px solid #666;
+  }
+}
+
+/* 모션 감소 모드 지원 */
+@media (prefers-reduced-motion: reduce) {
+  .explanation-floating-btn,
+  .explanation-nav-btn,
+  .explanation-popup,
+  .explanation-popup .popup-close-btn {
+    transition: none;
+  }
+  
+  .explanation-popup .loading-spinner {
+    animation: none;
+  }
+}
+
+/* =====================================================
+   🔥 인쇄 스타일 (선택적)
+   ===================================================== */
+
+@media print {
+  .explanation-floating-btn,
+  .explanation-nav-btn {
+    display: none;
+  }
+  
+  .explanation-popup {
+    position: static;
+    width: 100%;
+    max-height: none;
+    box-shadow: none;
+    border: 1px solid #000;
+    border-radius: 0;
+  }
+  
+  .explanation-popup .popup-header {
+    background: none;
+    border-bottom: 2px solid #000;
+  }
+  
+  .explanation-popup .popup-close-btn {
+    display: none;
+  }
+  
+  .explanation-popup .explanation-body {
+    padding: 20px;
+  }
+  
+  .explanation-popup .explanation-body a {
+    color: #000;
+    text-decoration: underline;
+  }
+}

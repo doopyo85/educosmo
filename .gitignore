@@ -1,0 +1,53 @@
+# 🔐 민감 정보 파일
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+
+# AWS 자격 증명
+.aws/
+credentials
+
+# Docker
+docker/
+
+# AppInventor
+appinventor-sources/
+
+# 빌드 파일
+**/*.cache.js
+**/*.jar
+**/war/
+
+# Dependencies
+node_modules/
+
+# 로그 파일
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 세션 파일
+sessions/
+
+# 임시 파일
+temp/
+tmp/
+*.tmp
+
+# OS 파일
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE 설정
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

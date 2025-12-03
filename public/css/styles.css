@@ -1,0 +1,725 @@
+/* =============================================
+   📌 기본 설정 및 글꼴 (컴포넌트 시스템 공통)
+   ============================================= */
+body {
+    font-family: 'Noto Sans KR', sans-serif;
+    margin: 0;
+    padding: 0;
+    padding-top: 70px; /* 🔥 전역 헤더 여백 - header.css의 헤더 높이 */
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+/* 🔥 Jupyter 레이아웃 전용 - 헤더 여백 추가 */
+body.layout-jupyter {
+    padding-top: 70px !important; /* 🔥 수정: 70px로 통일 */
+}
+
+body.layout-jupyter .jupyter-container {
+    margin-top: 0 !important;
+    height: calc(100vh - 70px) !important; /* 🔥 수정: 70px로 통일 */
+}
+
+body.layout-jupyter #content-component {
+    margin-top: 0 !important;
+    padding-top: 0;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex-grow: 1;
+}
+
+/* =============================================
+   📌 메인 페이지 전용 스타일 (index.ejs)
+   ============================================= */
+
+/* 메인 페이지 제목 */
+.multicolor-text {
+    font-size: 2.5rem;
+    font-weight: bold;
+    background: linear-gradient(to right, #4a90e2, #e94e77);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+}
+
+/* 교육 단계 표시 */
+.education-level {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: inline-block;
+    margin-right: 15px;
+    text-align: center;
+    min-width: 180px;
+}
+
+/* =============================================
+   📌 카드 스타일 (메인 페이지 캐러셀용)
+   ============================================= */
+
+/* 기본 카드 컨테이너 */
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+    width: 100%;
+    height: 380px;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+/* 카드 이미지 영역 */
+.card-img-box {
+    position: relative;
+    width: 100%;
+    height: 55%;
+    min-height: 180px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #ffffff;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    padding: 7%;
+    box-sizing: border-box;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-img-top {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
+    max-height: 100%;
+}
+
+/* 카드 텍스트 영역 */
+.card-text-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 15px;
+    position: relative;
+    background-color: white;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    min-height: 45%;
+    box-shadow: inset 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    margin-bottom: 10px;
+    padding: 0;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    line-height: 1.3;
+    white-space: normal;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+    z-index: 2;
+}
+
+.card-text {
+    font-size: 0.95rem;
+    color: #6c757d;
+    text-align: left;
+    margin-bottom: 60px;
+    position: relative;
+    z-index: 2;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+}
+
+/* 카드 버튼 */
+.btn-primary {
+    border-radius: 50px;
+    padding: 8px 22px;
+    font-size: 0.95rem;
+    text-align: center;
+    width: auto;
+    min-width: 200px;
+    max-width: 260px;
+    height: 38px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    position: absolute;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* =============================================
+   📌 캐러셀 스타일 (메인 페이지 전용)
+   ============================================= */
+
+/* 캐러셀 컨테이너 */
+#categoriesCarousel {
+    position: relative;
+    overflow: visible;
+    padding: 0 50px;
+    margin: 0 auto;
+    max-width: 1320px;
+}
+
+/* 캐러셀 카드 레이아웃 */
+.carousel-item .col-md-3 {
+    width: 320px;
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-bottom: 20px;
+    flex: 0 0 300px;
+}
+
+.carousel-item .row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: left;
+    margin: 0 auto;
+    max-width: 1400px;
+}
+
+/* 캐러셀 컨트롤 버튼 */
+.carousel-control-prev, 
+.carousel-control-next,
+.carousel-btn-outer.carousel-control-prev,
+.carousel-btn-outer.carousel-control-next {
+    width: 60px;
+    height: 60px;
+    background-color: transparent;
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 1;
+    position: absolute;
+    z-index: 1050;
+    display: block;
+}
+
+.carousel-control-prev, 
+.carousel-btn-outer.carousel-control-prev {
+    left: -10px;
+}
+
+.carousel-control-next, 
+.carousel-btn-outer.carousel-control-next {
+    right: 10px;
+}
+
+/* 캐러셀 화살표 아이콘 */
+.carousel-control-prev-icon, 
+.carousel-control-next-icon {
+    width: 84px;
+    height: 84px;
+    background-size: 35%;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.4)) 
+            drop-shadow(0 0 6px rgba(0, 0, 0, 0.3))
+            drop-shadow(0 0 2px #fff);
+}
+
+.carousel-control-prev-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 16 16'%3e%3cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/%3e%3c/svg%3e");
+}
+
+.carousel-control-next-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 16 16'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+.carousel-control-prev:hover, 
+.carousel-control-next:hover {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(0, 123, 255, 0.6))
+            drop-shadow(0 0 5px #fff);
+}
+
+/* =============================================
+   📌 Markdown 콘텐츠 격리 스타일
+   ============================================= */
+
+/* 🔥 Markdown 컨테이너 - 기본 스타일 초기화 및 격리 */
+.markdown-content {
+    /* 기존 스타일 상속 차단 */
+    all: unset;
+    display: block;
+    
+    /* 기본 텍스트 스타일 재설정 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+    background: transparent;
+    
+    /* 박스 모델 재설정 */
+    box-sizing: border-box;
+    margin: 0;
+    padding: 20px;
+    width: 100%;
+}
+
+/* Markdown 내부 요소들 - 기본 스타일 재정의 */
+.markdown-content * {
+    box-sizing: border-box;
+}
+
+/* 제목 요소들 */
+.markdown-content h1 {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    margin: 24px 0 16px 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+    color: #1a1a1a !important;
+    line-height: 1.25 !important;
+}
+
+.markdown-content h2 {
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    margin: 20px 0 12px 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+    color: #1a1a1a !important;
+    line-height: 1.25 !important;
+}
+
+.markdown-content h3 {
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    margin: 16px 0 8px 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+    color: #1a1a1a !important;
+    line-height: 1.25 !important;
+}
+
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    margin: 12px 0 6px 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+    color: #1a1a1a !important;
+    line-height: 1.25 !important;
+}
+
+/* 문단 */
+.markdown-content p {
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+    margin: 0 0 16px 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+    color: #333 !important;
+    font-weight: 400 !important;
+}
+
+/* 목록 */
+.markdown-content ul,
+.markdown-content ol {
+    margin: 0 0 16px 20px !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+}
+
+.markdown-content li {
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+    margin: 4px 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+    color: #333 !important;
+    list-style-type: disc !important;
+}
+
+.markdown-content ol li {
+    list-style-type: decimal !important;
+}
+
+/* 코드 블록 */
+.markdown-content pre {
+    background: #f6f8fa !important;
+    border: 1px solid #e1e4e8 !important;
+    border-radius: 6px !important;
+    padding: 16px !important;
+    margin: 16px 0 !important;
+    overflow-x: auto !important;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+}
+
+.markdown-content code {
+    background: #f6f8fa !important;
+    border: 1px solid #e1e4e8 !important;
+    border-radius: 3px !important;
+    padding: 2px 4px !important;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace !important;
+    font-size: 14px !important;
+    color: #e83e8c !important;
+}
+
+.markdown-content pre code {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    color: #333 !important;
+}
+
+/* 인용구 */
+.markdown-content blockquote {
+    border-left: 4px solid #dfe2e5 !important;
+    padding: 0 16px !important;
+    margin: 16px 0 !important;
+    color: #6a737d !important;
+    background: none !important;
+    font-style: italic !important;
+}
+
+.markdown-content blockquote p {
+    color: #6a737d !important;
+    margin: 8px 0 !important;
+}
+
+/* 링크 */
+.markdown-content a {
+    color: #0366d6 !important;
+    text-decoration: underline !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.markdown-content a:hover {
+    color: #0256cc !important;
+    text-decoration: underline !important;
+}
+
+/* 테이블 */
+.markdown-content table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    margin: 16px 0 !important;
+    background: none !important;
+}
+
+.markdown-content th,
+.markdown-content td {
+    border: 1px solid #dfe2e5 !important;
+    padding: 8px 12px !important;
+    text-align: left !important;
+    background: none !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    color: #333 !important;
+}
+
+.markdown-content th {
+    background: #f6f8fa !important;
+    font-weight: 600 !important;
+}
+
+/* 수평선 */
+.markdown-content hr {
+    border: none !important;
+    border-top: 1px solid #e1e4e8 !important;
+    margin: 24px 0 !important;
+    background: none !important;
+}
+
+/* 이미지 */
+.markdown-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    border: none !important;
+    border-radius: 4px !important;
+    margin: 8px 0 !important;
+    background: none !important;
+    padding: 0 !important;
+}
+
+/* 강조 */
+.markdown-content strong,
+.markdown-content b {
+    font-weight: 700 !important;
+    color: inherit !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.markdown-content em,
+.markdown-content i {
+    font-style: italic !important;
+    color: inherit !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* 📌 특별한 마크다운 요소들 */
+
+/* 이모지 제목 (🏆, 📋 등) */
+.markdown-content h2:has-text("🏆"),
+.markdown-content h2[data-emoji="trophy"],
+.markdown-content h2:first-of-type {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    padding: 12px 20px !important;
+    border-radius: 8px !important;
+    margin: 20px 0 16px 0 !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* blockquote 스타일링 개선 */
+.markdown-content blockquote:has-text("🎤"),
+.markdown-content blockquote:has-text("📋"),
+.markdown-content blockquote:has-text("✅"),
+.markdown-content blockquote:has-text("🧠") {
+    background: #f8f9fa !important;
+    border-left: 4px solid #007bff !important;
+    border-radius: 4px !important;
+    padding: 16px 20px !important;
+    margin: 16px 0 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 코드 블록 언어별 스타일링 */
+.markdown-content pre[class*="language-python"] {
+    background: #f0f3ff !important;
+    border-left: 4px solid #3776ab !important;
+}
+
+.markdown-content pre[class*="language-javascript"] {
+    background: #fffbf0 !important;
+    border-left: 4px solid #f7df1e !important;
+}
+
+/* 반응형 조정 */
+@media (max-width: 768px) {
+    .markdown-content {
+        padding: 16px !important;
+        font-size: 15px !important;
+    }
+    
+    .markdown-content h1 {
+        font-size: 24px !important;
+    }
+    
+    .markdown-content h2 {
+        font-size: 20px !important;
+    }
+    
+    .markdown-content h3 {
+        font-size: 18px !important;
+    }
+    
+    .markdown-content pre {
+        padding: 12px !important;
+        font-size: 13px !important;
+    }
+}
+
+/* =============================================
+   📌 기타 공통 요소
+   ============================================= */
+
+/* 컨테이너 설정 */
+.container {
+    margin-top: 50px;
+    max-width: 1600px;
+    width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* 기본 타이포그래피 */
+h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+p {
+    font-size: 1.1rem;
+    color: #6c757d;
+}
+
+/* 탭 스타일 */
+.nav-tabs {
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+/* 푸터 */
+footer {
+    background-color: #f8f9fa;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    margin-top: auto;
+    width: 100%;
+    border-top: 1px solid #dee2e6;
+}
+
+/* =============================================
+   📌 반응형 미디어 쿼리 (메인 페이지 전용)
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* 모바일 카드 조정 */
+    .carousel-item .col-md-3 {
+        padding-left: 10px;
+        padding-right: 10px;
+        width: 100%;
+        flex: 0 0 100%;
+    }
+    
+    .card {
+        height: 320px;
+    }
+    
+    .card-img-box {
+        min-height: 150px;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+    }
+    
+    .card-text {
+        font-size: 0.9rem;
+        margin-bottom: 50px;
+    }
+    
+    .btn-primary {
+        min-width: 180px;
+        padding: 8px 20px;
+        font-size: 0.95rem;
+    }
+    
+    /* 모바일 캐러셀 조정 */
+    #categoriesCarousel {
+        padding: 0 30px;
+    }
+    
+    .carousel-control-prev, 
+    .carousel-btn-outer.carousel-control-prev {
+        left: -25px;
+    }
+    
+    .carousel-control-next, 
+    .carousel-btn-outer.carousel-control-next {
+        right: -25px;
+    }
+    
+    .carousel-control-prev, 
+    .carousel-control-next {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .carousel-control-prev-icon, 
+    .carousel-control-next-icon {
+        width: 30px;
+        height: 30px;
+    }
+    
+    /* 모바일 타이포그래피 */
+    .multicolor-text {
+        font-size: 2rem;
+    }
+    
+    .education-level {
+        font-size: 1rem;
+        min-width: 150px;
+        padding: 8px 20px;
+    }
+    
+    .container {
+        margin-top: 30px;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    p {
+        font-size: 1rem;
+    }
+}
+
+/* 태블릿 조정 */
+@media (max-width: 992px) and (min-width: 769px) {
+    .carousel-item .col-md-3 {
+        width: 280px;
+        flex: 0 0 280px;
+    }
+    
+    .card {
+        height: 350px;
+    }
+    
+    .multicolor-text {
+        font-size: 2.2rem;
+    }
+}
+
+/* 대형 화면 조정 */
+@media (min-width: 1400px) {
+    .carousel-item .row {
+        max-width: 1600px;
+    }
+    
+    .container {
+        max-width: 1800px;
+    }
+}

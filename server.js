@@ -1,0 +1,1099 @@
+require('dotenv').config();
+const express = require('express');
+const session = require('express-session');
+const RedisStore = require('connect-redis').default;
+const redis = require('redis');
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const path = require('path');
+const mime = require('mime-types');
+const fs = require('fs');
+const { google } = require('googleapis');
+const cron = require('node-cron');
+const bcrypt = require('bcrypt');
+
+// 설정 파일 불러오기
+const config = require('./config');
+
+// DB 및 권한 관련 모듈 불러오기
+const db = require('./lib_login/db');
+const { updatePermissionCache } = require('./lib_login/permissions');
+const { checkPageAccess, checkRole, checkAdminRole } = require('./lib_login/authMiddleware');
+const { logUserActivity, logMenuAccess, logLearningActivity } = require('./lib_login/logging');
+
+const app = express();
+
+// 서버 시작 시 권한 캐시 초기화
+const permissionsPath = path.join(__dirname, './lib_login/permissions.json');
+const permissions = JSON.parse(fs.readFileSync(permissionsPath, 'utf8'));
+updatePermissionCache(permissions);
+
+// AWS SDK v3 사용
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { fromEnv } = require('@aws-sdk/credential-provider-env');
+
+// S3Client 설정
+const s3Client = new S3Client({
+  region: config.S3.REGION,
+  credentials: fromEnv()
+});
+
+// S3에서 객체 가져오는 함수
+const getObjectFromS3 = async (fileName) => {
+  const params = {
+    Bucket: config.S3.BUCKET_NAME,
+    Key: fileName
+  };
+
+  try {
+    const data = await s3Client.send(new GetObjectCommand(params));
+    return data.Body;
+  } catch (err) {
+    console.error(`Error fetching file from S3: ${err.message}`);
+    throw err;
+  }
+};
+
+// view 사용 설정
+app.set('view engine', 'ejs');
+app.set('views', [
+  path.join(__dirname, 'views'),
+  path.join(__dirname, 'portfolio-project', 'games')
+]);
+
+// =====================================================================
+// 정적 파일 서빙
+// =====================================================================
+
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath, stat) => {
+    const ext = path.extname(filePath).toLowerCase();
+
+    switch (ext) {
+      case '.js':
+        res.set('Content-Type', 'application/javascript; charset=utf-8');
+        break;
+      case '.css':
+        res.set('Content-Type', 'text/css; charset=utf-8');
+        break;
+      case '.json':
+        res.set('Content-Type', 'application/json; charset=utf-8');
+        break;
+      case '.html':
+        res.set('Content-Type', 'text/html; charset=utf-8');
+        break;
+      case '.png':
+        res.set('Content-Type', 'image/png');
+        break;
+      case '.jpg':
+      case '.jpeg':
+        res.set('Content-Type', 'image/jpeg');
+        break;
+      case '.gif':
+        res.set('Content-Type', 'image/gif');
+        break;
+      case '.svg':
+        res.set('Content-Type', 'image/svg+xml');
+        break;
+      case '.ico':
+        res.set('Content-Type', 'image/x-icon');
+        break;
+      case '.woff':
+        res.set('Content-Type', 'font/woff');
+        break;
+      case '.woff2':
+        res.set('Content-Type', 'font/woff2');
+        break;
+      case '.ttf':
+        res.set('Content-Type', 'font/ttf');
+        break;
+      case '.eot':
+        res.set('Content-Type', 'application/vnd.ms-fontobject');
+        break;
+      case '.pdf':
+        res.set('Content-Type', 'application/pdf');
+        break;
+      default:
+        res.set('Content-Type', mime.lookup(filePath) || 'application/octet-stream');
+    }
+
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  }
+}));
+
+app.use('/resource', express.static(path.join(__dirname, 'public', 'resource')));
+app.use('/node_modules/bootstrap-icons', express.static(path.join(__dirname, 'node_modules/bootstrap-icons')));
+app.use('/js/turn.js', express.static(path.join(__dirname, 'node_modules/turn.js/turn.min.js')));
+app.use('/favicon.ico', express.static(path.join(__dirname, 'public', 'resource', 'favicon.ico')));
+
+app.use('/node_modules', express.static(path.join(__dirname, 'node_modules'), {
+  setHeaders: (res, filePath, stat) => {
+    const ext = path.extname(filePath).toLowerCase();
+
+    switch (ext) {
+      case '.js':
+        res.set('Content-Type', 'application/javascript; charset=utf-8');
+        break;
+      case '.css':
+        res.set('Content-Type', 'text/css; charset=utf-8');
+        break;
+      case '.wasm':
+        res.set('Content-Type', 'application/wasm');
+        break;
+      case '.json':
+        res.set('Content-Type', 'application/json; charset=utf-8');
+        break;
+    }
+
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  }
+}));
+
+// 환경 설정 API
+app.get('/config', (req, res) => {
+  res.json({
+    apiKey: config.GOOGLE_API.KEY,
+    discoveryDocs: config.GOOGLE_API.DISCOVERY_DOCS,
+    spreadsheetId: config.GOOGLE_API.SPREADSHEET_ID,
+  });
+});
+
+// Redis 클라이언트 설정
+const redisClient = redis.createClient({ url: config.REDIS.URL });
+redisClient.connect().catch(console.error);
+redisClient.setMaxListeners(20);
+
+const store = new RedisStore({
+  client: redisClient,
+  prefix: config.REDIS.PREFIX
+});
+store.setMaxListeners(20);
+
+// CORS 설정
+app.use(cors({
+  origin: [
+    'https://app.codingnplay.co.kr',
+    'https://cosmoedu.co.kr',
+    'http://localhost:3000',
+    'https://localhost:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Access-Control-Allow-Headers',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+  ],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
+}));
+
+// CSP 설정
+app.use((req, res, next) => {
+  let cspString = config.getCSPString();
+  let cspParts = cspString.split(';').map(part => part.trim());
+
+  let scriptSrcIndex = cspParts.findIndex(part => part.startsWith('script-src'));
+  if (scriptSrcIndex !== -1) {
+    cspParts[scriptSrcIndex] += " https://polyfill.io https://entry-cdn.pstatic.net";
+  } else {
+    cspParts.push("script-src 'self' 'unsafe-inline' 'unsafe-eval' https://polyfill.io https://entry-cdn.pstatic.net");
+  }
+
+  let connectSrcIndex = cspParts.findIndex(part => part.startsWith('connect-src'));
+  if (connectSrcIndex !== -1) {
+    cspParts[connectSrcIndex] += " ws: wss: https://playentry.org https://entry-cdn.pstatic.net https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com";
+  } else {
+    cspParts.push("connect-src 'self' ws: wss: https://playentry.org https://entry-cdn.pstatic.net https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com");
+  }
+
+  let imgSrcIndex = cspParts.findIndex(part => part.startsWith('img-src'));
+  if (imgSrcIndex !== -1) {
+    cspParts[imgSrcIndex] += " data: blob: https://entry-cdn.pstatic.net https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com";
+  } else {
+    cspParts.push("img-src 'self' data: blob: https: https://entry-cdn.pstatic.net https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com");
+  }
+
+  let fontSrcIndex = cspParts.findIndex(part => part.startsWith('font-src'));
+  if (fontSrcIndex !== -1) {
+    cspParts[fontSrcIndex] += " https://entry-cdn.pstatic.net";
+  } else {
+    cspParts.push("font-src 'self' data: https://entry-cdn.pstatic.net");
+  }
+
+  let styleSrcIndex = cspParts.findIndex(part => part.startsWith('style-src'));
+  if (styleSrcIndex !== -1) {
+    cspParts[styleSrcIndex] += " https://entry-cdn.pstatic.net";
+  } else {
+    cspParts.push("style-src 'self' 'unsafe-inline' https://entry-cdn.pstatic.net");
+  }
+
+  if (!cspParts.some(part => part.startsWith('worker-src'))) {
+    cspParts.push("worker-src 'self' blob:");
+  }
+
+  res.setHeader("Content-Security-Policy", cspParts.join('; '));
+  next();
+});
+
+app.set('trust proxy', 1);
+
+// =====================================================================
+// 미들웨어 등록 (최적화된 순서)
+// =====================================================================
+
+// 1. 기본 파서 (🔥 10MB 제한 추가)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }));
+app.use(cookieParser());
+
+// 2. 서비스 감지
+app.use((req, res, next) => {
+  const serviceType = config.getServiceType(req);
+  req.serviceType = serviceType;
+  res.locals.serviceType = serviceType;
+  res.locals.serviceName = serviceType === 'cosmoedu' ? '코스모에듀' : '코딩앤플레이';
+  next();
+});
+
+// 3. 세션
+app.use(session({
+  store: store,
+  secret: config.SESSION.SECRET,
+  resave: false,
+  saveUninitialized: false,
+  name: 'connect.sid',
+  cookie: {
+    secure: false,
+    httpOnly: true,
+    sameSite: 'lax',
+    domain: '.codingnplay.co.kr',
+    maxAge: 10800000
+  }
+}));
+
+// 4. 로깅 미들웨어 (세션 이후!)
+app.use(logUserActivity);
+app.use(logMenuAccess);
+app.use(logLearningActivity);
+
+// 5. 개발 환경 로깅
+if (process.env.NODE_ENV === 'development') {
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    console.log('세션:', req.session);
+    next();
+  });
+}
+
+// 인증 미들웨어
+const authenticateUser = (req, res, next) => {
+  const token = req.cookies.token;
+  const isApiRequest = req.path.startsWith('/api/');
+
+  // 세션 확인 함수
+  const checkSession = () => {
+    if (req.session && req.session.is_logined) {
+      return next();
+    }
+    if (isApiRequest) {
+      return res.status(401).json({ loggedIn: false, error: '로그인이 필요합니다.' });
+    }
+    return res.redirect('/auth/login');
+  };
+
+  if (token) {
+    jwt.verify(token, config.JWT.SECRET, (err, user) => {
+      if (err) {
+        // 🔥 토큰이 만료되었거나 유효하지 않은 경우
+        // 즉시 리다이렉트하지 않고 토큰 쿠키를 삭제한 후 세션 확인으로 넘어감
+        // 이렇게 하면 세션이 살아있는 경우 로그아웃되지 않음
+        res.clearCookie('token');
+        return checkSession();
+      }
+      req.user = user;
+      next();
+    });
+  } else {
+    checkSession();
+  }
+};
+
+// 템플릿 변수 설정 미들웨어
+app.use(async (req, res, next) => {
+  try {
+    res.locals.userID = req.session?.userID || null;
+    res.locals.is_logined = req.session?.is_logined || false;
+    res.locals.role = req.session?.role || 'guest';
+    res.locals.centerID = req.session?.centerID || null;
+
+    if (req.session?.userID) {
+      try {
+        const [user] = await db.queryDatabase(
+          'SELECT profile_image FROM Users WHERE userID = ?',
+          [req.session.userID]
+        );
+        res.locals.profileImage = user?.profile_image || '/resource/profiles/default.webp';
+      } catch (err) {
+        console.error('프로필 이미지 조회 오류:', err);
+        res.locals.profileImage = '/resource/profiles/default.webp';
+      }
+    } else {
+      res.locals.profileImage = '/resource/profiles/default.webp';
+    }
+  } catch (err) {
+    console.error('템플릿 변수 설정 오류:', err);
+  }
+
+  next();
+});
+
+// HSTS 설정
+app.use((req, res, next) => {
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  next();
+});
+
+// =====================================================================
+// Google Sheets API
+// =====================================================================
+
+let sheets;
+
+async function initGoogleSheets() {
+  sheets = google.sheets({ version: 'v4', auth: config.GOOGLE_API.KEY });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Google Sheets API 초기화 성공');
+  }
+}
+
+async function getSheetData(range) {
+  if (!sheets) {
+    await initGoogleSheets();
+  }
+
+  try {
+    const requestParams = {
+      spreadsheetId: config.GOOGLE_API.SPREADSHEET_ID,
+      range: range,
+    };
+
+    const response = await sheets.spreadsheets.values.get(requestParams);
+
+    if (!response || !response.data) {
+      console.error('API 응답이 없거나 올바르지 않음:', response);
+      return [];
+    }
+
+    return response.data.values || [];
+  } catch (error) {
+    console.error(`스프레드시트 데이터 로드 오류 (${range}):`, error.message);
+    throw error;
+  }
+}
+
+initGoogleSheets()
+  .then(() => {
+    app.set('getSheetData', getSheetData);
+  })
+  .catch(error => {
+    console.error('Google Sheets API 초기화 실패:', error);
+  });
+
+module.exports = { getSheetData };
+
+// =====================================================================
+// 라우터 등록
+// =====================================================================
+
+// Entry-tool 에셋 프록시
+app.use('/uploads', (req, res) => {
+  const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads${req.path}`;
+  res.redirect(301, s3Url);
+});
+
+app.use('/resource/uploads', (req, res) => {
+  const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads${req.path}`;
+  res.redirect(301, s3Url);
+});
+
+app.use('/api/assets', (req, res) => {
+  const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/api/assets${req.path}`;
+  res.redirect(301, s3Url);
+});
+
+// API 라우터 등록
+app.use('/api', require('./routes/apiRouter'));
+app.use('/api/board', require('./routes/api/boardApiRouter'));
+app.use('/api/jupyter', require('./routes/api/jupyterRouter'));
+// app.use('/api/entry-project', authenticateUser, require('./routes/api/entryProjectAPI')); // ❌ deprecated - 통합 projectRouter 사용
+
+// 🔥 Entry 데이터 API 라우터 (업로드 포함)
+app.use('/entry/data', require('./routes/api/entryDataRouter'));
+
+// 🔥 통합 프로젝트 저장 시스템 라우터
+app.use('/api/projects', authenticateUser, require('./routes/api/projectRouter'));
+
+// 🔥 S3 브라우저 API 라우터
+app.use('/api/s3', authenticateUser, require('./routes/api/s3BrowserRouter'));
+
+// 페이지 라우터 등록
+const routes = {
+  'auth': require('./lib_login/auth'),
+  'admin': require('./routes/adminRouter'),
+  'board': require('./routes/boardRouter'),
+  'nuguritalk': require('./routes/nuguritalkRouter'),
+  'teacher': require('./routes/teacherRouter'),
+  'machu': require('./routes/machugameRouter'),
+  'kinder': require('./routes/kinderRouter'),
+  'learning': require('./routes/learningRouter'),
+  'report': require('./routes/reportRouter'),
+  'onlineclass': require('./routes/onlineclassRouter'),
+  'machinelearning': require('./routes/machinelearningRouter'),
+  'appinventor': require('./routes/appinventorRouter'),
+  'python': require('./routes/pythonRouter'),
+  'template': require('./routes/templateRouter'),
+  's3': require('./routes/s3Router')  // 🔥 통합 S3 브라우저
+};
+
+const entryRouter = require('./routes/entryRouter');
+const ttsRouter = require('./routes/api/ttsRouter');
+app.use('/api', authenticateUser, ttsRouter);
+app.use('/entry', authenticateUser, entryRouter);
+
+const entDebugRouter = require('./routes/api/debug/entDebugRouter');
+app.use('/api/debug/ent', entDebugRouter);
+
+const { createProxyMiddleware } = require('http-proxy-middleware');
+app.use('/appinventor/editor', createProxyMiddleware({
+  target: 'http://localhost:8888',
+  changeOrigin: true,
+  pathRewrite: { '^/appinventor/editor': '/' },
+}));
+
+// 🔥 디버깅: null 라우터 체크
+Object.entries(routes).forEach(([path, router]) => {
+  if (!router) {
+    console.error(`❌ 라우터가 null입니다: ${path}`);
+    throw new Error(`라우터 로드 실패: ${path}`);
+  }
+
+  if (path === 'auth') {
+    app.use(`/${path}`, router);
+  } else {
+    app.use(`/${path}`, authenticateUser, router);
+  }
+});
+
+// JSON 파싱 오류 처리
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    console.error('JSON 파싱 오류:', err);
+    return res.status(400).json({
+      error: 'JSON 형식이 잘못되었습니다.',
+      details: err.message
+    });
+  }
+  next(err);
+});
+
+// API 프록시
+app.use('/api/sprite', async (req, res) => {
+  try {
+    const targetUrl = `https://app.codingnplay.co.kr/entry/api/sprite${req.path}`;
+    const response = await fetch(targetUrl, {
+      method: req.method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': req.headers.cookie || ''
+      }
+    });
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'API 프록시 오류' });
+  }
+});
+
+const entrySpritesRouter = require('./routes/api/entrySpritesRouter');
+app.use('/entry/api/sprite', entrySpritesRouter);
+
+// =====================================================================
+// 로그인/로그아웃
+// =====================================================================
+app.get('/logout', async (req, res) => {
+  if (req.session?.userID) {
+    try {
+      const [user] = await db.queryDatabase(
+        'SELECT id, centerID FROM Users WHERE userID = ?',
+        [req.session.userID]
+      );
+
+      if (user) {
+        // 🔥 중복 체크
+        const logKey = `logout-${user.id}-${Date.now()}`;
+        if (!global.logoutLogs) global.logoutLogs = new Map();
+
+        if (!global.logoutLogs.has(user.id)) {
+          await db.queryDatabase(`
+            INSERT INTO UserActivityLogs 
+            (user_id, center_id, action_type, url, ip_address, user_agent, action_detail, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [
+            user.id,
+            user.centerID,
+            'GET',
+            '/logout',
+            req.ip,
+            req.headers['user-agent'],
+            'User logout',
+            'logout'
+          ]);
+
+          global.logoutLogs.set(user.id, Date.now());
+          setTimeout(() => global.logoutLogs.delete(user.id), 2000);
+        }
+      }
+    } catch (err) {
+      console.error('Logout logging error:', err);
+    }
+  }
+
+  const domain = config.SESSION.COOKIE.getDomain(req);
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).send('로그아웃 실패');
+    }
+    res.clearCookie('connect.sid', { domain: domain, path: '/' });
+    res.clearCookie('token', { domain: domain, path: '/' });
+    res.redirect('/auth/login');
+  });
+});
+
+// 내 프로필 페이지
+app.get('/my-profile', authenticateUser, async (req, res) => {
+  try {
+    const [student] = await db.queryDatabase(
+      'SELECT * FROM Users WHERE userID = ?',
+      [req.session.userID]
+    );
+
+    if (!student) {
+      return res.status(404).send('사용자를 찾을 수 없습니다.');
+    }
+
+    const logs = await db.queryDatabase(
+      'SELECT * FROM LearningLogs WHERE user_id = ? ORDER BY start_time DESC LIMIT 20',
+      [student.id]
+    );
+
+    const activityLogs = await db.queryDatabase(
+      `SELECT created_at, ip_address, user_agent, url, status 
+             FROM UserActivityLogs 
+             WHERE user_id = ? AND status IN ('login', 'logout')
+             ORDER BY created_at DESC 
+             LIMIT 50`,
+      [student.id]
+    );
+
+    res.render('teacher/student-detail', {
+      student,
+      logs,
+      activityLogs,
+      isMyProfile: true
+    });
+
+  } catch (error) {
+    console.error('프로필 조회 오류:', error);
+    res.status(500).send('오류 발생');
+  }
+});
+
+// =====================================================================
+// 페이지 라우트
+// =====================================================================
+
+const pagesUnderConstruction = [];
+
+function checkUnderConstruction(req, res, next) {
+  if (pagesUnderConstruction.includes(req.path)) {
+    return res.render('under-construction', {
+      userID: req.session?.userID,
+      userRole: req.session?.role,
+      is_logined: req.session?.is_logined,
+      centerID: req.session?.centerID
+    });
+  }
+  next();
+}
+
+app.use(checkUnderConstruction);
+
+app.get('/entry_project', authenticateUser, checkPageAccess('/entry_project'), (req, res) => {
+  res.render('entry_project', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID
+  });
+});
+
+app.get('/computer', authenticateUser, checkPageAccess('/computer'), (req, res) => {
+  res.render('computer', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID
+  });
+});
+
+app.get('/scratch_project', authenticateUser, checkPageAccess('/scratch_project'), (req, res) => {
+  res.render('scratch_project', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID
+  });
+});
+
+app.get('/scratch', authenticateUser, (req, res) => {
+  res.redirect(config.SERVICES.SCRATCH);
+});
+
+app.get('/appinventor_project', authenticateUser, checkPageAccess('/appinventor_project'), (req, res) => {
+  res.render('appinventor_project', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID
+  });
+});
+
+app.get('/machinelearning', authenticateUser, checkPageAccess('/machinelearning'), (req, res) => {
+  res.render('machinelearning', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID
+  });
+});
+
+app.get('/python_project', authenticateUser, checkPageAccess('/python_project'), (req, res) => {
+  res.render('template', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID,
+    pageType: 'python'
+  });
+});
+
+app.get('/algorithm', authenticateUser, checkPageAccess('/algorithm'), (req, res) => {
+  res.render('template', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID,
+    pageType: 'algorithm'
+  });
+});
+
+app.get('/certification', authenticateUser, checkPageAccess('/certification'), (req, res) => {
+  res.render('template', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID,
+    pageType: 'certification'
+  });
+});
+
+app.get('/aiMath', authenticateUser, checkPageAccess('/aiMath'), (req, res) => {
+  res.render('template', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID,
+    pageType: 'aiMath'
+  });
+});
+
+app.get('/dataAnalysis', authenticateUser, checkPageAccess('/dataAnalysis'), (req, res) => {
+  res.render('template', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID,
+    pageType: 'dataAnalysis'
+  });
+});
+
+app.get('/debug-page-type/:pageType', authenticateUser, (req, res) => {
+  const pageType = req.params.pageType;
+  const allowedPageTypes = ['certification', 'python', 'algorithm', 'aiMath', 'template'];
+
+  if (!allowedPageTypes.includes(pageType)) {
+    return res.status(400).json({
+      error: '지원하지 않는 페이지 타입입니다.',
+      allowedTypes: allowedPageTypes
+    });
+  }
+
+  res.render('template', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID,
+    pageType: pageType
+  });
+});
+
+const quizRouter = require('./routes/api/quizRouter');
+app.use('/api/quiz', quizRouter);
+
+const templateRouter = require('./routes/templateRouter');
+app.use('/template', authenticateUser, templateRouter);
+
+const portfolioRouter = require('./routes/portfolioRouter');
+app.use('/portfolio', authenticateUser, portfolioRouter);
+
+app.use('/novnc', express.static(path.join(__dirname, 'node_modules', 'novnc')));
+
+const portManager = require('./lib_portfolio/port-manager');
+setInterval(async () => {
+  try {
+    await portManager.cleanupOldAllocations();
+  } catch (error) {
+    console.error('포트 정리 중 오류:', error);
+  }
+}, 5 * 60 * 1000);
+
+app.get('/teacher', authenticateUser, (req, res) => {
+  res.render('teacher', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID
+  });
+});
+
+// 루트 경로
+app.get('/', (req, res) => {
+  if (!req.session?.is_logined) {
+    return res.redirect('/auth/login');
+  }
+
+  res.render('index', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID,
+    serviceType: req.serviceType,
+    serviceName: res.locals.serviceName
+  });
+});
+
+app.get('/debug-session', (req, res) => {
+  res.json({
+    session: {
+      userID: req.session?.userID,
+      role: req.session?.role,
+      is_logined: req.session?.is_logined,
+      userType: req.session?.userType,
+      centerID: req.session?.centerID
+    }
+  });
+});
+
+// =====================================================================
+// Cron Jobs
+// =====================================================================
+
+cron.schedule(config.CRON.SUBSCRIPTION_UPDATE, async () => {
+  try {
+    await db.queryDatabase(
+      `UPDATE Users SET subscription_status = 'expired' 
+       WHERE subscription_expiry < CURDATE() AND subscription_status = 'active'`
+    );
+  } catch (error) {
+    console.error('구독 만료 상태 업데이트 중 오류:', error);
+  }
+});
+
+cron.schedule('0 0 * * *', async () => {
+  try {
+    const entryAssetsDir = path.join(__dirname, 'public', 'entry-assets');
+    if (fs.existsSync(entryAssetsDir)) {
+      const sessionDirs = fs.readdirSync(entryAssetsDir);
+      const now = Date.now();
+      let cleanedCount = 0;
+
+      for (const sessionDir of sessionDirs) {
+        const sessionPath = path.join(entryAssetsDir, sessionDir);
+        const stats = fs.statSync(sessionPath);
+
+        if (now - stats.mtime.getTime() > 60 * 60 * 1000) {
+          await fs.promises.rm(sessionPath, { recursive: true, force: true });
+          cleanedCount++;
+        }
+      }
+
+      if (cleanedCount > 0 && process.env.NODE_ENV === 'development') {
+        console.log(`Entry 에셋 정리 완료: ${cleanedCount}개 세션 디렉토리 삭제`);
+      }
+    }
+  } catch (error) {
+    console.error('Entry 에셋 정리 중 오류:', error);
+  }
+});
+
+const { scheduledCleanup } = require('./scripts/cleanup-ent-files');
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    const result = await scheduledCleanup();
+    if (result.success && result.deletedFiles > 0 && process.env.NODE_ENV === 'development') {
+      console.log(`ENT 파일 정리 완료: ${result.deletedFiles}개 파일 삭제`);
+    }
+  } catch (error) {
+    console.error('ENT 파일 정리 cron 오류:', error);
+  }
+});
+
+app.get('/api/ws/proxy/:port', (req, res) => {
+  res.status(200).send('WebSocket 프록시 엔드포인트');
+});
+
+app.get('/api/generate-metadata-direct', async (req, res) => {
+  try {
+    const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
+
+    const s3Client = new S3Client({
+      region: process.env.AWS_REGION || 'ap-northeast-2',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      }
+    });
+
+    const S3_BUCKET = process.env.S3_BUCKET_NAME || 'educodingnplaycontents';
+
+    const listParams = {
+      Bucket: S3_BUCKET,
+      Prefix: 'ent/uploads/images/',
+      MaxKeys: 1000
+    };
+
+    const listCommand = new ListObjectsV2Command(listParams);
+    const listResult = await s3Client.send(listCommand);
+
+    const metadata = {
+      version: "2.0",
+      lastUpdated: new Date().toISOString().split('T')[0],
+      totalAssets: 0,
+      baseUrl: "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads",
+      categories: [
+        { id: "entrybot_friends", name: "엔트리봇", visible: true },
+        { id: "animal", name: "동물", visible: true },
+        { id: "thing", name: "사물", visible: true },
+        { id: "background", name: "배경", visible: true },
+        { id: "characters", name: "캐릭터", visible: true },
+        { id: "other", name: "기타", visible: true }
+      ],
+      sprites: {}
+    };
+
+    if (listResult.Contents && listResult.Contents.length > 0) {
+      for (const object of listResult.Contents) {
+        if (!object.Key.endsWith('/')) {
+          const filename = path.basename(object.Key);
+          const ext = path.extname(filename).toLowerCase();
+
+          if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].includes(ext)) {
+            const baseName = path.parse(filename).name;
+            const spriteId = baseName.replace(/[^a-zA-Z0-9가-힣]/g, '_').replace(/_+/g, '_');
+
+            let category = 'other';
+            const name = filename.toLowerCase();
+            if (name.includes('entrybot')) category = 'entrybot_friends';
+            else if (name.includes('ani_')) category = 'animal';
+            else if (name.includes('entry_icon') || name.includes('button') || name.includes('block')) category = 'thing';
+            else if (name.includes('entry_bg') || name.includes('workspace')) category = 'background';
+            else category = 'characters';
+
+            let spriteName = baseName;
+            if (name.includes('entrybot')) spriteName = '엔트리봇';
+            else if (name.includes('ani_')) spriteName = '동물';
+            else if (name.includes('entry_icon')) spriteName = '아이콘';
+            else if (name.includes('button')) spriteName = '버튼';
+            else if (name.includes('entry_bg')) spriteName = '배경';
+
+            metadata.sprites[spriteId] = {
+              id: spriteId,
+              name: spriteName,
+              category: category,
+              label: { ko: spriteName, en: baseName },
+              pictures: [{
+                id: `${spriteId}_pic1`,
+                name: spriteName,
+                filename: filename,
+                imageType: ext.substring(1),
+                dimension: { width: 80, height: 80 },
+                scale: 100,
+                fileurl: `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/${filename}`
+              }],
+              sounds: []
+            };
+
+            metadata.totalAssets++;
+          }
+        }
+      }
+    }
+
+    fs.writeFileSync('metadata.json', JSON.stringify(metadata, null, 2), 'utf8');
+
+    res.json({
+      success: true,
+      message: '메타데이터가 성공적으로 생성되었습니다!',
+      totalAssets: metadata.totalAssets,
+      filesFound: listResult.Contents?.length || 0,
+      oldAssets: 3,
+      newAssets: metadata.totalAssets
+    });
+
+  } catch (error) {
+    console.error('메타데이터 생성 오류:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      details: error.stack
+    });
+  }
+});
+
+// =====================================================================
+// 캐치올 라우트
+// =====================================================================
+
+app.get('*', (req, res, next) => {
+  const reqPath = req.path.toLowerCase();
+
+  const staticExtensions = [
+    '.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg',
+    '.woff', '.woff2', '.ttf', '.eot', '.pdf', '.html', '.json',
+    '.xml', '.txt', '.zip', '.mp3', '.mp4', '.wav', '.avi'
+  ];
+
+  const staticPaths = [
+    '/js/', '/css/', '/resource/', '/node_modules/', '/uploads/',
+    '/images/', '/fonts/', '/assets/', '/public/', '/static/'
+  ];
+
+  const isStaticFile = staticExtensions.some(ext => reqPath.endsWith(ext));
+  const isStaticPath = staticPaths.some(staticPath => reqPath.startsWith(staticPath));
+  const isApiRequest = reqPath.startsWith('/api/');
+
+  // 🔥 S3 라우터 예외 처리
+  const isS3Route = reqPath.startsWith('/s3/');
+
+  if (isStaticFile || isStaticPath) {
+    return res.status(404).send('File not found');
+  }
+
+  if (isApiRequest) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+
+  // 🔥 S3 경로는 404 반환 (라우터에서 처리)
+  if (isS3Route) {
+    console.log('❌ S3 라우트 처리 실패:', reqPath);
+    return res.status(404).json({ error: 'S3 route not found' });
+  }
+
+  if (!req.session || !req.session.is_logined) {
+    return res.redirect('/auth/login');
+  }
+
+  res.render('index', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID,
+    serviceType: req.serviceType,
+    serviceName: res.locals.serviceName
+  });
+});
+
+// 오류 처리 미들웨어
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+});
+
+// 관리자용 임시 파일 API
+app.get('/api/admin/temp-files/stats', checkAdminRole, async (req, res) => {
+  try {
+    const stats = await tempFileCleanup.getTempFileStats();
+    res.json({ success: true, stats: stats });
+  } catch (error) {
+    console.error('임시 파일 통계 조회 오류:', error);
+    res.status(500).json({
+      success: false,
+      error: '임시 파일 통계를 불러오는 중 오류가 발생했습니다.'
+    });
+  }
+});
+
+app.post('/api/admin/temp-files/cleanup', checkAdminRole, async (req, res) => {
+  try {
+    const result = await tempFileCleanup.cleanupTempFiles();
+    res.json({ success: true, result: result });
+  } catch (error) {
+    console.error('수동 임시 파일 정리 오류:', error);
+    res.status(500).json({
+      success: false,
+      error: '임시 파일 정리 중 오류가 발생했습니다.'
+    });
+  }
+});
+
+cron.schedule('0 2 * * *', async () => {
+  try {
+    const { cleanupTemporaryFiles } = require('./lib_board/attachmentService');
+    await cleanupTemporaryFiles();
+  } catch (error) {
+    console.error('S3 임시 파일 정리 오류:', error);
+  }
+});
+
+// 서버 시작
+function startServer(port) {
+  const server = app.listen(port)
+    .on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.log(`Port ${port} is in use, trying ${port + 1}...`);
+        startServer(port + 1);
+      } else {
+        console.error('Error starting server:', err);
+      }
+    })
+    .on('listening', () => {
+      console.log(`Server is running on ${config.SERVER.PRODUCTION ? 'https' : 'http'}://localhost:${port}`);
+      console.log(`Environment: ${config.SERVER.ENV}`);
+    });
+}
+
+startServer(config.SERVER.PORT);

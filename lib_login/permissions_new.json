@@ -1,0 +1,312 @@
+{
+    "services": {
+        "codingnplay": {
+            "name": "코딩앤플레이",
+            "description": "코딩교육 전문 플랫폼",
+            "pages": {
+                "/admin": {
+                    "name": "관리자 대시보드",
+                    "roles": ["admin"]
+                },
+                "/kinder": {
+                    "name": "유치원",
+                    "roles": ["admin", "kinder"]
+                },
+                "/computer": {
+                    "name": "컴퓨터 기초활용",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/scratch_project": {
+                    "name": "스크래치",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/entry_project": {
+                    "name": "엔트리",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/python_project": {
+                    "name": "파이썬",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/certification": {
+                    "name": "자격증 과정",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/machinelearning": {
+                    "name": "인공지능",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/algorithm": {
+                    "name": "알고리즘 연습",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/aiMath": {
+                    "name": "AI 수학",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/dataAnalysis": {
+                    "name": "데이터 분석",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/appinventor_project": {
+                    "name": "앱인벤터",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/template": {
+                    "name": "템플릿",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/teacher": {
+                    "name": "교사 교육",
+                    "roles": ["admin", "manager", "teacher"]
+                },
+                "/board": {
+                    "name": "게시판",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/learning": {
+                    "name": "학습 관리",
+                    "roles": ["admin", "manager", "teacher"]
+                },
+                "/report": {
+                    "name": "리포트 생성",
+                    "roles": ["admin", "manager", "teacher"]
+                },
+                "/onlineclass": {
+                    "name": "온라인 클래스",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/portfolio": {
+                    "name": "포트폴리오",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                }
+            },
+            "cardConfig": {
+                "elementary": [
+                    {
+                        "title": "컴퓨터 기초활용",
+                        "description": "컴퓨터 기초 지식을 배우고 실생활에서 활용하는 방법을 익혀보세요.",
+                        "image": "/resource/computer_basic.png",
+                        "link": "/computer"
+                    },
+                    {
+                        "title": "스크래치",
+                        "description": "스크래치를 사용하여 창의적이고 재미있는 프로젝트를 만들어보세요.",
+                        "image": "/resource/scratch.png",
+                        "link": "/scratch_project"
+                    },
+                    {
+                        "title": "엔트리",
+                        "description": "엔트리로 코딩을 시작하고 다양한 프로젝트를 경험해보세요.",
+                        "image": "/resource/entry.png",
+                        "link": "/entry_project"
+                    },
+                    {
+                        "title": "자격증과정",
+                        "description": "컴퓨터 관련 자격증을 준비하고 실력을 인증받을 수 있는 과정입니다.",
+                        "image": "/resource/certification.png",
+                        "link": "/certification"
+                    }
+                ],
+                "secondary": [
+                    {
+                        "title": "앱인벤터",
+                        "description": "앱인벤터를 통해 나만의 모바일 앱을 쉽고 재미있게 개발해보세요.",
+                        "image": "/resource/appinventor.png",
+                        "link": "/appinventor_project"
+                    },
+                    {
+                        "title": "파이썬",
+                        "description": "파이썬 프로그래밍 기초부터 응용까지 체계적으로 학습해보세요.",
+                        "image": "/resource/python.png",
+                        "link": "/python_project"
+                    },
+                    {
+                        "title": "인공지능",
+                        "description": "인공지능의 기본 개념을 이해하고 간단한 AI 프로젝트를 만들어보세요.",
+                        "image": "/resource/machinelearning.png",
+                        "link": "/machinelearning"
+                    },
+                    {
+                        "title": "알고리즘연습",
+                        "description": "다양한 알고리즘 문제를 풀면서 논리적 사고력과 문제해결 능력을 키워보세요.",
+                        "image": "/resource/algorithm.png",
+                        "link": "/algorithm"
+                    }
+                ]
+            }
+        },
+        "cosmoedu": {
+            "name": "코스모에듀",
+            "description": "창의융합교육 플랫폼",
+            "pages": {
+                "/admin": {
+                    "name": "관리자 대시보드",
+                    "roles": ["admin"]
+                },
+                "/computer": {
+                    "name": "컴퓨터 기초활용",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/python_project": {
+                    "name": "파이썬",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/machinelearningforkids": {
+                    "name": "머신러닝포키즈",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/makecode": {
+                    "name": "메이크코드",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/codeular": {
+                    "name": "코듈러",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/aiMath": {
+                    "name": "AI 수학",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/dataAnalysis": {
+                    "name": "데이터 분석",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/teacher": {
+                    "name": "교사 교육",
+                    "roles": ["admin", "manager", "teacher"]
+                },
+                "/board": {
+                    "name": "게시판",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/learning": {
+                    "name": "학습 관리",
+                    "roles": ["admin", "manager", "teacher"]
+                },
+                "/report": {
+                    "name": "리포트 생성",
+                    "roles": ["admin", "manager", "teacher"]
+                },
+                "/onlineclass": {
+                    "name": "온라인 클래스",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                },
+                "/portfolio": {
+                    "name": "포트폴리오",
+                    "roles": ["admin", "manager", "teacher", "student"]
+                }
+            },
+            "cardConfig": {
+                "elementary": [
+                    {
+                        "title": "컴퓨터 기초활용",
+                        "description": "컴퓨터 기초 지식을 배우고 실생활에서 활용하는 방법을 익혀보세요.",
+                        "image": "/resource/computer_basic.png",
+                        "link": "/computer"
+                    },
+                    {
+                        "title": "머신러닝포키즈",
+                        "description": "아이들도 쉽게 따라할 수 있는 머신러닝 학습 도구입니다.",
+                        "image": "/resource/ml4kids.png",
+                        "link": "/machinelearningforkids"
+                    },
+                    {
+                        "title": "메이크코드",
+                        "description": "블록 코딩으로 마이크로비트와 다양한 하드웨어를 제어해보세요.",
+                        "image": "/resource/makecode.png",
+                        "link": "/makecode"
+                    },
+                    {
+                        "title": "AI 수학",
+                        "description": "인공지능을 활용한 수학 학습으로 개념을 쉽게 이해해보세요.",
+                        "image": "/resource/aimath.png",
+                        "link": "/aiMath"
+                    }
+                ],
+                "secondary": [
+                    {
+                        "title": "파이썬",
+                        "description": "파이썬 프로그래밍 기초부터 응용까지 체계적으로 학습해보세요.",
+                        "image": "/resource/python.png",
+                        "link": "/python_project"
+                    },
+                    {
+                        "title": "코듈러",
+                        "description": "3D 코딩 환경에서 창의적인 프로그래밍을 경험해보세요.",
+                        "image": "/resource/codeular.png",
+                        "link": "/codeular"
+                    },
+                    {
+                        "title": "데이터 분석",
+                        "description": "실제 데이터를 활용한 분석 방법을 배우고 인사이트를 발견해보세요.",
+                        "image": "/resource/dataanalysis.png",
+                        "link": "/dataAnalysis"
+                    },
+                    {
+                        "title": "포트폴리오",
+                        "description": "나만의 창작물을 모아 포트폴리오를 완성해보세요.",
+                        "image": "/resource/portfolio.png",
+                        "link": "/portfolio"
+                    }
+                ]
+            }
+        }
+    },
+    "features": {
+        "PPT_BUTTON": ["admin", "teacher", "manager"],
+        "USER_MANAGE": ["admin"],
+        "CONTENT_EDIT": ["admin", "manager", "teacher"],
+        "ANSWER_VIEW": ["admin", "manager", "teacher"],
+        "CODE_EXECUTION": ["admin", "manager", "teacher", "student"],
+        "QUIZ_CREATION": ["admin", "manager", "teacher"],
+        "REPORT_GENERATION": ["admin", "manager", "teacher"],
+        "PORTFOLIO_MANAGE": ["admin", "manager", "teacher", "student"],
+        "DATA_ANALYSIS": ["admin", "manager", "teacher", "student"],
+        "AI_MATH_ACCESS": ["admin", "manager", "teacher", "student"],
+        "JUPYTER_ACCESS": ["admin", "manager", "teacher"],
+        "PYTHON_EXECUTION": ["admin", "manager", "teacher", "student"],
+        "ALGORITHM_PRACTICE": ["admin", "manager", "teacher", "student"],
+        "CERTIFICATION_TEST": ["admin", "manager", "teacher", "student"]
+    },
+    "roles": {
+        "admin": {
+            "name": "시스템 관리자",
+            "description": "모든 기능에 접근 가능한 최고 관리자",
+            "level": 5
+        },
+        "manager": {
+            "name": "센터 매니저",
+            "description": "센터 관리 및 교육 콘텐츠 관리",
+            "level": 4
+        },
+        "teacher": {
+            "name": "교사",
+            "description": "교육 콘텐츠 활용 및 학생 관리",
+            "level": 3
+        },
+        "student": {
+            "name": "학생",
+            "description": "학습 콘텐츠 이용",
+            "level": 2
+        },
+        "kinder": {
+            "name": "유치원 과정",
+            "description": "유치원 전용 콘텐츠 접근",
+            "level": 1
+        },
+        "guest": {
+            "name": "게스트",
+            "description": "비로그인 사용자",
+            "level": 0
+        }
+    },
+    "settings": {
+        "defaultRole": "guest",
+        "sessionTimeout": 3600,
+        "maxLoginAttempts": 5,
+        "enableGuestAccess": false,
+        "requireEmailVerification": true,
+        "enableRoleHierarchy": true
+    }
+}

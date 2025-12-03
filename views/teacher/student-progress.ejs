@@ -1,0 +1,63 @@
+<div class="container mt-5">
+  <h2>학습 진도 관리</h2>
+  <p>학생들의 학습 진행 상황과 컴퓨팅 사고력 레벨을 확인하세요.</p>
+
+  <!-- 탭 전환 -->
+  <div class="tab-nav mt-3 mb-4">
+    <a href="/teacher/student-management" class="btn btn-outline-secondary">학생관리</a>
+    <a href="/teacher/student-progress" class="btn btn-primary">학습관리</a>
+  </div>
+
+  <!-- 검색창 -->
+  <div class="mb-3">
+    <input type="text" id="searchInput" class="form-control" placeholder="학생 이름 또는 아이디 검색..." />
+  </div>
+
+  <!-- 진도표 테이블 -->
+  <table class="table table-bordered table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>프로필</th>
+        <th>이름</th>
+        <th>아이디</th>
+        <th>완료 수 / 전체</th>
+        <th>진도율</th>
+        <th>현재 플랫폼</th>
+        <th>CT 레벨</th>
+        <th>최근 학습일</th>
+        <th>관리</th>
+      </tr>
+    </thead>
+    <tbody id="progressTableBody">
+      <% students.forEach(student => { %>
+        <tr>
+          <td><img src="<%= student.profile_image %>" alt="프로필" class="rounded-circle" width="40" height="40"></td>
+          <td><%= student.name %></td>
+          <td><%= student.username %></td>
+          <td><%= student.completed_contents %> / <%= student.total_contents %></td>
+          <td>
+            <div class="progress" style="height: 20px;">
+              <div class="progress-bar" role="progressbar" style="width: <%= student.progress_rate %>%;">
+                <%= student.progress_rate %>%
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="badge bg-info text-dark">
+              <%= student.current_platform || '-' %>
+            </span>
+          </td>
+          <td>
+            <span class="badge bg-success">
+              CT <%= student.ct_level || '0' %>
+            </span>
+          </td>
+          <td><%= student.last_learning_at ? new Date(student.last_learning_at).toLocaleDateString('ko-KR') : '-' %></td>
+          <td><a href="/teacher/student-progress/<%= student.user_id %>" class="btn btn-sm btn-outline-primary">보기</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<script src="/js/student-progress.js"></script>

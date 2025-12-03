@@ -1,0 +1,219 @@
+/**
+ * base.css
+ * 컴포넌트 시스템의 기본 스타일
+ */
+
+/* ===================================
+   컴포넌트 기본 스타일
+   =================================== */
+
+/* 컴포넌트 기본 스타일 */
+.component {
+  position: relative;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+/* 컴포넌트 가시성 클래스 */
+.component-visible {
+  display: block !important;
+  opacity: 1;
+  z-index: 1;
+}
+
+.component-hidden {
+  display: none !important;
+  opacity: 0;
+  z-index: -1;
+}
+
+/* 컴포넌트 너비 클래스 */
+.component-full-width {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 1 !important;
+}
+
+.component-half-width {
+  width: 50% !important;
+  max-width: 50% !important;
+  flex: 0.5 !important;
+}
+
+/* 컴포넌트 높이 클래스 */
+.component-full-height {
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+.component-half-height {
+  height: 50% !important;
+  max-height: 50% !important;
+}
+
+/* ===================================
+   레이아웃 기본 스타일
+   =================================== */
+
+/* 메인 레이아웃 컨테이너 */
+.main-container {
+  display: flex;
+  height: 100vh;
+  margin-top: 3px;
+  max-height: calc(100vh - 60px); /* 헤더 고려 */
+}
+
+/* 메인 콘텐츠 영역 */
+.main-area {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  width: calc(100% - 250px); /* 네비게이션 제외 */
+  position: relative;
+  overflow: hidden;
+}
+
+/* 레이아웃 타입별 본문 클래스 */
+body.layout-html .content-component {
+  width: 100% !important;
+  flex: 1 !important;
+}
+
+body.layout-ide .content-component,
+body.layout-ide .ide-component {
+  width: 50% !important;
+  flex: 0.5 !important;
+}
+
+body.layout-quiz .content-component,
+body.layout-quiz .quiz-component {
+  width: 50% !important;
+  flex: 0.5 !important;
+}
+
+body.layout-ppt .ppt-viewer-component {
+  width: 100% !important;
+  flex: 1 !important;
+}
+
+/* 레이아웃 타입별 컴포넌트 숨김 */
+body.layout-html .ide-component,
+body.layout-html .quiz-component,
+body.layout-html .ppt-viewer-component {
+  display: none !important;
+  width: 0 !important;
+  flex: 0 !important;
+}
+
+body.layout-ide .quiz-component,
+body.layout-ide .ppt-viewer-component {
+  display: none !important;
+  width: 0 !important;
+  flex: 0 !important;
+}
+
+body.layout-quiz .ide-component,
+body.layout-quiz .ppt-viewer-component {
+  display: none !important;
+  width: 0 !important;
+  flex: 0 !important;
+}
+
+body.layout-ppt .content-component,
+body.layout-ppt .ide-component,
+body.layout-ppt .quiz-component {
+  display: none !important;
+  width: 0 !important;
+  flex: 0 !important;
+}
+
+/* ===================================
+   유틸리티 클래스
+   =================================== */
+
+/* 시각적으로만 숨김 (스크린 리더에서는 인식) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* 스크롤바 스타일 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* ===================================
+   반응형 레이아웃
+   =================================== */
+
+/* 태블릿 이하에서는 수직 레이아웃으로 전환 */
+@media (max-width: 992px) {
+  .main-area {
+    flex-direction: column;
+  }
+  
+  body.layout-ide .content-component,
+  body.layout-ide .ide-component,
+  body.layout-quiz .content-component,
+  body.layout-quiz .quiz-component {
+    width: 100% !important;
+    height: 50% !important;
+    flex: 0.5 !important;
+  }
+}
+
+/* 모바일에서 더 작은 폰트 사이즈와 여백 조정 */
+@media (max-width: 576px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .component {
+    padding: 10px;
+  }
+}
+
+/* ===================================
+   애니메이션
+   =================================== */
+
+/* 페이드 인 애니메이션 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* 페이드 아웃 애니메이션 */
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-out;
+}

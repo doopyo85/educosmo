@@ -1,0 +1,278 @@
+{
+  "totalAssets": 5,
+  "baseUrl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads",
+  "entryAssetsIntegrated": true,
+  "extractedFrom": "entry-offline-v1.0.0-windows",
+  "sprites": [
+    {
+      "id": "offline_entrybot_friends_69",
+      "name": "entrybot1",
+      "label": {
+        "ko": "entrybot1",
+        "en": "entrybot1"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_69_pic_1",
+          "name": "entrybot1",
+          "label": {
+            "ko": "entrybot1",
+            "en": "entrybot1"
+          },
+          "filename": "entrybot1_69",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/entrybot1_69.png",
+          "trimmed": null
+        }
+      ],
+      "sounds": []
+    },
+    {
+      "id": "offline_entrybot_friends_70",
+      "name": "entrybot2",
+      "label": {
+        "ko": "entrybot2",
+        "en": "entrybot2"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_70_pic_1",
+          "name": "entrybot2",
+          "label": {
+            "ko": "entrybot2",
+            "en": "entrybot2"
+          },
+          "filename": "entrybot2_70",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/entrybot2_70.png",
+          "trimmed": null
+        }
+      ],
+      "sounds": []
+    },
+    {
+      "id": "offline_thing_21",
+      "name": "start_icon_object",
+      "label": {
+        "ko": "오브젝트 아이콘",
+        "en": "start_icon_object"
+      },
+      "category": {
+        "main": "thing",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_thing_21_pic_1",
+          "name": "start_icon_object",
+          "label": {
+            "ko": "오브젝트 아이콘",
+            "en": "start_icon_object"
+          },
+          "filename": "start_icon_object_21",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/start_icon_object_21.png",
+          "trimmed": null
+        }
+      ],
+      "sounds": []
+    },
+    {
+      "id": "offline_background_23",
+      "name": "start_icon_scene_1",
+      "label": {
+        "ko": "장면 아이콘 1",
+        "en": "start_icon_scene_1"
+      },
+      "category": {
+        "main": "background",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_background_23_pic_1",
+          "name": "start_icon_scene_1",
+          "label": {
+            "ko": "장면 아이콘 1",
+            "en": "start_icon_scene_1"
+          },
+          "filename": "start_icon_scene_1_23",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/start_icon_scene_1_23.png",
+          "trimmed": null
+        }
+      ],
+      "sounds": []
+    },
+    {
+      "id": "offline_animal_demo",
+      "name": "고양이",
+      "label": {
+        "ko": "고양이",
+        "en": "cat"
+      },
+      "category": {
+        "main": "animal",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_animal_demo_pic_1",
+          "name": "고양이",
+          "label": {
+            "ko": "고양이",
+            "en": "cat"
+          },
+          "filename": "cat_demo",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/cat_demo.png",
+          "trimmed": null
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_animal_demo_sound_1",
+          "name": "bark",
+          "label": {
+            "ko": "짖는 소리",
+            "en": "bark"
+          },
+          "filename": "bark_6",
+          "ext": ".mp3",
+          "duration": 2,
+          "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/sounds/bark_6.mp3"
+        }
+      ]
+    }
+  ],
+  "sounds": [
+    {
+      "id": "offline_other_6_sound_1",
+      "name": "bark",
+      "label": {
+        "ko": "짖는 소리",
+        "en": "bark"
+      },
+      "filename": "bark_6",
+      "ext": ".mp3",
+      "duration": 2,
+      "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/sounds/bark_6.mp3"
+    },
+    {
+      "id": "offline_other_7_sound_1",
+      "name": "click",
+      "label": {
+        "ko": "클릭 소리",
+        "en": "click"
+      },
+      "filename": "click_7",
+      "ext": ".mp3",
+      "duration": 1,
+      "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/sounds/click_7.mp3"
+    }
+  ],
+  "categories": {
+    "entrybot_friends": {
+      "id": "entrybot_friends",
+      "name": "엔트리봇",
+      "value": "entrybot_friends",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    },
+    "people": {
+      "id": "people",
+      "name": "사람",
+      "value": "people",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    },
+    "animal": {
+      "id": "animal",
+      "name": "동물",
+      "value": "animal",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    },
+    "thing": {
+      "id": "thing",
+      "name": "사물",
+      "value": "thing",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    },
+    "background": {
+      "id": "background",
+      "name": "배경",
+      "value": "background",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    },
+    "other": {
+      "id": "other",
+      "name": "기타",
+      "value": "other",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    }
+  },
+  "imageBaseUrl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/",
+  "soundBaseUrl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/sounds/"
+}

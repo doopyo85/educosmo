@@ -1,0 +1,188 @@
+/* =============================================
+   📌 게시판 새 글 알림 스타일
+   ============================================= */
+
+/* 게시판 알림 래퍼 */
+.board-notification-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-right: 15px;
+}
+
+/* 게시판 아이콘 버튼 */
+.board-icon-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 20px;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.board-icon-btn:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+    transform: scale(1.05);
+}
+
+.board-icon-btn:active {
+    transform: scale(0.95);
+}
+
+/* 새 글 알림 뱃지 */
+.new-post-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+    z-index: 10;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 뱃지 표시 상태 */
+.new-post-badge.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* 뱃지 펄스 애니메이션 */
+.new-post-badge.pulse {
+    animation: pulse-red 2s infinite;
+}
+
+/* 펄스 애니메이션 키프레임 */
+@keyframes pulse-red {
+    0% { 
+        transform: scale(1); 
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7), 0 2px 4px rgba(0, 0, 0, 0.2); 
+    }
+    70% { 
+        transform: scale(1); 
+        box-shadow: 0 0 0 6px rgba(220, 53, 69, 0), 0 2px 4px rgba(0, 0, 0, 0.2); 
+    }
+    100% { 
+        transform: scale(1); 
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0), 0 2px 4px rgba(0, 0, 0, 0.2); 
+    }
+}
+
+/* 툴팁 스타일 */
+.board-tooltip {
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+}
+
+/* 툴팁 화살표 */
+.board-tooltip::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-bottom-color: #333;
+}
+
+/* 툴팁 호버 표시 */
+.board-notification-wrapper:hover .board-tooltip {
+    opacity: 1;
+}
+
+/* =============================================
+   📌 반응형 스타일
+   ============================================= */
+
+/* 모바일 환경에서 툴팁 숨김 */
+@media (max-width: 768px) {
+    .board-tooltip {
+        display: none;
+    }
+    
+    .board-icon-btn {
+        font-size: 18px;
+        padding: 6px;
+    }
+    
+    .new-post-badge {
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+        top: 1px;
+        right: 1px;
+    }
+    
+    .board-notification-wrapper {
+        margin-right: 12px;
+    }
+}
+
+/* 태블릿 환경 */
+@media (max-width: 992px) and (min-width: 769px) {
+    .board-icon-btn {
+        font-size: 19px;
+    }
+    
+    .board-notification-wrapper {
+        margin-right: 14px;
+    }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .board-icon-btn {
+        border: 1px solid #333;
+    }
+    
+    .new-post-badge {
+        border: 3px solid white;
+    }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+    .board-icon-btn {
+        color: #adb5bd;
+    }
+    
+    .board-icon-btn:hover {
+        background-color: #495057;
+        color: #f8f9fa;
+    }
+    
+    .board-tooltip {
+        background: #495057;
+        border: 1px solid #6c757d;
+    }
+    
+    .board-tooltip::before {
+        border-bottom-color: #495057;
+    }
+}

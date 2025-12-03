@@ -1,0 +1,378 @@
+/* report.css */
+/* iframe 내에서의 리셋 스타일 */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: auto;
+  background-color: #f8f9fa;
+  color: #212529;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+body {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* 컨테이너 전체 너비 확보 */
+.container, .container-fluid {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+  max-width: 100%;
+}
+ 
+/* 헤더 스타일 */
+.report-header {
+  padding: 20px 0;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+/* 카드 스타일 */
+.category-section {
+  margin-bottom: 2rem;
+}
+
+.category-title {
+  border-left: 4px solid #0d6efd;
+  padding-left: 12px;
+  background-color: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+/* 리포트 생성 페이지 스타일 */
+#reportPreview {
+  min-height: 800px;
+}
+
+#printableReport {
+  font-family: 'Noto Sans KR', sans-serif;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+/* 테이블 스타일 */
+.table th {
+  background-color: #f8f9fa !important;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+/* 평가 항목 테이블 스타일 */
+#evaluationTableBody td {
+  padding: 0.75rem;
+}
+
+.form-check-inline {
+  display: flex;
+  margin-right: 0;
+  justify-content: center;
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* 선생님 의견 영역 */
+.teacher-comment-area {
+  min-height: 100px;
+  padding: 15px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+/* 교재 썸네일 영역 */
+.book-thumbnail {
+  max-height: 120px;
+  margin-bottom: 10px;
+}
+
+/* 버튼 스타일 */
+.btn-outline-primary {
+  transition: all 0.3s;
+}
+
+.btn-outline-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 로딩 메시지 */
+.loading-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  flex-direction: column;
+}
+
+/* 인쇄 스타일 */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printableReport, #printableReport * {
+    visibility: visible;
+  }
+  #printableReport {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 15px;
+    box-shadow: none;
+  }
+  
+  .card, .card-header, .card-body {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  .form-check-input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1px solid #000;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+  }
+  
+  .form-check-input:checked {
+    background-color: #000;
+    border-color: #000;
+  }
+  
+  .btn, .card-header, .form-control {
+    display: none !important;
+  }
+}
+
+/* 새로운 교재 선택 UI 스타일 */
+
+/* 기본 컨테이너 스타일 */
+.course-container {
+  margin-bottom: 2rem;
+}
+
+/* 카테고리 카드 스타일 */
+.course-category {
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  background-color: #fff;
+}
+
+/* 카테고리 헤더 스타일 */
+.category-header {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* 카테고리 아이콘 스타일 */
+.category-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  margin-right: 1rem;
+}
+
+/* 카테고리 제목 스타일 */
+.category-header .category-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  border-left: none;
+  padding: 0;
+  background-color: transparent;
+}
+
+/* 카테고리 설명 스타일 */
+.category-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-left: auto;
+}
+
+/* 교재 그리드 컨테이너 */
+.books-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+/* 교재 카드 아이템 */
+.book-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #fff;
+}
+
+.book-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* 교재 아이콘 영역 */
+.book-icon {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  font-size: 3rem;
+}
+
+/* 교재 내용 영역 */
+.book-content {
+  padding: 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 교재 제목 */
+.book-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+/* 교재 설명 */
+.book-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  flex-grow: 1;
+  margin-bottom: 1rem;
+}
+
+/* 진행 상태 표시줄 */
+.progress-bar {
+  height: 6px;
+  background-color: #e5e7eb;
+  border-radius: 3px;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #3b82f6;
+}
+
+/* 교재 정보 라인 */
+.book-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* 액션 버튼 스타일 */
+.action-button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  text-align: center;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0 0 8px 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-decoration: none;
+}
+
+.action-button:hover {
+  background-color: #2563eb;
+  color: white;
+  text-decoration: none;
+}
+
+/* 카테고리별 아이콘 색상 */
+.preschool-icon { background-color: #3b82f6; }
+.junior-icon { background-color: #8b5cf6; }
+.epl-icon { background-color: #ec4899; }
+.advanced-icon { background-color: #10b981; }
+
+/* 호수 선택 모달 스타일 */
+.volume-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.volume-buttons .btn {
+  min-width: 60px;
+}
+
+/* 모바일 반응형 스타일 */
+@media (max-width: 768px) {
+  .category-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .category-icon {
+    margin-bottom: 0.5rem;
+  }
+  
+  .category-description {
+    margin-left: 0;
+    margin-top: 0.25rem;
+  }
+  
+  .books-container {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  }
+}
+
+/* 작은 화면 스타일 */
+@media (max-width: 576px) {
+  .books-container {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .book-icon {
+    height: 100px;
+  }
+}

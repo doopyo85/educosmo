@@ -1,0 +1,254 @@
+// header.js
+document.addEventListener("DOMContentLoaded", function () {
+    // 현재 사용자 정보 가져오기
+    const currentUserID = document.getElementById('currentUserID')?.value || '게스트';
+    const currentUserRole = document.getElementById('currentUserRole')?.value || 'guest';
+
+    // 프로필 관련 요소들
+    const profileImage = document.getElementById('profileImage');
+    const profileDropdownImage = document.getElementById('profileDropdownImage');
+    const userNameElement = document.getElementById('userName');
+    const profileDropdownUserID = document.getElementById('profileDropdownUserID');
+    const profileDropdownRole = document.getElementById('profileDropdownRole');
+
+    // 사용자 정보 업데이트
+    if (userNameElement) userNameElement.textContent = currentUserID;
+    if (profileDropdownUserID) profileDropdownUserID.textContent = currentUserID;
+    if (profileDropdownRole) profileDropdownRole.textContent = currentUserRole;
+ 
+    // 로그아웃 시 로컬 및 세션 스토리지 초기화
+    if (window.location.pathname === '/logout') {
+        localStorage.clear();
+        sessionStorage.clear();
+    }
+
+    // 로그인 폼 처리
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch('/auth/login_process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.error) {
+                    alert(result.error);
+                } else {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = result.redirect;
+                }
+            })
+            .catch(error => {
+                console.error('로그인 오류:', error);
+                alert('로그인 중 오류가 발생했습니다.');
+            });
+        });
+    }
+
+         
+    const cachedProfile = sessionStorage.getItem('userProfileImage');
+    if (cachedProfile) {
+        if (profileImage) profileImage.src = cachedProfile;
+        if (profileDropdownImage) profileDropdownImage.src = cachedProfile;
+    }
+
+    // 사용자 세션 정보 가져오기
+    fetch('/api/get-user-session', { 
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => {
+      console.log('세션 API 응답 상태:', response.status);
+      return response.json();
+    })
+    .then(data => {
+      console.log('세션 API 응답 데이터:', data);
+      
+      if (data.is_logined && data.userID) {
+        if (userNameElement) userNameElement.textContent = data.userID;
+        if (profileDropdownUserID) profileDropdownUserID.textContent = data.userID;
+        if (profileDropdownRole) profileDropdownRole.textContent = data.role || currentUserRole;
+      } else {
+        console.warn('로그인 정보 없음:', data);
+        if (userNameElement) userNameElement.textContent = currentUserID;
+        if (profileDropdownUserID) profileDropdownUserID.textContent = currentUserID;
+      }
+    })
+    .catch(error => {
+      console.error('사용자 정보 가져오기 오류:', error);
+      // 오류 발생 시 서버에서 받은 기본값 사용
+      if (userNameElement) userNameElement.textContent = currentUserID;
+      if (profileDropdownUserID) profileDropdownUserID.textContent = currentUserID;
+    });
+
+    fetch('/api/get-profile-info')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.profilePath) {
+                if (profileImage) profileImage.src = data.profilePath;
+                if (profileDropdownImage) profileDropdownImage.src = data.profilePath;
+                sessionStorage.setItem('userProfileImage', data.profilePath);
+                initProfileSelector(data.profilePath);
+            }
+        })
+        .catch(error => console.error('프로필 정보 로드 오류:', error));
+
+    function initProfileSelector(selectedProfilePath) {
+        const defaultProfiles = [
+            '/resource/profiles/default.webp',
+            '/resource/profiles/profile1.webp',
+            '/resource/profiles/profile2.webp',
+            '/resource/profiles/profile3.webp',
+            '/resource/profiles/profile4.webp',
+            '/resource/profiles/profile5.webp'
+        ];
+
+        const defaultProfileContainer = document.getElementById('defaultProfileContainer');
+        if (defaultProfileContainer) {
+            defaultProfileContainer.innerHTML = '';
+            defaultProfiles.forEach(profile => {
+                const profileDiv = document.createElement('div');
+                profileDiv.className = `profile-image-item m-2 ${profile === selectedProfilePath ? 'selected' : ''}`;
+                profileDiv.dataset.profile = profile;
+
+                profileDiv.innerHTML = `
+                    <img src="${profile}" alt="Profile" class="rounded-circle"
+                         style="width: 60px; height: 60px; cursor: pointer;
+                         ${profile === selectedProfilePath ? 'border: 3px solid #0d6efd;' : ''}">
+                `;
+
+                profileDiv.addEventListener('click', function () {
+                    document.querySelectorAll('.profile-image-item').forEach(item => {
+                        item.classList.remove('selected');
+                        item.querySelector('img').style.border = 'none';
+                    });
+                    this.classList.add('selected');
+                    this.querySelector('img').style.border = '3px solid #0d6efd';
+                });
+
+                defaultProfileContainer.appendChild(profileDiv);
+            });
+        }
+
+        // 중복 이벤트 방지: 기존 버튼 제거 후 새로 바인딩
+        const oldBtn = document.getElementById('saveProfileButton');
+        if (oldBtn) {
+            const newBtn = oldBtn.cloneNode(true);
+            oldBtn.replaceWith(newBtn);
+
+            newBtn.addEventListener('click', function () {
+                const selectedItem = document.querySelector('.profile-image-item.selected');
+                if (selectedItem) {
+                    const selectedProfile = selectedItem.dataset.profile;
+                    saveProfileToDB(selectedProfile);
+                }
+            });
+        }
+    }
+
+    function saveProfileToDB(profilePath) {
+        fetch('/api/save-profile-to-db', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profilePath: profilePath })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (profileImage) profileImage.src = profilePath;
+                if (profileDropdownImage) profileDropdownImage.src = profilePath;
+                sessionStorage.setItem('userProfileImage', profilePath);
+                const modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
+                if (modal) modal.hide();
+                alert('프로필이 저장되었습니다.');
+            } else {
+                alert('프로필 저장 실패: ' + (data.message || '알 수 없는 오류'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('프로필 저장 중 오류가 발생했습니다.');
+        });
+    }
+
+    // 🕒 idle 타이머 기반 로그아웃
+    let idleTime = 0;
+    function resetIdleTimer() {
+        idleTime = 0;
+    }
+    function checkIdleTime() {
+        idleTime += 1;
+        if (idleTime >= 30) {
+            alert("일정시간동안 활동이 없어, 로그아웃되었습니다.");
+            window.location.href = '/logout';
+        }
+    }
+    setInterval(checkIdleTime, 60 * 1000);
+    ['mousemove', 'keypress', 'click', 'scroll'].forEach(evt =>
+        document.addEventListener(evt, resetIdleTimer)
+    );
+
+    // 문제가 되던 fetch 가로채기 부분 수정
+    const originalFetch = window.fetch;
+    window.fetch = function () {
+        const url = arguments[0];
+        if (typeof url === 'string' && url.includes('/api/get-user-session')) {
+            return Promise.resolve({
+                ok: true,
+                json: () => Promise.resolve({
+                    userID: currentUserID,  // 정의되지 않은 변수 대신 currentUserID 사용
+                    role: currentUserRole,  // 정의되지 않은 변수 대신 currentUserRole 사용
+                    is_logined: true
+                })
+            });
+        }
+        return originalFetch.apply(this, arguments);
+    };
+});
+
+
+// 관리자 대시보드로 이동
+function goToAdmin() {
+    window.location.href = '/admin';
+}
+
+// 교사 페이지로 이동
+function goToTeacher() {
+    window.location.href = '/teacher';
+}
+
+// 게시판으로 이동 (간단 버전)
+function goToBoard() {
+    // board-notification이 있으면 그쪽에서 처리 (방문 기록 업데이트)
+    if (window.boardNotification && typeof window.boardNotification.goToBoard === 'function') {
+        window.boardNotification.goToBoard();
+    } else {
+        // 없으면 그냥 이동
+        window.location.href = '/board';
+    }
+}
+
+// 내 프로필 열기
+function openMyProfile() {
+    const width = 900;
+    const height = 800;
+    const left = (screen.width - width) / 2;
+    const top = (screen.height - height) / 2;
+    
+    window.open(
+        '/my-profile',
+        'myProfile',
+        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+    );
+}

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공사중 - 코딩앤플레이</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f5f5f5;
+            overflow-x: hidden;
+        }
+        
+        .construction-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+        }
+        
+        .construction-title {
+            color: #ff6b35;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .raccoon-container {
+            position: relative;
+            height: 300px;
+            margin: 2rem 0;
+        }
+        
+        .raccoon {
+            width: 180px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            animation: bounce 2s infinite ease-in-out;
+        }
+        
+        .hard-hat {
+            width: 100px;
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translateX(-40%);
+            z-index: 3;
+        }
+        
+        .construction-sign {
+            width: 250px;
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            transform: translateX(-50%);
+        }
+        
+        .tools {
+            position: absolute;
+            width: 80px;
+        }
+        
+        .hammer {
+            right: 25%;
+            top: 60%;
+            transform: rotate(15deg);
+        }
+        
+        .wrench {
+            left: 25%;
+            top: 55%;
+            transform: rotate(-20deg);
+        }
+        
+        .dust-cloud {
+            position: absolute;
+            width: 100%;
+            height: 70px;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(222, 184, 135, 0.6), rgba(222, 184, 135, 0));
+            border-radius: 50%;
+            z-index: 1;
+            opacity: 0.7;
+            animation: dustPuff 3s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(-20px);
+            }
+        }
+        
+        @keyframes dustPuff {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
+        }
+        
+        .construction-tape {
+            background: repeating-linear-gradient(
+                45deg,
+                #ffdc00,
+                #ffdc00 10px,
+                #000000 10px,
+                #000000 20px
+            );
+            height: 30px;
+            width: 120%;
+            position: absolute;
+            left: -10%;
+            transform: rotate(-2deg);
+        }
+        
+        .tape-top {
+            top: -15px;
+        }
+        
+        .tape-bottom {
+            bottom: -15px;
+            transform: rotate(2deg);
+        }
+        
+        .message {
+            margin: 2rem 0;
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+        
+        .back-button {
+            background-color: #ff6b35;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            margin-top: 1rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .back-button:hover {
+            background-color: #e55a28;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+        
+        .timing {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 1.5rem;
+        }
+        
+        .blinking {
+            animation: blink 1.5s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+    
+    <div class="construction-container">
+        <div class="construction-tape tape-top"></div>
+        
+        <h1 class="construction-title">
+            <i class="bi bi-exclamation-triangle-fill"></i> 
+            공사중입니다!
+        </h1>
+        
+        <div class="message">
+            <p><strong>열심히 개발 중인 페이지입니다!</strong></p>
+            <p>너구리 개발자가 밤낮으로 코딩하고 있어요. 조금만 기다려주세요!</p>
+        </div>
+        
+        <div class="raccoon-container">
+            <!-- 너구리 이미지 (SVG로 대체) -->
+            <svg class="raccoon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                <!-- 너구리 몸통 -->
+                <ellipse cx="256" cy="300" rx="120" ry="130" fill="#6e5c62"/>
+                <!-- 너구리 얼굴 -->
+                <circle cx="256" cy="180" r="100" fill="#6e5c62"/>
+                <!-- 너구리 귀 -->
+                <circle cx="186" cy="120" r="30" fill="#6e5c62"/>
+                <circle cx="326" cy="120" r="30" fill="#6e5c62"/>
+                <!-- 하얀 얼굴 부분 -->
+                <ellipse cx="256" cy="200" rx="70" ry="60" fill="#f0f0f0"/>
+                <!-- 눈 -->
+                <circle cx="226" cy="180" r="15" fill="#333"/>
+                <circle cx="286" cy="180" r="15" fill="#333"/>
+                <!-- 눈 반짝임 -->
+                <circle cx="231" cy="175" r="5" fill="white"/>
+                <circle cx="291" cy="175" r="5" fill="white"/>
+                <!-- 코 -->
+                <ellipse cx="256" cy="210" rx="15" ry="10" fill="#333"/>
+                <!-- 너구리 마스크 (눈 주변 검은 부분) -->
+                <path d="M200,160 Q256,190 312,160 Q312,130 256,140 Q200,130 200,160 Z" fill="#333"/>
+            </svg>
+            
+            <!-- 안전모 -->
+            <svg class="hard-hat" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <path d="M10,50 Q50,-10 90,50 L80,70 Q50,80 20,70 Z" fill="#ffdc00"/>
+                <rect x="45" y="10" width="10" height="20" fill="#ffdc00"/>
+            </svg>
+            
+            <!-- 공사중 표지판 -->
+            <svg class="construction-sign" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <rect x="10" y="20" width="80" height="60" fill="white" stroke="#333" stroke-width="2"/>
+                <text x="50" y="50" font-family="Arial" font-size="10" text-anchor="middle" fill="#333">공사중</text>
+                <line x1="48" y1="80" x2="48" y2="100" stroke="#333" stroke-width="3"/>
+                <line x1="52" y1="80" x2="52" y2="100" stroke="#333" stroke-width="3"/>
+            </svg>
+            
+            <!-- 공구 -->
+            <svg class="tools hammer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <rect x="40" y="30" width="10" height="60" fill="#a0522d"/>
+                <rect x="20" y="10" width="50" height="20" fill="#555"/>
+            </svg>
+            
+            <svg class="tools wrench" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <path d="M20,20 Q60,60 80,80 L70,90 Q50,70 10,30 Z" fill="#aaa"/>
+                <circle cx="20" cy="20" r="10" fill="#aaa"/>
+            </svg>
+            
+            <!-- 먼지 구름 -->
+            <div class="dust-cloud"></div>
+        </div>
+        
+        <p class="timing">예상 완료 시간: <span class="blinking">곧...</span></p>
+        
+        <button class="back-button" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> 이전 페이지로 돌아가기
+        </button>
+        
+        <div class="construction-tape tape-bottom"></div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

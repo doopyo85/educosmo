@@ -1,0 +1,249 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">   
+    <title>코딩앤플레이 - 쉽게 배우는 프로그래밍</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/board-notification.css">
+    <script src="https://apis.google.com/js/api.js"></script>
+
+    <!-- 필요한 hidden input 요소 추가 -->
+    <input type="hidden" id="googleApiKey" value="<%= process.env.GOOGLE_API_KEY %>">
+    <input type="hidden" id="spreadsheetId" value="<%= process.env.SPREADSHEET_ID %>">
+    <input type="hidden" id="discoveryDocs" value="<%= process.env.DISCOVERY_DOCS %>">
+    <input type="hidden" id="currentUserID" value="<%= locals.userID || '게스트' %>">
+    <input type="hidden" id="currentUserRole" value="<%= locals.role || 'guest' %>">
+
+    <!-- Favicon 설정 -->
+    <link rel="icon" href="/resource/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/resource/favicon.ico" type="image/x-icon">
+</head>
+
+<header class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <% if (serviceType === 'cosmoedu') { %>
+                <img src="/resource/cosmoedu.webp" 
+                     alt="코스모에듀 로고" 
+                     onerror="this.src='/resource/codingnplay_logo.png'">
+            <% } else { %>
+                <img src="/resource/codingnplay_logo.png" 
+                     alt="코딩앤플레이 로고">
+            <% } %>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <form class="d-flex mx-auto" style="max-width: 400px;">
+                <input class="form-control me-2" type="search" placeholder="Search..." aria-label="Search" style="font-size: 16px; padding: 8px;">
+            </form>   
+            <% if (role === 'admin') { %>
+                <div class="board-notification-wrapper">
+                    <button class="board-icon-btn" onclick="goToAdmin()" title="관리자 대시보드" aria-label="관리자 대시보드로 이동">
+                        <i class="bi bi-gear-fill" aria-hidden="true"></i>
+                    </button>
+                    <div class="board-tooltip">관리자</div>
+                </div>
+            <% } %>
+            <% if (role === 'admin' || role === 'teacher' || role === 'manager') { %>
+                <div class="board-notification-wrapper">
+                    <button class="board-icon-btn" onclick="goToTeacher()" title="교사 전용 페이지" aria-label="교사 전용 페이지로 이동">
+                        <i class="bi bi-people-fill" aria-hidden="true"></i>
+                    </button>
+                    <div class="board-tooltip">교사 전용</div>
+                </div>
+            <% } %>       
+            <div class="d-flex align-items-center">
+                <!-- 게시판 아이콘 (새 글 알림 포함) -->
+                <div class="board-notification-wrapper">
+                    <button class="board-icon-btn" onclick="goToBoard()" title="게시판" aria-label="게시판으로 이동">
+                        <i class="bi bi-chat-square-text" aria-hidden="true"></i>
+                        <span class="new-post-badge" id="newPostBadge" aria-label="새 글 개수">0</span>
+                    </button>
+                    <div class="board-tooltip">새 글 확인</div>
+                </div>
+
+                <!-- 🔥 내 파일 아이콘 (전체 사용자) -->
+                <div class="board-notification-wrapper">
+                    <button class="board-icon-btn" onclick="openMyFiles()" title="내 파일 관리" aria-label="내 파일 관리 열기">
+                        <i class="bi bi-folder-fill" aria-hidden="true"></i>
+                    </button>
+                    <div class="board-tooltip">내 파일</div>
+                </div>
+
+                <% if (role === 'admin' || role === 'teacher' || role === 'manager') { %>
+                    <div class="nav-item dropdown me-4">
+                        <a class="nav-link dropdown-toggle" href="#" id="teacherResourcesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            교사 전용페이지
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="teacherResourcesDropdown">
+                            <li>
+                                <a class="dropdown-item" href="https://shop.codingnplay.co.kr/" target="_blank">
+                                    <img src="/resource/imweb.png" alt="교재" width="20" height="20" class="me-2"> 교재몰
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="https://www.miricanvas.com/workspace/team/drive" target="_blank">
+                                    <img src="/resource/miricanvas.png" alt="홍보" width="20" height="20" class="me-2"> 홍보물
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="http://naver.me/5YwLMZzj" target="_blank">
+                                    <img src="/resource/navermybox.jpg" alt="운영자료" width="20" height="20" class="me-2"> 운영자료
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="https://edu.codingnplay.co.kr/" target="_blank">
+                                    <img src="/resource/glide.png" alt="지도서 영상보기" width="20" height="20" class="me-2"> 지도서 영상보기
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="https://app.codingnplay.co.kr/report/books-page">
+                                    <i class="bi bi-clipboard-check me-2"></i> 평가지 출력
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="https://codingnplay.co.kr/%ec%bd%94%ed%94%8c%ec%86%8c%ec%8b%9d/" target="_blank">
+                                    <i class="bi bi-award me-2"></i> 자격증/행사
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="https://us02web.zoom.us/j/3566471255?pwd=U3hGeFJ4dVZnYlRVNThTcHVKbUxTUT09" target="_blank">
+                                    <img src="/resource/zoom.png" alt="줌 회의실" width="20" height="20" class="me-2"> 줌 회의실
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/nuguritalk">
+                                    <img src="/resource/co.ico" alt="일해라너구리" width="20" height="20" class="me-2"> 일해라너구리
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                <% } %>
+                
+                <!-- 프로필 드롭다운 -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0;">
+                        <img src="/resource/profiles/default.webp" alt="Profile" id="profileImage" class="rounded-circle" style="width: 40px; height: 40px;">
+                        <span id="userName" class="ms-2"><%= locals.userID || '게스트' %></span>
+                    </a>
+
+                    <%
+                    function canAccess(feature) {
+                        const permissions = require('../../lib_login/permissions');
+                        return permissions.hasFeatureAccess(locals.role, feature);
+                    }
+                    %> 
+
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                        <li class="px-3 py-2 text-muted">
+                            <div class="d-flex align-items-center">
+                                <img src="/resource/profiles/default.webp" alt="Profile" id="profileDropdownImage" class="rounded-circle" style="width: 50px; height: 50px;">
+                                <div class="ms-3">
+                                    <div id="profileDropdownUserID" style="font-weight: 500;"><%= locals.userID || '게스트' %></div>
+                                    <div class="small text-muted" id="profileDropdownRole"><%= locals.role || 'guest' %></div>
+                                </div>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#profileModal">
+                                <i class="bi bi-person-fill me-2"></i>프로필 선택
+                            </button>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="openMyProfile(); return false;">
+                                <i class="bi bi-pencil-square me-2"></i>내 정보 수정
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/logout">
+                                <i class="bi bi-box-arrow-right me-2"></i>로그아웃
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                               
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- 프로필 선택 모달 -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="profileModalLabel">프로필 선택</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 기본 프로필 이미지 선택 -->
+                <h6 class="mb-3">기본 프로필</h6>
+                <div class="d-flex flex-wrap justify-content-center mb-4" id="defaultProfileContainer">
+                    <!-- 기본 프로필 이미지들이 JS로 동적으로 추가됩니다 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                <button type="button" class="btn btn-primary" id="saveProfileButton">저장</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 🔥 내 파일 모달 (전체화면) -->
+<div class="modal fade" id="myFilesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <iframe id="myFilesFrame" 
+                        src="" 
+                        style="width: 100%; height: 100%; border: none;"
+                        frameborder="0">
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 스크립트 부분 -->
+<script defer src="/header.js"></script>
+<script defer src="/js/board-notification.js"></script>
+
+<script>
+/**
+ * 내 파일 모달 열기 (역할별 자동 경로 선택)
+ */
+function openMyFiles() {
+    const userRole = '<%= role %>';
+    const modal = new bootstrap.Modal(document.getElementById('myFilesModal'));
+    const iframe = document.getElementById('myFilesFrame');
+    
+    // 🔥 역할별 경로 자동 선택
+    let s3Path;
+    
+    if (userRole === 'admin') {
+        s3Path = '/s3/browser';  // Admin은 전체 탐색
+    } else if (userRole === 'teacher' || userRole === 'manager') {
+        s3Path = '/s3/student-files';  // Teacher는 학생 파일
+    } else if (userRole === 'student') {
+        s3Path = '/s3/my-files';  // Student는 본인 파일만
+    } else {
+        s3Path = '/s3/browser';  // 기본값
+    }
+    
+    console.log('📂 S3 경로:', s3Path, '(역할:', userRole, ')');
+    iframe.src = s3Path;
+    
+    modal.show();
+}
+
+// 모달이 닫힐 때 iframe src 초기화 (메모리 절약)
+document.getElementById('myFilesModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('myFilesFrame').src = '';
+});
+</script>

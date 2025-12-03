@@ -1,0 +1,442 @@
+/**
+ * navigation.css
+ * 네비게이션 컴포넌트의 스타일
+ */
+
+/* ===================================
+   네비게이션 컴포넌트 기본 스타일
+   =================================== */
+
+/* 네비게이션 컨테이너 */
+.nav-container {
+  width: 250px;
+  min-width: 250px;
+  height: 100%;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+  border-right: 1px solid #dee2e6;
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+  transition: width 0.3s ease-in-out;
+}
+
+/* 네비게이션 스크롤바 */
+.nav-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nav-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.nav-container::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.nav-container::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* ===================================
+   메뉴 목록 스타일
+   =================================== */
+
+/* 메뉴 목록 */
+#navList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ===================================
+   상위 메뉴 스타일
+   =================================== */
+
+/* 메뉴 항목 */
+.menu-item {
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 상위 메뉴 항목 */
+.menu-item > a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 15px;
+  color: #495057;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.menu-item > a:hover {
+  background-color: #e9ecef;
+  color: #0d6efd;
+}
+
+/* 메뉴 화살표 아이콘 */
+.menu-item > a > i {
+  /* 회전 애니메이션 제거 */
+}
+
+/* 펼쳐진 메뉴 화살표 */
+.menu-item > a[aria-expanded="true"] > i {
+  /* 회전 애니메이션 제거 */
+}
+
+/* ===================================
+   하위 메뉴 스타일
+   =================================== */
+
+/* 하위 메뉴 컨테이너 */
+.collapse {
+  /* 애니메이션 제거 - 즉시 표시/숨김 */
+}
+
+/* 하위 메뉴 목록 */
+.collapse ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 하위 메뉴 항목 */
+.collapse .menu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px 10px 35px;
+  color: #495057;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  position: relative;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.collapse .menu-item:before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #dee2e6;
+  display: none;
+}
+
+.collapse .menu-item:hover:before {
+  display: block;
+}
+
+.collapse .menu-item:hover {
+  background-color: #e9ecef;
+  color: #0d6efd;
+}
+
+/* 하위 메뉴 항목 아이콘 */
+.collapse .menu-item i.bi {
+  margin-right: 10px;
+  font-size: 1rem;
+  color: #6c757d;
+  transition: color 0.2s ease;
+}
+
+.collapse .menu-item:hover i.bi {
+  color: #0d6efd;
+}
+
+/* ===================================
+   활성화된 메뉴 스타일
+   =================================== */
+
+/* 활성화된 메뉴 항목 */
+.menu-item.active {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+  font-weight: 500;
+}
+
+.menu-item.active i.bi {
+  color: #0d6efd;
+}
+
+/* 활성화된 상위 메뉴 */
+.menu-item.active > a {
+  color: #0d6efd;
+  background-color: #f0f7ff;
+}
+
+/* ===================================
+   레이아웃 타입별 메뉴 아이콘
+   =================================== */
+
+/* HTML 타입 메뉴 아이콘 */
+.menu-item i.bi-file-text {
+  color: #6c757d;
+}
+
+/* IDE 타입 메뉴 아이콘 */
+.menu-item i.bi-code-square {
+  color: #0d6efd;
+}
+
+/* 퀴즈 타입 메뉴 아이콘 */
+.menu-item i.bi-question-circle {
+  color: #28a745;
+}
+
+/* PPT 타입 메뉴 아이콘 */
+.menu-item i.bi-file-earmark-slides {
+  color: #fd7e14;
+}
+
+/* ===================================
+   접근성 및 키보드 탐색
+   =================================== */
+
+/* 키보드 포커스 스타일 */
+.menu-item:focus-visible {
+  outline: 2px solid #0d6efd;
+  outline-offset: -2px;
+}
+
+/* 탭 인덱스가 있는 메뉴 항목 */
+.menu-item[tabindex="0"]:focus {
+  background-color: #e9ecef;
+  color: #0d6efd;
+}
+
+/* ===================================
+   애니메이션 및 전환 효과
+   =================================== */
+
+/* 하위 메뉴 펼치기/접기 애니메이션 */
+.collapse {
+  /* 애니메이션 완전 제거 */
+  max-height: none;
+  overflow: visible;
+  transition: none;
+}
+
+.collapse.show {
+  max-height: none;
+}
+
+/* ===================================
+   반응형 레이아웃
+   =================================== */
+
+/* 축소 모드 네비게이션 */
+.nav-container.collapsed {
+  width: 60px;
+  min-width: 60px;
+}
+
+.nav-container.collapsed .menu-item > a {
+  padding: 12px 10px;
+  justify-content: center;
+}
+
+.nav-container.collapsed .menu-item > a > span,
+.nav-container.collapsed .menu-item > a > i.bi-chevron-down,
+.nav-container.collapsed .menu-item > a > i.bi-chevron-up {
+  display: none;
+}
+
+.nav-container.collapsed .collapse {
+  position: absolute;
+  left: 60px;
+  top: 0;
+  width: 200px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+/* 토글 버튼 */
+.nav-toggle-btn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 11;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s ease;
+}
+
+.nav-toggle-btn:hover {
+  background-color: #0b5ed7;
+}
+
+.nav-toggle-btn i {
+  font-size: 1.1rem;
+  transition: transform 0.3s ease;
+}
+
+.nav-container.collapsed .nav-toggle-btn i {
+  transform: rotate(180deg);
+}
+
+/* 태블릿 및 모바일 레이아웃 */
+@media (max-width: 992px) {
+  .nav-container {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .menu-item > a {
+    padding: 10px 15px;
+  }
+  
+  .collapse .menu-item {
+    padding: 8px 15px 8px 30px;
+  }
+  
+  /* 화면 너비가 좁을 때 네비게이션 토글 */
+  .nav-container.collapsed {
+    max-height: 50px;
+    overflow: hidden;
+  }
+  
+  .nav-container.collapsed #navList > .menu-item:not(:first-child) {
+    display: none;
+  }
+  
+  .nav-toggle-btn {
+    top: 7px;
+    right: 7px;
+    bottom: auto;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 576px) {
+  .nav-container {
+    max-height: 150px;
+  }
+  
+  .menu-item > a {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+  
+  .collapse .menu-item {
+    padding: 6px 12px 6px 25px;
+    font-size: 0.85rem;
+  }
+  
+  .collapse .menu-item i.bi {
+    font-size: 0.9rem;
+    margin-right: 8px;
+  }
+  
+  .nav-toggle-btn {
+    top: 5px;
+    right: 5px;
+    width: 28px;
+    height: 28px;
+  }
+  
+  .nav-toggle-btn i {
+    font-size: 0.9rem;
+  }
+}
+
+/* ===================================
+   메뉴 스타일 테마
+   =================================== */
+
+/* 라이트 테마 (기본값) */
+.nav-theme-light {
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+.nav-theme-light .menu-item > a {
+  color: #495057;
+}
+
+.nav-theme-light .menu-item.active {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+}
+
+/* 다크 테마 */
+.nav-theme-dark {
+  background-color: #212529;
+  color: #f8f9fa;
+  border-right-color: #343a40;
+}
+
+.nav-theme-dark .menu-item > a {
+  color: #e9ecef;
+}
+
+.nav-theme-dark .menu-item > a:hover {
+  background-color: #343a40;
+  color: #ffffff;
+}
+
+.nav-theme-dark .collapse .menu-item {
+  color: #e9ecef;
+}
+
+.nav-theme-dark .collapse .menu-item:hover {
+  background-color: #343a40;
+  color: #ffffff;
+}
+
+.nav-theme-dark .menu-item.active {
+  background-color: #0d6efd;
+  color: #ffffff;
+}
+
+.nav-theme-dark .menu-item.active > a {
+  color: #ffffff;
+  background-color: #0d6efd;
+}
+
+.nav-theme-dark .menu-item:before {
+  background-color: #495057;
+}
+
+.nav-theme-dark::-webkit-scrollbar-track {
+  background: #343a40;
+}
+
+.nav-theme-dark::-webkit-scrollbar-thumb {
+  background: #495057;
+}
+
+.nav-theme-dark::-webkit-scrollbar-thumb:hover {
+  background: #6c757d;
+}

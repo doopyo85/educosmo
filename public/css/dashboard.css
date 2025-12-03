@@ -1,0 +1,130 @@
+/* =============================================
+   📌 대시보드 테이블 스타일
+   ============================================= */
+/* 대시보드 테이블 정렬 아이콘 */
+th[data-sort] {
+    cursor: pointer;
+    position: relative;
+}
+
+th[data-sort] i {
+    opacity: 0.3;
+    margin-left: 5px;
+}
+
+th[data-sort].sorted-asc i,
+th[data-sort].sorted-desc i {
+    opacity: 1;
+}
+
+/* 테이블 필터 입력창 */
+.column-filter {
+    width: 100%;
+    margin-top: 5px;
+    font-size: 0.875rem;
+}
+
+/* 테이블 전체 레이아웃 조정 */
+.table-responsive {
+    margin-top: 1rem;
+    overflow-x: auto;  /* 필요시 가로 스크롤 */
+}
+
+/* 필터 입력창 너비 조정 */
+.column-filter {
+    width: 100%;
+    min-width: 50px;  /* 최소 너비 설정 */
+}
+
+/* =============================================
+   📌 통계 카드 스타일
+   ============================================= */
+/* 통계 카드 애니메이션 */
+.stat-card {
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+/* 차트 컨테이너 */
+.chart-container {
+    position: relative;
+    margin: auto;
+    height: 300px;
+}
+
+/* =============================================
+   📌 사용자 관리 테이블 스타일
+   ============================================= */
+/* 사용자 관리 테이블 열 너비 조정 */
+#usersTable th,
+#usersTable td {
+    white-space: nowrap;  /* 텍스트 줄바꿈 방지 */
+    padding: 6px;         /* 셀 내부 여백 최소화 */
+    vertical-align: middle; /* 텍스트 수직 중앙 정렬 */
+}
+
+#usersTable th[data-sort="no"],
+#usersTable td:first-child {
+    width: 50px;  /* NO 컬럼 */
+}
+
+#usersTable th[data-sort="userID"],
+#usersTable th[data-sort="name"],
+#usersTable th[data-sort="role"] {
+    width: 120px;  /* ID, 이름, 역할 컬럼 */
+}
+
+#usersTable th[data-sort="centerID"] {
+    width: 150px;  /* 센터ID 컬럼 */
+}
+
+#usersTable th[data-sort="email"] {
+    width: 200px;  /* 이메일 컬럼 */
+}
+
+#usersTable th[data-sort="created_at"] {
+    width: 180px;  /* 가입일 컬럼 */
+}
+
+#usersTable th:last-child,
+#usersTable td:last-child {
+    width: 100px;  /* 작업 컬럼 */
+    text-align: center;
+}
+
+/* [활동 보기] 버튼 크기 조정 */
+#usersTable .btn-view {
+    font-size: 12px;       /* 글자 크기 */
+    padding: 2px 6px;      /* 내부 여백 최소화 */
+    height: auto;          /* 고정 높이 제거 */
+    line-height: 1.2;      /* 줄 간격 최소화 */
+}
+
+/* =============================================
+   📌 권한 설정 테이블 스타일
+   ============================================= */
+#permissions-section .table {
+    font-size: 0.9rem;
+}
+
+#permissions-section .table th {
+    text-align: center;
+    vertical-align: middle;
+    background-color: #f8f9fa;
+}
+
+#permissions-section .form-check-input {
+    cursor: pointer;
+}
+
+#permissions-section .form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+#permissions-section small.text-muted {
+    font-size: 0.8rem;
+}

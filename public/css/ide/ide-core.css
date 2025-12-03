@@ -1,0 +1,327 @@
+/* ============================================================
+   ide-core.css - IDE 기본 변수, 컨테이너, 레이아웃
+   ============================================================ */
+
+/* ============================================================
+   🔥 VSCode 색상 변수 - IDE 컨테이너 내부에만 적용
+   ============================================================ */
+.ide-container {
+  /* VSCode 색상 변수 - IDE 영역에만 적용 */
+  --vscode-bg-primary: #1e1e1e;
+  --vscode-bg-secondary: #252526;
+  --vscode-bg-tertiary: #2d2d30;
+  --vscode-border: #3c3c3c;
+  --vscode-border-light: #454545;
+  --vscode-text-primary: #cccccc;
+  --vscode-text-secondary: #969696;
+  --vscode-text-muted: #6a6a6a;
+  --vscode-accent: #007acc;
+  --vscode-accent-hover: #1177bb;
+  --vscode-success: #4ec9b0;
+  --vscode-warning: #dcdcaa;
+  --vscode-error: #f44747;
+  --vscode-info: #569cd6;
+  
+  /* VSCode 폰트 */
+  --vscode-font-editor: Consolas, 'Courier New', Monaco, 'Lucida Console', monospace;
+  --vscode-font-ui: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* VSCode 크기 */
+  --vscode-toolbar-height: 35px;
+  --vscode-tab-height: 35px;
+  --vscode-border-width: 1px;
+  --vscode-border-radius: 3px;
+}
+
+/* ============================================================
+   기본 IDE 컨테이너 - VSCode 스타일 적용
+   ============================================================ */
+
+.ide-container {
+  display: none;
+  flex-direction: column;
+  background-color: var(--vscode-bg-primary);
+  color: var(--vscode-text-primary);
+  font-family: var(--vscode-font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+  border-left: var(--vscode-border-width) solid var(--vscode-border);
+}
+
+/* IDE 레이아웃 활성화 */
+.layout-ide .ide-container {
+  display: flex !important;
+}
+
+/* ============================================================
+   🔥 수정된 IDE 레이아웃 - 에디터와 터미널 분할
+   ============================================================ */
+
+/* 코드 에디터 컨테이너 */
+.ide-container .code-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 코드 에디터 상단 바 */
+.ide-container .code-editor-top-bar {
+  flex: 0 0 auto;
+  height: 50px;
+  min-height: 50px;
+}
+
+/* ACE 에디터 내부 컨테이너 */
+.ide-container #ace-editor-inner {
+  flex: 1;
+  display: flex !important;
+  flex-direction: column !important;
+  height: calc(100% - 50px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 에디터 영역 (상단) */
+.ide-container .editor-area {
+  flex: 1 1 70%; /* 기본 70% 할당 */
+  min-height: 200px;
+  max-height: calc(100% - 150px); /* 터미널을 위한 최소 공간 확보 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  order: 1;
+}
+
+/* 코드 에디터 */
+.ide-container .code-editor {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+}
+
+/* 리사이즈 핸들 */
+.ide-container .resize-handle {
+  flex: 0 0 6px;
+  height: 6px;
+  background-color: var(--vscode-bg-secondary);
+  border-top: 1px solid var(--vscode-border);
+  border-bottom: 1px solid var(--vscode-border);
+  cursor: ns-resize;
+  position: relative;
+  user-select: none;
+  z-index: 10;
+  transition: background-color 0.2s ease;
+  order: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ide-container .resize-handle:hover {
+  background-color: var(--vscode-accent);
+}
+
+.ide-container .resize-handle-line {
+  width: 30px;
+  height: 1px;
+  background-color: var(--vscode-text-muted);
+  opacity: 0.6;
+}
+
+.ide-container .resize-handle:hover .resize-handle-line {
+  background-color: white;
+  opacity: 1;
+}
+
+/* 🔥 수정된 터미널(출력) 영역 */
+.ide-container .output-container {
+  flex: 0 0 30%; /* 기본 30% 할당 */
+  min-height: 120px;
+  max-height: 60%; /* 최대 60%까지 확장 가능 */
+  display: flex !important;
+  flex-direction: column !important;
+  background-color: var(--vscode-bg-primary);
+  border-top: 1px solid var(--vscode-border);
+  order: 3;
+  overflow: hidden;
+}
+
+/* 터미널 타이틀 */
+.ide-container .output-title {
+  flex: 0 0 40px;
+  height: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--vscode-bg-secondary);
+  border-bottom: 1px solid var(--vscode-border);
+  font-size: 16px; 
+  font-weight: 500;
+  color: var(--vscode-text-primary);
+}
+
+/* 터미널 콘텐츠 */
+.ide-container .output-content {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  font-family: var(--vscode-font-editor);
+  font-size: 16px; 
+  line-height: 1.4;
+  color: var(--vscode-text-primary);
+  background-color: var(--vscode-bg-primary);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* ============================================================
+   레이아웃 강제 보장
+   ============================================================ */
+
+.layout-ide .ide-container .output-container,
+body.layout-ide .ide-container .output-container,
+#ide-component .output-container {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex: 0 0 200px !important;
+  min-height: 200px !important;
+}
+
+.layout-ide .ide-container .output-content,
+body.layout-ide .ide-container .output-content,
+#ide-component .output-content {
+  display: flex !important;
+  flex-direction: column !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* ============================================================
+   반응형 디자인
+   ============================================================ */
+
+@media (max-width: 992px) {
+  .ide-container .code-editor-top-bar {
+    padding: 8px 12px;
+    height: 56px;
+  }
+  
+  .ide-container #ace-editor-inner {
+    height: calc(100% - 56px);
+  }
+  
+  .ide-container .output-container {
+    flex: 0 0 35%;
+    min-height: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ide-container .code-editor-top-bar {
+    padding: 6px 10px;
+    height: 50px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .ide-container #ace-editor-inner {
+    height: calc(100% - 50px);
+  }
+  
+  .ide-container .output-container {
+    flex: 0 0 40%;
+    min-height: 120px;
+  }
+}
+
+@media (max-height: 600px) {
+  .ide-container .output-container {
+    flex: 0 0 25%;
+    min-height: 100px;
+  }
+}
+
+@media (max-height: 400px) {
+  .ide-container .output-container {
+    flex: 0 0 30%;
+    min-height: 80px;
+  }
+}
+
+/* ============================================================
+   접근성 및 포커스 스타일
+   ============================================================ */
+
+.ide-container .resize-handle:focus {
+  outline: 2px solid var(--vscode-accent);
+  outline-offset: 1px;
+}
+
+.ide-container .ace_editor:focus {
+  outline: none;
+}
+
+/* ============================================================
+   프린트 스타일
+   ============================================================ */
+
+@media print {
+  .ide-container .code-editor-top-bar,
+  .ide-container .output-container {
+    display: none;
+  }
+  
+  .ide-container #editor {
+    height: 100%;
+  }
+  
+  .ide-container .ace_editor {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-size: 16pt !important;
+  }
+  
+  .ide-container .ace_gutter {
+    font-size: 16pt !important;
+  }
+}
+
+/* ============================================================
+   터미널 최대화 및 리사이즈 상태
+   ============================================================ */
+
+/* 터미널 최대화 상태 */
+.ide-container .output-container.maximized {
+  flex: 1 1 100% !important;
+  height: calc(100vh - 120px) !important;
+  min-height: calc(100vh - 120px) !important;
+  max-height: calc(100vh - 120px) !important;
+  position: relative;
+  z-index: 100;
+}
+
+/* 최대화 상태에서 에디터 숨기기 */
+.ide-container .output-container.maximized ~ .editor-area,
+.ide-container .output-container.maximized ~ .resize-handle {
+  display: none !important;
+}
+
+/* 리사이즈 중 상태 */
+.ide-container.resizing {
+  user-select: none;
+  cursor: ns-resize;
+}
+
+.ide-container.resizing * {
+  pointer-events: none;
+}
+
+.ide-container.resizing .resize-handle {
+  pointer-events: all;
+}

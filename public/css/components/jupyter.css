@@ -1,0 +1,340 @@
+/**
+ * jupyter.css - Jupyter 컴포넌트 전용 스타일
+ * md+jupyter 타입 콘텐츠용 스타일링
+ */
+
+/* =============================================================================
+   Jupyter 컨테이너 기본 스타일
+   ============================================================================= */
+
+.jupyter-container {
+  width: 100%;
+  height: 100%; /* 🔥 수정: calc 제거 - CSS가 자동 처리 */
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  display: none; /* 기본적으로 숨김 */
+}
+
+.jupyter-container.component-visible {
+  display: flex !important;
+  flex-direction: column;
+}
+
+.jupyter-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =============================================================================
+   Jupyter iframe 스타일
+   ============================================================================= */
+
+.jupyter-iframe {
+  width: 100%;
+  height: 100%; /* 🔥 수정: calc 제거 - flex가 자동 처리 */
+  border: none;
+  border-radius: 8px;
+  flex: 1;
+  background: #ffffff;
+}
+
+/* iframe 로딩 중 스타일 */
+.jupyter-iframe[src="about:blank"] {
+  background: #f8f9fa;
+  display: none;
+}
+
+/* =============================================================================
+   로딩 상태 스타일
+   ============================================================================= */
+
+.jupyter-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 10;
+}
+
+.jupyter-loading .loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #f37626; /* Jupyter 오렌지 색상 */
+  border-radius: 50%;
+  animation: jupyter-spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+.jupyter-loading p {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+  text-align: center;
+}
+
+@keyframes jupyter-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* =============================================================================
+   오류 상태 스타일
+   ============================================================================= */
+
+.jupyter-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  z-index: 11;
+}
+
+.jupyter-error .error-content {
+  text-align: center;
+  padding: 40px;
+  max-width: 400px;
+}
+
+.jupyter-error h5 {
+  color: #dc3545;
+  margin-bottom: 16px;
+}
+
+.jupyter-error p {
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.jupyter-error .btn {
+  min-width: 120px;
+}
+
+/* =============================================================================
+   Jupyter 도구 모음 스타일
+   ============================================================================= */
+
+.jupyter-toolbar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 15;
+  backdrop-filter: blur(10px);
+}
+
+.jupyter-toolbar .toolbar-group {
+  display: flex;
+  gap: 4px;
+}
+
+.jupyter-toolbar .btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.jupyter-toolbar .btn:hover {
+  background-color: #f8f9fa;
+  border-color: #6c757d;
+}
+
+/* =============================================================================
+   레이아웃별 스타일
+   ============================================================================= */
+
+/* Jupyter 레이아웃이 활성화된 경우 */
+.layout-jupyter .jupyter-container {
+  display: flex !important;
+  flex-direction: column;
+  margin-top: 0 !important; /* 🔥 수정: margin 제거 */
+}
+
+.layout-jupyter .jupyter-container.component-hidden {
+  display: flex !important;
+  margin-top: 0 !important; /* 🔥 수정: margin 제거 */
+}
+
+/* 다른 레이아웃에서는 숨김 */
+.layout-html .jupyter-container,
+.layout-ide .jupyter-container,
+.layout-quiz .jupyter-container,
+.layout-ppt .jupyter-container {
+  display: none !important;
+}
+
+/* =============================================================================
+   반응형 디자인
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .jupyter-toolbar {
+    top: 8px;
+    right: 8px;
+    padding: 6px;
+  }
+  
+  .jupyter-toolbar .btn {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .jupyter-loading p {
+    font-size: 14px;
+  }
+  
+  .jupyter-error .error-content {
+    padding: 20px;
+  }
+  
+  .jupyter-error h5 {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .jupyter-toolbar {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin: 8px;
+    justify-content: center;
+  }
+  
+  .jupyter-container {
+    border-radius: 4px;
+  }
+  
+  .jupyter-iframe {
+    border-radius: 4px;
+  }
+}
+
+/* =============================================================================
+   다크 모드 지원 (선택사항)
+   ============================================================================= */
+
+@media (prefers-color-scheme: dark) {
+  .jupyter-container {
+    background: #2d2d2d;
+    border-color: #404040;
+  }
+  
+  .jupyter-loading {
+    background: rgba(45, 45, 45, 0.95);
+  }
+  
+  .jupyter-loading p {
+    color: #cccccc;
+  }
+  
+  .jupyter-error {
+    background: #2d2d2d;
+  }
+  
+  .jupyter-error .error-content h5 {
+    color: #ff6b6b;
+  }
+  
+  .jupyter-error .error-content p {
+    color: #cccccc;
+  }
+  
+  .jupyter-toolbar {
+    background: rgba(45, 45, 45, 0.95);
+    border-color: #404040;
+  }
+}
+
+/* =============================================================================
+   전체화면 모드 스타일
+   ============================================================================= */
+
+.jupyter-iframe:fullscreen {
+  border-radius: 0;
+}
+
+.jupyter-iframe:-webkit-full-screen {
+  border-radius: 0;
+}
+
+.jupyter-iframe:-moz-full-screen {
+  border-radius: 0;
+}
+
+/* =============================================================================
+   접근성 개선
+   ============================================================================= */
+
+.jupyter-container:focus-within {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+.jupyter-toolbar .btn:focus {
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.25);
+}
+
+/* 스크린 리더용 숨김 텍스트 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =============================================================================
+   성능 최적화
+   ============================================================================= */
+
+.jupyter-iframe {
+  will-change: transform;
+  transform: translateZ(0); /* GPU 가속 활성화 */
+}
+
+.jupyter-loading .loading-spinner {
+  will-change: transform;
+}
+
+/* 애니메이션 비활성화 옵션 */
+@media (prefers-reduced-motion: reduce) {
+  .jupyter-loading .loading-spinner {
+    animation: none;
+  }
+  
+  .jupyter-toolbar .btn {
+    transition: none;
+  }
+}

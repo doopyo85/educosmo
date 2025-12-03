@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> 게임</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        .header { background-color: #333; color: white; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .container { padding: 20px; }
+        .game-frame { width: 100%; height: 600px; border: 1px solid #ddd; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h4><%= title %></h4>
+        <a href="/portfolio" class="btn btn-sm btn-outline-light">포트폴리오로 돌아가기</a>
+    </div>
+    
+    <div class="container">
+        <h2>게임 플레이</h2>
+        <p>아래에서 게임을 플레이하거나 새 창에서 열 수 있습니다.</p>
+        
+        <div class="d-flex mb-3">
+            <button class="btn btn-primary me-2" onclick="openNewWindow()">새 창에서 열기</button>
+            <button class="btn btn-success" onclick="embedGame()">게임 표시하기</button>
+        </div>
+        
+        <div id="gameContainer"></div>
+    </div>
+    
+    <script>
+        function openNewWindow() {
+            window.open('https://app.codingnplay.co.kr/game-proxy/vnc.html?path=/game-proxy/websockify&autoconnect=true', '<%= title %>', 'width=1024,height=768');
+        }
+        
+        function embedGame() {
+            document.getElementById('gameContainer').innerHTML = 
+                '<iframe src="https://app.codingnplay.co.kr/game-proxy/vnc.html?path=/game-proxy/websockify&autoconnect=true" class="game-frame"></iframe>';
+        }
+    </script>
+</body>
+</html>

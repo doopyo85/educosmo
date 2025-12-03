@@ -1,0 +1,4 @@
+<FilesMatch "\.svg$">
+    ForceType image/png
+    Header set Content-Type "image/png"
+</FilesMatch>

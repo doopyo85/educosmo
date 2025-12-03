@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EntryJS Base 표준 워크스페이스 - 코딩앤플레이</title>
+    
+    <!-- SEO 메타 태그 -->
+    <meta name="description" content="EntryJS Base 표준 구조 기반 블록 코딩 및 Python 코딩 통합 환경">
+    <meta name="keywords" content="EntryJS, Base, 블록코딩, 파이썬, 교육, 프로그래밍">
+    
+    <!-- 파비콘 -->
+    <link rel="icon" href="<%= baseUrl %>/resource/favicon.ico" type="image/x-icon">
+    
+    <!-- Base 표준 CSS (순서 중요!) -->
+    <link rel="stylesheet" href="<%= cssPath %>/entry.css">
+    <link rel="stylesheet" href="<%= cssPath %>/workspace.css">
+    <link rel="stylesheet" href="<%= cssPath %>/modal.css">
+    
+    <!-- Entry-tool CSS (CDN 우선, 로컬 fallback) -->
+    <link rel="stylesheet" href="https://playentry.org/lib/entry-tool/dist/entry-tool.css" 
+          onerror="this.onerror=null; this.href='<%= libPath %>/entry-tool/dist/entry-tool.css';">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Base 표준 EntryJS 전용 스타일 */
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+        
+        #workspace {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #ffffff;
+        }
+        
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .loading-content {
+            text-align: center;
+            animation: fadeInUp 0.6s ease-out;
+            max-width: 400px;
+            padding: 40px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #ffffff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        .loading-text {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .loading-subtext {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .loading-progress {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 20px auto;
+        }
+        
+        .loading-progress-bar {
+            height: 100%;
+            background: #ffffff;
+            width: 0%;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        
+        .loading-details {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 15px;
+        }
+        
+        .error-container {
+            text-align: center;
+            color: #e74c3c;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .error-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #e74c3c;
+        }
+        
+        .error-message {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .error-details {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 4px;
+            margin: 16px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            text-align: left;
+            overflow-x: auto;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .retry-button {
+            padding: 12px 24px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.2s ease;
+            margin: 0 5px;
+        }
+        
+        .retry-button:hover {
+            background: #2980b9;
+        }
+        
+        .retry-button.secondary {
+            background: #95a5a6;
+        }
+        
+        .retry-button.secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .loading-progress {
+                width: 250px;
+            }
+            
+            .loading-content {
+                padding: 20px;
+            }
+            
+            .error-container {
+                margin: 20px;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 로딩 화면 -->
+    <div id="loading" class="loading-container">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">EntryJS Base 표준 워크스페이스</div>
+            <div class="loading-subtext">
+                블록 코딩과 Python 통합 환경을 Base 표준 구조로 준비하고 있습니다
+            </div>
+            <div class="loading-progress">
+                <div class="loading-progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="loading-details" id="loading-details">
+                Base 표준 라이브러리 로딩 중...
+            </div>
+        </div>
+    </div>
+    
+    <!-- 오류 화면 (숨김 상태) -->
+    <div id="error" class="loading-container" style="display: none;">
+        <div class="error-container">
+            <div class="error-icon">⚠️</div>
+            <div class="error-title">Base 표준 워크스페이스 로딩 실패</div>
+            <div class="error-message" id="error-message">
+                EntryJS Base 표준 구조 워크스페이스를 로딩하는 중 오류가 발생했습니다.
+            </div>
+            <div class="error-details" id="error-details" style="display: none;"></div>
+            <div style="margin-top: 20px;">
+                <button class="retry-button" onclick="location.reload()">
+                    🔄 다시 시도
+                </button>
+                <button class="retry-button secondary" onclick="window.history.back()">
+                    ← 이전 페이지로
+                </button>
+                <button class="retry-button secondary" onclick="checkLibraries()">
+                    🔍 라이브러리 상태 확인
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- EntryJS 워크스페이스 컨테이너 -->
+    <div id="workspace" style="display: none;"></div>
+    
+    <!-- Base 표준 라이브러리 로딩 (순서 매우 중요!) -->
+    
+    <!-- 1. 로딩 진행률 관리 스크립트 -->
+    <script>
+        console.log('🚀 EntryJS Base 표준 라이브러리 로딩 시작...');
+        
+        window.BaseLoader = {
+            progress: 0,
+            total: 12,
+            loadedLibs: [],
+            errors: [],
+            
+            updateProgress: function(step, libName) {
+                this.progress = step;
+                this.loadedLibs.push(libName);
+                
+                const percentage = Math.round((step / this.total) * 100);
+                const progressBar = document.getElementById('progress-bar');
+                const loadingDetails = document.getElementById('loading-details');
+                
+                if (progressBar) {
+                    progressBar.style.width = percentage + '%';
+                }
+                
+                if (loadingDetails) {
+                    loadingDetails.textContent = `${libName} 로드 완료 (${percentage}%)`;
+                }
+                
+                console.log(`📊 Base 표준 로딩 진행률: ${percentage}% - ${libName}`);
+            },
+            
+            logError: function(libName, error) {
+                this.errors.push({ lib: libName, error: error });
+                console.error(`❌ ${libName} 로드 실패:`, error);
+            },
+            
+            getStatus: function() {
+                return {
+                    progress: this.progress,
+                    total: this.total,
+                    percentage: Math.round((this.progress / this.total) * 100),
+                    loadedLibs: this.loadedLibs,
+                    errors: this.errors,
+                    isComplete: this.progress >= this.total
+                };
+            }
+        };
+        
+        function checkLibraries() {
+            fetch('/api/check-libs')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('📋 라이브러리 상태:', data);
+                    const missingLibs = Object.entries(data.libraries)
+                        .filter(([name, status]) => !status)
+                        .map(([name]) => name);
+                    
+                    if (missingLibs.length > 0) {
+                        alert(`누락된 라이브러리: ${missingLibs.join(', ')}\n\n콘솔(F12)에서 자세한 정보를 확인하세요.`);
+                    } else {
+                        alert('모든 Base 표준 라이브러리가 정상적으로 설치되어 있습니다.');
+                    }
+                })
+                .catch(error => {
+                    console.error('라이브러리 상태 확인 실패:', error);
+                    alert('라이브러리 상태 확인 중 오류가 발생했습니다.');
+                });
+        }
+    </script>
+    
+    <!-- 2. Base 표준 필수 라이브러리 (순서 중요!) -->
+    
+    <!-- jQuery (Base 표준 필수) -->
+    <script src="<%= libPath %>/jquery/jquery.min.js" 
+            onload="console.log('✅ jQuery 로드 완료'); window.BaseLoader.updateProgress(1, 'jQuery');"
+            onerror="console.error('❌ jQuery 로드 실패'); window.BaseLoader.logError('jQuery', 'Load failed'); loadLibraryFallback('jquery', 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js');"></script>
+    
+    <!-- Lodash (Base 표준 필수) -->
+    <script src="<%= libPath %>/lodash/dist/lodash.min.js" 
+            onload="console.log('✅ Lodash 로드 완료'); window.BaseLoader.updateProgress(2, 'Lodash');"
+            onerror="console.error('❌ Lodash 로드 실패'); window.BaseLoader.logError('Lodash', 'Load failed'); loadLibraryFallback('lodash', 'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js');"></script>
+    
+    <!-- Fabric.js (Base 표준 필수) -->
+    <script src="<%= libPath %>/fabric.min.js" 
+            onload="console.log('✅ Fabric.js 로드 완료'); window.BaseLoader.updateProgress(3, 'Fabric.js');"
+            onerror="console.error('❌ Fabric.js 로드 실패'); window.BaseLoader.logError('Fabric.js', 'Load failed'); loadLibraryFallback('fabric', 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.6.0/fabric.min.js');"></script>
+    
+    <!-- 3. CreateJS 라이브러리들 (Base 표준 경로) -->
+    
+    <!-- PreloadJS -->
+    <script src="<%= libPath %>/PreloadJS/lib/preloadjs-0.6.0.min.js" 
+            onload="console.log('✅ PreloadJS 로드 완료'); window.BaseLoader.updateProgress(4, 'PreloadJS');"
+            onerror="console.error('❌ PreloadJS 로드 실패'); window.BaseLoader.logError('PreloadJS', 'Load failed');"></script>
+    
+    <!-- EaselJS -->
+    <script src="<%= libPath %>/EaselJS/lib/easeljs-0.8.0.min.js" 
+            onload="console.log('✅ EaselJS 로드 완료'); window.BaseLoader.updateProgress(5, 'EaselJS');"
+            onerror="console.error('❌ EaselJS 로드 실패'); window.BaseLoader.logError('EaselJS', 'Load failed');"></script>
+    
+    <!-- SoundJS -->
+    <script src="<%= libPath %>/SoundJS/lib/soundjs-0.6.0.min.js" 
+            onload="console.log('✅ SoundJS 로드 완료'); window.BaseLoader.updateProgress(6, 'SoundJS');"
+            onerror="console.error('❌ SoundJS 로드 실패'); window.BaseLoader.logError('SoundJS', 'Load failed');"></script>
+    
+    <!-- 4. Entry-tool (Entry.js보다 먼저 로드 - 순서 변경!) -->
+    <script src="https://playentry.org/lib/entry-tool/dist/entry-tool.js" 
+            onload="console.log('✅ Entry-tool 로드 완료 (로컬)'); window.BaseLoader.updateProgress(7, 'Entry-tool (CDN)');"
+            onerror="console.error('❌ Entry-tool 로컬 로드 실패'); window.BaseLoader.logError('Entry-tool', 'Local load failed'); showError('Entry-tool 로컬 파일을 로드할 수 없습니다.', '로컬 파일 경로를 확인해주세요: https://playentry.org/lib/entry-tool/dist/entry-tool.js');"></script>
+    
+<!-- 5. EntryJS npm 패키지들 (올바른 파일명 사용) -->
+    
+    <!-- EntryVideoLegacy (npm) - 올바른 파일명: index.js -->
+    <script src="https://playentry.org/lib/entry-js/dist/legacy-video.min.js" 
+            onload="console.log('✅ EntryVideoLegacy 로드 완료 (CDN)'); window.BaseLoader.updateProgress(8, 'EntryVideoLegacy');"
+            onerror="console.error('❌ EntryVideoLegacy 로드 실패'); window.BaseLoader.logError('EntryVideoLegacy', 'npm package not found'); showError('EntryVideoLegacy npm 패키지를 찾을 수 없습니다.', 'npm install @entrylabs/legacy-video 명령어로 설치해주세요.');"></script>
+    
+    <!-- EntryJS 메인 엔진 (npm) - 올바른 파일명: entry.min.js -->
+    <script src="https://playentry.org/lib/entry-js/dist/entry.min.js" 
+            onload="console.log('✅ Entry.js 메인 엔진 로드 완료 (CDN)'); window.BaseLoader.updateProgress(9, 'Entry.js');"
+            onerror="console.error('❌ Entry.js 로드 실패'); window.BaseLoader.logError('Entry.js', 'npm package not found'); showError('EntryJS 메인 엔진을 찾을 수 없습니다.', 'npm install @entrylabs/entry 명령어로 설치해주세요.');"></script>    
+    <!-- 6. 라이브러리 Fallback 및 초기화 스크립트 -->
+    <script>
+        // CDN Fallback 함수들
+        function loadLibraryFallback(name, url) {
+            console.log(`🔄 ${name} CDN fallback 시도: ${url}`);
+            
+            const script = document.createElement('script');
+            script.src = url;
+            script.onload = () => {
+                console.log(`✅ ${name} CDN fallback 성공`);
+                window.BaseLoader.updateProgress(window.BaseLoader.progress + 0.5, `${name} (CDN Fallback)`);
+            };
+            script.onerror = () => {
+                console.error(`❌ ${name} CDN fallback 실패`);
+                window.BaseLoader.logError(name, 'CDN fallback failed');
+            };
+            document.head.appendChild(script);
+        }
+        
+        function loadEntryToolLocal() {
+            const script = document.createElement('script');
+            script.src = 'https://playentry.org/lib/entry-tool/dist/entry-tool.js';
+            script.onload = () => {
+                console.log('✅ Entry-tool 로드 완료 (로컬)');
+                window.BaseLoader.updateProgress(9, 'Entry-tool (CDN)');
+            };
+            script.onerror = () => {
+                console.error('❌ Entry-tool 로컬 로드 실패');
+                window.BaseLoader.logError('Entry-tool', 'Local and CDN failed');
+                showError('Entry-tool을 로드할 수 없습니다.', 'CDN과 로컬 모두에서 Entry-tool 로드에 실패했습니다.');
+            };
+            document.head.appendChild(script);
+        }
+        
+        function showError(message, details) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'flex';
+            document.getElementById('error-message').textContent = message;
+            
+            if (details) {
+                document.getElementById('error-details').style.display = 'block';
+                document.getElementById('error-details').textContent = details;
+            }
+        }
+        
+        // 모든 라이브러리 로드 완료 체크
+        function checkLibraryCompletion() {
+            const status = window.BaseLoader.getStatus();
+            
+            if (status.errors.length > 0) {
+                console.warn('⚠️ 일부 라이브러리 로드 실패:', status.errors);
+            }
+            
+            if (status.progress >= 9) { // Entry-tool까지 로드 완료
+                console.log('📚 Base 표준 라이브러리 로드 완료, EntryJS 초기화 시작...');
+                setTimeout(initializeEntryJS, 500);
+            }
+        }
+        
+        // 라이브러리 로드 완료 감지 (폴링)
+        let checkInterval = setInterval(() => {
+            const status = window.BaseLoader.getStatus();
+            if (status.progress >= 9 || status.errors.length >= 3) {
+                clearInterval(checkInterval);
+                checkLibraryCompletion();
+            }
+        }, 100);
+        
+        // 타임아웃 처리 (10초)
+        setTimeout(() => {
+            const status = window.BaseLoader.getStatus();
+            if (status.progress < 9) {
+                clearInterval(checkInterval);
+                console.error('❌ Base 표준 라이브러리 로드 타임아웃');
+                showError(
+                    'Base 표준 라이브러리 로드 시간이 초과되었습니다.',
+                    `로드된 라이브러리: ${status.loadedLibs.join(', ')}\n\n오류: ${status.errors.map(e => e.lib).join(', ')}`
+                );
+            }
+        }, 10000);
+        
+        // EntryJS Base 표준 초기화 함수
+        async function initializeEntryJS() {
+            try {
+                console.log('🎯 EntryJS Base 표준 초기화 시작...');
+                window.BaseLoader.updateProgress(10, 'EntryJS 초기화');
+                
+                // 필수 객체 확인
+                if (typeof Entry === 'undefined') {
+                    throw new Error('Entry 객체가 정의되지 않았습니다. @entrylabs/entry 패키지를 확인해주세요.');
+                }
+                
+                if (typeof Entry.init !== 'function') {
+                    throw new Error('Entry.init 함수가 없습니다. EntryJS 패키지 버전을 확인해주세요.');
+                }
+                
+                if (typeof EntryVideoLegacy === 'undefined') {
+                    console.warn('⚠️ EntryVideoLegacy가 정의되지 않음. 비디오 기능이 제한될 수 있습니다.');
+                }
+                
+                // Base 표준 초기화 옵션
+                const initOptions = {
+                    type: 'workspace',
+                    libDir: '<%= libPath %>',                                    // Base 표준 라이브러리 경로
+                    entryDir: '<%= npmPath %>/@entrylabs/entry/images',          // Entry 이미지 리소스
+                    defaultDir: '<%= npmPath %>/@entrylabs/entry',               // 기본 리소스 경로
+                    soundDir: 'sounds/',                                         // 사운드 경로
+                    baseUrl: '<%= baseUrl %>',                                   // API 기본 URL
+                    
+                    // 사용자 정보 (3000번 서버에서 전달)
+                    userID: '<%= userID %>',
+                    userRole: '<%= role %>',
+                    
+                    // Base 표준 기능 활성화 설정 (전체 활성화)
+                    objectAddable: true,
+                    objectEditable: true,
+                    objectDeletable: true,
+                    soundEditable: true,
+                    pictureEditable: true,
+                    sceneEditable: true,
+                    functionEnable: true,
+                    messageEnable: true,
+                    variableEnable: true,
+                    listEnable: true,
+                    aiLearningEnable: true,
+                    textCodingEnable: true,
+                    hardwareEnable: true,
+                    expansionDisable: false,          // 확장블록 사용 가능
+                    aiUtilizeDisable: false,          // AI 블록 사용 가능
+                    blockSaveImageEnable: true,       // 블록 이미지 저장 가능
+                    
+                    // Base 표준 폰트 설정
+                    fonts: [
+                        {
+                            name: 'Noto Sans KR',
+                            url: 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap'
+                        }
+                    ]
+                };
+                
+                console.log('🎯 Base 표준 EntryJS 초기화 옵션:', {
+                    userID: '<%= userID %>',
+                    role: '<%= role %>',
+                    project: '<%= project %>',
+                    type: initOptions.type,
+                    paths: {
+                        lib: initOptions.libDir,
+                        entry: initOptions.entryDir,
+                        default: initOptions.defaultDir
+                    }
+                });
+                
+                // EntryJS 초기화 실행
+                Entry.init(document.getElementById('workspace'), initOptions);
+                window.BaseLoader.updateProgress(11, 'EntryJS 워크스페이스');
+                
+                // Entry-tool 팝업 시스템 초기화 (Base 표준)
+                if (window.EntryTool && window.EntryTool.Popup) {
+                    console.log('🎭 Entry-tool Base 표준 팝업 시스템 초기화...');
+                    
+                    const popup = new EntryTool.Popup({
+                        container: document.body,
+                        theme: 'entry',
+                        isShow: false
+                    });
+                    
+                    // Base 표준 팝업 이벤트 핸들러 설정
+                    setupBasePopupHandlers(popup);
+                    
+                    console.log('✅ Entry-tool Base 표준 팝업 시스템 초기화 완료');
+                } else {
+                    console.warn('⚠️ Entry-tool이 로드되지 않음. 팝업 기능이 제한됩니다.');
+                }
+                
+                // Base 모듈 시스템 로드 (기존 구조 활용)
+                try {
+                    await loadBaseModules();
+                    window.BaseLoader.updateProgress(12, 'Base 모듈 시스템');
+                } catch (error) {
+                    console.warn('⚠️ Base 모듈 로드 실패:', error.message);
+                    window.BaseLoader.updateProgress(12, 'Base 모듈 (일부 실패)');
+                }
+                
+                // 프로젝트 로드 (URL 파라미터 기반)
+                const project = '<%= project %>';
+                if (project && project !== 'new') {
+                    console.log('📁 Base 표준 프로젝트 로드 시도:', project);
+                    await loadProjectFromServer(project);
+                } else {
+                    console.log('📄 Base 표준 새 프로젝트 시작');
+                    Entry.loadProject();
+                }
+                
+                // 로딩 화면 제거 및 워크스페이스 표시
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('workspace').style.display = 'block';
+                    
+                    console.log('✅ EntryJS Base 표준 워크스페이스 초기화 완료!');
+                    
+                    // 초기화 완료 이벤트 발생 (Base 표준)
+                    if (typeof Entry.dispatchEvent === 'function') {
+                        Entry.dispatchEvent('workspaceReady', {
+                            userID: '<%= userID %>',
+                            role: '<%= role %>',
+                            baseStructure: 'enabled',
+                            version: 'base-standard',
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                    
+                    // 전역 디버깅 객체 등록
+                    window.EntryBaseDebug = createBaseDebugTools();
+                    
+                }, 500);
+                
+            } catch (error) {
+                console.error('❌ EntryJS Base 표준 초기화 실패:', error);
+                
+                showError(
+                    'EntryJS Base 표준 워크스페이스 초기화에 실패했습니다.',
+                    `오류 상세: ${error.message}\n\n스택 트레이스:\n${error.stack}`
+                );
+            }
+        }
+        
+        // Base 표준 팝업 이벤트 핸들러 함수
+        function setupBasePopupHandlers(popup) {
+            // 오브젝트(스프라이트) 추가 팝업
+            Entry.addEventListener('openSpriteManager', () => {
+                console.log('🎭 Base 표준 스프라이트 매니저 열기');
+                popup.show({ type: 'sprite' });
+            });
+            
+            // 모양(그림) 추가 팝업
+            Entry.addEventListener('openPictureManager', () => {
+                console.log('🖼️ Base 표준 모양 매니저 열기');
+                popup.show({ type: 'picture' });
+            });
+            
+            // 소리 추가 팝업
+            Entry.addEventListener('openSoundManager', () => {
+                console.log('🔊 Base 표준 사운드 매니저 열기');
+                popup.show({ type: 'sound' });
+            });
+            
+            // 확장블록 팝업
+            Entry.addEventListener('openExpansionBlockManager', () => {
+                console.log('🧩 Base 표준 확장블록 매니저 열기');
+                popup.show({ type: 'expansion' });
+            });
+            
+            // 인공지능 블록 팝업
+            Entry.addEventListener('openAIUtilizeBlockManager', () => {
+                console.log('🤖 Base 표준 AI 블록 매니저 열기');
+                popup.show({ type: 'aiUtilize' });
+            });
+            
+            // 하드웨어 연결 팝업
+            Entry.addEventListener('openHardwareLiteBlockManager', () => {
+                console.log('🔌 Base 표준 하드웨어 연결 매니저 열기');
+                popup.show({ type: 'hardwareLite' });
+            });
+            
+            // 모양 가져오기 팝업
+            Entry.addEventListener('openPictureImport', () => {
+                console.log('📥 Base 표준 모양 가져오기 매니저 열기');
+                popup.show({ type: 'paint' });
+            });
+        }
+        
+        // Base 모듈 시스템 로드 (기존 구조 활용)
+        async function loadBaseModules() {
+            try {
+                console.log('📦 Base 표준 모듈 시스템 로드 시작...');
+                
+                // Base 모듈들 동적 로드 (기존 구조 활용)
+                const modules = [
+                    '<%= jsPath %>/app.mjs',
+                    '<%= jsPath %>/event.mjs',
+                    '<%= jsPath %>/util.mjs'
+                ];
+                
+                const loadPromises = modules.map(async (moduleUrl) => {
+                    try {
+                        const module = await import(moduleUrl);
+                        console.log(`✅ Base 모듈 로드 완료: ${moduleUrl}`);
+                        return { url: moduleUrl, success: true, module };
+                    } catch (error) {
+                        console.warn(`⚠️ Base 모듈 로드 실패: ${moduleUrl}`, error.message);
+                        return { url: moduleUrl, success: false, error: error.message };
+                    }
+                });
+                
+                const results = await Promise.all(loadPromises);
+                const successCount = results.filter(r => r.success).length;
+                
+                console.log(`📊 Base 모듈 로드 결과: ${successCount}/${modules.length} 성공`);
+                
+                return results;
+                
+            } catch (error) {
+                console.warn('⚠️ Base 모듈 시스템 로드 중 오류:', error.message);
+                throw error;
+            }
+        }
+        
+        // 서버 프로젝트 로드 함수 (3000번 서버 API 연동)
+        async function loadProjectFromServer(projectFile) {
+            try {
+                console.log('📁 Base 표준 서버에서 프로젝트 로드:', projectFile);
+                
+                const response = await fetch(`/api/load-project?file=${encodeURIComponent(projectFile)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const projectData = await response.json();
+                    
+                    if (projectData && typeof projectData === 'object') {
+                        Entry.loadProject(projectData);
+                        console.log('✅ Base 표준 프로젝트 로드 완료:', projectFile);
+                    } else {
+                        throw new Error('프로젝트 데이터 형식이 올바르지 않습니다.');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`서버 오류 (${response.status}): ${errorText}`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Base 표준 프로젝트 로드 오류:', error);
+                console.log('📄 새 프로젝트로 대체');
+                Entry.loadProject(); // 새 프로젝트로 대체
+            }
+        }
+        
+        // Base 표준 디버깅 도구 생성
+        function createBaseDebugTools() {
+            return {
+                // 현재 Base 표준 상태 확인
+                getStatus: () => ({
+                    baseStructure: 'enabled',
+                    entryLoaded: typeof Entry !== 'undefined',
+                    entryInitialized: typeof Entry.init === 'function',
+                    entryToolLoaded: typeof EntryTool !== 'undefined',
+                    legacyVideoLoaded: typeof EntryVideoLegacy !== 'undefined',
+                    loaderStatus: window.BaseLoader.getStatus(),
+                    userID: '<%= userID %>',
+                    role: '<%= role %>',
+                    project: '<%= project %>',
+                    paths: {
+                        lib: '<%= libPath %>',
+                        css: '<%= cssPath %>',
+                        js: '<%= jsPath %>',
+                        npm: '<%= npmPath %>'
+                    },
+                    timestamp: new Date().toISOString()
+                }),
+                
+                // Base 표준 라이브러리 상태 확인
+                checkLibraries: async () => {
+                    try {
+                        const response = await fetch('/api/check-libs');
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Base 표준 라이브러리 상태 확인 실패:', error);
+                        return null;
+                    }
+                },
+                
+                // 강제 재로드
+                forceReload: () => {
+                    console.log('🔄 Base 표준 EntryJS 강제 재로드...');
+                    location.reload();
+                },
+                
+                // Base 표준 프로젝트 내보내기
+                exportProject: () => {
+                    if (typeof Entry !== 'undefined' && typeof Entry.exportProject === 'function') {
+                        return Entry.exportProject();
+                    } else {
+                        console.error('Entry.exportProject 함수를 찾을 수 없습니다.');
+                        return null;
+                    }
+                },
+                
+                // Base 로더 상태
+                getLoaderStatus: () => window.BaseLoader.getStatus(),
+                
+                // Base 표준 환경 정보
+                getEnvironment: () => ({
+                    userAgent: navigator.userAgent,
+                    language: navigator.language,
+                    platform: navigator.platform,
+                    cookieEnabled: navigator.cookieEnabled,
+                    onLine: navigator.onLine,
+                    screen: {
+                        width: screen.width,
+                        height: screen.height,
+                        colorDepth: screen.colorDepth
+                    },
+                    window: {
+                        width: window.innerWidth,
+                        height: window.innerHeight
+                    }
+                })
+            };
+        }
+        
+        // 전역 오류 핸들러 (Base 표준)
+        window.addEventListener('error', (event) => {
+            console.error('💥 Base 표준 전역 JavaScript 오류:', {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                error: event.error
+            });
+            
+            // EntryJS 초기화 관련 오류인 경우 사용자에게 알림
+            if (event.message.includes('Entry') || event.message.includes('EntryTool')) {
+                if (document.getElementById('workspace').style.display === 'none') {
+                    showError(
+                        'EntryJS Base 표준 로딩 중 오류가 발생했습니다.',
+                        `오류: ${event.message}\n파일: ${event.filename}:${event.lineno}`
+                    );
+                }
+            }
+        });
+        
+        // Promise 거부 핸들러
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('💥 Base 표준 처리되지 않은 Promise 거부:', event.reason);
+            
+            if (document.getElementById('workspace').style.display === 'none') {
+                showError(
+                    'Base 표준 로딩 중 비동기 오류가 발생했습니다.',
+                    `Promise 거부: ${event.reason.message || event.reason}`
+                );
+            }
+        });
+        
+        // 페이지 언로드 시 정리 (Base 표준)
+        window.addEventListener('beforeunload', () => {
+            console.log('🔄 EntryJS Base 표준 워크스페이스 종료 중...');
+            
+            // Entry 이벤트 정리
+            if (typeof Entry !== 'undefined' && typeof Entry.removeAllEventListener === 'function') {
+                const events = [
+                    'openSpriteManager', 'openPictureManager', 'openSoundManager', 
+                    'openExpansionBlockManager', 'openAIUtilizeBlockManager',
+                    'openHardwareLiteBlockManager', 'openPictureImport'
+                ];
+                
+                events.forEach(eventName => {
+                    Entry.removeAllEventListener(eventName);
+                });
+            }
+        });
+        
+        console.log('🎯 EntryJS Base 표준 템플릿 스크립트 로드 완료');
+    </script>
+    
+    <!-- 개발자 도구 (개발 환경에서만) -->
+    <% if (environment !== 'production') { %>
+    <script>
+        console.log('🛠️ Base 표준 개발 모드: EntryBaseDebug 객체가 등록됩니다.');
+        console.log('Base 표준 사용 가능한 명령어:');
+        console.log('- EntryBaseDebug.getStatus(): Base 표준 현재 상태 확인');
+        console.log('- EntryBaseDebug.checkLibraries(): Base 표준 라이브러리 상태 확인');
+        console.log('- EntryBaseDebug.forceReload(): 강제 재로드');
+        console.log('- EntryBaseDebug.exportProject(): 프로젝트 내보내기');
+        console.log('- EntryBaseDebug.getLoaderStatus(): Base 로더 상태');
+        console.log('- EntryBaseDebug.getEnvironment(): 환경 정보');
+        
+        // Base 표준 성능 모니터링
+        if (window.performance && window.performance.mark) {
+            window.performance.mark('entryjs-base-template-start');
+            
+            window.addEventListener('load', () => {
+                window.performance.mark('entryjs-base-template-end');
+                window.performance.measure('entryjs-base-template-load', 'entryjs-base-template-start', 'entryjs-base-template-end');
+                
+                const measure = window.performance.getEntriesByName('entryjs-base-template-load')[0];
+                console.log(`⏱️ Base 표준 템플릿 로드 시간: ${measure.duration.toFixed(2)}ms`);
+            });
+        }
+    </script>
+    <% } %>
+</body>
+</html>

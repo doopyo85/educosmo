@@ -1,0 +1,144 @@
+/* PPT 뷰어 스타일 */
+/* /public/css/ppt-viewer.css */
+
+/* PPT 뷰어 컨테이너 */
+.ppt-viewer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: none; /* 기본적으로 숨김 */
+    background-color: #f5f5f5;
+    overflow: hidden;
+}
+
+/* 활성화된 PPT 뷰어 */
+.ppt-viewer.active {
+    display: block;
+}
+
+/* PPT iframe 컨테이너 */
+.ppt-frame-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* PPT iframe */
+#ppt-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background-color: white;
+}
+
+/* PPT 로딩 인디케이터 */
+.ppt-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 2;
+}
+
+.ppt-loading p {
+    margin-top: 10px;
+    font-size: 18px;
+    color: #333;
+}
+
+/* PPT 미선택/없음 플레이스홀더 */
+.ppt-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f8f9fa;
+    z-index: 1;
+}
+
+.placeholder-content {
+    text-align: center;
+    padding: 20px;
+    max-width: 400px;
+}
+
+.placeholder-content i {
+    font-size: 5rem;
+    color: #adb5bd;
+    margin-bottom: 20px;
+}
+
+.placeholder-content p {
+    font-size: 1rem;
+    color: #6c757d;
+    margin-bottom: 10px;
+}
+
+/* 전체화면 버튼 */
+.fullscreen-ppt-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 3;
+    transition: background-color 0.2s;
+}
+
+.fullscreen-ppt-btn:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.fullscreen-ppt-btn i {
+    font-size: 20px;
+}
+
+/* PPT 뷰어가 전체화면일 때 */
+.contents.ppt-fullscreen .ppt-viewer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+}
+
+/* 반응형 조정 */
+@media (max-width: 768px) {
+    .placeholder-content i {
+        font-size: 3rem;
+    }
+    
+    .placeholder-content p {
+        font-size: 0.9rem;
+    }
+    
+    .fullscreen-ppt-btn {
+        width: 32px;
+        height: 32px;
+        bottom: 10px;
+        right: 10px;
+    }
+    
+    .fullscreen-ppt-btn i {
+        font-size: 16px;
+    }
+}

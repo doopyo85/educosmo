@@ -1,0 +1,180 @@
+<!-- S3 브라우저 모달 (통합 버전) -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- S3 Browser CSS -->
+    <link rel="stylesheet" href="/css/admin/s3-browser.css">
+</head>
+<body>
+    <!-- 통합 헤더 -->
+    <div class="">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div>
+                    <h5 class="mb-1">
+                        <i class="bi bi-folder-open me-2"></i>
+                        <% if (role === 'admin') { %>
+                            S3 파일 관리 (전체)
+                        <% } else if (role === 'teacher' || role === 'manager') { %>
+                            학생 파일 관리 (센터 <%= centerID %>)
+                        <% } else { %>
+                            내 파일 관리
+                        <% } %>
+                    </h5>
+                    <p class="text-muted mb-0 small">
+                        <% if (role === 'admin') { %>
+                            모든 사용자의 저장 파일을 조회하고 관리할 수 있습니다.
+                        <% } else if (role === 'teacher' || role === 'manager') { %>
+                            소속 학생들의 저장 파일을 조회할 수 있습니다.
+                        <% } else { %>
+                            나의 저장 파일을 조회할 수 있습니다.
+                        <% } %>
+                    </p>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <!-- 권한 배지 -->
+                <div>
+                    <% if (role === 'admin') { %>
+                        <span class="badge bg-danger">Admin</span>
+                        <span class="badge bg-secondary">전체 접근</span>
+                    <% } else if (role === 'teacher' || role === 'manager') { %>
+                        <span class="badge bg-success"><%= role %></span>
+                        <span class="badge bg-info">센터 ID: <%= centerID %></span>
+                    <% } else { %>
+                        <span class="badge bg-primary"><%= role %></span>
+                        <span class="badge bg-secondary">개인</span>
+                    <% } %>
+                </div>
+                <button type="button" class="btn-close-custom" onclick="closeS3Browser()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- S3 브라우저 컨테이너 -->
+    <div id="s3-browser"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/components/S3Explorer.js"></script>
+
+    <!-- 초기화 스크립트 -->
+    <script>
+        (function() {
+            console.log('🚀 S3 Browser 초기화 시작...');
+
+            const role = '<%= role %>';
+            const userID = '<%= userID %>';
+            const scope = '<%= scope %>';
+
+            // 역할별 루트 경로 설정
+            let rootPath = '';
+            if (role === 'admin') {
+                rootPath = '';
+            } else if (role === 'teacher' || role === 'manager') {
+                rootPath = 'users/';
+            } else if (role === 'student') {
+                rootPath = `users/${userID}/`; // ✅ 학생은 본인 폴더에서 시작
+            }
+
+            // 🔥 역할별 업로드 권한 설정
+            let enableUpload = false;
+            if (role === 'admin') {
+                enableUpload = true;  // Admin은 모든 곳에 업로드 가능
+            } else if (role === 'teacher' || role === 'manager') {
+                enableUpload = true;  // Teacher/Manager는 학생 폴더에 업로드 가능
+            } else if (role === 'student') {
+                enableUpload = true;  // Student는 본인 폴더에 업로드 가능
+            }
+
+            window.s3Explorer = new S3Explorer({
+                containerId: 's3-browser',
+                apiEndpoint: '/api/s3/browse',
+                scope: scope,
+                rootPath: rootPath,
+                userID: userID,        // ✅ 반드시 전달
+                userRole: role,        // ✅ 역할 전달
+                allowedPlatforms: ['scratch', 'entry', 'gallery', 'portfolio'],
+                enableUpload: enableUpload,  // 🔥 역할별 업로드 권한
+                enableDelete: <%= enableDelete %>,
+                enablePreview: true,
+                onFolderOpen: function(path) {
+                    console.log('📂 폴더 열림:', path);
+                },
+                onFileSelect: function(file) {
+                    console.log('📄 파일 선택:', file);
+                },
+                onError: function(error) {
+                    console.error('❌ 오류 발생:', error);
+                    showModalNotification('오류가 발생했습니다: ' + error.message, 'danger');
+                }
+            });
+
+            console.log('✅ S3 Browser 초기화 완료');
+
+            function showModalNotification(message, type = 'info') {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+                alertDiv.style.cssText = 'position: absolute; top: 10px; right: 10px; z-index: 9999; min-width: 300px;';
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alertDiv);
+                setTimeout(() => alertDiv.remove(), 5000);
+            }
+
+            window.showModalNotification = showModalNotification;
+        })();
+
+        function closeS3Browser() {
+            // 🔥 index.ejs로 돌아가기 (로그인 페이지 아님)
+            if (window.parent !== window) {
+                // 모달로 열렸을 경우
+                const modal = window.parent.bootstrap.Modal.getInstance(
+                    window.parent.document.getElementById('s3BrowserModal')
+                );
+                if (modal) {
+                    modal.hide();
+                    // 모달 닫힌 후 index.ejs로 이동
+                    setTimeout(() => {
+                        window.parent.location.href = '/';
+                    }, 300);
+                } else {
+                    window.parent.location.href = '/';
+                }
+            } else {
+                // 일반 페이지로 열렸을 경우 바로 index.ejs로 이동
+                window.location.href = '/';
+            }
+        }
+    </script>
+
+    <style>
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; display: flex; flex-direction: column; height: 100vh; background: #fff; }
+        .s3-browser-header { flex-shrink: 0; background: #f1f3f5; padding: 20px 30px; border-bottom: 2px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .s3-browser-header h5 { font-size: 1.5rem; font-weight: 700; color: #212529; margin: 0; }
+        .s3-browser-header .text-muted { color: #6c757d !important; font-size: 0.9rem; }
+        .btn-close-custom { width: 36px; height: 36px; border: none; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-close-custom:hover { background: #dc3545; transform: scale(1.05); box-shadow: 0 4px 8px rgba(220,53,69,0.3); }
+        .btn-close-custom:hover i { color: white; }
+        .btn-close-custom i { font-size: 18px; color: #495057; transition: color 0.2s ease; }
+        #s3-browser { flex: 1; padding: 25px; overflow-y: auto; background: #f8f9fa; }
+        .badge { font-size: 0.75rem; padding: 0.4em 0.8em; font-weight: 600; border-radius: 6px; letter-spacing: 0.3px; }
+        #s3-browser::-webkit-scrollbar { width: 10px; }
+        #s3-browser::-webkit-scrollbar-track { background: #e9ecef; border-radius: 5px; }
+        #s3-browser::-webkit-scrollbar-thumb { background: #adb5bd; border-radius: 5px; }
+        #s3-browser::-webkit-scrollbar-thumb:hover { background: #868e96; }
+    </style>
+</body>
+</html>

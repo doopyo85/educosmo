@@ -1,0 +1,3927 @@
+{
+  "sprites": {
+    "offline_other_0": {
+      "id": "offline_other_0",
+      "name": "glyphicons-halflings-regular",
+      "label": {
+        "ko": "glyphicons-halflings-regular",
+        "en": "glyphicons-halflings-regular"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_0_pic_1",
+          "name": "glyphicons-halflings-regular",
+          "filename": "glyphicons-halflings-regular_0",
+          "imageType": "svg",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/glyphicons-halflings-regular_0.svg",
+          "originalSize": 108738
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_0_sound_1",
+          "name": "click",
+          "filename": "click_0",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/click_0.mp3",
+          "originalSize": 2304
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\bootstrap\\dist\\fonts"
+    },
+    "offline_other_1": {
+      "id": "offline_other_1",
+      "name": "glyphicons-halflings-regular",
+      "label": {
+        "ko": "glyphicons-halflings-regular",
+        "en": "glyphicons-halflings-regular"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_1_pic_1",
+          "name": "glyphicons-halflings-regular",
+          "filename": "glyphicons-halflings-regular_1",
+          "imageType": "svg",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/glyphicons-halflings-regular_1.svg",
+          "originalSize": 108738
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_1_sound_1",
+          "name": "click",
+          "filename": "click_1",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/click_1.ogg",
+          "originalSize": 4865
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\bootstrap\\fonts"
+    },
+    "offline_other_2": {
+      "id": "offline_other_2",
+      "name": "ani",
+      "label": {
+        "ko": "ani",
+        "en": "ani"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_2_pic_1",
+          "name": "ani",
+          "filename": "ani_2",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/ani_2.png",
+          "originalSize": 3212
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_2_sound_1",
+          "name": "click",
+          "filename": "click_2",
+          "ext": ".wav",
+          "duration": 1,
+          "localPath": "sounds/click_2.wav",
+          "originalSize": 3782
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\extern\\blockly\\media"
+    },
+    "offline_other_3": {
+      "id": "offline_other_3",
+      "name": "quote1",
+      "label": {
+        "ko": "quote1",
+        "en": "quote1"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_3_pic_1",
+          "name": "quote1",
+          "filename": "quote1_3",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/quote1_3.png",
+          "originalSize": 3517
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_3_sound_1",
+          "name": "delete",
+          "filename": "delete_3",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/delete_3.mp3",
+          "originalSize": 3123
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\extern\\blockly\\media"
+    },
+    "offline_other_4": {
+      "id": "offline_other_4",
+      "name": "trashbody",
+      "label": {
+        "ko": "trashbody",
+        "en": "trashbody"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_4_pic_1",
+          "name": "trashbody",
+          "filename": "trashbody_4",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/trashbody_4.png",
+          "originalSize": 5221
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_4_sound_1",
+          "name": "delete",
+          "filename": "delete_4",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/delete_4.ogg",
+          "originalSize": 5731
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\extern\\blockly\\media"
+    },
+    "offline_other_5": {
+      "id": "offline_other_5",
+      "name": "trashlid",
+      "label": {
+        "ko": "trashlid",
+        "en": "trashlid"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_5_pic_1",
+          "name": "trashlid",
+          "filename": "trashlid_5",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/trashlid_5.png",
+          "originalSize": 1192
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_5_sound_1",
+          "name": "delete",
+          "filename": "delete_5",
+          "ext": ".wav",
+          "duration": 1,
+          "localPath": "sounds/delete_5.wav",
+          "originalSize": 9164
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\extern\\blockly\\media"
+    },
+    "offline_entrybot_friends_6": {
+      "id": "offline_entrybot_friends_6",
+      "name": "entry_icon_arduino",
+      "label": {
+        "ko": "entry_icon_arduino",
+        "en": "entry_icon_arduino"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_6_pic_1",
+          "name": "entry_icon_arduino",
+          "filename": "entry_icon_arduino_6",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_arduino_6.png",
+          "originalSize": 1077
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_entrybot_friends_7": {
+      "id": "offline_entrybot_friends_7",
+      "name": "entry_icon_brush",
+      "label": {
+        "ko": "entry_icon_brush",
+        "en": "entry_icon_brush"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_7_pic_1",
+          "name": "entry_icon_brush",
+          "filename": "entry_icon_brush_7",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_brush_7.png",
+          "originalSize": 3766
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_entrybot_friends_8": {
+      "id": "offline_entrybot_friends_8",
+      "name": "entry_icon_calc",
+      "label": {
+        "ko": "entry_icon_calc",
+        "en": "entry_icon_calc"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_8_pic_1",
+          "name": "entry_icon_calc",
+          "filename": "entry_icon_calc_8",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_calc_8.png",
+          "originalSize": 4183
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_entrybot_friends_9": {
+      "id": "offline_entrybot_friends_9",
+      "name": "entry_icon_decision",
+      "label": {
+        "ko": "entry_icon_decision",
+        "en": "entry_icon_decision"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_9_pic_1",
+          "name": "entry_icon_decision",
+          "filename": "entry_icon_decision_9",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_decision_9.png",
+          "originalSize": 3686
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_entrybot_friends_10": {
+      "id": "offline_entrybot_friends_10",
+      "name": "entry_icon_flow",
+      "label": {
+        "ko": "entry_icon_flow",
+        "en": "entry_icon_flow"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_10_pic_1",
+          "name": "entry_icon_flow",
+          "filename": "entry_icon_flow_10",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_flow_10.png",
+          "originalSize": 3781
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_entrybot_friends_11": {
+      "id": "offline_entrybot_friends_11",
+      "name": "entry_icon_function",
+      "label": {
+        "ko": "entry_icon_function",
+        "en": "entry_icon_function"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_11_pic_1",
+          "name": "entry_icon_function",
+          "filename": "entry_icon_function_11",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_function_11.png",
+          "originalSize": 3289
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_entrybot_friends_12": {
+      "id": "offline_entrybot_friends_12",
+      "name": "entry_icon_looks",
+      "label": {
+        "ko": "entry_icon_looks",
+        "en": "entry_icon_looks"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_12_pic_1",
+          "name": "entry_icon_looks",
+          "filename": "entry_icon_looks_12",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_looks_12.png",
+          "originalSize": 3832
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_entrybot_friends_13": {
+      "id": "offline_entrybot_friends_13",
+      "name": "entry_icon_moving",
+      "label": {
+        "ko": "entry_icon_moving",
+        "en": "entry_icon_moving"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_13_pic_1",
+          "name": "entry_icon_moving",
+          "filename": "entry_icon_moving_13",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_moving_13.png",
+          "originalSize": 3989
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_entrybot_friends_14": {
+      "id": "offline_entrybot_friends_14",
+      "name": "entry_icon_scene",
+      "label": {
+        "ko": "entry_icon_scene",
+        "en": "entry_icon_scene"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_14_pic_1",
+          "name": "entry_icon_scene",
+          "filename": "entry_icon_scene_14",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_scene_14.png",
+          "originalSize": 3841
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_entrybot_friends_15": {
+      "id": "offline_entrybot_friends_15",
+      "name": "entry_icon_sound",
+      "label": {
+        "ko": "entry_icon_sound",
+        "en": "entry_icon_sound"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_15_pic_1",
+          "name": "entry_icon_sound",
+          "filename": "entry_icon_sound_15",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_sound_15.png",
+          "originalSize": 3608
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_entrybot_friends_16": {
+      "id": "offline_entrybot_friends_16",
+      "name": "entry_icon_start",
+      "label": {
+        "ko": "entry_icon_start",
+        "en": "entry_icon_start"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_16_pic_1",
+          "name": "entry_icon_start",
+          "filename": "entry_icon_start_16",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_start_16.png",
+          "originalSize": 3578
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_entrybot_friends_17": {
+      "id": "offline_entrybot_friends_17",
+      "name": "entry_icon_variable",
+      "label": {
+        "ko": "entry_icon_variable",
+        "en": "entry_icon_variable"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_17_pic_1",
+          "name": "entry_icon_variable",
+          "filename": "entry_icon_variable_17",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_icon_variable_17.png",
+          "originalSize": 3801
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_other_18": {
+      "id": "offline_other_18",
+      "name": "start_icon_clone",
+      "label": {
+        "ko": "start_icon_clone",
+        "en": "start_icon_clone"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_18_pic_1",
+          "name": "start_icon_clone",
+          "filename": "start_icon_clone_18",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/start_icon_clone_18.png",
+          "originalSize": 4491
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_18_sound_1",
+          "name": "Game-AudioSprite",
+          "filename": "Game-AudioSprite_18",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/Game-AudioSprite_18.ogg",
+          "originalSize": 21210
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_other_19": {
+      "id": "offline_other_19",
+      "name": "start_icon_keyboard",
+      "label": {
+        "ko": "start_icon_keyboard",
+        "en": "start_icon_keyboard"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_19_pic_1",
+          "name": "start_icon_keyboard",
+          "filename": "start_icon_keyboard_19",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/start_icon_keyboard_19.png",
+          "originalSize": 4418
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_19_sound_1",
+          "name": "Game-Break",
+          "filename": "Game-Break_19",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/Game-Break_19.mp3",
+          "originalSize": 5683
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_other_20": {
+      "id": "offline_other_20",
+      "name": "start_icon_mouse",
+      "label": {
+        "ko": "start_icon_mouse",
+        "en": "start_icon_mouse"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_20_pic_1",
+          "name": "start_icon_mouse",
+          "filename": "start_icon_mouse_20",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/start_icon_mouse_20.png",
+          "originalSize": 4262
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_20_sound_1",
+          "name": "Game-Break",
+          "filename": "Game-Break_20",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/Game-Break_20.ogg",
+          "originalSize": 20033
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_thing_21": {
+      "id": "offline_thing_21",
+      "name": "start_icon_object",
+      "label": {
+        "ko": "start_icon_object",
+        "en": "start_icon_object"
+      },
+      "category": {
+        "main": "thing",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_thing_21_pic_1",
+          "name": "start_icon_object",
+          "filename": "start_icon_object_21",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/start_icon_object_21.png",
+          "originalSize": 4063
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_other_22": {
+      "id": "offline_other_22",
+      "name": "start_icon_play",
+      "label": {
+        "ko": "start_icon_play",
+        "en": "start_icon_play"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_22_pic_1",
+          "name": "start_icon_play",
+          "filename": "start_icon_play_22",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/start_icon_play_22.png",
+          "originalSize": 3951
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_22_sound_1",
+          "name": "Game-Death",
+          "filename": "Game-Death_22",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/Game-Death_22.ogg",
+          "originalSize": 34636
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_background_23": {
+      "id": "offline_background_23",
+      "name": "start_icon_scene_1",
+      "label": {
+        "ko": "start_icon_scene_1",
+        "en": "start_icon_scene_1"
+      },
+      "category": {
+        "main": "background",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_background_23_pic_1",
+          "name": "start_icon_scene_1",
+          "filename": "start_icon_scene_1_23",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/start_icon_scene_1_23.png",
+          "originalSize": 5013
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_background_24": {
+      "id": "offline_background_24",
+      "name": "start_icon_scene_1_2",
+      "label": {
+        "ko": "start_icon_scene_1_2",
+        "en": "start_icon_scene_1_2"
+      },
+      "category": {
+        "main": "background",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_background_24_pic_1",
+          "name": "start_icon_scene_1_2",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/start_icon_scene_1_2_24.png",
+          "trimmed": null
+        }
+      ],
+      "sounds": []
+    }
+  ],
+  "sounds": [
+    {
+      "id": "offline_other_6_sound_1",
+      "name": "bark",
+      "label": {
+        "ko": "bark",
+        "en": "bark"
+      },
+      "filename": "bark_6",
+      "ext": ".mp3",
+      "duration": 1,
+      "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/sounds/bark_6.mp3"
+    },
+    {
+      "id": "offline_other_7_sound_1",
+      "name": "click",
+      "label": {
+        "ko": "click",
+        "en": "click"
+      },
+      "filename": "click_7",
+      "ext": ".mp3",
+      "duration": 1,
+      "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/sounds/click_7.mp3"
+    }
+  ],
+  "categories": {
+    "entrybot_friends": {
+      "id": "entrybot_friends",
+      "name": "엔트리봇",
+      "value": "entrybot_friends",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    },
+    "people": {
+      "id": "people",
+      "name": "사람",
+      "value": "people",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    },
+    "animal": {
+      "id": "animal",
+      "name": "동물",
+      "value": "animal",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    },
+    "thing": {
+      "id": "thing",
+      "name": "사물",
+      "value": "thing",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    },
+    "background": {
+      "id": "background",
+      "name": "배경",
+      "value": "background",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    },
+    "other": {
+      "id": "other",
+      "name": "기타",
+      "value": "other",
+      "sub": {
+        "all": {
+          "id": "",
+          "name": "전체",
+          "value": "all"
+        }
+      }
+    }
+  },
+  "imageBaseUrl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/",
+  "soundBaseUrl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/sounds/"
+}
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/start_icon_scene_1_2_24.png",
+          "originalSize": 1080
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_other_25": {
+      "id": "offline_other_25",
+      "name": "start_icon_signal",
+      "label": {
+        "ko": "start_icon_signal",
+        "en": "start_icon_signal"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_25_pic_1",
+          "name": "start_icon_signal",
+          "filename": "start_icon_signal_25",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/start_icon_signal_25.png",
+          "originalSize": 4368
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_25_sound_1",
+          "name": "Game-Spawn",
+          "filename": "Game-Spawn_25",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/Game-Spawn_25.mp3",
+          "originalSize": 4905
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\block_icon"
+    },
+    "offline_other_26": {
+      "id": "offline_other_26",
+      "name": "block_pattern_1",
+      "label": {
+        "ko": "block_pattern_1",
+        "en": "block_pattern_1"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_26_pic_1",
+          "name": "block_pattern_1",
+          "filename": "block_pattern_1_26",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/block_pattern_1_26.png",
+          "originalSize": 1184
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_26_sound_1",
+          "name": "Game-Spawn",
+          "filename": "Game-Spawn_26",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/Game-Spawn_26.ogg",
+          "originalSize": 16704
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_27": {
+      "id": "offline_other_27",
+      "name": "cloud_list_icon",
+      "label": {
+        "ko": "cloud_list_icon",
+        "en": "cloud_list_icon"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_27_pic_1",
+          "name": "cloud_list_icon",
+          "filename": "cloud_list_icon_27",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/cloud_list_icon_27.png",
+          "originalSize": 4212
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_27_sound_1",
+          "name": "GU-StealDaisy",
+          "filename": "GU-StealDaisy_27",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/GU-StealDaisy_27.mp3",
+          "originalSize": 3107
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_28": {
+      "id": "offline_other_28",
+      "name": "cloud_question_icon",
+      "label": {
+        "ko": "cloud_question_icon",
+        "en": "cloud_question_icon"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_28_pic_1",
+          "name": "cloud_question_icon",
+          "filename": "cloud_question_icon_28",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/cloud_question_icon_28.png",
+          "originalSize": 4181
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_28_sound_1",
+          "name": "GU-StealDaisy",
+          "filename": "GU-StealDaisy_28",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/GU-StealDaisy_28.ogg",
+          "originalSize": 6118
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_29": {
+      "id": "offline_other_29",
+      "name": "confirm_button",
+      "label": {
+        "ko": "confirm_button",
+        "en": "confirm_button"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_29_pic_1",
+          "name": "confirm_button",
+          "filename": "confirm_button_29",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/confirm_button_29.png",
+          "originalSize": 1912
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_29_sound_1",
+          "name": "Humm",
+          "filename": "Humm_29",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/Humm_29.mp3",
+          "originalSize": 81083
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_30": {
+      "id": "offline_other_30",
+      "name": "coordinates_edit",
+      "label": {
+        "ko": "coordinates_edit",
+        "en": "coordinates_edit"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_30_pic_1",
+          "name": "coordinates_edit",
+          "filename": "coordinates_edit_30",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/coordinates_edit_30.png",
+          "originalSize": 3016
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_30_sound_1",
+          "name": "Humm",
+          "filename": "Humm_30",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/Humm_30.ogg",
+          "originalSize": 13912
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_31": {
+      "id": "offline_other_31",
+      "name": "coordinates_edit_on",
+      "label": {
+        "ko": "coordinates_edit_on",
+        "en": "coordinates_edit_on"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_31_pic_1",
+          "name": "coordinates_edit_on",
+          "filename": "coordinates_edit_on_31",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/coordinates_edit_on_31.png",
+          "originalSize": 3026
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_32": {
+      "id": "offline_other_32",
+      "name": "coordinates_play",
+      "label": {
+        "ko": "coordinates_play",
+        "en": "coordinates_play"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_32_pic_1",
+          "name": "coordinates_play",
+          "filename": "coordinates_play_32",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/coordinates_play_32.png",
+          "originalSize": 3015
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_33": {
+      "id": "offline_other_33",
+      "name": "delete_body",
+      "label": {
+        "ko": "delete_body",
+        "en": "delete_body"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_33_pic_1",
+          "name": "delete_body",
+          "filename": "delete_body_33",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/delete_body_33.png",
+          "originalSize": 12427
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_33_sound_1",
+          "name": "R-Damage",
+          "filename": "R-Damage_33",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/R-Damage_33.mp3",
+          "originalSize": 2656
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_34": {
+      "id": "offline_other_34",
+      "name": "delete_cover",
+      "label": {
+        "ko": "delete_cover",
+        "en": "delete_cover"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_34_pic_1",
+          "name": "delete_cover",
+          "filename": "delete_cover_34",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/delete_cover_34.png",
+          "originalSize": 5604
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_34_sound_1",
+          "name": "R-Damage",
+          "filename": "R-Damage_34",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/R-Damage_34.ogg",
+          "originalSize": 5185
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_entrybot_friends_35": {
+      "id": "offline_entrybot_friends_35",
+      "name": "entry_bg",
+      "label": {
+        "ko": "entry_bg",
+        "en": "entry_bg"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_35_pic_1",
+          "name": "entry_bg",
+          "filename": "entry_bg_35",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_bg_35.png",
+          "originalSize": 4268
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_entrybot_friends_36": {
+      "id": "offline_entrybot_friends_36",
+      "name": "entry_bg_1",
+      "label": {
+        "ko": "entry_bg_1",
+        "en": "entry_bg_1"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_36_pic_1",
+          "name": "entry_bg_1",
+          "filename": "entry_bg_1_36",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_bg_1_36.png",
+          "originalSize": 4268
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_entrybot_friends_37": {
+      "id": "offline_entrybot_friends_37",
+      "name": "entry_scroll",
+      "label": {
+        "ko": "entry_scroll",
+        "en": "entry_scroll"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_37_pic_1",
+          "name": "entry_scroll",
+          "filename": "entry_scroll_37",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_scroll_37.png",
+          "originalSize": 1386
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_entrybot_friends_38": {
+      "id": "offline_entrybot_friends_38",
+      "name": "entry_scroll_02",
+      "label": {
+        "ko": "entry_scroll_02",
+        "en": "entry_scroll_02"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_38_pic_1",
+          "name": "entry_scroll_02",
+          "filename": "entry_scroll_02_38",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entry_scroll_02_38.png",
+          "originalSize": 2849
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_39": {
+      "id": "offline_other_39",
+      "name": "fullscreen_edit",
+      "label": {
+        "ko": "fullscreen_edit",
+        "en": "fullscreen_edit"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_39_pic_1",
+          "name": "fullscreen_edit",
+          "filename": "fullscreen_edit_39",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/fullscreen_edit_39.png",
+          "originalSize": 3205
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_39_sound_1",
+          "name": "ToneWobble",
+          "filename": "ToneWobble_39",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/ToneWobble_39.mp3",
+          "originalSize": 29620
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_40": {
+      "id": "offline_other_40",
+      "name": "fullscreen_play",
+      "label": {
+        "ko": "fullscreen_play",
+        "en": "fullscreen_play"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_40_pic_1",
+          "name": "fullscreen_play",
+          "filename": "fullscreen_play_40",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/fullscreen_play_40.png",
+          "originalSize": 3195
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_40_sound_1",
+          "name": "ToneWobble",
+          "filename": "ToneWobble_40",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/ToneWobble_40.ogg",
+          "originalSize": 42446
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_41": {
+      "id": "offline_other_41",
+      "name": "glyphicons_150_edit",
+      "label": {
+        "ko": "glyphicons_150_edit",
+        "en": "glyphicons_150_edit"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_41_pic_1",
+          "name": "glyphicons_150_edit",
+          "filename": "glyphicons_150_edit_41",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/glyphicons_150_edit_41.png",
+          "originalSize": 1346
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_42": {
+      "id": "offline_other_42",
+      "name": "icon_code",
+      "label": {
+        "ko": "icon_code",
+        "en": "icon_code"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_42_pic_1",
+          "name": "icon_code",
+          "filename": "icon_code_42",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/icon_code_42.png",
+          "originalSize": 3015
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_43": {
+      "id": "offline_other_43",
+      "name": "icon_picture",
+      "label": {
+        "ko": "icon_picture",
+        "en": "icon_picture"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_43_pic_1",
+          "name": "icon_picture",
+          "filename": "icon_picture_43",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/icon_picture_43.png",
+          "originalSize": 3358
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_43_sound_1",
+          "name": "0198d03532efe10d95ee24db8f104500",
+          "filename": "0198d03532efe10d95ee24db8f104500_43",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/0198d03532efe10d95ee24db8f104500_43.mp3",
+          "originalSize": 19542
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_44": {
+      "id": "offline_other_44",
+      "name": "icon_sound",
+      "label": {
+        "ko": "icon_sound",
+        "en": "icon_sound"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_44_pic_1",
+          "name": "icon_sound",
+          "filename": "icon_sound_44",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/icon_sound_44.png",
+          "originalSize": 3105
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_44_sound_1",
+          "name": "03da1e90f29198b956d36bcc4910aab6",
+          "filename": "03da1e90f29198b956d36bcc4910aab6_44",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/03da1e90f29198b956d36bcc4910aab6_44.mp3",
+          "originalSize": 101462
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_45": {
+      "id": "offline_other_45",
+      "name": "layers_arrow_down_nor",
+      "label": {
+        "ko": "layers_arrow_down_nor",
+        "en": "layers_arrow_down_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_45_pic_1",
+          "name": "layers_arrow_down_nor",
+          "filename": "layers_arrow_down_nor_45",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_arrow_down_nor_45.png",
+          "originalSize": 3084
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_45_sound_1",
+          "name": "06cf00c066c71f60527980e92035cd92",
+          "filename": "06cf00c066c71f60527980e92035cd92_45",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/06cf00c066c71f60527980e92035cd92_45.mp3",
+          "originalSize": 2942
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_46": {
+      "id": "offline_other_46",
+      "name": "layers_arrow_down_nor_1",
+      "label": {
+        "ko": "layers_arrow_down_nor_1",
+        "en": "layers_arrow_down_nor_1"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_46_pic_1",
+          "name": "layers_arrow_down_nor_1",
+          "filename": "layers_arrow_down_nor_1_46",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_arrow_down_nor_1_46.png",
+          "originalSize": 3084
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_46_sound_1",
+          "name": "08553422161e66f3af518a1cad882f62",
+          "filename": "08553422161e66f3af518a1cad882f62_46",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/08553422161e66f3af518a1cad882f62_46.mp3",
+          "originalSize": 49635
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_47": {
+      "id": "offline_other_47",
+      "name": "layers_arrow_up_nor",
+      "label": {
+        "ko": "layers_arrow_up_nor",
+        "en": "layers_arrow_up_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_47_pic_1",
+          "name": "layers_arrow_up_nor",
+          "filename": "layers_arrow_up_nor_47",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_arrow_up_nor_47.png",
+          "originalSize": 3054
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_47_sound_1",
+          "name": "0ece444f2b0240b51daeb54e8350bcca",
+          "filename": "0ece444f2b0240b51daeb54e8350bcca_47",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/0ece444f2b0240b51daeb54e8350bcca_47.mp3",
+          "originalSize": 54651
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_48": {
+      "id": "offline_other_48",
+      "name": "layers_icon_button_stop_nor",
+      "label": {
+        "ko": "layers_icon_button_stop_nor",
+        "en": "layers_icon_button_stop_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_48_pic_1",
+          "name": "layers_icon_button_stop_nor",
+          "filename": "layers_icon_button_stop_nor_48",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_button_stop_nor_48.png",
+          "originalSize": 2880
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_48_sound_1",
+          "name": "1120c09771a49f821fdbf7e12cbf537a",
+          "filename": "1120c09771a49f821fdbf7e12cbf537a_48",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/1120c09771a49f821fdbf7e12cbf537a_48.mp3",
+          "originalSize": 2942
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_49": {
+      "id": "offline_other_49",
+      "name": "layers_icon_button_stop_nor_1",
+      "label": {
+        "ko": "layers_icon_button_stop_nor_1",
+        "en": "layers_icon_button_stop_nor_1"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_49_pic_1",
+          "name": "layers_icon_button_stop_nor_1",
+          "filename": "layers_icon_button_stop_nor_1_49",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_button_stop_nor_1_49.png",
+          "originalSize": 2880
+        }
+      ],
+      "sounds": [
+        {
+          "id": "offline_other_49_sound_1",
+          "name": "11856215fedb9e4f7ccd40afcd7a158d",
+          "filename": "11856215fedb9e4f7ccd40afcd7a158d_49",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/11856215fedb9e4f7ccd40afcd7a158d_49.mp3",
+          "originalSize": 2942
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_50": {
+      "id": "offline_other_50",
+      "name": "layers_icon_close_nor",
+      "label": {
+        "ko": "layers_icon_close_nor",
+        "en": "layers_icon_close_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_50_pic_1",
+          "name": "layers_icon_close_nor",
+          "filename": "layers_icon_close_nor_50",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_close_nor_50.png",
+          "originalSize": 3150
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_51": {
+      "id": "offline_other_51",
+      "name": "layers_icon_fullmode01_nor",
+      "label": {
+        "ko": "layers_icon_fullmode01_nor",
+        "en": "layers_icon_fullmode01_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_51_pic_1",
+          "name": "layers_icon_fullmode01_nor",
+          "filename": "layers_icon_fullmode01_nor_51",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_fullmode01_nor_51.png",
+          "originalSize": 2947
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_52": {
+      "id": "offline_other_52",
+      "name": "layers_icon_fullmode01_nor_1",
+      "label": {
+        "ko": "layers_icon_fullmode01_nor_1",
+        "en": "layers_icon_fullmode01_nor_1"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_52_pic_1",
+          "name": "layers_icon_fullmode01_nor_1",
+          "filename": "layers_icon_fullmode01_nor_1_52",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_fullmode01_nor_1_52.png",
+          "originalSize": 2947
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_53": {
+      "id": "offline_other_53",
+      "name": "layers_icon_fullmode02_nor",
+      "label": {
+        "ko": "layers_icon_fullmode02_nor",
+        "en": "layers_icon_fullmode02_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_53_pic_1",
+          "name": "layers_icon_fullmode02_nor",
+          "filename": "layers_icon_fullmode02_nor_53",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_fullmode02_nor_53.png",
+          "originalSize": 2937
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_54": {
+      "id": "offline_other_54",
+      "name": "layers_icon_grid_nor",
+      "label": {
+        "ko": "layers_icon_grid_nor",
+        "en": "layers_icon_grid_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_54_pic_1",
+          "name": "layers_icon_grid_nor",
+          "filename": "layers_icon_grid_nor_54",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_grid_nor_54.png",
+          "originalSize": 2839
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_55": {
+      "id": "offline_other_55",
+      "name": "layers_icon_grid_nor_1",
+      "label": {
+        "ko": "layers_icon_grid_nor_1",
+        "en": "layers_icon_grid_nor_1"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_55_pic_1",
+          "name": "layers_icon_grid_nor_1",
+          "filename": "layers_icon_grid_nor_1_55",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_grid_nor_1_55.png",
+          "originalSize": 2839
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_56": {
+      "id": "offline_other_56",
+      "name": "layers_icon_rotate01_nor",
+      "label": {
+        "ko": "layers_icon_rotate01_nor",
+        "en": "layers_icon_rotate01_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_56_pic_1",
+          "name": "layers_icon_rotate01_nor",
+          "filename": "layers_icon_rotate01_nor_56",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_rotate01_nor_56.png",
+          "originalSize": 3337
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_57": {
+      "id": "offline_other_57",
+      "name": "layers_icon_rotate01_sel",
+      "label": {
+        "ko": "layers_icon_rotate01_sel",
+        "en": "layers_icon_rotate01_sel"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_57_pic_1",
+          "name": "layers_icon_rotate01_sel",
+          "filename": "layers_icon_rotate01_sel_57",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_rotate01_sel_57.png",
+          "originalSize": 3676
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_58": {
+      "id": "offline_other_58",
+      "name": "layers_icon_rotate02_nor",
+      "label": {
+        "ko": "layers_icon_rotate02_nor",
+        "en": "layers_icon_rotate02_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_58_pic_1",
+          "name": "layers_icon_rotate02_nor",
+          "filename": "layers_icon_rotate02_nor_58",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_rotate02_nor_58.png",
+          "originalSize": 3269
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_59": {
+      "id": "offline_other_59",
+      "name": "layers_icon_rotate02_sel",
+      "label": {
+        "ko": "layers_icon_rotate02_sel",
+        "en": "layers_icon_rotate02_sel"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_59_pic_1",
+          "name": "layers_icon_rotate02_sel",
+          "filename": "layers_icon_rotate02_sel_59",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_rotate02_sel_59.png",
+          "originalSize": 3373
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_60": {
+      "id": "offline_other_60",
+      "name": "layers_icon_rotate03_nor",
+      "label": {
+        "ko": "layers_icon_rotate03_nor",
+        "en": "layers_icon_rotate03_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_60_pic_1",
+          "name": "layers_icon_rotate03_nor",
+          "filename": "layers_icon_rotate03_nor_60",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_rotate03_nor_60.png",
+          "originalSize": 3267
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_61": {
+      "id": "offline_other_61",
+      "name": "layers_icon_rotate03_sel",
+      "label": {
+        "ko": "layers_icon_rotate03_sel",
+        "en": "layers_icon_rotate03_sel"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_61_pic_1",
+          "name": "layers_icon_rotate03_sel",
+          "filename": "layers_icon_rotate03_sel_61",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/layers_icon_rotate03_sel_61.png",
+          "originalSize": 3388
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_62": {
+      "id": "offline_other_62",
+      "name": "list_icon_list",
+      "label": {
+        "ko": "list_icon_list",
+        "en": "list_icon_list"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_62_pic_1",
+          "name": "list_icon_list",
+          "filename": "list_icon_list_62",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/list_icon_list_62.png",
+          "originalSize": 4036
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_63": {
+      "id": "offline_other_63",
+      "name": "list_icon_list_1",
+      "label": {
+        "ko": "list_icon_list_1",
+        "en": "list_icon_list_1"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_63_pic_1",
+          "name": "list_icon_list_1",
+          "filename": "list_icon_list_1_63",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/list_icon_list_1_63.png",
+          "originalSize": 4036
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_64": {
+      "id": "offline_other_64",
+      "name": "list_icon_question",
+      "label": {
+        "ko": "list_icon_question",
+        "en": "list_icon_question"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_64_pic_1",
+          "name": "list_icon_question",
+          "filename": "list_icon_question_64",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/list_icon_question_64.png",
+          "originalSize": 3534
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_65": {
+      "id": "offline_other_65",
+      "name": "list_icon_question_1",
+      "label": {
+        "ko": "list_icon_question_1",
+        "en": "list_icon_question_1"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_65_pic_1",
+          "name": "list_icon_question_1",
+          "filename": "list_icon_question_1_65",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/list_icon_question_1_65.png",
+          "originalSize": 3534
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_66": {
+      "id": "offline_other_66",
+      "name": "list_icon_signal",
+      "label": {
+        "ko": "list_icon_signal",
+        "en": "list_icon_signal"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_66_pic_1",
+          "name": "list_icon_signal",
+          "filename": "list_icon_signal_66",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/list_icon_signal_66.png",
+          "originalSize": 3763
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_67": {
+      "id": "offline_other_67",
+      "name": "local_list_icon",
+      "label": {
+        "ko": "local_list_icon",
+        "en": "local_list_icon"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_67_pic_1",
+          "name": "local_list_icon",
+          "filename": "local_list_icon_67",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/local_list_icon_67.png",
+          "originalSize": 4197
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_68": {
+      "id": "offline_other_68",
+      "name": "local_question_icon",
+      "label": {
+        "ko": "local_question_icon",
+        "en": "local_question_icon"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_68_pic_1",
+          "name": "local_question_icon",
+          "filename": "local_question_icon_68",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/local_question_icon_68.png",
+          "originalSize": 4153
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_entrybot_friends_69": {
+      "id": "offline_entrybot_friends_69",
+      "name": "entrybot1",
+      "label": {
+        "ko": "entrybot1",
+        "en": "entrybot1"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_69_pic_1",
+          "name": "entrybot1",
+          "filename": "entrybot1_69",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entrybot1_69.png",
+          "originalSize": 20420
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_entrybot_friends_70": {
+      "id": "offline_entrybot_friends_70",
+      "name": "entrybot2",
+      "label": {
+        "ko": "entrybot2",
+        "en": "entrybot2"
+      },
+      "category": {
+        "main": "entrybot_friends",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_entrybot_friends_70_pic_1",
+          "name": "entrybot2",
+          "filename": "entrybot2_70",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/entrybot2_70.png",
+          "originalSize": 20073
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_other_71": {
+      "id": "offline_other_71",
+      "name": "keyboard_workspace",
+      "label": {
+        "ko": "keyboard_workspace",
+        "en": "keyboard_workspace"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_71_pic_1",
+          "name": "keyboard_workspace",
+          "filename": "keyboard_workspace_71",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/keyboard_workspace_71.png",
+          "originalSize": 4618
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_other_72": {
+      "id": "offline_other_72",
+      "name": "trashbody",
+      "label": {
+        "ko": "trashbody",
+        "en": "trashbody"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_72_pic_1",
+          "name": "trashbody",
+          "filename": "trashbody_72",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/trashbody_72.png",
+          "originalSize": 12427
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_other_73": {
+      "id": "offline_other_73",
+      "name": "trashlid",
+      "label": {
+        "ko": "trashlid",
+        "en": "trashlid"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_73_pic_1",
+          "name": "trashlid",
+          "filename": "trashlid_73",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/trashlid_73.png",
+          "originalSize": 5604
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_other_74": {
+      "id": "offline_other_74",
+      "name": "pausebutton_edit",
+      "label": {
+        "ko": "pausebutton_edit",
+        "en": "pausebutton_edit"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_74_pic_1",
+          "name": "pausebutton_edit",
+          "filename": "pausebutton_edit_74",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/pausebutton_edit_74.png",
+          "originalSize": 2827
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_75": {
+      "id": "offline_other_75",
+      "name": "pausebutton_play",
+      "label": {
+        "ko": "pausebutton_play",
+        "en": "pausebutton_play"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_75_pic_1",
+          "name": "pausebutton_play",
+          "filename": "pausebutton_play_75",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/pausebutton_play_75.png",
+          "originalSize": 2827
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_76": {
+      "id": "offline_other_76",
+      "name": "playbutton_edit",
+      "label": {
+        "ko": "playbutton_edit",
+        "en": "playbutton_edit"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_76_pic_1",
+          "name": "playbutton_edit",
+          "filename": "playbutton_edit_76",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/playbutton_edit_76.png",
+          "originalSize": 2934
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_77": {
+      "id": "offline_other_77",
+      "name": "playbutton_play",
+      "label": {
+        "ko": "playbutton_play",
+        "en": "playbutton_play"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_77_pic_1",
+          "name": "playbutton_play",
+          "filename": "playbutton_play_77",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/playbutton_play_77.png",
+          "originalSize": 2916
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_78": {
+      "id": "offline_other_78",
+      "name": "screen_btn_play_nor",
+      "label": {
+        "ko": "screen_btn_play_nor",
+        "en": "screen_btn_play_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_78_pic_1",
+          "name": "screen_btn_play_nor",
+          "filename": "screen_btn_play_nor_78",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/screen_btn_play_nor_78.png",
+          "originalSize": 5313
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_79": {
+      "id": "offline_other_79",
+      "name": "screen_btn_stop_nor",
+      "label": {
+        "ko": "screen_btn_stop_nor",
+        "en": "screen_btn_stop_nor"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_79_pic_1",
+          "name": "screen_btn_stop_nor",
+          "filename": "screen_btn_stop_nor_79",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/screen_btn_stop_nor_79.png",
+          "originalSize": 4990
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_80": {
+      "id": "offline_other_80",
+      "name": "stopbutton_pause",
+      "label": {
+        "ko": "stopbutton_pause",
+        "en": "stopbutton_pause"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_80_pic_1",
+          "name": "stopbutton_pause",
+          "filename": "stopbutton_pause_80",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/stopbutton_pause_80.png",
+          "originalSize": 2822
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_81": {
+      "id": "offline_other_81",
+      "name": "stopbutton_play",
+      "label": {
+        "ko": "stopbutton_play",
+        "en": "stopbutton_play"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_81_pic_1",
+          "name": "stopbutton_play",
+          "filename": "stopbutton_play_81",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/stopbutton_play_81.png",
+          "originalSize": 2836
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_82": {
+      "id": "offline_other_82",
+      "name": "text_button_strike_false",
+      "label": {
+        "ko": "text_button_strike_false",
+        "en": "text_button_strike_false"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_82_pic_1",
+          "name": "text_button_strike_false",
+          "filename": "text_button_strike_false_82",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/text_button_strike_false_82.png",
+          "originalSize": 1102
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_83": {
+      "id": "offline_other_83",
+      "name": "text_button_strike_true",
+      "label": {
+        "ko": "text_button_strike_true",
+        "en": "text_button_strike_true"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_83_pic_1",
+          "name": "text_button_strike_true",
+          "filename": "text_button_strike_true_83",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/text_button_strike_true_83.png",
+          "originalSize": 1729
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_84": {
+      "id": "offline_other_84",
+      "name": "text_icon_white",
+      "label": {
+        "ko": "text_icon_white",
+        "en": "text_icon_white"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_84_pic_1",
+          "name": "text_icon_white",
+          "filename": "text_icon_white_84",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/text_icon_white_84.png",
+          "originalSize": 1314
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_85": {
+      "id": "offline_other_85",
+      "name": "top_tab_b_nor_left_blue",
+      "label": {
+        "ko": "top_tab_b_nor_left_blue",
+        "en": "top_tab_b_nor_left_blue"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_85_pic_1",
+          "name": "top_tab_b_nor_left_blue",
+          "filename": "top_tab_b_nor_left_blue_85",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/top_tab_b_nor_left_blue_85.png",
+          "originalSize": 2930
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_86": {
+      "id": "offline_other_86",
+      "name": "top_tab_b_nor_right_blue",
+      "label": {
+        "ko": "top_tab_b_nor_right_blue",
+        "en": "top_tab_b_nor_right_blue"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_86_pic_1",
+          "name": "top_tab_b_nor_right_blue",
+          "filename": "top_tab_b_nor_right_blue_86",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/top_tab_b_nor_right_blue_86.png",
+          "originalSize": 3565
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_87": {
+      "id": "offline_other_87",
+      "name": "top_tab_b_sel_left",
+      "label": {
+        "ko": "top_tab_b_sel_left",
+        "en": "top_tab_b_sel_left"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_87_pic_1",
+          "name": "top_tab_b_sel_left",
+          "filename": "top_tab_b_sel_left_87",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/top_tab_b_sel_left_87.png",
+          "originalSize": 2938
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_88": {
+      "id": "offline_other_88",
+      "name": "top_tab_b_sel_right",
+      "label": {
+        "ko": "top_tab_b_sel_right",
+        "en": "top_tab_b_sel_right"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_88_pic_1",
+          "name": "top_tab_b_sel_right",
+          "filename": "top_tab_b_sel_right_88",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/top_tab_b_sel_right_88.png",
+          "originalSize": 3182
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_89": {
+      "id": "offline_other_89",
+      "name": "workspace_coordinate",
+      "label": {
+        "ko": "workspace_coordinate",
+        "en": "workspace_coordinate"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_89_pic_1",
+          "name": "workspace_coordinate",
+          "filename": "workspace_coordinate_89",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/workspace_coordinate_89.png",
+          "originalSize": 7818
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_90": {
+      "id": "offline_other_90",
+      "name": "workspace_coordinate_v1",
+      "label": {
+        "ko": "workspace_coordinate_v1",
+        "en": "workspace_coordinate_v1"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_90_pic_1",
+          "name": "workspace_coordinate_v1",
+          "filename": "workspace_coordinate_v1_90",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/workspace_coordinate_v1_90.png",
+          "originalSize": 7188
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_91": {
+      "id": "offline_other_91",
+      "name": "workspace_sound_play",
+      "label": {
+        "ko": "workspace_sound_play",
+        "en": "workspace_sound_play"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_91_pic_1",
+          "name": "workspace_sound_play",
+          "filename": "workspace_sound_play_91",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/workspace_sound_play_91.png",
+          "originalSize": 4397
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_92": {
+      "id": "offline_other_92",
+      "name": "workspace_sound_stop",
+      "label": {
+        "ko": "workspace_sound_stop",
+        "en": "workspace_sound_stop"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_92_pic_1",
+          "name": "workspace_sound_stop",
+          "filename": "workspace_sound_stop_92",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/workspace_sound_stop_92.png",
+          "originalSize": 4319
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images"
+    },
+    "offline_other_93": {
+      "id": "offline_other_93",
+      "name": "ui-icons_222222_256x240",
+      "label": {
+        "ko": "ui-icons_222222_256x240",
+        "en": "ui-icons_222222_256x240"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_93_pic_1",
+          "name": "ui-icons_222222_256x240",
+          "filename": "ui-icons_222222_256x240_93",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/ui-icons_222222_256x240_93.png",
+          "originalSize": 4369
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\jquery-ui\\themes\\base\\images"
+    },
+    "offline_other_94": {
+      "id": "offline_other_94",
+      "name": "ui-icons_2e83ff_256x240",
+      "label": {
+        "ko": "ui-icons_2e83ff_256x240",
+        "en": "ui-icons_2e83ff_256x240"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_94_pic_1",
+          "name": "ui-icons_2e83ff_256x240",
+          "filename": "ui-icons_2e83ff_256x240_94",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/ui-icons_2e83ff_256x240_94.png",
+          "originalSize": 4369
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\jquery-ui\\themes\\base\\images"
+    },
+    "offline_other_95": {
+      "id": "offline_other_95",
+      "name": "ui-icons_444444_256x240",
+      "label": {
+        "ko": "ui-icons_444444_256x240",
+        "en": "ui-icons_444444_256x240"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_95_pic_1",
+          "name": "ui-icons_444444_256x240",
+          "filename": "ui-icons_444444_256x240_95",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/ui-icons_444444_256x240_95.png",
+          "originalSize": 6992
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\jquery-ui\\themes\\base\\images"
+    },
+    "offline_other_96": {
+      "id": "offline_other_96",
+      "name": "ui-icons_454545_256x240",
+      "label": {
+        "ko": "ui-icons_454545_256x240",
+        "en": "ui-icons_454545_256x240"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_96_pic_1",
+          "name": "ui-icons_454545_256x240",
+          "filename": "ui-icons_454545_256x240_96",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/ui-icons_454545_256x240_96.png",
+          "originalSize": 4369
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\jquery-ui\\themes\\base\\images"
+    },
+    "offline_other_97": {
+      "id": "offline_other_97",
+      "name": "ui-icons_555555_256x240",
+      "label": {
+        "ko": "ui-icons_555555_256x240",
+        "en": "ui-icons_555555_256x240"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_97_pic_1",
+          "name": "ui-icons_555555_256x240",
+          "filename": "ui-icons_555555_256x240_97",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/ui-icons_555555_256x240_97.png",
+          "originalSize": 6988
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\jquery-ui\\themes\\base\\images"
+    },
+    "offline_other_98": {
+      "id": "offline_other_98",
+      "name": "ui-icons_777620_256x240",
+      "label": {
+        "ko": "ui-icons_777620_256x240",
+        "en": "ui-icons_777620_256x240"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_98_pic_1",
+          "name": "ui-icons_777620_256x240",
+          "filename": "ui-icons_777620_256x240_98",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/ui-icons_777620_256x240_98.png",
+          "originalSize": 4549
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\jquery-ui\\themes\\base\\images"
+    },
+    "offline_other_99": {
+      "id": "offline_other_99",
+      "name": "ui-icons_777777_256x240",
+      "label": {
+        "ko": "ui-icons_777777_256x240",
+        "en": "ui-icons_777777_256x240"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [
+        {
+          "id": "offline_other_99_pic_1",
+          "name": "ui-icons_777777_256x240",
+          "filename": "ui-icons_777777_256x240_99",
+          "imageType": "png",
+          "dimension": {
+            "width": 100,
+            "height": 100
+          },
+          "localPath": "images/ui-icons_777777_256x240_99.png",
+          "originalSize": 6999
+        }
+      ],
+      "sounds": [],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\jquery-ui\\themes\\base\\images"
+    },
+    "offline_other_6": {
+      "id": "offline_other_6",
+      "name": "bark",
+      "label": {
+        "ko": "bark",
+        "en": "bark"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_6_sound_1",
+          "name": "bark",
+          "filename": "bark_6",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/bark_6.mp3",
+          "originalSize": 40440
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_other_7": {
+      "id": "offline_other_7",
+      "name": "click",
+      "label": {
+        "ko": "click",
+        "en": "click"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_7_sound_1",
+          "name": "click",
+          "filename": "click_7",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/click_7.mp3",
+          "originalSize": 2304
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_other_8": {
+      "id": "offline_other_8",
+      "name": "click",
+      "label": {
+        "ko": "click",
+        "en": "click"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_8_sound_1",
+          "name": "click",
+          "filename": "click_8",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/click_8.ogg",
+          "originalSize": 4865
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_other_9": {
+      "id": "offline_other_9",
+      "name": "click",
+      "label": {
+        "ko": "click",
+        "en": "click"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_9_sound_1",
+          "name": "click",
+          "filename": "click_9",
+          "ext": ".wav",
+          "duration": 1,
+          "localPath": "sounds/click_9.wav",
+          "originalSize": 3782
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_other_10": {
+      "id": "offline_other_10",
+      "name": "delete",
+      "label": {
+        "ko": "delete",
+        "en": "delete"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_10_sound_1",
+          "name": "delete",
+          "filename": "delete_10",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/delete_10.mp3",
+          "originalSize": 3123
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_other_11": {
+      "id": "offline_other_11",
+      "name": "delete",
+      "label": {
+        "ko": "delete",
+        "en": "delete"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_11_sound_1",
+          "name": "delete",
+          "filename": "delete_11",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/delete_11.ogg",
+          "originalSize": 5731
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_other_12": {
+      "id": "offline_other_12",
+      "name": "delete",
+      "label": {
+        "ko": "delete",
+        "en": "delete"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_12_sound_1",
+          "name": "delete",
+          "filename": "delete_12",
+          "ext": ".wav",
+          "duration": 1,
+          "localPath": "sounds/delete_12.wav",
+          "originalSize": 9164
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\entryjs\\images\\media"
+    },
+    "offline_other_13": {
+      "id": "offline_other_13",
+      "name": "Thunder",
+      "label": {
+        "ko": "Thunder",
+        "en": "Thunder"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_13_sound_1",
+          "name": "Thunder",
+          "filename": "Thunder_13",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/Thunder_13.mp3",
+          "originalSize": 156685
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\PreloadJS\\_assets\\audio"
+    },
+    "offline_other_14": {
+      "id": "offline_other_14",
+      "name": "Thunder",
+      "label": {
+        "ko": "Thunder",
+        "en": "Thunder"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_14_sound_1",
+          "name": "Thunder",
+          "filename": "Thunder_14",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/Thunder_14.ogg",
+          "originalSize": 71083
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\PreloadJS\\_assets\\audio"
+    },
+    "offline_people_15": {
+      "id": "offline_people_15",
+      "name": "CabinBoy",
+      "label": {
+        "ko": "CabinBoy",
+        "en": "CabinBoy"
+      },
+      "category": {
+        "main": "people",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_people_15_sound_1",
+          "name": "CabinBoy",
+          "filename": "CabinBoy_15",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/CabinBoy_15.mp3",
+          "originalSize": 9529
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\PreloadJS\\_assets\\static"
+    },
+    "offline_background_16": {
+      "id": "offline_background_16",
+      "name": "05-Binrpilot-Underground",
+      "label": {
+        "ko": "05-Binrpilot-Underground",
+        "en": "05-Binrpilot-Underground"
+      },
+      "category": {
+        "main": "background",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_background_16_sound_1",
+          "name": "05-Binrpilot-Underground",
+          "filename": "05-Binrpilot-Underground_16",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/05-Binrpilot-Underground_16.mp3",
+          "originalSize": 4467036
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_other_17": {
+      "id": "offline_other_17",
+      "name": "Game-AudioSprite",
+      "label": {
+        "ko": "Game-AudioSprite",
+        "en": "Game-AudioSprite"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_17_sound_1",
+          "name": "Game-AudioSprite",
+          "filename": "Game-AudioSprite_17",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/Game-AudioSprite_17.mp3",
+          "originalSize": 45556
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_other_21": {
+      "id": "offline_other_21",
+      "name": "Game-Death",
+      "label": {
+        "ko": "Game-Death",
+        "en": "Game-Death"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_21_sound_1",
+          "name": "Game-Death",
+          "filename": "Game-Death_21",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/Game-Death_21.mp3",
+          "originalSize": 11737
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_other_23": {
+      "id": "offline_other_23",
+      "name": "Game-Shot",
+      "label": {
+        "ko": "Game-Shot",
+        "en": "Game-Shot"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_23_sound_1",
+          "name": "Game-Shot",
+          "filename": "Game-Shot_23",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/Game-Shot_23.mp3",
+          "originalSize": 3677
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_other_24": {
+      "id": "offline_other_24",
+      "name": "Game-Shot",
+      "label": {
+        "ko": "Game-Shot",
+        "en": "Game-Shot"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_24_sound_1",
+          "name": "Game-Shot",
+          "filename": "Game-Shot_24",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/Game-Shot_24.ogg",
+          "originalSize": 11692
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_background_31": {
+      "id": "offline_background_31",
+      "name": "M-GameBG",
+      "label": {
+        "ko": "M-GameBG",
+        "en": "M-GameBG"
+      },
+      "category": {
+        "main": "background",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_background_31_sound_1",
+          "name": "M-GameBG",
+          "filename": "M-GameBG_31",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/M-GameBG_31.mp3",
+          "originalSize": 795853
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_background_32": {
+      "id": "offline_background_32",
+      "name": "M-GameBG",
+      "label": {
+        "ko": "M-GameBG",
+        "en": "M-GameBG"
+      },
+      "category": {
+        "main": "background",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_background_32_sound_1",
+          "name": "M-GameBG",
+          "filename": "M-GameBG_32",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/M-GameBG_32.ogg",
+          "originalSize": 1700011
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_other_35": {
+      "id": "offline_other_35",
+      "name": "S-Damage",
+      "label": {
+        "ko": "S-Damage",
+        "en": "S-Damage"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_35_sound_1",
+          "name": "S-Damage",
+          "filename": "S-Damage_35",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/S-Damage_35.mp3",
+          "originalSize": 2422
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_other_36": {
+      "id": "offline_other_36",
+      "name": "S-Damage",
+      "label": {
+        "ko": "S-Damage",
+        "en": "S-Damage"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_36_sound_1",
+          "name": "S-Damage",
+          "filename": "S-Damage_36",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/S-Damage_36.ogg",
+          "originalSize": 5119
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_other_37": {
+      "id": "offline_other_37",
+      "name": "Thunder1",
+      "label": {
+        "ko": "Thunder1",
+        "en": "Thunder1"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_37_sound_1",
+          "name": "Thunder1",
+          "filename": "Thunder1_37",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/Thunder1_37.mp3",
+          "originalSize": 156685
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_other_38": {
+      "id": "offline_other_38",
+      "name": "Thunder1",
+      "label": {
+        "ko": "Thunder1",
+        "en": "Thunder1"
+      },
+      "category": {
+        "main": "other",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_other_38_sound_1",
+          "name": "Thunder1",
+          "filename": "Thunder1_38",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/Thunder1_38.ogg",
+          "originalSize": 73509
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_people_41": {
+      "id": "offline_people_41",
+      "name": "U-CabinBoy3",
+      "label": {
+        "ko": "U-CabinBoy3",
+        "en": "U-CabinBoy3"
+      },
+      "category": {
+        "main": "people",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_people_41_sound_1",
+          "name": "U-CabinBoy3",
+          "filename": "U-CabinBoy3_41",
+          "ext": ".mp3",
+          "duration": 1,
+          "localPath": "sounds/U-CabinBoy3_41.mp3",
+          "originalSize": 9529
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    },
+    "offline_people_42": {
+      "id": "offline_people_42",
+      "name": "U-CabinBoy3",
+      "label": {
+        "ko": "U-CabinBoy3",
+        "en": "U-CabinBoy3"
+      },
+      "category": {
+        "main": "people",
+        "sub": null
+      },
+      "pictures": [],
+      "sounds": [
+        {
+          "id": "offline_people_42_sound_1",
+          "name": "U-CabinBoy3",
+          "filename": "U-CabinBoy3_42",
+          "ext": ".ogg",
+          "duration": 1,
+          "localPath": "sounds/U-CabinBoy3_42.ogg",
+          "originalSize": 9811
+        }
+      ],
+      "source": "entry-offline-v1.0.0-windows",
+      "originalPath": "entry\\bower_components\\SoundJS\\_assets\\audio"
+    }
+  },
+  "categories": {
+    "entrybot_friends": {
+      "id": "entrybot_friends",
+      "name": "엔트리봇 친구들",
+      "value": "entrybot_friends"
+    },
+    "people": {
+      "id": "people",
+      "name": "사람",
+      "value": "people"
+    },
+    "animal": {
+      "id": "animal",
+      "name": "동물",
+      "value": "animal"
+    },
+    "vehicle": {
+      "id": "vehicle",
+      "name": "탈것",
+      "value": "vehicle"
+    },
+    "thing": {
+      "id": "thing",
+      "name": "사물",
+      "value": "thing"
+    },
+    "background": {
+      "id": "background",
+      "name": "배경",
+      "value": "background"
+    },
+    "other": {
+      "id": "other",
+      "name": "기타",
+      "value": "other"
+    }
+  },
+  "extractedAt": "2025-06-28T11:56:01.802Z",
+  "totalAssets": 123,
+  "source": "entry-offline-v1.0.0-windows",
+  "version": "1.0.0"
+}

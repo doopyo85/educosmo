@@ -1,0 +1,679 @@
+<!-- CSS 파일 참조 추가 -->
+<link rel="stylesheet" href="/css/report.css">
+<%- include('../partials/header') %>
+
+<div class="container my-4">
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <h2>월간 학습리포트 POD</h2>
+      <p class="text-muted" id="reportTitle">...</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+      <button id="printBtn" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-printer"></i> 인쇄하기
+      </button>
+      <a href="/report/books-page" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> 목록으로
+      </a>
+    </div>
+  </div>
+
+  <div class="alert alert-success d-none" id="saveAlert">
+    <i class="bi bi-check-circle me-2"></i> 리포트가 성공적으로 저장되었습니다!
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm" id="reportPreview">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">리포트 편집</h5>
+          <small class="text-muted">빈칸을 클릭하여 직접 입력하세요</small>
+        </div>
+        <div class="card-body">
+          <div id="loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">교재 정보를 불러오는 중...</p>
+          </div>
+          
+          <div id="reportContent" class="d-none">
+            <!-- 리포트 컨텐츠 시작 -->
+            <div id="printableReport" class="a4-page">
+              <div class="text-center mb-4">
+                <h1 class="display-6 fw-bold">Monthly Assessment</h1>
+                <div class="text-end">
+                  <h6>센터: <span id="headerCenterName" class="editable" data-field="centerName" contenteditable="true">(센터명 입력)</span></h6>
+                </div>
+              </div>
+              
+              <table class="table table-bordered fixed-width">
+                <tr>
+                  <th style="width: 15%;" class="text-center bg-light">학습 기간</th>
+                  <td style="width: 35%;" id="studyPeriodCell">
+                    <div class="d-flex align-items-center">
+                      <input type="date" id="startDate" class="form-control form-control-sm me-1" style="width: 45%;">
+                      <span class="mx-1">~</span>
+                      <input type="date" id="endDate" class="form-control form-control-sm" style="width: 45%;">
+                    </div>
+                  </td>
+                  <th style="width: 15%;" class="text-center bg-light">프로그램명</th>
+                  <td style="width: 35%;" id="programNameCell"></td>
+                </tr>
+                <tr>
+                  <th class="text-center bg-light">학 생 명</th>
+                  <td id="studentNameCell" class="editable" data-field="studentName" contenteditable="true">(학생명 입력)</td>
+                  <th class="text-center bg-light">강 사 명</th>
+                  <td id="teacherNameCell" class="editable" data-field="teacherName" contenteditable="true">(강사명 입력)</td>
+                </tr>
+              </table>
+              
+              <!-- 교재 정보 - 순서 변경됨 -->
+              <div class="mt-4 mb-4">
+                <h5 class="mb-3 text-center" id="contentsTitle"></h5>
+                
+                <table class="table table-bordered fixed-width">
+                  <tr>
+                    <th class="text-center bg-light" style="width: 15%;">교재</th>
+                    <td id="bookThumbnailsCell" class="text-center">
+                      <!-- 썸네일 이미지가 여기에 삽입됩니다 -->
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              
+              <!-- 선생님 의견 - 순서 변경됨 -->
+              <div class="mt-4">
+                <h5 class="mb-3">선생님 의견</h5>
+                <div class="teacher-comment-area mb-4 editable" id="teacherCommentCell" data-field="teacherComment" contenteditable="true">
+                  학생의 성취와 발전 사항, 개선이 필요한 부분, 향후 학습 방향에 대해 의견을 작성하세요.
+                </div>
+              </div>
+              
+              <!-- CT 요소 평가 테이블 - 순서 변경됨 -->
+              <div class="evaluation-container">
+                <table class="table table-bordered mt-4 fixed-width">
+                  <colgroup>
+                    <col style="width: 5%;">
+                    <col style="width: 20%;">
+                    <col style="width: 55%;">
+                    <col style="width: 6%;">
+                    <col style="width: 7%;">
+                    <col style="width: 7%;">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th class="text-center bg-light">항목</th>
+                      <th class="text-center bg-light">
+                        CT<br>
+                        <small>(컴퓨팅 사고력)</small>
+                      </th>
+                      <th class="text-center bg-light">평가 내용</th>
+                      <th class="text-center bg-light">상</th>
+                      <th class="text-center bg-light">중</th>
+                      <th class="text-center bg-light">하</th>
+                    </tr>
+                  </thead>
+                  <tbody id="evaluationTableBody">
+                    <!-- 평가 항목이 여기에 동적으로 삽입됩니다 -->
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="text-center mt-4 page-footer">
+                <img src="/resource/codingnplay_logo.png" alt="코딩앤플레이" style="max-width: 80px;" />
+              </div>
+            </div>
+            <!-- 리포트 컨텐츠 끝 -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>
+
+<style>
+  /* 🔥 styles.css 카드 스타일 오버라이드 - 리포트 생성 페이지용 */
+  .card {
+    height: auto !important;           /* 고정 높이 제거 */
+    overflow: visible !important;      /* 넘치는 내용 표시 */
+    min-height: auto !important;       /* 최소 높이도 제거 */
+    max-height: none !important;       /* 최대 높이 제한 제거 */
+  }
+
+  .card-body {
+    height: auto !important;           /* 카드 본문 높이 자동 */
+    overflow: visible !important;      /* 카드 본문 오버플로우 표시 */
+    max-height: none !important;       /* 카드 본문 최대 높이 제한 제거 */
+    padding: 1.5rem !important;        /* 적절한 패딩 유지 */
+  }
+
+  /* 평가 테이블 컨테이너 강제 표시 */
+  .evaluation-container {
+    width: 100% !important;
+    overflow: visible !important;      /* 스크롤 제거, 모든 내용 표시 */
+    max-height: none !important;       /* 높이 제한 제거 */
+    height: auto !important;           /* 자동 높이 */
+  }
+
+  /* 평가 테이블 자체 스타일 */
+  #evaluationTableBody {
+    display: table-row-group !important; /* 테이블 본문 강제 표시 */
+  }
+
+  /* 리포트 프리뷰 카드 */
+  #reportPreview {
+    min-height: auto !important;       /* 최소 높이 제거 */
+    height: auto !important;           /* 자동 높이 */
+  }
+
+  /* A4 페이지 컨테이너 */
+  .a4-page {
+    height: auto !important;           /* 자동 높이로 모든 내용 표시 */
+    min-height: auto !important;       /* 최소 높이 제거 */
+  }
+
+  /* 인쇄 가능한 리포트 */
+  #printableReport {
+    height: auto !important;           /* 자동 높이 */
+    overflow: visible !important;      /* 모든 내용 표시 */
+  }
+
+  /* A4 용지 크기에 맞는 스타일 */
+  @media screen {
+    .a4-page {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    
+    .fixed-width {
+      width: 100% !important;
+      table-layout: fixed;
+    }
+    
+    /* 스크롤 제거 */
+    .evaluation-container {
+      width: 100%;
+      overflow-x: visible;
+    }
+    
+    /* hover 효과 제거 */
+    .card {
+      transition: none !important;
+      transform: none !important;
+    }
+    
+    .card:hover {
+      transform: none !important;
+      box-shadow: none !important;
+    }
+  }
+  
+  /* 편집 가능한 요소 스타일 */
+  .editable {
+    min-height: 20px;
+    border: 1px dashed transparent;
+    padding: 2px 5px;
+    transition: all 0.2s;
+  }
+  
+  .editable:hover, .editable:focus {
+    border-color: #80bdff;
+    background-color: #f8f9fa;
+    outline: none;
+  }
+  
+  .editable:empty:before {
+    content: attr(data-placeholder);
+    color: #aaa;
+    font-style: italic;
+  }
+  
+  /* 인쇄 시 적용되는 스타일 - 수정됨 */
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
+    
+    /* 모든 요소 숨김 */
+    body * {
+      visibility: hidden;
+    }
+    
+    /* 인쇄할 요소만 표시 */
+    #printableReport, 
+    #printableReport * {
+      visibility: visible !important;
+    }
+    
+    /* 인쇄할 컨텐츠 위치 조정 */
+    #printableReport {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 190mm !important;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .a4-page {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .fixed-width {
+      width: 100% !important;
+      table-layout: fixed;
+    }
+    
+    /* 편집 가능 요소 인쇄 스타일 */
+    .editable {
+      border: none !important;
+    }
+    
+    /* 날짜 입력 필드 인쇄 스타일 */
+    #studyPeriodCell input {
+      display: none !important;
+    }
+    
+    #studyPeriodCell:before {
+      content: attr(data-formatted-period);
+      display: inline-block;
+    }
+    
+    #studyPeriodCell .align-self-center {
+      display: none !important;
+    }
+    
+    /* 내용이 많아질 경우 자동으로 페이지 나누기 */
+    .evaluation-container {
+      page-break-inside: auto;
+      overflow: visible !important;
+    }
+    
+    tr {
+      page-break-inside: avoid;
+    }
+    
+    .page-footer {
+      position: static !important;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    
+    /* 불필요한 요소 숨김 */
+    .navbar, .btn, 
+    .card-header,
+    .container > .row:first-child,
+    #saveAlert {
+      display: none !important;
+    }
+  }
+  
+  /* 테이블 열 너비 고정 */
+  th, td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* 선생님 의견 영역 스타일 */
+  .teacher-comment-area {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 1rem;
+    min-height: 100px;
+  }
+  
+  /* 도서 썸네일 이미지 스타일 */
+  .book-thumbnail {
+    max-height: 150px;
+    max-width: 100%;
+    object-fit: contain;
+  }
+  
+  /* 저장 알림 스타일 */
+  #saveAlert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    width: 300px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    animation: fadeOut 3s forwards;
+    animation-delay: 3s;
+  }
+  
+  @keyframes fadeOut {
+    0% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async function() {
+    // URL에서 카테고리와 볼륨 값 가져오기
+    const pathParts = window.location.pathname.split('/');
+    const category = decodeURIComponent(pathParts[pathParts.length - 2]);
+    const volume = decodeURIComponent(pathParts[pathParts.length - 1]);
+    
+    console.log(`리포트 생성 페이지 로드: B열=${category}, C열=${volume}`);
+    
+    // 초기 로딩 상태
+    const loadingElement = document.getElementById('loading');
+    const reportContentElement = document.getElementById('reportContent');
+    const saveAlertElement = document.getElementById('saveAlert');
+    
+    // 리포트 요소
+    const reportTitleElement = document.getElementById('reportTitle');
+    const studentNameCell = document.getElementById('studentNameCell');
+    const teacherNameCell = document.getElementById('teacherNameCell');
+    const headerCenterName = document.getElementById('headerCenterName');
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const studyPeriodCell = document.getElementById('studyPeriodCell');
+    const programNameCell = document.getElementById('programNameCell');
+    const teacherCommentCell = document.getElementById('teacherCommentCell');
+    const evaluationTableBody = document.getElementById('evaluationTableBody');
+    const contentsTitle = document.getElementById('contentsTitle');
+    const bookThumbnailsCell = document.getElementById('bookThumbnailsCell');
+    
+    // 날짜 기본값 설정 (오늘 및 1개월 전)
+    const today = new Date();
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(today.getMonth() - 1);
+    
+    startDateInput.value = formatDateForInput(oneMonthAgo);
+    endDateInput.value = formatDateForInput(today);
+    
+    // 날짜 변경 시 기간 포맷팅
+    function updateFormattedPeriod() {
+      if (startDateInput.value && endDateInput.value) {
+        const formattedPeriod = formatDateRange(startDateInput.value, endDateInput.value);
+        studyPeriodCell.setAttribute('data-formatted-period', formattedPeriod);
+      }
+    }
+    
+    startDateInput.addEventListener('change', updateFormattedPeriod);
+    endDateInput.addEventListener('change', updateFormattedPeriod);
+    
+    // 초기 포맷팅 실행
+    updateFormattedPeriod();
+    
+    // 보고서 저장 키 생성
+    const reportStorageKey = `report_${category}_${volume}`;
+    
+    // 저장된 데이터 불러오기
+    loadSavedReportData();
+    
+    try {
+      // 교재 정보 및 CT요소 가져오기 - B열/C열 값 직접 전달
+      const response = await fetch(`/report/book-ct-elements/${encodeURIComponent(category)}/${encodeURIComponent(volume)}`);
+      
+      if (!response.ok) {
+        throw new Error('교재 정보를 불러오는데 실패했습니다.');
+      }
+      
+      const data = await response.json();
+      console.log('불러온 데이터:', data);
+      
+      // 카테고리 표시 값 (B열) 및 볼륨 표시 값 (C열에서 파싱)
+      let displayCategory = category;
+      let displayVolume = volume;
+      
+      // 볼륨에서 호수 부분 추출 (C열 값 파싱)
+      const volumeMatch = volume.match(/(\d+)(?:-(\d+))?/);
+      if (volumeMatch) {
+        if (volumeMatch[2]) {
+          // '1-2' 형식인 경우
+          displayVolume = `${volumeMatch[2]}호`;
+        } else {
+          // '2' 형식인 경우
+          displayVolume = `${volumeMatch[1]}호`;
+        }
+      }
+      
+      // 리포트 제목 설정
+      reportTitleElement.textContent = `${displayCategory} ${displayVolume}`;
+      
+      // 프로그램 이름 설정
+      programNameCell.textContent = `${displayCategory}`;
+      
+      // 컨텐츠 타이틀 설정
+      contentsTitle.textContent = `${displayCategory} CT컴퓨팅 사고력 신규확장 콘텐츠`;
+      
+      // 썸네일 이미지 표시
+      if (data.book && data.book.thumbnail) {
+        bookThumbnailsCell.innerHTML = `
+          <img src="${data.book.thumbnail}" alt="${data.book.title}" class="book-thumbnail">
+          <p class="small mt-2">${data.book.title}</p>
+        `;
+      } else {
+        bookThumbnailsCell.innerHTML = `
+          <p class="text-muted small">이미지 없음</p>
+          <p class="small mt-2">${data.book?.title || '교재 정보 없음'}</p>
+        `;
+      }
+      
+      // CT 요소 평가 테이블 초기화
+      evaluationTableBody.innerHTML = '';
+      
+      // 평가 항목 표시
+      if (data.ctElements && data.ctElements.length > 0) {
+        data.ctElements.forEach((item, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="text-center">${index + 1}</td>
+            <td class="text-center">${item.ctElement || ''}</td>
+            <td>${item.evaluationItem || ''}</td>
+            <td class="text-center">
+              <div class="form-check form-check-inline justify-content-center">
+                <input class="form-check-input evaluation-radio" type="radio" 
+                  name="evaluation-${index}" id="eval-${index}-high" value="상" checked>
+              </div>
+            </td>
+            <td class="text-center">
+              <div class="form-check form-check-inline justify-content-center">
+                <input class="form-check-input evaluation-radio" type="radio" 
+                  name="evaluation-${index}" id="eval-${index}-mid" value="중">
+              </div>
+            </td>
+            <td class="text-center">
+              <div class="form-check form-check-inline justify-content-center">
+                <input class="form-check-input evaluation-radio" type="radio" 
+                  name="evaluation-${index}" id="eval-${index}-low" value="하">
+              </div>
+            </td>
+          `;
+          evaluationTableBody.appendChild(row);
+        });
+        
+        // 평가 항목이 많을 경우 페이지 나누기를 위한 처리
+        if (data.ctElements.length > 7) {
+          document.querySelector('.evaluation-container').classList.add('multi-page');
+        }
+        
+        console.log(`${data.ctElements.length}개의 평가 항목이 표시됨`);
+        
+        // 저장된 평가 데이터 복원
+        restoreEvaluationData();
+      } else {
+        evaluationTableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center text-muted py-3">
+              해당 교재에 대한 평가 항목이 없습니다. (${volume})
+            </td>
+          </tr>
+        `;
+        console.log('표시할 평가 항목이 없음');
+      }
+      
+      // 로딩 완료 후 컨텐츠 표시
+      loadingElement.classList.add('d-none');
+      reportContentElement.classList.remove('d-none');
+      
+      // 자동 저장 설정
+      setupAutoSave();
+      
+    } catch (error) {
+      console.error('Error:', error);
+      loadingElement.innerHTML = `
+        <div class="alert alert-danger">
+          <i class="bi bi-exclamation-circle me-2"></i>
+          교재 정보를 불러오는 중 오류가 발생했습니다: ${error.message}
+        </div>
+      `;
+    }
+    
+    // 저장된 리포트 데이터 불러오기
+    function loadSavedReportData() {
+      try {
+        const savedData = localStorage.getItem(reportStorageKey);
+        if (savedData) {
+          const data = JSON.parse(savedData);
+          
+          // 데이터 복원
+          if (data.centerName) headerCenterName.innerText = data.centerName;
+          if (data.studentName) studentNameCell.innerText = data.studentName;
+          if (data.teacherName) teacherNameCell.innerText = data.teacherName;
+          if (data.teacherComment) teacherCommentCell.innerText = data.teacherComment;
+          if (data.startDate) startDateInput.value = data.startDate;
+          if (data.endDate) endDateInput.value = data.endDate;
+          
+          console.log('저장된 리포트 데이터를 불러왔습니다.');
+        }
+      } catch (error) {
+        console.error('저장된 데이터 불러오기 오류:', error);
+      }
+    }
+    
+    // 저장된 평가 데이터 복원
+    function restoreEvaluationData() {
+      try {
+        const savedData = localStorage.getItem(reportStorageKey);
+        if (savedData) {
+          const data = JSON.parse(savedData);
+          
+          if (data.evaluations) {
+            data.evaluations.forEach((value, index) => {
+              const radioSelector = `input[name="evaluation-${index}"][value="${value}"]`;
+              const radio = document.querySelector(radioSelector);
+              if (radio) radio.checked = true;
+            });
+          }
+        }
+      } catch (error) {
+        console.error('평가 데이터 복원 오류:', error);
+      }
+    }
+    
+    // 자동 저장 설정
+    function setupAutoSave() {
+      // 편집 가능 요소에 이벤트 리스너 추가
+      document.querySelectorAll('.editable').forEach(el => {
+        el.addEventListener('blur', saveReportData);
+      });
+      
+      // 날짜 입력 필드에 이벤트 리스너 추가
+      startDateInput.addEventListener('change', saveReportData);
+      endDateInput.addEventListener('change', saveReportData);
+      
+      // 라디오 버튼 변경 이벤트 리스너 추가
+      document.querySelectorAll('.evaluation-radio').forEach(radio => {
+        radio.addEventListener('change', saveReportData);
+      });
+      
+      // 저장 버튼 클릭 이벤트 (버튼이 있는 경우)
+      const saveBtn = document.getElementById('saveReportBtn');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+          saveReportData();
+          showSaveAlert();
+        });
+      }
+    }
+    
+    // 리포트 데이터 저장 함수
+    function saveReportData() {
+      const reportData = {
+        centerName: headerCenterName.innerText,
+        studentName: studentNameCell.innerText,
+        teacherName: teacherNameCell.innerText,
+        teacherComment: teacherCommentCell.innerText,
+        startDate: startDateInput.value,
+        endDate: endDateInput.value,
+        evaluations: []
+      };
+      
+      // 평가 항목 값 수집
+      document.querySelectorAll('[name^="evaluation-"]').forEach((input, groupIndex) => {
+        if (input.checked) {
+          const groupName = input.name;
+          const index = parseInt(groupName.split('-')[1]);
+          reportData.evaluations[index] = input.value;
+        }
+      });
+      
+      // 로컬 스토리지에 저장
+      localStorage.setItem(reportStorageKey, JSON.stringify(reportData));
+      console.log('리포트 데이터가 자동 저장되었습니다.');
+    }
+    
+    // 저장 알림 표시
+    function showSaveAlert() {
+      saveAlertElement.classList.remove('d-none');
+      
+      // 6초 후 알림 숨기기
+      setTimeout(() => {
+        saveAlertElement.classList.add('d-none');
+      }, 6000);
+    }
+    
+    // 인쇄 버튼 이벤트
+    const printBtn = document.getElementById('printBtn');
+    if (printBtn) {
+      printBtn.addEventListener('click', function() {
+        // 인쇄 전 레이아웃 최적화
+        optimizeForPrinting();
+        window.print();
+      });
+    }
+    
+    // 인쇄를 위한 최적화 함수
+    function optimizeForPrinting() {
+      // 학습 기간 표시를 위한 속성 업데이트
+      studyPeriodCell.setAttribute('data-formatted-period', formatDateRange(startDateInput.value, endDateInput.value));
+      
+      // 선생님 의견이 비어있는지 확인하고 최소 높이 설정
+      const teacherComment = document.getElementById('teacherCommentCell');
+      if (teacherComment && (!teacherComment.textContent.trim() || teacherComment.textContent === '학생의 성취와 발전 사항, 개선이 필요한 부분, 향후 학습 방향에 대해 의견을 작성하세요.')) {
+        teacherComment.innerHTML = '&nbsp;'; // 비어있을 경우 공백 추가
+      }
+      
+      console.log('인쇄를 위한 레이아웃을 최적화했습니다.');
+    }
+    
+    // 날짜 포맷 함수 (YYYY-MM-DD)
+    function formatDateForInput(date) {
+      return date.toISOString().split('T')[0];
+    }
+    
+    // 날짜 범위 포맷 함수 (YYYY.MM.DD ~ YYYY.MM.DD)
+    function formatDateRange(start, end) {
+      const formatDate = (dateStr) => {
+        const parts = dateStr.split('-');
+        return `${parts[0]}.${parts[1]}.${parts[2]}`;
+      };
+      
+      return `${formatDate(start)} ~ ${formatDate(end)}`;
+    }
+  });
+</script>

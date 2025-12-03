@@ -1,0 +1,167 @@
+/* ==========================================================================
+   Layout Toggle Button Styles - 정확한 비율 배치 (25% + 65% + 10%)
+   ========================================================================== */
+
+/* 🔥 토글 버튼 컨테이너 - 5% 폭으로 수정 */
+.layout-toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* 🔥 오른쪽 정렬 */
+    flex: 0 0 5%; /* 🔥 15%에서 5%로 변경 */
+    box-sizing: border-box;
+    z-index: 10;
+}
+
+/* 🔥 토글 버튼 - 색상 제거하고 주변과 일치시킴 */
+.layout-toggle-btn {
+    background: transparent;
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    padding: 6px 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    /* 둥근 모서리 */
+    border-radius: 4px;
+    
+    /* 기본 스타일 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    
+    /* 주변 네비게이션 버튼과 일치 */
+    box-shadow: none;
+}
+
+/* 🔥 호버 효과 - 색상 없이 자연스럽게 */
+.layout-toggle-btn:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
+    transform: none;
+}
+
+/* 🔥 클릭 효과 */
+.layout-toggle-btn:active {
+    background: #e9ecef;
+    border-color: #6c757d;
+    transform: scale(0.98);
+}
+
+/* 🔥 아이콘 스타일 */
+.layout-toggle-btn i {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+}
+
+/* 🔥 IDE 숨김 상태 - 펼치기 아이콘 (arrow-bar-right) */
+.layout-html .header-controls-group #layout-toggle-icon {
+    display: inline-block;
+}
+
+.layout-html .header-controls-group #layout-toggle-icon-alt {
+    display: none;
+}
+
+/* 🔥 IDE 표시 상태 - 접기 아이콘 (arrow-bar-left) */
+.layout-ide .header-controls-group #layout-toggle-icon {
+    display: none;
+}
+
+.layout-ide .header-controls-group #layout-toggle-icon-alt {
+    display: inline-block;
+}
+
+/* 🔥 문제 네비게이션 버튼 스타일 (전/다음) */
+#prev-problem, #next-problem {
+    font-size: 18px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+#prev-problem:hover, #next-problem:hover {
+    color: #495057;
+    background: #f8f9fa;
+}
+
+#prev-problem:disabled, #next-problem:disabled {
+    color: #adb5bd;
+    cursor: not-allowed;
+    background: transparent;
+}
+
+/* 🔥 문제 번호 네비게이션 */
+.problem-navigation {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.problem-navigation .problem-icon {
+    font-size: 16px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.problem-navigation .problem-icon:hover {
+    color: #333; /* 🔥 파란색에서 검정색으로 변경 */
+    background: rgba(51, 51, 51, 0.1); /* 🔥 검정색 배경 */
+}
+
+/* 🔥 현재 문제 아이콘 (채워진 상태) */
+.problem-navigation .problem-icon[class*="-fill"] {
+    color: #333; /* 🔥 파란색에서 검정색으로 변경 */
+}
+
+/* 🔥 반응형 조정 - common-content.css와 통합하여 중복 제거 */
+@media (max-width: 768px) {
+    .layout-toggle-container {
+        flex: 1 1 20%; /* 모바일에서만 별도 설정 */
+    }
+    
+    .layout-toggle-btn {
+        padding: 4px 6px;
+        min-width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    
+    .layout-toggle-btn i {
+        font-size: 14px;
+    }
+}
+
+/* 🔥 포커스 스타일 (접근성) */
+.layout-toggle-btn:focus {
+    outline: 2px solid #333; /* 🔥 파란색에서 검정색으로 변경 */
+    outline-offset: 2px;
+    box-shadow: 0 0 0 0.2rem rgba(51, 51, 51, 0.25); /* 🔥 검정색 그림자 */
+}
+
+/* 🔥 비활성화 상태 */
+.layout-toggle-btn:disabled {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: #adb5bd;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* 🔥 다른 레이아웃(quiz, ppt)에서는 숨김 */
+.layout-quiz .layout-toggle-container,
+.layout-ppt .layout-toggle-container {
+    display: none;
+}

@@ -1,0 +1,159 @@
+/* khan-academy-style.css */
+.khan-category {
+    margin-bottom: 2rem;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .khan-category-header {
+    background-color: #1865f2;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .khan-category-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+    flex-grow: 1;
+  }
+  
+  .khan-category-container {
+    background-color: #f7f8fa;
+    padding: 20px;
+    border: 1px solid #e8e9eb;
+    border-top: none;
+  }
+  
+  .khan-book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  
+  .khan-book-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .khan-book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  
+  .khan-book-header {
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #eeeeee;
+  }
+  
+  .khan-book-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    color: #1a1a1a;
+  }
+  
+  .khan-book-content {
+    padding: 15px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .khan-book-description {
+    color: #666;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+  }
+  
+  .khan-book-footer {
+    padding: 15px;
+    border-top: 1px solid #eeeeee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .khan-volume-tag {
+    background-color: #e8f2ff;
+    color: #1865f2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  
+  .khan-volumes-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    margin-bottom: auto;
+  }
+  
+  .khan-volume-btn {
+    display: inline-block;
+    padding: 8px 15px;
+    background-color: #e8f2ff;
+    color: #1865f2;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+  }
+  
+  .khan-volume-btn:hover {
+    background-color: #1865f2;
+    color: white;
+  }
+  
+  .khan-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 5px;
+    background-color: #f0f0f0;
+    color: #555;
+  }
+  
+  .khan-icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 12px;
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .khan-icon i {
+    font-size: 1.2rem;
+  }
+  
+  .small-heading {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  /* 반응형 디자인 */
+  @media (max-width: 768px) {
+    .khan-book-grid {
+      grid-template-columns: 1fr;
+    }
+  }

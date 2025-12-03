@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>EntryJS Base - Custom</title>
+
+    <!-- ✅ 스타일 -->
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link href="./node_modules/@entrylabs/entry/dist/entry.css" rel="stylesheet" />
+    <link href="./lib/modal/dist/entry/entry-modal.css" rel="stylesheet" />
+    <link href="./node_modules/@entrylabs/tool/dist/entry-tool.css" rel="stylesheet" />
+    <link href="https://entry-cdn.pstatic.net/lib/entry-lms/dist/assets/app.css" rel="stylesheet" />
+
+    <!-- ✅ 필수 라이브러리 -->
+    <script src="https://entry-cdn.pstatic.net/lib/lodash/dist/lodash.min.js"></script>
+    <script src="https://entry-cdn.pstatic.net/js/react18/react.production.min.js"></script>
+    <script src="https://entry-cdn.pstatic.net/js/react18/react-dom.production.min.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/PreloadJS/lib/preloadjs-0.6.0.min.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/EaselJS/lib/easeljs-0.8.0.min.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/SoundJS/lib/soundjs-0.6.0.min.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/SoundJS/lib/flashaudioplugin-0.6.0.min.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/jquery/jquery.min.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/jquery-ui/ui/minified/jquery-ui.min.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/velocity/velocity.min.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/codemirror/lib/codemirror.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/codemirror/addon/hint/show-hint.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/codemirror/addon/lint/lint.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/codemirror/addon/selection/active-line.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/codemirror/mode/javascript/javascript.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/codemirror/addon/hint/javascript-hint.js"></script>
+    <script src="https://entry-cdn.pstatic.net/js/ws/jshint.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/fuzzy/lib/fuzzy.js"></script>
+    <script src="https://entry-cdn.pstatic.net/js/ws/python.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/socket.io-client/socket.io.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/components-webfontloader/webfontloader.js"></script>
+    <script src="https://entry-cdn.pstatic.net/lib/entry-lms/dist/assets/app.js"></script>
+</head>
+
+<body>
+    <!-- ✅ UI 컨테이너 -->
+    <!--
+    <div class="header">
+        <button onclick="javascript:setBlockMode()">block mode</button>
+        <button onclick="javascript:setPythonMode()">python mode</button>
+    </div>
+    -->
+    
+    <!-- 🔥 Entry 공식 스타일 헤더 (파란색 배경) -->
+    <div class="entry-header" style="
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        height: 56px; 
+        background: #4f80ff; 
+        padding: 0 24px; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    ">
+        <!-- 왼쪽: Entry 로고 + 사용자 정보 -->
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="
+                font-size: 20px; 
+                font-weight: 700; 
+                color: white;
+                letter-spacing: 0.5px;
+            ">Entry</div>
+            
+            <span id="headerUserID" style="
+                font-size: 14px; 
+                color: rgba(255,255,255,0.9);
+                padding: 5px 12px;
+                background: rgba(255,255,255,0.15);
+                border-radius: 4px;
+                font-weight: 500;
+            ">게스트</span>
+        </div>
+        
+        <!-- 오른쪽: 버튼들 -->
+        <div style="display: flex; gap: 10px;">
+            <!-- 불러오기 버튼 -->
+            <button id="loadProjectBtn" style="
+                padding: 8px 18px; 
+                background: rgba(255,255,255,0.2);
+                color: white; 
+                border: 1px solid rgba(255,255,255,0.3);
+                border-radius: 4px; 
+                cursor: pointer; 
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.2s;
+            " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                📂 불러오기
+            </button>
+            
+            <!-- 저장하기 버튼 -->
+            <button id="saveProjectBtn" style="
+                padding: 8px 18px; 
+                background: rgba(255,255,255,0.2);
+                color: white; 
+                border: 1px solid rgba(255,255,255,0.3);
+                border-radius: 4px; 
+                cursor: pointer; 
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.2s;
+            " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                💾 저장하기
+            </button>
+            
+            <!-- 🔥 다운로드 버튼 (신규) -->
+            <button id="downloadProjectBtn" style="
+                padding: 8px 18px; 
+                background: rgba(255,255,255,0.2);
+                color: white; 
+                border: 1px solid rgba(255,255,255,0.3);
+                border-radius: 4px; 
+                cursor: pointer; 
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.2s;
+            " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                ⬇️ 다운로드
+            </button>
+            
+            <!-- 제출하기 버튼 (강조) -->
+            <button id="submitProjectBtn" style="
+                padding: 8px 18px; 
+                background: #FF6B35;
+                color: white; 
+                border: 1px solid #E85A2A;
+                border-radius: 4px; 
+                cursor: pointer; 
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.2s;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            " onmouseover="this.style.background='#E85A2A'; this.style.boxShadow='0 3px 6px rgba(0,0,0,0.2)'" onmouseout="this.style.background='#FF6B35'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.15)'">
+                ✅ 제출하기
+            </button>
+        </div>
+    </div>
+    
+    <div id="workspace" style="height: calc(100vh - 56px);"></div>
+    <div id="EntryPopupContainer"></div>
+    <div id="EntryModalContainer"></div>
+    <div id="EntryListContainer" class="modal"></div>
+
+    <!-- ✅ Entry 초기화 및 앱 로직 -->
+    <script src="./js/global.js"></script>
+    <script src="./node_modules/@entrylabs/entry/extern/lang/ko.js"></script>
+    <script src="./node_modules/@entrylabs/entry/extern/util/static.js"></script>
+    <script src="./node_modules/@entrylabs/tool/dist/entry-tool.js"></script>
+    <script src="./lib/paint/entry-paint.js"></script>
+    <script src="https://entry-cdn.pstatic.net/external/sound/sound-editor.js"></script>
+    <script src="./node_modules/@entrylabs/entry/extern/util/filbert.js"></script>
+    <script src="./node_modules/@entrylabs/entry/extern/util/CanvasInput.js"></script>
+    <script src="./node_modules/@entrylabs/entry/extern/util/ndgmr.Collision.js"></script>
+    <script src="./node_modules/@entrylabs/entry/extern/util/handle.js"></script>
+    <script src="./node_modules/@entrylabs/entry/extern/util/bignumber.min.js"></script>
+    <script src="./node_modules/@entrylabs/legacy-video/dist/index.js"></script>
+    <script src="./node_modules/@entrylabs/entry/dist/entry.js"></script>
+    
+    <!-- ✅ 엔트리 확장 기능 -->
+    <script src="./js/entryjs-webspeech-tts.js"></script>
+    <script src="./lib/modal/dist/entry-modal.js"></script>
+    <script type="module" src="./js/app.mjs"></script>
+    <script src="/js/entry-minimal-dataapi.js"></script>
+    
+    <!-- 🔥 자동저장 시스템 (상대 경로로 변경) -->
+    <script src="/js/autosave.js"></script>
+    
+    <!-- 🔥 프로젝트 저장 시스템 -->
+    <script src="./js/projectSaver.js"></script>
+
+    <!-- ✅ 브라우저 지원 여부 확인 -->
+    <script>
+    // 🔥 자동저장 매니저 전역 변수
+    let autoSaveManager = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!('speechSynthesis' in window)) {
+            console.warn('⚠️ 이 브라우저는 Web Speech API를 지원하지 않습니다.');
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+                background: #ff9800; color: white; padding: 8px 16px;
+                border-radius: 4px; font-size: 14px; z-index: 10000;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            `;
+            notification.textContent = '⚠️ 음성 읽기 기능이 완전히 지원되지 않습니다.';
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        } else {
+            console.log('✅ Web Speech API 지원됨 - TTS 기능 사용 가능');
+            console.log('사용 가능한 음성 수:', speechSynthesis.getVoices().length || '로딩 중...');
+        }
+        
+        // 🔥 Entry 로드 대기 후 자동저장 시작
+        initAutoSave();
+    });
+    
+    // 🔥 자동저장 초기화 함수
+    function initAutoSave() {
+        const checkEntryInterval = setInterval(() => {
+            if (window.Entry && window.Entry.exportProject && window.Entry.loadProject) {
+                clearInterval(checkEntryInterval);
+                
+                console.log('🔄 자동저장 시스템 초기화 시작...');
+                
+                // 현재 사용자 ID 가져오기
+                const currentUserID = window.EDUCODINGNPLAY_USER?.userID || 
+                                       new URLSearchParams(window.location.search).get('userID') || 
+                                       'anonymous';
+                
+                // 자동저장 매니저 생성 (userID 전달)
+                autoSaveManager = new AutoSaveManager('entry', () => {
+                    // Entry 프로젝트 데이터 추출
+                    try {
+                        const projectData = Entry.exportProject();
+                        console.log('📦 프로젝트 데이터 추출 완료:', {
+                            objects: projectData?.objects?.length || 0,
+                            scenes: projectData?.scenes?.length || 0
+                        });
+                        return projectData;
+                    } catch (error) {
+                        console.error('❌ 프로젝트 데이터 추출 실패:', error);
+                        return null;
+                    }
+                }, { userID: currentUserID });
+                
+                // 복구 가능한 데이터 확인
+                const recoveryData = autoSaveManager.checkRecovery();
+                if (recoveryData) {
+                    console.log('💾 복구 가능한 자동저장 데이터 발견!');
+                    autoSaveManager.showRecoveryModal(recoveryData, (projectData) => {
+                        console.log('🔄 프로젝트 복구 시작...');
+                        Entry.loadProject(projectData);
+                        console.log('✅ 프로젝트 복구 완료!');
+                    });
+                } else {
+                    console.log('ℹ️ 복구할 자동저장 데이터 없음');
+                }
+                
+                // 자동저장 시작 (개발용: 30초, 운영: 3분)
+                // 아래 주석을 해제하면 30초마다 저장 (테스트용)
+                // autoSaveManager.interval = 30 * 1000;
+                autoSaveManager.startAutoSave();
+                
+                console.log('✅ 자동저장 시스템 활성화 완료!');
+                
+                // 전역에서 수동 저장 가능하도록 노출
+                window.saveProject = () => {
+                    if (autoSaveManager) {
+                        autoSaveManager.manualSave();
+                        console.log('💾 수동 저장 완료!');
+                    }
+                };
+            }
+        }, 500);
+        
+        // 10초 후에도 Entry가 로드되지 않으면 경고
+        setTimeout(() => {
+            if (!window.Entry) {
+                console.error('❌ Entry 로드 실패 - 자동저장 사용 불가');
+            }
+        }, 10000);
+    }
+    
+    // 🔥 URL 파라미터 파싱 함수
+    function getUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        const s3Url = params.get('s3Url');
+        const userID = params.get('userID') || 'anonymous';
+        const role = params.get('role') || 'student';
+        
+        // S3 URL에서 프로젝트명 추출
+        let projectName = '내작품';
+        if (s3Url) {
+            try {
+                const urlPath = decodeURIComponent(s3Url);
+                const fileName = urlPath.split('/').pop(); // 마지막 세그먼트
+                projectName = fileName.replace('.ent', ''); // 확장자 제거
+                console.log(`📌 S3 URL 파싱 성공: ${urlPath} → 프로젝트명: ${projectName}`);
+            } catch (err) {
+                console.error('❌ 프로젝트명 추출 오류:', err);
+            }
+        } else {
+            console.log('ℹ️ s3Url 파라미터가 없습니다.');
+        }
+        
+        return { projectName, userID, role };
+    }
+    
+    // 🔥 저장/제출/불러오기 버튼 초기화
+    function initSaveButtons() {
+        const checkSaver = setInterval(() => {
+            if (window.EntryProjectSaver) {
+                clearInterval(checkSaver);
+                
+                // 🔥 URL 파라미터에서 정보 먼저 추출
+                const { projectName, userID, role } = getUrlParams();
+                
+                console.log(`🔍 추출된 정보:`, { projectName, userID, role });
+                
+                // 🔥 EntryProjectSaver 생성 시 모든 정보 전달
+                const saver = new EntryProjectSaver({
+                    projectName: projectName !== '내작품' ? projectName : undefined,
+                    userID: userID,
+                    role: role
+                });
+                
+                console.log(`✅ EntryProjectSaver 초기화 완료:`, {
+                    projectName: saver.projectName,
+                    userID: saver.userID,
+                    role: saver.role
+                });
+                
+                // 불러오기 버튼
+                document.getElementById('loadProjectBtn').onclick = async () => {
+                    try {
+                        await saver.showLoadProjectModal();
+                    } catch (error) {
+                        console.error('불러오기 오류:', error);
+                    }
+                };
+                
+                // 저장 버튼
+                document.getElementById('saveProjectBtn').onclick = async () => {
+                    try {
+                        await saver.saveProject();
+                    } catch (error) {
+                        console.error('저장 오류:', error);
+                    }
+                };
+                
+                // 제출 버튼
+                document.getElementById('submitProjectBtn').onclick = async () => {
+                    try {
+                        await saver.submitProject();
+                    } catch (error) {
+                        console.error('제출 오류:', error);
+                    }
+                };
+                
+                // 🔥 다운로드 버튼 (신규)
+                document.getElementById('downloadProjectBtn').onclick = async () => {
+                    try {
+                        await saver.downloadProject();
+                    } catch (error) {
+                        console.error('다운로드 오류:', error);
+                    }
+                };
+                
+                console.log('✅ 불러오기/저장/다운로드/제출 버튼 활성화 완료!');
+                
+                // 🔥 전역에서 접근 가능하도록 saver 노출
+                window.entryProjectSaver = saver;
+            }
+        }, 500);
+    }
+    
+    // 🔥 Query Params에서 사용자 ID 읽기 (즉시 실행)
+    (function() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const userID = params.get('userID') || 'guest';
+            const role = params.get('role') || 'guest';
+            
+            console.log('🔍 [즉시 실행] Query Params:', { userID, role });
+            
+            // DOM 로드 전에도 실행 가능하도록 즉시 실행 함수 사용
+            function updateUserDisplay() {
+                const headerUserID = document.getElementById('headerUserID');
+                if (headerUserID) {
+                    headerUserID.textContent = userID;
+                    console.log('✅ 사용자 ID 표시:', userID);
+                } else {
+                    console.warn('⚠️ headerUserID 요소를 찾을 수 없음');
+                }
+            }
+            
+            // DOM이 이미 로드되었으면 즉시 실행, 아니면 DOMContentLoaded 대기
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', updateUserDisplay);
+            } else {
+                updateUserDisplay();
+            }
+            
+            // window.EDUCODINGNPLAY_USER 객체도 설정 (하위 호환성)
+            window.EDUCODINGNPLAY_USER = window.EDUCODINGNPLAY_USER || {};
+            window.EDUCODINGNPLAY_USER.userID = userID;
+            window.EDUCODINGNPLAY_USER.role = role;
+            
+        } catch (error) {
+            console.error('❌ 사용자 정보 로드 오류:', error);
+        }
+    })();
+    
+    // 🔥 사용자 ID 표시 (레거시 지원용 함수)
+    function loadUserInfo() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const userID = params.get('userID') || window.EDUCODINGNPLAY_USER?.userID || 'guest';
+            
+            const headerUserID = document.getElementById('headerUserID');
+            if (headerUserID) {
+                headerUserID.textContent = userID;
+                console.log('✅ [loadUserInfo] 사용자 ID 표시:', userID);
+            }
+        } catch (error) {
+            console.log('⚠️ 사용자 정보 로드 오류:', error);
+        }
+    }
+    
+    // 페이지 로드 후 자동 초기화
+    window.addEventListener('DOMContentLoaded', () => {
+        loadUserInfo();  // 사용자 정보 로드
+        initSaveButtons();
+    });
+    </script>
+    
+    <!-- 🔥 Paint Editor 저장 함수 커스터마이징 -->
+    <script src="./js/custom-painter-save.js"></script>
+</body>
+</html>

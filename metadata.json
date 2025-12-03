@@ -1,0 +1,112 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-07-07",
+  "totalAssets": 3,
+  "baseUrl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads",
+  "categories": [
+    {
+      "id": "entrybot_friends",
+      "name": "엔트리봇",
+      "visible": true
+    },
+    {
+      "id": "animal", 
+      "name": "동물",
+      "visible": true
+    },
+    {
+      "id": "thing",
+      "name": "사물",
+      "visible": true
+    },
+    {
+      "id": "background",
+      "name": "배경",
+      "visible": true
+    },
+    {
+      "id": "characters",
+      "name": "캐릭터",
+      "visible": true
+    },
+    {
+      "id": "other",
+      "name": "기타",
+      "visible": true
+    }
+  ],
+  "sprites": {
+    "entrybot": {
+      "id": "entrybot",
+      "name": "엔트리봇",
+      "category": "entrybot_friends",
+      "label": {
+        "ko": "엔트리봇",
+        "en": "EntryBot"
+      },
+      "pictures": [
+        {
+          "id": "entrybot_pic1",
+          "name": "엔트리봇",
+          "filename": "entrybot.png",
+          "imageType": "png",
+          "dimension": {
+            "width": 80,
+            "height": 80
+          },
+          "scale": 100,
+          "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/entrybot.png"
+        }
+      ],
+      "sounds": []
+    },
+    "cat": {
+      "id": "cat",
+      "name": "고양이",
+      "category": "animal",
+      "label": {
+        "ko": "고양이",
+        "en": "Cat"
+      },
+      "pictures": [
+        {
+          "id": "cat_pic1", 
+          "name": "고양이",
+          "filename": "cat.png",
+          "imageType": "png",
+          "dimension": {
+            "width": 80,
+            "height": 80
+          },
+          "scale": 100,
+          "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/cat.png"
+        }
+      ],
+      "sounds": []
+    },
+    "dog": {
+      "id": "dog",
+      "name": "강아지",
+      "category": "animal",
+      "label": {
+        "ko": "강아지",
+        "en": "Dog"
+      },
+      "pictures": [
+        {
+          "id": "dog_pic1",
+          "name": "강아지", 
+          "filename": "dog.png",
+          "imageType": "png",
+          "dimension": {
+            "width": 80,
+            "height": 80
+          },
+          "scale": 100,
+          "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/dog.png"
+        }
+      ],
+      "sounds": []
+    }
+  }
+}

@@ -1,0 +1,10 @@
+<IfModule mod_mime.c>
+    AddType text/css .css
+</IfModule>
+
+<FilesMatch "\.(css)$">
+    ForceType text/css
+</FilesMatch>
+
+
+Header set Content-Security-Policy "default-src 'self'; img-src 'self' data:;"

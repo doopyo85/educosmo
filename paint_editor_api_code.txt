@@ -1,0 +1,94 @@
+// 🎨 Paint Editor API - Entry 캔버스 이미지 저장
+// 이 코드를 apiRouter.js의 module.exports = router; 바로 위에 추가하세요
+
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+
+// Paint 전용 Multer 설정
+const paintUpload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('이미지 파일만 업로드 가능합니다.'), false);
+    }
+  }
+});
+
+router.post('/picture/paint', authenticateUser, paintUpload.single('image'), async (req, res) => {
+  console.log('🎨 Paint Editor 저장 요청 받음');
+  
+  try {
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '이미지 파일이 없습니다.' 
+      });
+    }
+
+    console.log('📷 업로드된 이미지:', {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    });
+
+    // S3 클라이언트 생성
+    const s3Client = new S3Client({
+      region: process.env.AWS_REGION || 'ap-northeast-2',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      }
+    });
+
+    // 파일명 생성
+    const timestamp = Date.now();
+    const userId = req.session?.userID || 'anonymous';
+    const ext = req.file.mimetype.split('/')[1]; // png, jpeg 등
+    const filename = `paint_${userId}_${timestamp}.${ext}`;
+    const s3Key = `ent/uploads/images/${filename}`;
+
+    // S3 업로드
+    const uploadParams = {
+      Bucket: process.env.S3_BUCKET_NAME || 'educodingnplaycontents',
+      Key: s3Key,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+      CacheControl: 'public, max-age=31536000'
+    };
+
+    await s3Client.send(new PutObjectCommand(uploadParams));
+    console.log('✅ S3 업로드 성공:', s3Key);
+
+    // Entry.js가 기대하는 응답 형식
+    const fileUrl = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${s3Key}`;
+    
+    res.json({
+      success: true,
+      data: {
+        _id: `paint_${timestamp}`,
+        filename: filename,
+        imageType: ext,
+        dimension: { 
+          width: 100,  // 실제 크기는 클라이언트에서 계산
+          height: 100 
+        },
+        fileurl: fileUrl,
+        label: { 
+          ko: '새 그림', 
+          en: 'New Picture' 
+        },
+        name: '새 그림'
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Paint Editor 저장 실패:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});

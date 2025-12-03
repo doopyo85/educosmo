@@ -1,0 +1,115 @@
+/* 헤더 전체 영역 스타일 - Bootstrap Navbar 완전 덕어쓰기 */
+.navbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 70px !important; /* 헤더 높이 고정 */
+    min-height: 70px !important;
+    max-height: 70px !important;
+    background-color: #f8f9fa !important; /* 🔥 배경색 명시 */
+    color: #212529 !important;
+    padding: 0.5rem 1rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    z-index: 1100 !important; /* 높은 z-index 값 */
+    border-bottom: 1px solid #dee2e6 !important; /* 🔥 실선 강제 표시 */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; /* 🔥 그림자 강제 표시 */
+    margin: 0 !important;
+}
+
+/* 🔥 추가: navbar-light 클래스 강화 */
+.navbar.navbar-light {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* 🔥 추가: bg-light 클래스 강화 */
+.navbar.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+/* 🔥 추가: shadow-sm 클래스 강화 */
+.navbar.shadow-sm {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* 로고 및 좌측 콘텐츠 */
+.header .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    text-decoration: none;
+}
+
+/* ===== 🔥 navbar 로고 스타일 추가 ===== */
+/* 로고 기본 스타일 - 비율 유지, 크기 통일 */
+.navbar-brand img {
+    height: 50px !important;           /* 높이 고정 */
+    width: auto !important;            /* 너비는 비율에 맞게 자동 조정 */
+    max-width: 190px !important;       /* 모든 로고 동일한 최대 너비 */
+    object-fit: contain !important;    /* 비율 유지하며 맞춤 */
+    transition: opacity 0.3s ease;     /* 부드러운 전환 효과 */
+}
+
+/* 로고 호버 효과 */
+.navbar-brand:hover img {
+    opacity: 0.8;
+}
+
+/* 반응형 디자인 - 태블릿 */
+@media (max-width: 992px) {
+    .navbar-brand img {
+        height: 45px !important;
+        max-width: 170px !important;
+    }
+}
+
+/* 반응형 디자인 - 모바일 */
+@media (max-width: 768px) {
+    .navbar-brand img {
+        height: 40px !important;
+        max-width: 150px !important;
+    }
+}
+
+/* 반응형 디자인 - 소형 모바일 */
+@media (max-width: 576px) {
+    .navbar-brand img {
+        height: 35px !important;
+        max-width: 120px !important;
+    }
+}
+
+/* 유저 정보와 로그아웃 버튼 */
+.header .user-info {
+    display: flex;
+    align-items: center;
+}
+
+.header .user-info span {
+    margin-right: 15px;
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+.header .logout-button {
+    background-color: #ff6b6b;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.header .logout-button:hover {
+    background-color: #ff5252;
+}
+
+#toggle-dark-mode, #notification-icon, #app-drawer-button {
+    font-size: 2rem;
+    cursor: pointer;
+}
+

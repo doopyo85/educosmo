@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QwerFighter - Space Shooting Game</title>
+    <meta charset="utf-8">
+    <!-- CSP 및 스크립트 로딩 관련 문제 해결을 위한 메타 태그 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
+    
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background-color: #121212; 
+            font-family: Arial, sans-serif;
+        }
+        #login-container { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            color: white;
+        }
+        #game-container { 
+            position: relative; 
+            display: none; 
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        canvas { 
+            display: block; 
+            margin: 0 auto; 
+            border: 2px solid #444;
+            box-shadow: 0 0 20px rgba(0, 0, 255, 0.3);
+        }
+        #google-login-btn { 
+            padding: 12px 24px; 
+            font-size: 16px; 
+            background-color: #4285F4; 
+            color: white; 
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: background-color 0.3s;
+        }
+        #google-login-btn:hover {
+            background-color: #3367D6;
+        }
+        #guest-login-btn {
+            padding: 12px 24px; 
+            font-size: 16px; 
+            background-color: #757575; 
+            color: white; 
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: background-color 0.3s;
+        }
+        #guest-login-btn:hover {
+            background-color: #616161;
+        }
+        #user-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        #loading-message {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        #logout-btn {
+            color: #4285F4;
+            text-decoration: underline;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .game-title {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #4285F4;
+            text-shadow: 0 0 10px rgba(66, 133, 244, 0.7);
+        }
+        .game-subtitle {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #ccc;
+        }
+        #controls-info {
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 5px;
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #4285F4;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #portfolio-nav {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+        }
+        #portfolio-nav a {
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        #portfolio-nav a:hover {
+            background: rgba(66, 133, 244, 0.7);
+        }
+        
+        /* 대체 게임 캔버스 관련 스타일 */
+        #js-game-container {
+            display: none;
+            margin-top: 20px;
+        }
+        #js-game-canvas {
+            border: 2px solid #444;
+            box-shadow: 0 0 20px rgba(0, 0, 255, 0.3);
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="portfolio-nav">
+        <a href="/portfolio">← 포트폴리오로 돌아가기</a>
+    </div>
+
+    <div id="login-container">
+        <h1 class="game-title">QwerFighter</h1>
+        <p class="game-subtitle">우주 슈팅 게임에 오신 것을 환영합니다!</p>
+        <button id="google-login-btn">Google로 로그인</button>
+        <button id="guest-login-btn">게스트로 입장</button>
+    </div>
+
+    <div id="game-container">
+        <div id="user-info">
+            <div id="user-name"></div>
+            <div id="high-score"></div>
+            <div id="logout-btn">로그아웃</div>
+        </div>
+        
+        <div id="loading-message">
+            게임 로딩 중... <div class="loading-spinner"></div>
+            <div style="font-size:14px; margin-top:10px;">처음 로딩 시 20-30초 정도 소요될 수 있습니다.</div>
+        </div>
+        
+        <!-- PyGame 캔버스 -->
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- 자바스크립트 대체 게임 (PyGame 로딩 실패시) -->
+        <div id="js-game-container">
+            <canvas id="js-game-canvas" width="576" height="864"></canvas>
+        </div>
+        
+        <div id="controls-info">
+            조작방법:<br>
+            화살표 키: 이동<br>
+            Q: 슈퍼 공격<br>
+            W: 달 공격<br>
+            E: 방어막<br>
+            R: 추적 미사일 (5000점 이상)<br>
+            TAB: 일시정지
+        </div>
+    </div>
+
+    <script>
+        // PyScript 로딩 확인 타이머 - 60초 후에도 로딩이 안되면 자바스크립트 게임으로 대체
+        const pyScriptLoadingTimer = setTimeout(() => {
+            if (document.getElementById('loading-message').style.display !== 'none') {
+                console.log('PyScript 로딩 시간 초과 - 대체 게임 시작');
+                document.getElementById('loading-message').style.display = 'none';
+                document.getElementById('game-canvas').style.display = 'none';
+                document.getElementById('js-game-container').style.display = 'block';
+                startJavaScriptGame();
+            }
+        }, 60000);
+        
+        // 자바스크립트로 간단한 게임 구현 (PyScript 실패 시 대체용)
+        function startJavaScriptGame() {
+            const canvas = document.getElementById('js-game-canvas');
+            const ctx = canvas.getContext('2d');
+            let score = 0;
+            
+            // 간단한 슈팅 게임 구현 코드...
+            // 여기에 자바스크립트 게임 로직 추가
+        }
+        
+        // Firebase 초기화 (Firebase가 설정된 경우에만)
+        let firebase;
+        try {
+            firebase = window.firebase;
+            
+                    // Firebase 구성 정보
+            const firebaseConfig = {
+                apiKey: "AIzaSyBAdbPhKDmCuTcaMzUxHvstrc5zzFtNt9c",
+                authDomain: "project-victoria-ead31.firebaseapp.com",
+                projectId: "project-victoria-ead31",
+                storageBucket: "project-victoria-ead31.firebasestorage.app",
+                messagingSenderId: "987936519895",
+                appId: "1:987936519895:web:b3ab4ca7ec25d7d7c5a292",
+                measurementId: "G-YTBNKCTXK8"
+            };  
+
+            // Firebase 초기화
+            if (firebase) {
+                firebase.initializeApp(firebaseConfig);
+            }
+        } catch (e) {
+            console.log("Firebase 초기화 실패 - 게스트 모드로 실행합니다");
+            console.error(e);
+        }
+        
+        // DOM 요소
+        const loginContainer = document.getElementById('login-container');
+        const gameContainer = document.getElementById('game-container');
+        const loginButton = document.getElementById('google-login-btn');
+        const guestLoginButton = document.getElementById('guest-login-btn');
+        const userNameElement = document.getElementById('user-name');
+        const highScoreElement = document.getElementById('high-score');
+        const logoutElement = document.getElementById('logout-btn');
+        const loadingMessage = document.getElementById('loading-message');
+        
+        // 게스트 로그인 처리 함수
+        function handleGuestLogin() {
+            // 로그인 화면을 숨기고 게임 화면 표시
+            loginContainer.style.display = 'none';
+            gameContainer.style.display = 'flex';
+            
+            // 게스트 사용자 정보 설정
+            userNameElement.textContent = "게스트";
+            
+            // 로컬 스토리지에서 게스트 점수 불러오기
+            const savedHighScore = localStorage.getItem('guestHighScore') || 0;
+            highScoreElement.textContent = `최고 점수: ${savedHighScore}`;
+            
+            // 로그아웃 버튼 동작 설정
+            logoutElement.addEventListener('click', () => {
+                window.location.reload(); // 페이지 새로고침으로 로그인 화면으로 돌아감
+            });
+            
+            // 게임에서 사용자 정보에 접근할 수 있도록 전역 변수로 저장
+            window.currentUser = {
+                uid: 'guest_' + Date.now(),
+                displayName: '게스트',
+                email: null,
+                highScore: savedHighScore
+            };
+            
+            // 게임 점수 저장 함수 정의 (로컬 스토리지 사용)
+            window.saveGameScore = function(score) {
+                const highScore = parseInt(localStorage.getItem('guestHighScore') || 0);
+                
+                if (score > highScore) {
+                    localStorage.setItem('guestHighScore', score);
+                    highScoreElement.textContent = `최고 점수: ${score}`;
+                    window.currentUser.highScore = score;
+                }
+                
+                // 점수 기록 저장 (최근 5개)
+                try {
+                    let scoreHistory = JSON.parse(localStorage.getItem('guestScoreHistory') || '[]');
+                    scoreHistory.push({
+                        score: score,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    // 최대 5개 기록만 유지
+                    if (scoreHistory.length > 5) {
+                        scoreHistory = scoreHistory.slice(-5);
+                    }
+                    
+                    localStorage.setItem('guestScoreHistory', JSON.stringify(scoreHistory));
+                } catch (e) {
+                    console.error('점수 기록 저장 오류:', e);
+                }
+            };
+        }
+        
+        // 게스트 로그인 버튼 이벤트
+        guestLoginButton.addEventListener('click', handleGuestLogin);
+        
+        // Firebase 설정이 있는 경우만 Firebase 로그인 기능 활성화
+        if (firebase) {
+            // Google 로그인 버튼 이벤트
+            loginButton.addEventListener('click', () => {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                firebase.auth().signInWithPopup(provider)
+                    .catch(error => {
+                        console.error('로그인 오류:', error);
+                        alert('로그인 중 오류가 발생했습니다.');
+                    });
+            });
+            
+            // 로그아웃 버튼 이벤트
+            logoutElement.addEventListener('click', () => {
+                firebase.auth().signOut()
+                    .catch(error => {
+                        console.error('로그아웃 오류:', error);
+                    });
+            });
+            
+            // 최고 점수 가져오기
+            function getHighScore(userId) {
+                return firebase.firestore().collection('scores').doc(userId).get()
+                    .then(doc => {
+                        if (doc.exists && doc.data().highScore) {
+                            return doc.data().highScore;
+                        }
+                        return 0;
+                    })
+                    .catch(error => {
+                        console.error('점수 가져오기 오류:', error);
+                        return 0;
+                    });
+            }
+            
+            // 인증 상태 감지
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    // 로그인 성공
+                    loginContainer.style.display = 'none';
+                    gameContainer.style.display = 'flex';
+                    userNameElement.textContent = user.displayName;
+                    
+                    // 최고 점수 표시
+                    getHighScore(user.uid).then(highScore => {
+                        highScoreElement.textContent = `최고 점수: ${highScore}`;
+                        
+                        // 게임에서 사용자 정보에 접근할 수 있도록 전역 변수로 저장
+                        window.currentUser = {
+                            uid: user.uid,
+                            displayName: user.displayName,
+                            email: user.email,
+                            highScore: highScore
+                        };
+                    });
+                    
+                    // 게임 점수 저장 함수 (게임에서 호출할 수 있도록)
+                    window.saveGameScore = function(score) {
+                        if (!user) return;
+                        
+                        const userRef = firebase.firestore().collection('scores').doc(user.uid);
+                        
+                        // 트랜잭션으로 최고 점수 업데이트
+                        firebase.firestore().runTransaction(transaction => {
+                            return transaction.get(userRef).then(doc => {
+                                if (!doc.exists) {
+                                    transaction.set(userRef, {
+                                        displayName: user.displayName,
+                                        highScore: score,
+                                        lastScore: score,
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                                    return score;
+                                }
+                                
+                                const data = doc.data();
+                                const highScore = data.highScore || 0;
+                                
+                                if (score > highScore) {
+                                    transaction.update(userRef, { 
+                                        highScore: score,
+                                        lastScore: score,
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                                    return score;
+                                } else {
+                                    transaction.update(userRef, { 
+                                        lastScore: score,
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                                    return highScore;
+                                }
+                            });
+                        }).then(highScore => {
+                            highScoreElement.textContent = `최고 점수: ${highScore}`;
+                            window.currentUser.highScore = highScore;
+                        }).catch(error => {
+                            console.error('점수 저장 오류:', error);
+                        });
+                    };
+                } else {
+                    // 로그아웃 상태
+                    loginContainer.style.display = 'flex';
+                    gameContainer.style.display = 'none';
+                    window.currentUser = null;
+                }
+            });
+        } else {
+            // Firebase 없이 게스트 모드로 실행
+            window.saveGameScore = function(score) {
+                console.log(`게스트 모드: 점수 ${score}점`);
+                // 로컬 스토리지에 점수 저장 (선택사항)
+                const highScore = localStorage.getItem('highScore') || 0;
+                if (score > highScore) {
+                    localStorage.setItem('highScore', score);
+                    highScoreElement.textContent = `최고 점수: ${score}`;
+                }
+            };
+            
+            // 게스트 모드 UI 조정
+            userNameElement.textContent = "게스트";
+            const savedHighScore = localStorage.getItem('highScore') || 0;
+            highScoreElement.textContent = `최고 점수: ${savedHighScore}`;
+            logoutElement.style.display = 'none';
+        }
+    </script>
+
+    <!-- PyScript 구성 - type 속성 확인 -->
+    <py-config type="json">
+    {
+        "packages": ["pygame"],
+        "fetch": [
+            {
+                "files": [
+                    "main.py", 
+                    "image/fighter.png", 
+                    "image/badguy.png", 
+                    "image/boss.png", 
+                    "image/missile.png", 
+                    "image/super.png", 
+                    "image/moon.png", 
+                    "image/shield.png", 
+                    "image/heal.png", 
+                    "image/missile2.png", 
+                    "image/fireball.png", 
+                    "image/background.png"
+                ]
+            }
+        ]
+    }
+    </py-config>
+
+    <!-- PyScript 코드 블록 - type 속성 확인 -->
+    <py-script type="text">
+import asyncio
+import pygame
+import sys
+import js
+from js import window, document
+from pyodide.ffi import create_proxy
+
+# 웹 환경에서 이미지 로딩 함수 (원본 GameObject를 수정하지 않기 위한 헬퍼 함수)
+def load_image(path, size, colorkey=(0,0,0)):
+    try:
+        image = pygame.image.load(path).convert()
+        image = pygame.transform.scale(image, size)
+        image.set_colorkey(colorkey)
+        return image
+    except pygame.error as e:
+        print(f"이미지 로딩 오류: {path} - {e}")
+        # 대체 이미지 생성
+        surf = pygame.Surface(size)
+        surf.fill((255, 0, 255))  # 마젠타색 임시 이미지
+        return surf
+
+# pygame 초기화
+pygame.init()
+
+# canvas 요소 가져오기
+canvas = document.getElementById("game-canvas")
+
+# 화면 설정
+SCREEN_WIDTH = 144 * 4
+SCREEN_HEIGHT = 288 * 3
+canvas.width = SCREEN_WIDTH
+canvas.height = SCREEN_HEIGHT
+
+# Pygame 화면 설정 (canvas 연결)
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA, 32, canvas=canvas)
+
+# main.py에서 Game 클래스 가져오기
+from main import Game, pressed_keys
+
+# 웹에서의 키 입력 처리를 위한 전역 변수
+pressed_keys = pygame.key.get_pressed()
+
+# 게임 오버 시 점수 저장
+def save_score_to_firebase(score):
+    if hasattr(window, 'saveGameScore'):
+        window.saveGameScore(score)
+
+# 메인 게임 객체 생성
+game = Game()
+
+# 로딩 완료 시 메시지 숨기기
+document.getElementById("loading-message").style.display = "none"
+
+# 게임 점수 저장 여부 상태 변수
+score_saved = False
+
+# 키 이벤트 처리를 위한 함수
+def key_down_handler(event):
+    global pressed_keys
+    # PyGame 키 코드로 변환
+    # 여기서는 주요 키만 처리
+    if event.key == "ArrowLeft":
+        pressed_keys = list(pressed_keys)
+        pressed_keys[pygame.K_LEFT] = True
+        pressed_keys = tuple(pressed_keys)
+    elif event.key == "ArrowRight":
+        pressed_keys = list(pressed_keys)
+        pressed_keys[pygame.K_RIGHT] = True
+        pressed_keys = tuple(pressed_keys)
+    elif event.key == "ArrowUp":
+        pressed_keys = list(pressed_keys)
+        pressed_keys[pygame.K_UP] = True
+        pressed_keys = tuple(pressed_keys)
+    elif event.key == "ArrowDown":
+        pressed_keys = list(pressed_keys)
+        pressed_keys[pygame.K_DOWN] = True
+        pressed_keys = tuple(pressed_keys)
+    elif event.key == "q" or event.key == "Q":
+        # 슈퍼 공격
+        if not game.game_over and not game.paused:
+            game.fighter.use_super(game.super_attacks)
+    elif event.key == "w" or event.key == "W":
+        # 달 공격
+        if not game.game_over and not game.paused:
+            game.fighter.use_moon(game.moon_attacks)
+    elif event.key == "e" or event.key == "E":
+        # 방어막
+        if not game.game_over and not game.paused:
+            game.fighter.shield.activate()
+    elif event.key == "r" or event.key == "R":
+        # 추적 슈퍼 공격
+        if not game.game_over and not game.paused and game.score >= 5000:
+            game.fighter.use_tracking_super(game.tracking_super_attacks, game.badguys)
+    elif event.key == "Tab":
+        # 일시 정지
+        game.paused = not game.paused
+    elif event.key == "Enter" or event.key == " ":
+        # 게임 재시작
+        if game.game_over:
+            global score_saved
+            score_saved = False
+            game.reset()
+
+def key_up_handler(event):
+    global pressed_keys
+    if event.key == "ArrowLeft":
+        pressed_keys = list(pressed_keys)
+        pressed_keys[pygame.K_LEFT] = False
+        pressed_keys = tuple(pressed_keys)
+    elif event.key == "ArrowRight":
+        pressed_keys = list(pressed_keys)
+        pressed_keys[pygame.K_RIGHT] = False
+        pressed_keys = tuple(pressed_keys)
+    elif event.key == "ArrowUp":
+        pressed_keys = list(pressed_keys)
+        pressed_keys[pygame.K_UP] = False
+        pressed_keys = tuple(pressed_keys)
+    elif event.key == "ArrowDown":
+        pressed_keys = list(pressed_keys)
+        pressed_keys[pygame.K_DOWN] = False
+        pressed_keys = tuple(pressed_keys)
+
+# 키 이벤트 리스너 등록
+key_down_proxy = create_proxy(key_down_handler)
+key_up_proxy = create_proxy(key_up_handler)
+
+document.addEventListener("keydown", key_down_proxy)
+document.addEventListener("keyup", key_up_proxy)
+
+# 비동기 게임 루프
+async def game_loop():
+    global score_saved
+    clock = pygame.time.Clock()
+    
+    while True:
+        clock.tick(60)
+        
+        # 게임 이벤트 처리 (키 이벤트는 별도로 처리)
+        for event in pygame.event.get():
+            # 필요한 이벤트가 있다면 여기서 처리
+            pass
+        
+        # 게임 상태 업데이트
+        if not game.game_over and not game.paused:
+            game.update()
+        
+        # 화면 렌더링
+        game.render()
+        
+        # 게임 오버 시 점수 저장 (한 번만)
+        if game.game_over and not score_saved:
+            save_score_to_firebase(game.score)
+            score_saved = True
+        
+        # 브라우저가 응답할 수 있도록 짧은 대기 추가
+        await asyncio.sleep(0.001)
+
+# 게임 루프 시작
+asyncio.ensure_future(game_loop())
+    </py-script>
+</body>
+</html>
