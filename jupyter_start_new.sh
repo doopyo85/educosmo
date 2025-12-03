@@ -59,8 +59,8 @@ echo "✅ 한글 폰트 설정 완료"
 # 노트북 디렉토리로 이동
 cd jupyter_notebooks
 
-# Jupyter 서버 실행
-exec jupyter notebook \
+# Jupyter 서버 실행 (가상환경 Python을 명시적으로 사용)
+exec /var/www/html/myenv/bin/python -m jupyter notebook \
   --ip=0.0.0.0 \
   --port=8000 \
   --no-browser \
