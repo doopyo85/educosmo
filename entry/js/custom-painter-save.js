@@ -2,10 +2,18 @@
  * 🎨 Entry Paint Editor 저장 함수 커스터마이징
  * Paint Editor의 저장하기 버튼을 S3 업로드 API와 연동
  * + 🔥 모양 가져오기 기능 추가
+ * + 🔥 변경사항 저장 팝업 대응
+ * 
+ * 수정일: 2025-01-XX
+ * - 격자 배경 제거 로직 개선
+ * - 팝업 저장 버튼 대응 추가
  */
 
 (function() {
     console.log('🎨 Custom Painter Save 초기화 중...');
+
+    // 저장 함수 참조 (전역)
+    let customSaveFunction = null;
 
     // Entry가 로드될 때까지 대기
     function waitForEntry() {
@@ -40,6 +48,7 @@
                 clearInterval(checkPainter);
                 overridePainterSave();
                 hookImportButton();
+                hookConfirmDialog(); // 🔥 팝업 대응 추가
             }
         }, 500);
         
@@ -77,7 +86,7 @@
                 
                 const paintCanvas = document.getElementById('paint_canvas');
                 if (paintCanvas) {
-                    console.log('📝 paint_canvas 발견');
+                    console.log('📝 paint_canvas 발견, 크기:', paintCanvas.width, 'x', paintCanvas.height);
                     const trimmedData = extractTransparentImage(paintCanvas);
                     imageData = trimmedData.dataUrl;
                     width = trimmedData.width;
@@ -173,6 +182,11 @@
                     addNewPicture(currentObject, result, width, height);
                 }
                 
+                // 🔥 modified 플래그 해제 (팝업 방지)
+                if (painter.file) {
+                    painter.file.modified = false;
+                }
+                
                 // Paint Editor 닫기
                 if (Entry.playground.togglePainter) {
                     Entry.playground.togglePainter();
@@ -202,6 +216,9 @@
                 return false;
             }
         }
+        
+        // 전역 참조 저장
+        customSaveFunction = customSaveImage;
         
         /**
          * 🔥 새 모양 추가 헬퍼 함수
@@ -241,21 +258,33 @@
         }
         
         /**
-         * 🔥 투명 배경 이미지 추출 (격자 배경 제거)
+         * 🔥 투명 배경 이미지 추출 (격자 배경 제거) - 개선 버전
          */
         function extractTransparentImage(sourceCanvas) {
             const ctx = sourceCanvas.getContext('2d');
             const imageData = ctx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
             const data = imageData.data;
             
+            /**
+             * 🔥 개선된 배경 감지 - Entry 격자 패턴만 정확히 감지
+             * Entry Paint Editor 격자 색상:
+             * - 밝은 회색: RGB(230, 230, 230) 또는 #e6e6e6
+             * - 어두운 회색: RGB(204, 204, 204) 또는 #cccccc
+             */
             const isBackgroundPixel = (r, g, b, a) => {
+                // 완전 투명
                 if (a < 10) return true;
-                const isGray = Math.abs(r - g) < 5 && Math.abs(g - b) < 5;
+                
+                // RGB가 거의 같은지 (회색 계열)
+                const isGray = Math.abs(r - g) <= 2 && Math.abs(g - b) <= 2 && Math.abs(r - b) <= 2;
+                
                 if (isGray) {
-                    if ((r >= 225 && r <= 255) || (r >= 195 && r <= 215)) {
-                        return true;
-                    }
+                    // Entry 격자 밝은 회색 (228-232 범위)
+                    if (r >= 228 && r <= 232) return true;
+                    // Entry 격자 어두운 회색 (202-206 범위)
+                    if (r >= 202 && r <= 206) return true;
                 }
+                
                 return false;
             };
             
@@ -277,11 +306,13 @@
                     const a = data[idx + 3];
                     
                     if (isBackgroundPixel(r, g, b, a)) {
+                        // 배경 픽셀은 완전 투명으로
                         newData[idx] = 0;
                         newData[idx + 1] = 0;
                         newData[idx + 2] = 0;
                         newData[idx + 3] = 0;
                     } else {
+                        // 실제 그림 픽셀은 유지
                         newData[idx] = r;
                         newData[idx + 1] = g;
                         newData[idx + 2] = b;
@@ -305,7 +336,8 @@
                 };
             }
             
-            const padding = 10;
+            // 여유 공간 (패딩)
+            const padding = 5;
             minX = Math.max(0, minX - padding);
             minY = Math.max(0, minY - padding);
             maxX = Math.min(sourceCanvas.width - 1, maxX + padding);
@@ -316,12 +348,14 @@
             
             console.log('✂️ 트림 영역:', { minX, minY, maxX, maxY, trimWidth, trimHeight });
             
+            // 임시 캔버스에 투명 처리된 이미지 그리기
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = sourceCanvas.width;
             tempCanvas.height = sourceCanvas.height;
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.putImageData(newImageData, 0, 0);
             
+            // 트림된 캔버스 생성
             const trimCanvas = document.createElement('canvas');
             trimCanvas.width = trimWidth;
             trimCanvas.height = trimHeight;
@@ -340,12 +374,89 @@
         painter.save = customSaveImage;
         console.log('✅ painter.save 오버라이드 완료');
         
+        // 🔥 painter.file.save도 오버라이드
         if (painter.file) {
             painter.file.save = customSaveImage;
             console.log('✅ painter.file.save 오버라이드 완료');
         }
         
+        // 🔥 Entry.Painter 클래스의 save 메서드도 오버라이드 (프로토타입 레벨)
+        if (Entry.Painter && Entry.Painter.prototype) {
+            Entry.Painter.prototype.save = customSaveImage;
+            console.log('✅ Entry.Painter.prototype.save 오버라이드 완료');
+        }
+        
         hookSaveButton();
+    }
+    
+    /**
+     * 🔥 변경사항 저장 팝업 대응
+     */
+    function hookConfirmDialog() {
+        console.log('🔔 변경사항 저장 팝업 후킹 시작');
+        
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                for (const node of mutation.addedNodes) {
+                    if (node.nodeType !== Node.ELEMENT_NODE) continue;
+                    
+                    // Entry 팝업/다이얼로그 감지
+                    const isDialog = node.classList?.contains('entryDialog') ||
+                                    node.classList?.contains('entryModalContainer') ||
+                                    node.classList?.contains('modal') ||
+                                    node.classList?.contains('popup') ||
+                                    node.querySelector?.('.entryDialog, .entryModalContainer');
+                    
+                    if (isDialog || node.textContent?.includes('저장하지 않은 변경사항')) {
+                        console.log('📢 변경사항 저장 팝업 감지됨');
+                        
+                        // 팝업 내 저장 버튼 찾기
+                        setTimeout(() => {
+                            const buttons = node.querySelectorAll ? 
+                                node.querySelectorAll('button, .btn, [role="button"]') :
+                                document.querySelectorAll('.entryDialog button, .entryModalContainer button');
+                            
+                            buttons.forEach(btn => {
+                                const text = btn.textContent?.trim();
+                                if (text === '저장' || text === 'Save' || text === '확인') {
+                                    if (!btn._confirmHooked) {
+                                        btn._confirmHooked = true;
+                                        console.log('✅ 팝업 저장 버튼 후킹:', text);
+                                        
+                                        btn.addEventListener('click', async (e) => {
+                                            console.log('🖱️ 팝업 저장 버튼 클릭됨');
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            e.stopImmediatePropagation();
+                                            
+                                            // 커스텀 저장 실행
+                                            if (customSaveFunction) {
+                                                await customSaveFunction();
+                                            } else if (Entry.playground?.painter?.save) {
+                                                await Entry.playground.painter.save();
+                                            }
+                                            
+                                            // 팝업 닫기
+                                            const closeBtn = node.querySelector('.close, .btn-close, [aria-label="Close"]');
+                                            if (closeBtn) closeBtn.click();
+                                            
+                                            // 또는 직접 제거
+                                            setTimeout(() => {
+                                                if (node.parentNode) {
+                                                    node.style.display = 'none';
+                                                }
+                                            }, 100);
+                                        }, true);
+                                    }
+                                }
+                            });
+                        }, 100);
+                    }
+                }
+            }
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
     }
     
     /**
@@ -366,7 +477,9 @@
                     e.stopPropagation();
                     console.log('🖱️ 저장하기 버튼 클릭됨');
                     
-                    if (Entry.playground && Entry.playground.painter) {
+                    if (customSaveFunction) {
+                        await customSaveFunction();
+                    } else if (Entry.playground && Entry.playground.painter) {
                         await Entry.playground.painter.save();
                     }
                 });
