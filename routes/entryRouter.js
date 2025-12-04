@@ -428,7 +428,7 @@ router.get('/api/debug/session', authenticateUser, (req, res) => {
 });
 
 // =============================================================================
-// 🎨 페인트 에디터 이미지 업로드 API
+// 🎨 페인트 에디터 이미지 업로드 API (S3Manager 사용 - IAM Role 지원)
 // =============================================================================
 
 router.post('/data/upload-drawing', authenticateUser, async (req, res) => {
@@ -457,33 +457,26 @@ router.post('/data/upload-drawing', authenticateUser, async (req, res) => {
         
         // 파일명 생성
         const timestamp = Date.now();
-        const hash = Math.random().toString(36).substring(2, 10);
-        const finalFileName = `${hash}_${timestamp}.png`;
+        const finalFileName = `${timestamp}_drawing_${sessionID}.png`;
         
         const fs = require('fs').promises;
         const localPath = require('path');
         
-        // 🔥 S3에 업로드 (메인 저장소)
+        // 🔥 S3Manager 사용 (IAM Role 지원)
         let s3Url = null;
         let s3Key = null;
         
         try {
-            const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-            const s3Client = new S3Client({ 
-                region: process.env.AWS_REGION || 'ap-northeast-2' 
-            });
+            const S3Manager = require('../lib_storage/s3Manager');
+            const s3Manager = new S3Manager();
             
-            s3Key = `users/${userID}/entry/images/${finalFileName}`;
+            // S3 키 생성 - ent/uploads 경로 사용 (CORS 설정된 경로)
+            s3Key = `ent/uploads/${userID}_${sessionID}/${finalFileName}`;
             
-            await s3Client.send(new PutObjectCommand({
-                Bucket: process.env.S3_BUCKET_NAME || 'educodingnplaycontents',
-                Key: s3Key,
-                Body: imageBuffer,
-                ContentType: 'image/png'
-            }));
+            // S3Manager의 uploadProject 메서드 사용
+            s3Url = await s3Manager.uploadProject(s3Key, imageBuffer, 'image/png');
             
-            s3Url = `https://${process.env.S3_BUCKET_NAME || 'educodingnplaycontents'}.s3.ap-northeast-2.amazonaws.com/${s3Key}`;
-            console.log(`✅ S3 업로드 완료: ${s3Url}`);
+            console.log(`✅ S3 업로드 완료 (S3Manager): ${s3Url}`);
             
         } catch (s3Error) {
             console.error('⚠️ S3 업로드 실패, 로컬 저장으로 폴백:', s3Error.message);

@@ -1423,8 +1423,7 @@ router.use((error, req, res, next) => {
     next(error);
 });
 
-// 🎨 Paint Editor API - Entry 캔버스 이미지 저장
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+// 🎨 Paint Editor API - Entry 캔버스 이미지 저장 (S3Manager 사용 - IAM Role 지원)
 
 // Paint 전용 Multer 설정
 const paintUpload = multer({ 
@@ -1446,6 +1445,7 @@ router.post('/picture/paint', authenticateUser, async (req, res) => {
   
   try {
     const imageData = req.body.image;
+    const fileInfo = req.body.file; // 페인트 에디터에서 전달하는 파일 정보
     
     if (!imageData || !imageData.startsWith('data:image/')) {
       return res.status(400).json({ 
@@ -1466,43 +1466,37 @@ router.post('/picture/paint', authenticateUser, async (req, res) => {
     const base64Data = matches[2];
     const buffer = Buffer.from(base64Data, 'base64');
 
-    const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-    const s3Client = new S3Client({
-      region: process.env.AWS_REGION || 'ap-northeast-2',
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-      }
-    });
+    // 🔥 S3Manager 사용 (IAM Role 지원)
+    const S3Manager = require('../lib_storage/s3Manager');
+    const s3Manager = new S3Manager();
 
     const timestamp = Date.now();
     const userId = req.session?.userID || 'anonymous';
     const filename = 'paint_' + userId + '_' + timestamp + '.' + ext;
     const s3Key = 'ent/uploads/images/' + filename;
 
-    await s3Client.send(new PutObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME || 'educodingnplaycontents',
-      Key: s3Key,
-      Body: buffer,
-      ContentType: 'image/' + ext,
-      CacheControl: 'public, max-age=31536000',
-    }));
-
-    const fileUrl = 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/' + s3Key;
+    // S3Manager의 uploadProject 메서드 사용
+    const fileUrl = await s3Manager.uploadProject(s3Key, buffer, 'image/' + ext);
     
+    console.log(`✅ Paint Editor 이미지 S3 업로드 완료: ${fileUrl}`);
+    
+    // 🔥 Entry가 기대하는 형식으로 응답
     const pictureData = {
       _id: 'paint_' + timestamp,
+      id: 'paint_' + timestamp,
       filename: filename,
       imageType: ext,
-      dimension: { width: 200, height: 200 },
+      dimension: { width: 480, height: 270 },
       fileurl: fileUrl,
-      name: '새 그림'
+      thumbUrl: fileUrl,
+      name: fileInfo?.name || '새 그림'
     };
 
+    console.log('📤 응답 데이터:', pictureData);
     res.json(pictureData);
 
   } catch (error) {
-    console.error('❌ 오류:', error);
+    console.error('❌ Paint Editor 오류:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

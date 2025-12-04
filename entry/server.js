@@ -279,6 +279,49 @@ app.get('/api/user-info', decodeUserInfo, (req, res) => {
     });
 });
 
+// 🔥 Paint Editor API - 3000번 서버로 프록시
+const http = require('http');
+
+app.post('/api/picture/paint', (req, res) => {
+    console.log('🎨 [8070] Paint Editor API 프록시 요청');
+    
+    const postData = JSON.stringify(req.body);
+    
+    const options = {
+        hostname: 'localhost',
+        port: 3000,
+        path: '/api/picture/paint',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData),
+            'Cookie': req.headers.cookie || ''
+        }
+    };
+    
+    const proxyReq = http.request(options, (proxyRes) => {
+        let data = '';
+        proxyRes.on('data', (chunk) => { data += chunk; });
+        proxyRes.on('end', () => {
+            try {
+                const jsonData = JSON.parse(data);
+                console.log('✅ [8070] 프록시 응답:', jsonData);
+                res.json(jsonData);
+            } catch (e) {
+                console.error('❌ [8070] 프록시 응답 파싱 오류:', e);
+                res.status(500).json({ error: 'Proxy response parse error' });
+            }
+        });
+    });
+    
+    proxyReq.on('error', (e) => {
+        console.error('❌ [8070] 프록시 요청 오류:', e);
+        res.status(500).json({ error: 'Proxy request failed' });
+    });
+    
+    proxyReq.write(postData);
+    proxyReq.end();
+});
 
 // 404 핸들러
 app.use((req, res) => {
