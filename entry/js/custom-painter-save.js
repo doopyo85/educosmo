@@ -253,27 +253,66 @@
         }
         
         /**
-         * 🔥 투명 배경 이미지 추출 (회색 배경 제거)
+         * 🔥 투명 배경 이미지 추출 (격자 배경 제거 - 개선 버전)
          */
         function extractTransparentImage(sourceCanvas) {
             const ctx = sourceCanvas.getContext('2d');
             const imageData = ctx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
             const data = imageData.data;
             
-            // 경계 박스 찾기 (투명하지 않은 픽셀의 범위)
+            // 🔥 Entry Paint Editor의 격자 배경 색상 (회색 톤)
+            // 밝은 회색: RGB(230, 230, 230) 또는 흰색: RGB(255, 255, 255)
+            // 어두운 회색: RGB(204, 204, 204)
+            const isBackgroundPixel = (r, g, b, a) => {
+                // 완전 투명이면 배경
+                if (a < 10) return true;
+                
+                // 회색 계열인지 확인 (격자 패턴의 두 색상)
+                const isGray = Math.abs(r - g) < 5 && Math.abs(g - b) < 5;
+                
+                if (isGray) {
+                    // 밝은 회색 (230~255) 또는 어두운 회색 (200~210)
+                    if ((r >= 225 && r <= 255) || (r >= 195 && r <= 215)) {
+                        return true;
+                    }
+                }
+                
+                return false;
+            };
+            
+            // 경계 박스 찾기 (배경이 아닌 픽셀의 범위)
             let minX = sourceCanvas.width;
             let minY = sourceCanvas.height;
             let maxX = 0;
             let maxY = 0;
             let hasContent = false;
             
+            // 🔥 배경 픽셀을 투명하게 처리한 새 ImageData 생성
+            const newImageData = ctx.createImageData(sourceCanvas.width, sourceCanvas.height);
+            const newData = newImageData.data;
+            
             for (let y = 0; y < sourceCanvas.height; y++) {
                 for (let x = 0; x < sourceCanvas.width; x++) {
                     const idx = (y * sourceCanvas.width + x) * 4;
-                    const alpha = data[idx + 3];
+                    const r = data[idx];
+                    const g = data[idx + 1];
+                    const b = data[idx + 2];
+                    const a = data[idx + 3];
                     
-                    // 투명하지 않은 픽셀 (알파 > 0)
-                    if (alpha > 0) {
+                    if (isBackgroundPixel(r, g, b, a)) {
+                        // 🔥 배경 픽셀은 완전 투명으로
+                        newData[idx] = 0;
+                        newData[idx + 1] = 0;
+                        newData[idx + 2] = 0;
+                        newData[idx + 3] = 0;
+                    } else {
+                        // 🔥 그림 픽셀은 그대로 복사
+                        newData[idx] = r;
+                        newData[idx + 1] = g;
+                        newData[idx + 2] = b;
+                        newData[idx + 3] = a;
+                        
+                        // 경계 박스 업데이트
                         hasContent = true;
                         minX = Math.min(minX, x);
                         minY = Math.min(minY, y);
@@ -305,7 +344,14 @@
             
             console.log('✂️ 트림 영역:', { minX, minY, maxX, maxY, trimWidth, trimHeight });
             
-            // 새 캔버스에 트림된 영역만 복사 (투명 배경)
+            // 🔥 임시 캔버스에 배경 제거된 이미지 그리기
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = sourceCanvas.width;
+            tempCanvas.height = sourceCanvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.putImageData(newImageData, 0, 0);
+            
+            // 🔥 새 캔버스에 트림된 영역만 복사 (투명 배경)
             const trimCanvas = document.createElement('canvas');
             trimCanvas.width = trimWidth;
             trimCanvas.height = trimHeight;
@@ -314,9 +360,9 @@
             // 투명 배경 유지 (기본값)
             trimCtx.clearRect(0, 0, trimWidth, trimHeight);
             
-            // 원본에서 트림된 영역만 복사
+            // 배경 제거된 임시 캔버스에서 트림된 영역만 복사
             trimCtx.drawImage(
-                sourceCanvas,
+                tempCanvas,
                 minX, minY, trimWidth, trimHeight,  // 소스 영역
                 0, 0, trimWidth, trimHeight          // 대상 영역
             );

@@ -147,13 +147,27 @@ class S3Manager {
      */
     async uploadProject(s3Key, data, contentType = 'application/json') {
         try {
-            const command = new PutObjectCommand({
+            // 🔥 이미지 파일인 경우 CORS 관련 메타데이터 추가
+            const isImage = contentType.startsWith('image/');
+            
+            const commandParams = {
                 Bucket: this.bucketName,
                 Key: s3Key,
                 Body: data,
                 ContentType: contentType,
                 ServerSideEncryption: 'AES256'
-            });
+            };
+            
+            // 🔥 이미지 파일에 CORS 캐시 제어 헤더 추가
+            if (isImage) {
+                commandParams.CacheControl = 'no-cache, no-store, must-revalidate';
+                commandParams.Metadata = {
+                    'Access-Control-Allow-Origin': '*'
+                };
+                console.log('🖼️ 이미지 업로드 - CORS 헤더 추가');
+            }
+
+            const command = new PutObjectCommand(commandParams);
 
             await this.s3Client.send(command);
 
