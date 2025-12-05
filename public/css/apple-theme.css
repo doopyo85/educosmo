@@ -1,0 +1,272 @@
+/* Apple/Mantine Theme Inspired CSS */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    /* Color Palette */
+    --apple-bg: #F5F5F7;
+    --apple-card-bg: rgba(255, 255, 255, 0.8);
+    --apple-text-primary: #1D1D1F;
+    --apple-text-secondary: #86868B;
+    --apple-accent: #0071E3; /* Apple Blue */
+    --apple-accent-hover: #0077ED;
+    --apple-border: rgba(0, 0, 0, 0.05);
+    
+    /* Mantine-like variables */
+    --mantine-radius-md: 12px;
+    --mantine-radius-lg: 16px;
+    --mantine-radius-xl: 24px;
+    --apple-shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --apple-shadow-md: 0 4px 20px rgba(0,0,0,0.08); /* Soft diffusion */
+    --apple-shadow-hover: 0 10px 40px rgba(0,0,0,0.12);
+    
+    /* Transitions */
+    --transition-base: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+body {
+    background-color: var(--apple-bg);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--apple-text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Layout Containers */
+.apple-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 20px;
+}
+
+.apple-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.apple-title {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    color: var(--apple-text-primary);
+}
+
+.apple-subtitle {
+    font-size: 21px;
+    font-weight: 400;
+    color: var(--apple-text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* Glassmorphism Card System */
+.project-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.apple-card {
+    background: var(--apple-card-bg);
+    border-radius: var(--mantine-radius-lg);
+    box-shadow: var(--apple-shadow-md);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--apple-border);
+    padding: 24px;
+    transition: var(--transition-base);
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.apple-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: var(--apple-shadow-hover);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* Card Content */
+.apple-card-header {
+    margin-bottom: 16px;
+}
+
+.apple-card-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.apple-card-image {
+    width: 100%;
+    height: 160px;
+    border-radius: var(--mantine-radius-md);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.apple-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.apple-card:hover .apple-card-image img {
+    transform: scale(1.05);
+}
+
+.apple-tag-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.apple-tag {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background-color: rgba(0, 113, 227, 0.1); /* Light blue tint */
+    color: var(--apple-accent);
+}
+
+.apple-card-actions {
+    margin-top: auto; /* Push to bottom */
+    display: flex;
+    gap: 10px;
+}
+
+/* Buttons (Mantine/Apple Style) */
+.apple-btn {
+    border: none;
+    outline: none;
+    border-radius: 999px; /* Pill shape */
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: var(--transition-base);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.apple-btn-primary {
+    background-color: var(--apple-text-primary); /* Black/Dark Gray */
+    color: white;
+}
+
+.apple-btn-primary:hover {
+    background-color: #000;
+    transform: scale(1.03);
+}
+
+.apple-btn-accent {
+    background-color: var(--apple-accent);
+    color: white;
+}
+
+.apple-btn-accent:hover {
+    background-color: var(--apple-accent-hover);
+    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+}
+
+.apple-btn-secondary {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--apple-text-primary);
+}
+
+.apple-btn-secondary:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.apple-btn-ghost {
+    background: transparent;
+    color: var(--apple-text-secondary);
+    padding: 8px 12px;
+}
+
+.apple-btn-ghost:hover {
+    color: var(--apple-text-primary);
+    background: rgba(0,0,0,0.03);
+}
+
+/* Tab Navigation Style (Mantine SegmentedControl vibe) */
+.nav-tabs {
+    border-bottom: none !important;
+    background: rgba(118, 118, 128, 0.12);
+    padding: 4px;
+    border-radius: 12px;
+    display: inline-flex;
+    margin: 0 auto 40px auto;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.nav-tabs .nav-item {
+    margin: 0;
+}
+
+.nav-tabs .nav-link {
+    border: none !important;
+    border-radius: 9px !important;
+    color: var(--apple-text-primary);
+    padding: 8px 24px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background: transparent;
+}
+
+.nav-tabs .nav-link.active {
+    background: white !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    color: black !important;
+}
+
+.nav-tabs .nav-link:hover:not(.active) {
+    background: rgba(255,255,255,0.5);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--apple-text-secondary);
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 24px;
+    opacity: 0.2;
+    display: block;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.apple-card {
+    animation: fadeIn 0.6s ease-out backwards;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .apple-container {
+        padding: 40px 16px;
+    }
+    
+    .apple-title {
+        font-size: 36px;
+    }
+}
