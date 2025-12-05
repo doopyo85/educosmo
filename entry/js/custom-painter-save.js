@@ -3,10 +3,9 @@
  * Paint Editor의 저장하기 버튼을 S3 업로드 API와 연동
  * 
  * 수정일: 2025-12-05
- * - 🔥 배경 제거 로직 제거 (Entry 원본 투명 배경 방식 사용)
- * - Paper.js 캔버스 직접 접근
+ * - 🔥 Paper.js 레이어 기반 이미지 추출 (배경 레이어 제외)
+ * - 투명 배경 유지
  * - 팝업 저장 버튼 완전 차단
- * - 모양 가져오기 후킹 비활성화 (클릭 충돌 문제)
  */
 
 (function() {
@@ -15,7 +14,7 @@
     // 저장 함수 참조 (전역)
     let customSaveFunction = null;
     
-    // 원본 저장 함수 백업 (호출 차단용)
+    // 원본 저장 함수 백업
     let originalEntrySave = null;
 
     // Entry가 로드될 때까지 대기
@@ -51,7 +50,6 @@
                 clearInterval(checkPainter);
                 overridePainterSave();
                 hookConfirmDialog();
-                // 🔥 hookImportButton 호출 제거 - 클릭 충돌 문제
             }
         }, 500);
         
@@ -66,9 +64,7 @@
             return;
         }
         
-        console.log('🔧 Painter 객체 발견, 구조 분석 시작');
-        
-        // 🔥 Painter 구조 디버깅
+        console.log('🔧 Painter 객체 발견, 구조 분석');
         console.log('📋 Painter 속성들:', Object.keys(painter));
         
         // 원본 save 백업
@@ -87,7 +83,7 @@
                 
                 console.log('📋 모드:', { isEditMode, editingPictureId });
                 
-                // 🔥 Paper.js에서 그림만 추출 (배경 제거 로직 없이)
+                // 🔥 Paper.js에서 그림만 추출 (배경 제외)
                 let imageData = null;
                 let width = 480;
                 let height = 270;
@@ -186,33 +182,86 @@
         customSaveFunction = customSaveImage;
         
         /**
-         * 🔥 Paper.js에서 그림 추출 (배경 제거 없이 - Entry 원본 방식)
+         * 🔥 Paper.js에서 그림만 추출 (핵심 함수)
+         * Entry Paint Editor의 Paper.js 레이어 구조 활용
          */
         async function extractPaperImage(painter) {
-            console.log('🖼️ Paper.js 이미지 추출 시작 (배경 제거 비활성화)');
+            console.log('🖼️ Paper.js 이미지 추출 시작');
             
-            // 방법 1: Paper.js project의 exportSVG/rasterize 사용
+            // 방법 1: Paper.js scope에서 직접 추출 (배경 레이어 제외)
             if (painter.paperScope && painter.paperScope.project) {
                 const project = painter.paperScope.project;
                 const view = painter.paperScope.view;
                 
                 console.log('📋 레이어 수:', project.layers.length);
                 project.layers.forEach((layer, i) => {
-                    console.log(`  레이어 ${i}: ${layer.name || '이름없음'}, children: ${layer.children?.length || 0}`);
+                    console.log(`  레이어 ${i}: ${layer.name || '이름없음'}, visible: ${layer.visible}, children: ${layer.children?.length || 0}`);
                 });
                 
-                // 그림 레이어만 내보내기 (Entry 기본 구조 활용)
-                if (view) {
-                    const canvas = view.element;
-                    return extractFromCanvas(canvas);
+                // 🔥 Paper.js의 rasterize 사용 (배경 제외하고 그림만)
+                if (project.activeLayer) {
+                    try {
+                        // 배경 레이어 숨기기
+                        const backgroundLayer = project.layers.find(l => 
+                            l.name === 'background' || 
+                            l.name === 'backgroundLayer' ||
+                            l.name === 'grid' ||
+                            l === project.layers[0]  // 보통 첫 번째 레이어가 배경
+                        );
+                        
+                        let wasVisible = true;
+                        if (backgroundLayer && project.layers.length > 1) {
+                            wasVisible = backgroundLayer.visible;
+                            backgroundLayer.visible = false;
+                            console.log('🔒 배경 레이어 숨김 처리');
+                        }
+                        
+                        // 그림 레이어만 래스터화
+                        const raster = project.activeLayer.rasterize({
+                            resolution: 72,
+                            insert: false
+                        });
+                        
+                        // 배경 복원
+                        if (backgroundLayer && project.layers.length > 1) {
+                            backgroundLayer.visible = wasVisible;
+                        }
+                        
+                        if (raster) {
+                            const dataUrl = raster.toDataURL();
+                            const bounds = project.activeLayer.bounds;
+                            
+                            console.log('✅ Paper.js rasterize 성공');
+                            
+                            return {
+                                dataUrl: dataUrl,
+                                width: Math.ceil(bounds.width) || 480,
+                                height: Math.ceil(bounds.height) || 270,
+                                hasContent: true
+                            };
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ Paper.js rasterize 실패:', e);
+                    }
+                }
+                
+                // Fallback: 캔버스에서 직접 추출
+                if (view && view.element) {
+                    return extractTransparentImage(view.element);
                 }
             }
             
-            // 방법 2: 캔버스 직접 탐색
+            // 방법 2: paint_canvas에서 추출 (투명 배경 처리)
+            const paintCanvas = document.getElementById('paint_canvas');
+            if (paintCanvas) {
+                console.log('📋 paint_canvas 사용');
+                return extractTransparentImage(paintCanvas);
+            }
+            
+            // 방법 3: 다른 캔버스 탐색
             const canvasSelectors = [
                 '#entryPainterCanvas',
                 '.entryPainterCanvas',
-                '#paint_canvas',
                 'canvas[data-paper-scope]',
                 '.entryPlaygroundPainter canvas',
                 '.entryPainter canvas'
@@ -221,26 +270,15 @@
             for (const selector of canvasSelectors) {
                 const canvas = document.querySelector(selector);
                 if (canvas) {
-                    console.log(`📋 캔버스 발견: ${selector}, 크기: ${canvas.width}x${canvas.height}`);
-                    return extractFromCanvas(canvas);
+                    console.log(`📋 캔버스 발견: ${selector}`);
+                    return extractTransparentImage(canvas);
                 }
             }
             
-            // 방법 3: painter 내부 캔버스
+            // 방법 4: painter 내부 캔버스
             if (painter.canvas) {
                 console.log('📋 painter.canvas 사용');
-                return extractFromCanvas(painter.canvas);
-            }
-            
-            // 방법 4: 모든 캔버스 탐색
-            const allCanvases = document.querySelectorAll('canvas');
-            console.log(`📋 페이지 내 모든 캔버스: ${allCanvases.length}개`);
-            
-            for (const canvas of allCanvases) {
-                if (canvas.width > 100 && canvas.height > 100) {
-                    console.log(`  체크: ${canvas.id || canvas.className}, ${canvas.width}x${canvas.height}`);
-                    return extractFromCanvas(canvas);
-                }
+                return extractTransparentImage(painter.canvas);
             }
             
             console.warn('⚠️ 적절한 캔버스를 찾지 못함');
@@ -248,22 +286,117 @@
         }
         
         /**
-         * 🔥 캔버스에서 이미지 추출 (배경 제거 없이 - Entry 원본 로직 사용)
-         * Entry Paint Editor는 자체적으로 투명 배경을 처리함
+         * 🔥 캔버스에서 투명 배경 이미지 추출 (트림 포함)
+         * 실제 그려진 콘텐츠만 추출하고 배경은 투명 처리
          */
-        function extractFromCanvas(canvas) {
-            console.log('🖼️ 캔버스에서 이미지 추출 (배경 제거 비활성화)');
-            console.log(`📐 캔버스 크기: ${canvas.width}x${canvas.height}`);
+        function extractTransparentImage(canvas) {
+            console.log('🖼️ 투명 배경 이미지 추출 시작');
+            console.log(`📐 원본 캔버스 크기: ${canvas.width}x${canvas.height}`);
             
-            // 캔버스를 그대로 PNG로 내보내기
-            const dataUrl = canvas.toDataURL('image/png');
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
             
-            console.log('✅ 이미지 추출 완료 (원본 그대로)');
+            // 1. 실제 콘텐츠가 있는 영역 찾기 (알파 > 0인 픽셀)
+            let minX = canvas.width, minY = canvas.height;
+            let maxX = 0, maxY = 0;
+            let hasContent = false;
+            
+            // 2. 배경색 감지 (격자 패턴 - 흰색/회색)
+            // Entry의 격자 배경은 보통 rgb(255,255,255)과 rgb(230,230,230) 정도
+            const isBackgroundColor = (r, g, b, a) => {
+                // 완전 투명
+                if (a < 10) return true;
+                
+                // 거의 흰색 (배경)
+                if (r > 250 && g > 250 && b > 250 && a > 250) return true;
+                
+                // 회색 격자 패턴 (Entry 배경)
+                if (r > 220 && g > 220 && b > 220 && Math.abs(r - g) < 5 && Math.abs(g - b) < 5) return true;
+                
+                return false;
+            };
+            
+            // 3. 콘텐츠 영역 스캔
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const idx = (y * canvas.width + x) * 4;
+                    const r = data[idx];
+                    const g = data[idx + 1];
+                    const b = data[idx + 2];
+                    const a = data[idx + 3];
+                    
+                    // 배경이 아닌 픽셀 (실제 그림)
+                    if (!isBackgroundColor(r, g, b, a)) {
+                        hasContent = true;
+                        minX = Math.min(minX, x);
+                        minY = Math.min(minY, y);
+                        maxX = Math.max(maxX, x);
+                        maxY = Math.max(maxY, y);
+                    }
+                }
+            }
+            
+            console.log(`📊 콘텐츠 영역: (${minX},${minY}) ~ (${maxX},${maxY}), hasContent: ${hasContent}`);
+            
+            // 콘텐츠가 없으면 빈 투명 이미지 반환
+            if (!hasContent) {
+                console.warn('⚠️ 그려진 내용이 없습니다.');
+                const emptyCanvas = document.createElement('canvas');
+                emptyCanvas.width = 100;
+                emptyCanvas.height = 100;
+                return {
+                    dataUrl: emptyCanvas.toDataURL('image/png'),
+                    width: 100,
+                    height: 100,
+                    hasContent: false
+                };
+            }
+            
+            // 4. 패딩 추가
+            const padding = 5;
+            minX = Math.max(0, minX - padding);
+            minY = Math.max(0, minY - padding);
+            maxX = Math.min(canvas.width - 1, maxX + padding);
+            maxY = Math.min(canvas.height - 1, maxY + padding);
+            
+            const trimWidth = maxX - minX + 1;
+            const trimHeight = maxY - minY + 1;
+            
+            // 5. 새 캔버스에 투명 배경으로 그림만 복사
+            const resultCanvas = document.createElement('canvas');
+            resultCanvas.width = trimWidth;
+            resultCanvas.height = trimHeight;
+            const resultCtx = resultCanvas.getContext('2d');
+            
+            // 투명 배경으로 시작
+            resultCtx.clearRect(0, 0, trimWidth, trimHeight);
+            
+            // 원본에서 트림 영역만 복사
+            const trimmedImageData = ctx.getImageData(minX, minY, trimWidth, trimHeight);
+            const trimmedData = trimmedImageData.data;
+            
+            // 6. 배경색을 투명으로 변환
+            for (let i = 0; i < trimmedData.length; i += 4) {
+                const r = trimmedData[i];
+                const g = trimmedData[i + 1];
+                const b = trimmedData[i + 2];
+                const a = trimmedData[i + 3];
+                
+                if (isBackgroundColor(r, g, b, a)) {
+                    // 배경색은 완전 투명으로
+                    trimmedData[i + 3] = 0;
+                }
+            }
+            
+            resultCtx.putImageData(trimmedImageData, 0, 0);
+            
+            console.log(`✅ 트림 완료: ${trimWidth}x${trimHeight}`);
             
             return {
-                dataUrl: dataUrl,
-                width: canvas.width,
-                height: canvas.height,
+                dataUrl: resultCanvas.toDataURL('image/png'),
+                width: trimWidth,
+                height: trimHeight,
                 hasContent: true
             };
         }
@@ -276,9 +409,7 @@
                 const entity = currentObject.entity;
                 console.log('📐 Entity 크기 조정 전:', {
                     width: entity.getWidth(),
-                    height: entity.getHeight(),
-                    scaleX: entity.getScaleX(),
-                    scaleY: entity.getScaleY()
+                    height: entity.getHeight()
                 });
                 
                 entity.setWidth(width);
@@ -349,7 +480,6 @@
             Entry.toast.confirm = function(title, message, onConfirm, onCancel) {
                 console.log('🚫 Entry.toast.confirm 가로채기:', title);
                 
-                // 저장 관련 팝업이면 커스텀 저장 실행
                 if (message && (message.includes('저장') || message.includes('변경'))) {
                     if (customSaveFunction) {
                         customSaveFunction();
@@ -372,30 +502,24 @@
                         console.log('📢 저장 팝업 감지');
                         
                         setTimeout(() => {
-                            // 모든 버튼 찾기
                             const buttons = node.querySelectorAll('button, .btn, [role="button"], div[class*="btn"]');
                             
                             buttons.forEach(btn => {
                                 const btnText = btn.textContent?.trim();
-                                console.log('  버튼 발견:', btnText);
                                 
                                 if (btnText === '저장' || btnText === 'Save' || btnText === '확인') {
-                                    // 기존 이벤트 제거
                                     const newBtn = btn.cloneNode(true);
                                     btn.parentNode?.replaceChild(newBtn, btn);
                                     
                                     newBtn.addEventListener('click', async (e) => {
-                                        console.log('🖱️ 팝업 저장 버튼 클릭 (가로채기)');
                                         e.preventDefault();
                                         e.stopPropagation();
                                         e.stopImmediatePropagation();
                                         
-                                        // 커스텀 저장 실행
                                         if (customSaveFunction) {
                                             await customSaveFunction();
                                         }
                                         
-                                        // 팝업 닫기
                                         node.style.display = 'none';
                                         node.remove();
                                         
@@ -405,7 +529,6 @@
                                 
                                 if (btnText === '취소' || btnText === 'Cancel' || btnText === '저장 안 함') {
                                     btn.addEventListener('click', () => {
-                                        // modified 플래그 해제
                                         if (Entry.playground?.painter?.file) {
                                             Entry.playground.painter.file.modified = false;
                                         }
