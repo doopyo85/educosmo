@@ -471,8 +471,11 @@ class ProjectCardManager {
 
     // createProjectButton 함수 추가
     createProjectButton(label, url, type) {
+        // App Inventor uses 'btn' class often but let's stick to the type passed or default to 'btn-secondary'
+        // If type is empty or specific apple class, map it to bootstrap/card_project styles if needed.
+        // For now, assuming type is passed correctly or generic 'btn btn-sm btn-secondary' equivalent.
         return `
-            <button class="apple-btn ${type} load-project" data-url="${url}">
+            <button class="btn ${type} load-project" data-url="${url}">
                 ${label}
             </button>
         `;
@@ -488,26 +491,28 @@ class ProjectCardManager {
 
         return `
             ${pptBtn}
-            <div class="apple-card-header">
-                <h3 class="apple-card-title">${projectName}</h3>
+            <div class="project-card-header">
+                <h3 class="project-card-title">${projectName}</h3>
             </div>
             
             ${project.img ? `
-                <div class="apple-card-image">
+                <div class="project-card-image">
                     <img src="${project.img}" alt="${projectName}">
                 </div>
             ` : ''}
             
-            <div class="apple-tag-container">
-                <span class="apple-tag">
+            <div class="project-card-tags">
+                <span class="project-card-tag">
                     <i class="bi bi-cpu"></i> ${project.ctElement || '정보 없음'}
                 </span>
             </div>
             
-            <div class="apple-card-actions">
-                ${project.basic ? this.createProjectButton('기본', project.basic, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'apple-btn-secondary') : ''}
+            <div class="project-card-actions">
+                <div class="project-card-btn-group">
+                    ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary') : ''}
+                    ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary') : ''}
+                    ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary') : ''}
+                </div>
             </div>
         `;
     }
@@ -522,28 +527,30 @@ class ProjectCardManager {
 
         return `
             ${pptBtn}
-            <div class="apple-card-header">
-                <h3 class="apple-card-title">${projectName}</h3>
+            <div class="project-card-header">
+                <h3 class="project-card-title">${projectName}</h3>
             </div>
             
             ${project.basic ? `
-                <div class="mb-3">
-                    <button class="apple-btn apple-btn-ghost entry-legacy-btn" data-url="${project.basic}" style="font-size: 12px; padding: 4px 8px;">
+                <div class="mb-3" style="text-align: center;">
+                    <button class="entry-legacy-btn" data-url="${project.basic}">
                         <i class="bi bi-download"></i> 다운로드
                     </button>
                 </div>
             ` : ''}
             
-            <div class="apple-tag-container">
-                <span class="apple-tag">
+            <div class="project-card-tags">
+                <span class="project-card-tag">
                     <i class="bi bi-cpu"></i> ${project.ctElement || '정보 없음'}
                 </span>
             </div>
             
-            <div class="apple-card-actions">
-                ${project.basic ? this.createProjectButton('기본', project.basic, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'apple-btn-secondary') : ''}
+            <div class="project-card-actions">
+                <div class="project-card-btn-group">
+                    ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary') : ''}
+                    ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary') : ''}
+                    ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary') : ''}
+                </div>
             </div>
         `;
     }
@@ -558,25 +565,27 @@ class ProjectCardManager {
 
         return `
             ${pptBtn}
-            <div class="apple-card-header">
-                <h3 class="apple-card-title">${projectName}</h3>
+            <div class="project-card-header">
+                <h3 class="project-card-title">${projectName}</h3>
             </div>
             
             ${project.img ? `
-                <div class="apple-card-image">
+                <div class="project-card-image">
                     <img src="${project.img}" alt="${projectName}">
                 </div>
             ` : ''}
             
-            <div class="apple-tag-container">
-                <span class="apple-tag">
+            <div class="project-card-tags">
+                <span class="project-card-tag">
                     <i class="bi bi-cpu"></i> ${project.ctElement || '정보 없음'}
                 </span>
             </div>
             
-            <div class="apple-card-actions">
-                ${project.basic ? this.createProjectButton('본문', project.basic, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showPractice && project.practice ? this.createProjectButton('연습', project.practice, 'apple-btn-secondary') : ''}
+            <div class="project-card-actions">
+                <div class="project-card-btn-group">
+                    ${project.basic ? this.createProjectButton('본문', project.basic, 'btn-secondary') : ''}
+                    ${this.viewConfig.showPractice && project.practice ? this.createProjectButton('연습', project.practice, 'btn-secondary') : ''}
+                </div>
             </div>
         `;
     }
@@ -586,9 +595,9 @@ class ProjectCardManager {
      */
     createProjectCard(projectName, project) {
         const card = document.createElement('div');
-        card.className = 'apple-card';
+        card.className = 'project-card';
 
-        // Entry 프로젝트일 경우 특별 클래스 추가 (logic might use it)
+        // Entry 프로젝트일 경우 특별 클래스 추가
         if (this.config.projectType === 'entry') {
             card.classList.add('entry-project');
         }
