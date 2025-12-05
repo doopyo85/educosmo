@@ -526,121 +526,6 @@ class ProjectCardManager {
     }
 
     /**
-     * Scratch 카드 내용 생성
-     */
-    createScratchCardContent(projectName, project) {
-        return `
-            <div class="apple-card-header">
-                <h3 class="apple-card-title">${projectName}</h3>
-            </div>
-            
-            ${project.img ? `
-                <div class="apple-card-image">
-                    <img src="${project.img}" alt="${projectName}">
-                </div>
-            ` : ''}
-            
-            <div class="apple-tag-container">
-                <span class="apple-tag">
-                    <i class="bi bi-cpu"></i> ${project.ctElement || '정보 없음'}
-                </span>
-            </div>
-            
-            <div class="apple-card-actions">
-                ${project.basic ? this.createProjectButton('기본', project.basic, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showPPTButton && project.ppt ? `
-                    <button class="apple-btn apple-btn-ghost project-ppt-btn" 
-                        onclick="window.open('${project.ppt}', '_blank'); event.stopPropagation();">
-                        PPT
-                    </button>
-                ` : ''}
-            </div>
-        `;
-    }
-
-    /**
-     * Entry 카드 내용 생성 (커스터마이징 버전)
-     */
-    createEntryCardContent(projectName, project) {
-        return `
-            <div class="apple-card-header">
-                <h3 class="apple-card-title">${projectName}</h3>
-            </div>
-            
-            ${project.basic ? `
-                <div class="mb-3">
-                    <button class="apple-btn apple-btn-ghost entry-legacy-btn" data-url="${project.basic}" style="font-size: 12px; padding: 4px 8px;">
-                        <i class="bi bi-download"></i> 다운로드
-                    </button>
-                </div>
-            ` : ''}
-            
-            <div class="apple-tag-container">
-                <span class="apple-tag">
-                    <i class="bi bi-cpu"></i> ${project.ctElement || '정보 없음'}
-                </span>
-            </div>
-            
-            <div class="apple-card-actions">
-                ${project.basic ? this.createProjectButton('기본', project.basic, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showPPTButton && project.ppt ? `
-                    <button class="apple-btn apple-btn-ghost project-ppt-btn" 
-                        onclick="window.open('${project.ppt}', '_blank'); event.stopPropagation();">
-                        PPT
-                    </button>
-                ` : ''}
-            </div>
-        `;
-    }
-
-    /**
-     * AppInventor 카드 내용 생성
-     */
-    createAppInventorCardContent(projectName, project) {
-        return `
-            <div class="apple-card-header">
-                <h3 class="apple-card-title">${projectName}</h3>
-            </div>
-            
-            ${project.img ? `
-                <div class="apple-card-image">
-                    <img src="${project.img}" alt="${projectName}">
-                </div>
-            ` : ''}
-            
-            <div class="apple-tag-container">
-                <span class="apple-tag">
-                    <i class="bi bi-cpu"></i> ${project.ctElement || '정보 없음'}
-                </span>
-            </div>
-            
-            <div class="apple-card-actions">
-                ${project.basic ? this.createProjectButton('본문', project.basic, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showPractice && project.practice ? this.createProjectButton('연습', project.practice, 'apple-btn-secondary') : ''}
-                ${this.viewConfig.showPPTButton && project.ppt ? `
-                    <button class="apple-btn apple-btn-ghost project-ppt-btn" 
-                        onclick="window.open('${project.ppt}', '_blank'); event.stopPropagation();">
-                        PPT
-                    </button>
-                ` : ''}
-            </div>
-        `;
-    }
-
-    // createProjectButton 함수 수정
-    createProjectButton(label, url, type) {
-        return `
-            <button class="apple-btn ${type} load-project" data-url="${url}">
-                ${label}
-            </button>
-        `;
-    }
-
-    /**
      * Scratch GUI에서 프로젝트 로드
      */
     loadProjectInScratchGUI(projectUrl) {
@@ -787,11 +672,11 @@ class ProjectCardManager {
         if (!container) return;
 
         container.innerHTML = `
-            <div class="alert alert-danger" role="alert">
+                    < div class="alert alert-danger" role = "alert" >
                 <h4 class="alert-heading">오류 발생</h4>
                 <p>${message}</p>
-            </div>
-        `;
+            </div >
+                    `;
     }
 
     setupEventListeners() {

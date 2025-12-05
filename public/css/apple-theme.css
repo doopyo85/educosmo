@@ -7,18 +7,20 @@
     --apple-card-bg: rgba(255, 255, 255, 0.8);
     --apple-text-primary: #1D1D1F;
     --apple-text-secondary: #86868B;
-    --apple-accent: #0071E3; /* Apple Blue */
+    --apple-accent: #0071E3;
+    /* Apple Blue */
     --apple-accent-hover: #0077ED;
     --apple-border: rgba(0, 0, 0, 0.05);
-    
+
     /* Mantine-like variables */
     --mantine-radius-md: 12px;
     --mantine-radius-lg: 16px;
     --mantine-radius-xl: 24px;
-    --apple-shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-    --apple-shadow-md: 0 4px 20px rgba(0,0,0,0.08); /* Soft diffusion */
-    --apple-shadow-hover: 0 10px 40px rgba(0,0,0,0.12);
-    
+    --apple-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --apple-shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+    /* Soft diffusion */
+    --apple-shadow-hover: 0 10px 40px rgba(0, 0, 0, 0.12);
+
     /* Transitions */
     --transition-base: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
@@ -151,35 +153,45 @@ body {
     font-weight: 500;
     padding: 4px 10px;
     border-radius: 20px;
-    background-color: rgba(0, 113, 227, 0.1); /* Light blue tint */
+    background-color: rgba(0, 113, 227, 0.1);
+    /* Light blue tint */
     color: var(--apple-accent);
 }
 
 .apple-card-actions {
-    margin-top: auto; /* Push to bottom */
+    margin-top: auto;
+    /* Push to bottom */
     display: flex;
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
+    /* Allow wrapping to prevent vertical text */
+    justify-content: center;
+    /* Center buttons */
 }
 
-/* Buttons (Mantine/Apple Style) */
-.apple-btn {
-    border: none;
-    outline: none;
-    border-radius: 999px; /* Pill shape */
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    transition: var(--transition-base);
-    cursor: pointer;
-    display: inline-flex;
+/* Absolute PPT Button */
+.apple-ppt-btn-absolute {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    color: var(--apple-text-secondary);
+    border: 1px solid var(--apple-border);
+    cursor: pointer;
+    transition: var(--transition-base);
+    z-index: 10;
+    padding: 0;
 }
 
-.apple-btn-primary {
-    background-color: var(--apple-text-primary); /* Black/Dark Gray */
-    color: white;
+.apple-ppt-btn-absolute:hover {
+    transform: scale(1.1);
 }
 
 .apple-btn-primary:hover {
@@ -214,7 +226,7 @@ body {
 
 .apple-btn-ghost:hover {
     color: var(--apple-text-primary);
-    background: rgba(0,0,0,0.03);
+    background: rgba(0, 0, 0, 0.03);
 }
 
 /* Tab Navigation Style (Mantine SegmentedControl vibe) */
@@ -247,12 +259,12 @@ body {
 
 .nav-tabs .nav-link.active {
     background: white !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
     color: black !important;
 }
 
 .nav-tabs .nav-link:hover:not(.active) {
-    background: rgba(255,255,255,0.5);
+    background: rgba(255, 255, 255, 0.5);
 }
 
 /* Empty State */
@@ -271,8 +283,15 @@ body {
 
 /* Animations */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .apple-card {
@@ -284,7 +303,7 @@ body {
     .apple-container {
         padding: 40px 16px;
     }
-    
+
     .apple-title {
         font-size: 36px;
     }
