@@ -6,6 +6,7 @@
  * - Paper.js 캔버스 직접 접근
  * - 격자 배경 레이어 분리
  * - 팝업 저장 버튼 완전 차단
+ * - 🔥 모양 가져오기 후킹 비활성화 (클릭 충돌 문제)
  */
 
 (function() {
@@ -49,8 +50,8 @@
             if (Entry.playground && Entry.playground.painter) {
                 clearInterval(checkPainter);
                 overridePainterSave();
-                hookImportButton();
                 hookConfirmDialog();
+                // 🔥 hookImportButton 호출 제거 - 클릭 충돌 문제
             }
         }, 500);
         
@@ -657,98 +658,6 @@
         document.body.appendChild(notification);
         
         setTimeout(() => notification.remove(), 3000);
-    }
-
-    /**
-     * 모양 가져오기 버튼 후킹
-     */
-    function hookImportButton() {
-        const observer = new MutationObserver(() => {
-            const painterContainer = document.querySelector('.entryPlaygroundPainter, .entryPainter');
-            if (!painterContainer) return;
-            
-            const allElements = painterContainer.querySelectorAll('button, div, span');
-            
-            for (const el of allElements) {
-                const text = el.textContent?.trim()?.toLowerCase() || '';
-                if ((text.includes('가져오기') || text.includes('import')) && !el._importHooked) {
-                    el._importHooked = true;
-                    console.log('✅ 가져오기 버튼 후킹');
-                    
-                    el.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        openImageFileDialog();
-                    }, true);
-                }
-            }
-        });
-        
-        observer.observe(document.body, { childList: true, subtree: true });
-        setTimeout(() => observer.disconnect(), 60000);
-    }
-    
-    function openImageFileDialog() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.style.display = 'none';
-        
-        input.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                await loadImageToPainter(file);
-            }
-            input.remove();
-        });
-        
-        document.body.appendChild(input);
-        input.click();
-    }
-    
-    async function loadImageToPainter(file) {
-        try {
-            const painter = Entry.playground.painter;
-            if (!painter) throw new Error('Paint Editor 없음');
-            
-            const dataUrl = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-            
-            const img = new Image();
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-                img.src = dataUrl;
-            });
-            
-            // Paper.js 캔버스에 그리기
-            const canvas = document.querySelector('#entryPainterCanvas, canvas[data-paper-scope]');
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
-                const scale = Math.min(
-                    (canvas.width * 0.8) / img.width,
-                    (canvas.height * 0.8) / img.height,
-                    1
-                );
-                
-                const w = img.width * scale;
-                const h = img.height * scale;
-                const x = (canvas.width - w) / 2;
-                const y = (canvas.height - h) / 2;
-                
-                ctx.drawImage(img, x, y, w, h);
-                
-                if (painter.file) painter.file.modified = true;
-                showNotification('✅ 이미지 로드됨', 'success');
-            }
-        } catch (error) {
-            console.error('이미지 로드 실패:', error);
-            showNotification('❌ 이미지 로드 실패', 'error');
-        }
     }
 
 })();
