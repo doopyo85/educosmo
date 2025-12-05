@@ -2,11 +2,11 @@
  * 🎨 Entry Paint Editor 저장 함수 커스터마이징
  * Paint Editor의 저장하기 버튼을 S3 업로드 API와 연동
  * 
- * 수정일: 2025-01-XX
+ * 수정일: 2025-12-05
+ * - 🔥 배경 제거 로직 제거 (Entry 원본 투명 배경 방식 사용)
  * - Paper.js 캔버스 직접 접근
- * - 격자 배경 레이어 분리
  * - 팝업 저장 버튼 완전 차단
- * - 🔥 모양 가져오기 후킹 비활성화 (클릭 충돌 문제)
+ * - 모양 가져오기 후킹 비활성화 (클릭 충돌 문제)
  */
 
 (function() {
@@ -70,18 +70,6 @@
         
         // 🔥 Painter 구조 디버깅
         console.log('📋 Painter 속성들:', Object.keys(painter));
-        console.log('📋 painter.canvas:', painter.canvas);
-        console.log('📋 painter.paperScope:', painter.paperScope);
-        console.log('📋 painter.view:', painter.view);
-        console.log('📋 painter.file:', painter.file);
-        
-        if (painter.paperScope) {
-            console.log('📋 paperScope.view:', painter.paperScope.view);
-            console.log('📋 paperScope.project:', painter.paperScope.project);
-            if (painter.paperScope.project) {
-                console.log('📋 project.layers:', painter.paperScope.project.layers);
-            }
-        }
         
         // 원본 save 백업
         originalEntrySave = painter.save;
@@ -99,7 +87,7 @@
                 
                 console.log('📋 모드:', { isEditMode, editingPictureId });
                 
-                // 🔥 Paper.js에서 그림만 추출 (배경 레이어 제외)
+                // 🔥 Paper.js에서 그림만 추출 (배경 제거 로직 없이)
                 let imageData = null;
                 let width = 480;
                 let height = 270;
@@ -198,12 +186,12 @@
         customSaveFunction = customSaveImage;
         
         /**
-         * 🔥 Paper.js에서 그림만 추출 (핵심 함수)
+         * 🔥 Paper.js에서 그림 추출 (배경 제거 없이 - Entry 원본 방식)
          */
         async function extractPaperImage(painter) {
-            console.log('🖼️ Paper.js 이미지 추출 시작');
+            console.log('🖼️ Paper.js 이미지 추출 시작 (배경 제거 비활성화)');
             
-            // 방법 1: Paper.js project에서 직접 추출
+            // 방법 1: Paper.js project의 exportSVG/rasterize 사용
             if (painter.paperScope && painter.paperScope.project) {
                 const project = painter.paperScope.project;
                 const view = painter.paperScope.view;
@@ -213,48 +201,10 @@
                     console.log(`  레이어 ${i}: ${layer.name || '이름없음'}, children: ${layer.children?.length || 0}`);
                 });
                 
-                // 배경 레이어를 제외한 그림 레이어만 내보내기
-                // Entry는 보통 layer 0이 배경, layer 1이 그림
-                let drawingLayer = null;
-                
-                // 그림이 있는 레이어 찾기
-                for (let i = project.layers.length - 1; i >= 0; i--) {
-                    const layer = project.layers[i];
-                    if (layer.children && layer.children.length > 0) {
-                        // 배경 격자가 아닌 실제 그림이 있는지 확인
-                        const hasDrawing = layer.children.some(child => {
-                            // Path, Shape, Raster 등 실제 그림 요소
-                            return child.className !== 'Layer' && 
-                                   !child.name?.includes('background') &&
-                                   !child.name?.includes('grid');
-                        });
-                        if (hasDrawing) {
-                            drawingLayer = layer;
-                            console.log(`✅ 그림 레이어 발견: ${i}`);
-                            break;
-                        }
-                    }
-                }
-                
-                if (drawingLayer && view) {
-                    // 임시로 다른 레이어 숨기기
-                    const layerVisibility = project.layers.map(l => l.visible);
-                    project.layers.forEach((l, i) => {
-                        l.visible = (l === drawingLayer);
-                    });
-                    
-                    // 캔버스에서 이미지 추출
+                // 그림 레이어만 내보내기 (Entry 기본 구조 활용)
+                if (view) {
                     const canvas = view.element;
-                    const result = extractFromCanvas(canvas);
-                    
-                    // 레이어 가시성 복원
-                    project.layers.forEach((l, i) => {
-                        l.visible = layerVisibility[i];
-                    });
-                    
-                    if (result.hasContent) {
-                        return result;
-                    }
+                    return extractFromCanvas(canvas);
                 }
             }
             
@@ -272,10 +222,7 @@
                 const canvas = document.querySelector(selector);
                 if (canvas) {
                     console.log(`📋 캔버스 발견: ${selector}, 크기: ${canvas.width}x${canvas.height}`);
-                    const result = extractFromCanvas(canvas);
-                    if (result.hasContent) {
-                        return result;
-                    }
+                    return extractFromCanvas(canvas);
                 }
             }
             
@@ -292,11 +239,7 @@
             for (const canvas of allCanvases) {
                 if (canvas.width > 100 && canvas.height > 100) {
                     console.log(`  체크: ${canvas.id || canvas.className}, ${canvas.width}x${canvas.height}`);
-                    const result = extractFromCanvas(canvas);
-                    if (result.hasContent && result.width < 480 && result.height < 270) {
-                        // 트림된 결과가 있으면 사용
-                        return result;
-                    }
+                    return extractFromCanvas(canvas);
                 }
             }
             
@@ -305,140 +248,22 @@
         }
         
         /**
-         * 🔥 캔버스에서 투명 배경 제외하고 이미지 추출
+         * 🔥 캔버스에서 이미지 추출 (배경 제거 없이 - Entry 원본 로직 사용)
+         * Entry Paint Editor는 자체적으로 투명 배경을 처리함
          */
         function extractFromCanvas(canvas) {
-            const ctx = canvas.getContext('2d');
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
+            console.log('🖼️ 캔버스에서 이미지 추출 (배경 제거 비활성화)');
+            console.log(`📐 캔버스 크기: ${canvas.width}x${canvas.height}`);
             
-            // 배경색 샘플링 (코너에서)
-            const corners = [
-                0,  // top-left
-                (canvas.width - 1) * 4,  // top-right
-                ((canvas.height - 1) * canvas.width) * 4,  // bottom-left
-                ((canvas.height - 1) * canvas.width + canvas.width - 1) * 4  // bottom-right
-            ];
+            // 캔버스를 그대로 PNG로 내보내기
+            const dataUrl = canvas.toDataURL('image/png');
             
-            const bgColors = corners.map(idx => ({
-                r: data[idx],
-                g: data[idx + 1],
-                b: data[idx + 2],
-                a: data[idx + 3]
-            }));
-            
-            console.log('🎨 코너 배경색:', bgColors);
-            
-            // 배경색 판단 (대부분의 코너가 같은 색이면 그것이 배경)
-            const isBackgroundPixel = (r, g, b, a) => {
-                // 완전 투명
-                if (a < 10) return true;
-                
-                // 흰색 배경
-                if (r > 250 && g > 250 && b > 250) return true;
-                
-                // Entry 격자 패턴 (회색 계열)
-                const isGray = Math.abs(r - g) <= 3 && Math.abs(g - b) <= 3;
-                if (isGray) {
-                    // 밝은 회색 (225-235)
-                    if (r >= 225 && r <= 235) return true;
-                    // 어두운 회색 (200-210) 
-                    if (r >= 200 && r <= 210) return true;
-                    // 중간 회색 (240-255) - 거의 흰색
-                    if (r >= 240) return true;
-                }
-                
-                // 코너 색상과 비교
-                for (const bg of bgColors) {
-                    if (Math.abs(r - bg.r) <= 5 && 
-                        Math.abs(g - bg.g) <= 5 && 
-                        Math.abs(b - bg.b) <= 5) {
-                        return true;
-                    }
-                }
-                
-                return false;
-            };
-            
-            // 콘텐츠 영역 계산 및 투명 처리
-            let minX = canvas.width, minY = canvas.height;
-            let maxX = 0, maxY = 0;
-            let hasContent = false;
-            
-            const newData = new Uint8ClampedArray(data.length);
-            
-            for (let y = 0; y < canvas.height; y++) {
-                for (let x = 0; x < canvas.width; x++) {
-                    const idx = (y * canvas.width + x) * 4;
-                    const r = data[idx];
-                    const g = data[idx + 1];
-                    const b = data[idx + 2];
-                    const a = data[idx + 3];
-                    
-                    if (isBackgroundPixel(r, g, b, a)) {
-                        // 배경은 투명으로
-                        newData[idx] = 0;
-                        newData[idx + 1] = 0;
-                        newData[idx + 2] = 0;
-                        newData[idx + 3] = 0;
-                    } else {
-                        // 실제 그림 픽셀
-                        newData[idx] = r;
-                        newData[idx + 1] = g;
-                        newData[idx + 2] = b;
-                        newData[idx + 3] = a;
-                        
-                        hasContent = true;
-                        minX = Math.min(minX, x);
-                        minY = Math.min(minY, y);
-                        maxX = Math.max(maxX, x);
-                        maxY = Math.max(maxY, y);
-                    }
-                }
-            }
-            
-            console.log(`📊 콘텐츠 영역: (${minX},${minY}) ~ (${maxX},${maxY}), hasContent: ${hasContent}`);
-            
-            if (!hasContent) {
-                return {
-                    dataUrl: canvas.toDataURL('image/png'),
-                    width: canvas.width,
-                    height: canvas.height,
-                    hasContent: false
-                };
-            }
-            
-            // 패딩 추가
-            const padding = 5;
-            minX = Math.max(0, minX - padding);
-            minY = Math.max(0, minY - padding);
-            maxX = Math.min(canvas.width - 1, maxX + padding);
-            maxY = Math.min(canvas.height - 1, maxY + padding);
-            
-            const trimWidth = maxX - minX + 1;
-            const trimHeight = maxY - minY + 1;
-            
-            // 투명 처리된 전체 이미지
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            const tempCtx = tempCanvas.getContext('2d');
-            const newImageData = new ImageData(newData, canvas.width, canvas.height);
-            tempCtx.putImageData(newImageData, 0, 0);
-            
-            // 트림된 이미지
-            const trimCanvas = document.createElement('canvas');
-            trimCanvas.width = trimWidth;
-            trimCanvas.height = trimHeight;
-            const trimCtx = trimCanvas.getContext('2d');
-            trimCtx.drawImage(tempCanvas, minX, minY, trimWidth, trimHeight, 0, 0, trimWidth, trimHeight);
-            
-            console.log(`✂️ 트림 결과: ${trimWidth}x${trimHeight}`);
+            console.log('✅ 이미지 추출 완료 (원본 그대로)');
             
             return {
-                dataUrl: trimCanvas.toDataURL('image/png'),
-                width: trimWidth,
-                height: trimHeight,
+                dataUrl: dataUrl,
+                width: canvas.width,
+                height: canvas.height,
                 hasContent: true
             };
         }
