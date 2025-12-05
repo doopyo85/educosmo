@@ -6,6 +6,8 @@
  * - 🔥 extractTransparentImage로 배경 제거 + 트림 처리
  * - 투명 배경 유지
  * - 팝업 저장 버튼 완전 차단
+ * - 선택 UI 제거 후 저장
+ * - 안티앨리어싱 경계 처리
  */
 
 (function() {
@@ -71,6 +73,54 @@
         originalEntrySave = painter.save;
 
         /**
+         * 🔥 선택 해제 함수
+         */
+        function deselectAll(painter) {
+            try {
+                // Paper.js 선택 해제
+                if (painter.paperScope && painter.paperScope.project) {
+                    const project = painter.paperScope.project;
+                    
+                    // 모든 아이템 선택 해제
+                    if (project.selectedItems) {
+                        project.selectedItems.forEach(item => {
+                            item.selected = false;
+                        });
+                    }
+                    
+                    // activeLayer의 선택 해제
+                    if (project.activeLayer) {
+                        project.activeLayer.selected = false;
+                        if (project.activeLayer.children) {
+                            project.activeLayer.children.forEach(child => {
+                                child.selected = false;
+                            });
+                        }
+                    }
+                    
+                    // view 업데이트
+                    if (painter.paperScope.view) {
+                        painter.paperScope.view.update();
+                    }
+                }
+                
+                // Entry Painter 선택 도구 해제
+                if (painter.selectTool) {
+                    painter.selectTool(null);
+                }
+                
+                // 선택 영역 초기화
+                if (painter.clearSelection) {
+                    painter.clearSelection();
+                }
+                
+                console.log('✅ 선택 해제 완료');
+            } catch (e) {
+                console.warn('⚠️ 선택 해제 중 오류:', e);
+            }
+        }
+
+        /**
          * 🔥 커스텀 이미지 저장 함수
          */
         async function customSaveImage() {
@@ -82,6 +132,12 @@
                 const editingPictureId = fileInfo?.id;
                 
                 console.log('📋 모드:', { isEditMode, editingPictureId });
+                
+                // 🔥 저장 전 선택 해제 (선택 UI 제거)
+                deselectAll(painter);
+                
+                // 잠시 대기 (UI 업데이트 시간)
+                await new Promise(resolve => setTimeout(resolve, 50));
                 
                 // 🔥 Paper.js에서 그림만 추출 (배경 제외)
                 let imageData = null;
@@ -240,23 +296,26 @@
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
             
-            // 1. 실제 콘텐츠가 있는 영역 찾기 (알파 > 0인 픽셀)
+            // 1. 실제 콘텐츠가 있는 영역 찾기
             let minX = canvas.width, minY = canvas.height;
             let maxX = 0, maxY = 0;
             let hasContent = false;
             
-            // 2. 배경색 감지 (격자 패턴 - 흰색/회색)
+            // 2. 배경색 감지 (격자 패턴 - 흰색/회색 + 안티앨리어싱 경계)
             // Entry의 격자 배경: 흰색 rgb(255,255,255) + 회색 rgb(204,204,204) 또는 rgb(230,230,230)
             const isBackgroundColor = (r, g, b, a) => {
                 // 완전 투명
                 if (a < 10) return true;
                 
+                // 반투명 (안티앨리어싱 경계) - 알파가 낮으면 배경으로 처리
+                if (a < 128) return true;
+                
                 // 회색 계열인지 확인 (R, G, B 값이 비슷함)
-                const isGrayish = Math.abs(r - g) < 10 && Math.abs(g - b) < 10 && Math.abs(r - b) < 10;
+                const isGrayish = Math.abs(r - g) < 15 && Math.abs(g - b) < 15 && Math.abs(r - b) < 15;
                 
                 // 밝은 회색~흰색 범위 (Entry 격자 배경)
                 // 흰색: 255, 밝은 회색: 230, 중간 회색: 204
-                if (isGrayish && r >= 200 && g >= 200 && b >= 200) return true;
+                if (isGrayish && r >= 195 && g >= 195 && b >= 195) return true;
                 
                 return false;
             };
@@ -297,13 +356,7 @@
                 };
             }
             
-            // 4. 패딩 추가
-            const padding = 5;
-            minX = Math.max(0, minX - padding);
-            minY = Math.max(0, minY - padding);
-            maxX = Math.min(canvas.width - 1, maxX + padding);
-            maxY = Math.min(canvas.height - 1, maxY + padding);
-            
+            // 4. 패딩 없이 정확한 크기로 트림
             const trimWidth = maxX - minX + 1;
             const trimHeight = maxY - minY + 1;
             
@@ -459,6 +512,8 @@
                                         e.preventDefault();
                                         e.stopPropagation();
                                         e.stopImmediatePropagation();
+                                        
+                                        console.log('🔔 팝업 확인 버튼 클릭 - customSaveFunction 호출');
                                         
                                         if (customSaveFunction) {
                                             await customSaveFunction();
