@@ -3,7 +3,7 @@
  * Paint Editor의 저장하기 버튼을 S3 업로드 API와 연동
  * 
  * 수정일: 2025-12-05
- * - 🔥 Paper.js 레이어 기반 이미지 추출 (배경 레이어 제외)
+ * - 🔥 extractTransparentImage로 배경 제거 + 트림 처리
  * - 투명 배경 유지
  * - 팝업 저장 버튼 완전 차단
  */
@@ -183,79 +183,22 @@
         
         /**
          * 🔥 Paper.js에서 그림만 추출 (핵심 함수)
-         * Entry Paint Editor의 Paper.js 레이어 구조 활용
+         * 캔버스에서 직접 추출 후 배경 제거 + 트림 처리
          */
         async function extractPaperImage(painter) {
-            console.log('🖼️ Paper.js 이미지 추출 시작');
+            console.log('🖼️ 이미지 추출 시작 (extractTransparentImage 사용)');
             
-            // 방법 1: Paper.js scope에서 직접 추출 (배경 레이어 제외)
-            if (painter.paperScope && painter.paperScope.project) {
-                const project = painter.paperScope.project;
-                const view = painter.paperScope.view;
-                
-                console.log('📋 레이어 수:', project.layers.length);
-                project.layers.forEach((layer, i) => {
-                    console.log(`  레이어 ${i}: ${layer.name || '이름없음'}, visible: ${layer.visible}, children: ${layer.children?.length || 0}`);
-                });
-                
-                // 🔥 Paper.js의 rasterize 사용 (배경 제외하고 그림만)
-                if (project.activeLayer) {
-                    try {
-                        // 배경 레이어 숨기기
-                        const backgroundLayer = project.layers.find(l => 
-                            l.name === 'background' || 
-                            l.name === 'backgroundLayer' ||
-                            l.name === 'grid' ||
-                            l === project.layers[0]  // 보통 첫 번째 레이어가 배경
-                        );
-                        
-                        let wasVisible = true;
-                        if (backgroundLayer && project.layers.length > 1) {
-                            wasVisible = backgroundLayer.visible;
-                            backgroundLayer.visible = false;
-                            console.log('🔒 배경 레이어 숨김 처리');
-                        }
-                        
-                        // 그림 레이어만 래스터화
-                        const raster = project.activeLayer.rasterize({
-                            resolution: 72,
-                            insert: false
-                        });
-                        
-                        // 배경 복원
-                        if (backgroundLayer && project.layers.length > 1) {
-                            backgroundLayer.visible = wasVisible;
-                        }
-                        
-                        if (raster) {
-                            const dataUrl = raster.toDataURL();
-                            const bounds = project.activeLayer.bounds;
-                            
-                            console.log('✅ Paper.js rasterize 성공');
-                            
-                            return {
-                                dataUrl: dataUrl,
-                                width: Math.ceil(bounds.width) || 480,
-                                height: Math.ceil(bounds.height) || 270,
-                                hasContent: true
-                            };
-                        }
-                    } catch (e) {
-                        console.warn('⚠️ Paper.js rasterize 실패:', e);
-                    }
-                }
-                
-                // Fallback: 캔버스에서 직접 추출
-                if (view && view.element) {
-                    return extractTransparentImage(view.element);
-                }
-            }
-            
-            // 방법 2: paint_canvas에서 추출 (투명 배경 처리)
+            // 방법 1: paint_canvas에서 추출 (투명 배경 처리 + 트림)
             const paintCanvas = document.getElementById('paint_canvas');
             if (paintCanvas) {
                 console.log('📋 paint_canvas 사용');
                 return extractTransparentImage(paintCanvas);
+            }
+            
+            // 방법 2: Paper.js view에서 캔버스 가져오기
+            if (painter.paperScope && painter.paperScope.view && painter.paperScope.view.element) {
+                console.log('📋 paperScope.view.element 사용');
+                return extractTransparentImage(painter.paperScope.view.element);
             }
             
             // 방법 3: 다른 캔버스 탐색
