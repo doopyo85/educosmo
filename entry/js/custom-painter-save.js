@@ -6,7 +6,7 @@
  * - 🔥 extractTransparentImage로 배경 제거 + 트림 처리
  * - 투명 배경 유지
  * - 팝업 저장 버튼 완전 차단
- * - 선택 UI 제거 후 저장
+ * - 선택 UI 제거 후 저장 (색상 필터링)
  * - 안티앨리어싱 경계 처리
  */
 
@@ -73,51 +73,91 @@
         originalEntrySave = painter.save;
 
         /**
-         * 🔥 선택 해제 함수
+         * 🔥 선택 해제 함수 (강화된 버전)
          */
         function deselectAll(painter) {
-            try {
-                // Paper.js 선택 해제
-                if (painter.paperScope && painter.paperScope.project) {
-                    const project = painter.paperScope.project;
+            return new Promise((resolve) => {
+                try {
+                    console.log('🔓 선택 해제 시작...');
                     
-                    // 모든 아이템 선택 해제
-                    if (project.selectedItems) {
-                        project.selectedItems.forEach(item => {
-                            item.selected = false;
-                        });
-                    }
-                    
-                    // activeLayer의 선택 해제
-                    if (project.activeLayer) {
-                        project.activeLayer.selected = false;
-                        if (project.activeLayer.children) {
-                            project.activeLayer.children.forEach(child => {
-                                child.selected = false;
+                    // 1. Paper.js 내장 deselectAll 사용
+                    if (painter.paperScope) {
+                        const scope = painter.paperScope;
+                        
+                        // Paper.js 내장 선택 해제
+                        if (scope.project && scope.project.deselectAll) {
+                            scope.project.deselectAll();
+                            console.log('  ✓ project.deselectAll() 호출');
+                        }
+                        
+                        // 모든 레이어의 모든 아이템 선택 해제
+                        if (scope.project && scope.project.layers) {
+                            scope.project.layers.forEach(layer => {
+                                if (layer.children) {
+                                    layer.children.forEach(item => {
+                                        if (item.selected) {
+                                            item.selected = false;
+                                        }
+                                    });
+                                }
                             });
+                            console.log('  ✓ 모든 레이어 아이템 선택 해제');
+                        }
+                        
+                        // 선택된 아이템 배열 직접 클리어
+                        if (scope.project && scope.project.selectedItems) {
+                            while (scope.project.selectedItems.length > 0) {
+                                scope.project.selectedItems[0].selected = false;
+                            }
+                            console.log('  ✓ selectedItems 클리어');
+                        }
+                        
+                        // view 강제 갱신
+                        if (scope.view) {
+                            scope.view.update();
+                            if (scope.view.draw) {
+                                scope.view.draw();
+                            }
+                            console.log('  ✓ view 갱신');
                         }
                     }
                     
-                    // view 업데이트
-                    if (painter.paperScope.view) {
-                        painter.paperScope.view.update();
+                    // 2. Entry Painter 자체 선택 해제 메서드들
+                    if (painter.clearSelection) {
+                        painter.clearSelection();
+                        console.log('  ✓ painter.clearSelection() 호출');
                     }
+                    
+                    if (painter.finishSelect) {
+                        painter.finishSelect();
+                        console.log('  ✓ painter.finishSelect() 호출');
+                    }
+                    
+                    if (painter.endEdit) {
+                        painter.endEdit();
+                        console.log('  ✓ painter.endEdit() 호출');
+                    }
+                    
+                    // 3. 선택 도구 비활성화
+                    if (painter.selectTool) {
+                        painter.selectTool(null);
+                    }
+                    
+                    // 4. 툴 변경으로 선택 해제 유도 (브러시 도구로 임시 변경)
+                    if (painter.setTool) {
+                        painter.setTool('brush');
+                        console.log('  ✓ 도구를 brush로 변경');
+                    }
+                    
+                    console.log('✅ 선택 해제 완료');
+                    
+                    // UI 업데이트 대기 후 resolve
+                    setTimeout(resolve, 100);
+                } catch (e) {
+                    console.warn('⚠️ 선택 해제 중 오류:', e);
+                    setTimeout(resolve, 100);
                 }
-                
-                // Entry Painter 선택 도구 해제
-                if (painter.selectTool) {
-                    painter.selectTool(null);
-                }
-                
-                // 선택 영역 초기화
-                if (painter.clearSelection) {
-                    painter.clearSelection();
-                }
-                
-                console.log('✅ 선택 해제 완료');
-            } catch (e) {
-                console.warn('⚠️ 선택 해제 중 오류:', e);
-            }
+            });
         }
 
         /**
@@ -133,11 +173,8 @@
                 
                 console.log('📋 모드:', { isEditMode, editingPictureId });
                 
-                // 🔥 저장 전 선택 해제 (선택 UI 제거)
-                deselectAll(painter);
-                
-                // 잠시 대기 (UI 업데이트 시간)
-                await new Promise(resolve => setTimeout(resolve, 50));
+                // 🔥 저장 전 선택 해제 (선택 UI 제거) - Promise로 대기
+                await deselectAll(painter);
                 
                 // 🔥 Paper.js에서 그림만 추출 (배경 제외)
                 let imageData = null;
@@ -287,6 +324,7 @@
         /**
          * 🔥 캔버스에서 투명 배경 이미지 추출 (트림 포함)
          * 실제 그려진 콘텐츠만 추출하고 배경은 투명 처리
+         * 선택 UI(파란색 바운딩 박스)도 제거
          */
         function extractTransparentImage(canvas) {
             console.log('🖼️ 투명 배경 이미지 추출 시작');
@@ -301,26 +339,33 @@
             let maxX = 0, maxY = 0;
             let hasContent = false;
             
-            // 2. 배경색 감지 (격자 패턴 - 흰색/회색 + 안티앨리어싱 경계)
-            // Entry의 격자 배경: 흰색 rgb(255,255,255) + 회색 rgb(204,204,204) 또는 rgb(230,230,230)
-            const isBackgroundColor = (r, g, b, a) => {
+            // 2. 배경색 및 선택 UI 색상 감지
+            const isBackgroundOrUIColor = (r, g, b, a) => {
                 // 완전 투명
                 if (a < 10) return true;
                 
                 // 반투명 (안티앨리어싱 경계) - 알파가 낮으면 배경으로 처리
                 if (a < 128) return true;
                 
+                // 🔥 선택 UI 색상 필터링 (파란색 바운딩 박스/핸들)
+                // Entry 선택 UI는 보통 파란색 계열 (rgb 약 0-100, 100-180, 200-255)
+                const isSelectionBlue = (r < 120 && g < 200 && b > 180);
+                if (isSelectionBlue) return true;
+                
+                // 🔥 선택 핸들 (작은 흰색/밝은 파란색 사각형)
+                // 순수 파란색 (Entry 기본 선택 색상)
+                if (r < 50 && g < 150 && b > 200) return true;
+                
                 // 회색 계열인지 확인 (R, G, B 값이 비슷함)
                 const isGrayish = Math.abs(r - g) < 15 && Math.abs(g - b) < 15 && Math.abs(r - b) < 15;
                 
                 // 밝은 회색~흰색 범위 (Entry 격자 배경)
-                // 흰색: 255, 밝은 회색: 230, 중간 회색: 204
                 if (isGrayish && r >= 195 && g >= 195 && b >= 195) return true;
                 
                 return false;
             };
             
-            // 3. 콘텐츠 영역 스캔
+            // 3. 콘텐츠 영역 스캔 (선택 UI 제외)
             for (let y = 0; y < canvas.height; y++) {
                 for (let x = 0; x < canvas.width; x++) {
                     const idx = (y * canvas.width + x) * 4;
@@ -329,8 +374,8 @@
                     const b = data[idx + 2];
                     const a = data[idx + 3];
                     
-                    // 배경이 아닌 픽셀 (실제 그림)
-                    if (!isBackgroundColor(r, g, b, a)) {
+                    // 배경/선택UI가 아닌 픽셀 (실제 그림)
+                    if (!isBackgroundOrUIColor(r, g, b, a)) {
                         hasContent = true;
                         minX = Math.min(minX, x);
                         minY = Math.min(minY, y);
@@ -373,15 +418,15 @@
             const trimmedImageData = ctx.getImageData(minX, minY, trimWidth, trimHeight);
             const trimmedData = trimmedImageData.data;
             
-            // 6. 배경색을 투명으로 변환
+            // 6. 배경색 및 선택 UI를 투명으로 변환
             for (let i = 0; i < trimmedData.length; i += 4) {
                 const r = trimmedData[i];
                 const g = trimmedData[i + 1];
                 const b = trimmedData[i + 2];
                 const a = trimmedData[i + 3];
                 
-                if (isBackgroundColor(r, g, b, a)) {
-                    // 배경색은 완전 투명으로
+                if (isBackgroundOrUIColor(r, g, b, a)) {
+                    // 배경색/선택UI는 완전 투명으로
                     trimmedData[i + 3] = 0;
                 }
             }
