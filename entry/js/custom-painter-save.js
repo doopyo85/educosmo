@@ -303,16 +303,17 @@
             let hasContent = false;
             
             // 2. 배경색 감지 (격자 패턴 - 흰색/회색)
-            // Entry의 격자 배경은 보통 rgb(255,255,255)과 rgb(230,230,230) 정도
+            // Entry의 격자 배경: 흰색 rgb(255,255,255) + 회색 rgb(204,204,204) 또는 rgb(230,230,230)
             const isBackgroundColor = (r, g, b, a) => {
                 // 완전 투명
                 if (a < 10) return true;
                 
-                // 거의 흰색 (배경)
-                if (r > 250 && g > 250 && b > 250 && a > 250) return true;
+                // 회색 계열인지 확인 (R, G, B 값이 비슷함)
+                const isGrayish = Math.abs(r - g) < 10 && Math.abs(g - b) < 10 && Math.abs(r - b) < 10;
                 
-                // 회색 격자 패턴 (Entry 배경)
-                if (r > 220 && g > 220 && b > 220 && Math.abs(r - g) < 5 && Math.abs(g - b) < 5) return true;
+                // 밝은 회색~흰색 범위 (Entry 격자 배경)
+                // 흰색: 255, 밝은 회색: 230, 중간 회색: 204
+                if (isGrayish && r >= 200 && g >= 200 && b >= 200) return true;
                 
                 return false;
             };
