@@ -480,10 +480,9 @@ class ProjectCardManager {
 
     createScratchCardContent(projectName, project) {
         const pptBtn = this.viewConfig.showPPTButton && project.ppt ? `
-            <button class="apple-ppt-btn-absolute" 
-                onclick="window.open('${project.ppt}', '_blank'); event.stopPropagation();"
-                title="PPT 다운로드">
-                <i class="bi bi-file-earmark-slides"></i>
+            <button class="project-ppt-btn" 
+                onclick="window.open('${project.ppt}', '_blank'); event.stopPropagation();">
+                PPT
             </button>
         ` : '';
 
@@ -515,10 +514,9 @@ class ProjectCardManager {
 
     createEntryCardContent(projectName, project) {
         const pptBtn = this.viewConfig.showPPTButton && project.ppt ? `
-            <button class="apple-ppt-btn-absolute" 
-                onclick="window.open('${project.ppt}', '_blank'); event.stopPropagation();"
-                title="PPT 다운로드">
-                <i class="bi bi-file-earmark-slides"></i>
+            <button class="project-ppt-btn" 
+                onclick="window.open('${project.ppt}', '_blank'); event.stopPropagation();">
+                PPT
             </button>
         ` : '';
 
@@ -552,10 +550,9 @@ class ProjectCardManager {
 
     createAppInventorCardContent(projectName, project) {
         const pptBtn = this.viewConfig.showPPTButton && project.ppt ? `
-            <button class="apple-ppt-btn-absolute" 
-                onclick="window.open('${project.ppt}', '_blank'); event.stopPropagation();"
-                title="PPT 다운로드">
-                <i class="bi bi-file-earmark-slides"></i>
+            <button class="project-ppt-btn" 
+                onclick="window.open('${project.ppt}', '_blank'); event.stopPropagation();">
+                PPT
             </button>
         ` : '';
 
