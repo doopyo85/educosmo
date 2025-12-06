@@ -527,17 +527,18 @@ class ProjectCardManager {
 
         return `
             ${pptBtn}
-            <div class="project-card-header">
-                <h3 class="project-card-title">${projectName}</h3>
-            </div>
             
             ${project.basic ? `
-                <div class="mb-3" style="text-align: center;">
+                <div style="position: absolute; top: 24px; right: ${this.viewConfig.showPPTButton && project.ppt ? '70px' : '24px'};">
                     <button class="entry-legacy-btn" data-url="${project.basic}">
                         <i class="bi bi-download"></i> 다운로드
                     </button>
                 </div>
             ` : ''}
+            
+            <div class="project-card-header">
+                <h3 class="project-card-title">${projectName}</h3>
+            </div>
             
             <div class="project-card-tags">
                 <span class="project-card-tag">
