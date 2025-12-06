@@ -1,138 +1,141 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>앱인벤터 프로젝트 선택</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/card_project.css">
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="/learning-tracker.js"></script>
-    
+
     <!-- 프로젝트 타입 지정 -->
     <script>
         const projectType = 'appinventor';
     </script>
-    
+
 </head>
+
 <body>
     <%- include('partials/header') %>
-    <input type="hidden" id="user-role" value="<%= role %>">
-    <input type="hidden" id="user-id" value="<%= userID %>">
-    <input type="hidden" id="center-id" value="<%= centerID %>">
-    
-    <div class="container mt-5">
-        <h1 class="text-center">앱인벤터 프로젝트</h1>
-        <p class="text-center">블록 코딩을 통해 나만의 모바일 앱을 만들고 공유해보세요!</p>
-        
-        <!-- 새로 시작하기 버튼 -->
-        <div class="text-center mb-4">
-            <a href="https://appinventor.mit.edu/" target="_blank" class="btn btn-success">새로 시작하기</a>
-        </div>
-        
-        <!-- 카테고리 탭 -->
-        <ul class="nav nav-tabs" id="categoryTabs" role="tablist"></ul>
-        
-        <!-- 콘텐츠 컨테이너 -->
-        <div id="content-container" class="tab-content"></div>
-    </div>
+        <input type="hidden" id="user-role" value="<%= role %>">
+        <input type="hidden" id="user-id" value="<%= userID %>">
+        <input type="hidden" id="center-id" value="<%= centerID %>">
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/header.js"></script>
-    
-    <!-- card_project.js 로드 -->
-    <script src="/js/card_project.js"></script>
-    
-    <!-- 앱인벤터 전용 확장 스크립트 -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // ProjectCardManager 클래스가 로드된 후에 실행
-            if (typeof ProjectCardManager === 'function') {
-                // 앱인벤터용 카드 매니저 확장 클래스
-                class AppInventorCardManager extends ProjectCardManager {
-                    constructor(config) {
-                        // 기본 설정에 앱인벤터 API 엔드포인트 추가
-                        const updatedConfig = {
-                            ...config,
-                            apiEndpoints: {
-                                ...config.apiEndpoints,
-                                appinventor: '/api/sheets/aia'
-                            }
-                        };
-                        super(updatedConfig);
-                    }
-                    
-                    // API 엔드포인트 오버라이드
-                    async loadProjectData() {
-                        try {
-                            // 직접 앱인벤터 엔드포인트 사용
-                            const endpoint = this.config.apiEndpoints.appinventor;
-                            
-                            console.log(`로딩 앱인벤터 프로젝트: ${endpoint}`);
-                            const response = await fetch(endpoint);
-                            
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            
-                            const data = await response.json();
-                            console.log(`앱인벤터 데이터 로드 성공:`, data.length, '항목');
-                            return data;
-                        } catch (error) {
-                            console.error('앱인벤터 데이터 로드 오류:', error);
-                            throw error;
+        <div class="container-fluid mt-5" style="max-width: 1700px;">
+            <div class="text-center mb-5">
+                <h1 class="fw-bold">앱인벤터 프로젝트</h1>
+                <p class="text-muted">블록 코딩을 통해 나만의 모바일 앱을 만들고 공유해보세요!</p>
+                <a href="https://appinventor.mit.edu/" target="_blank" class="btn btn-primary btn-lg rounded-pill px-4">
+                    <i class="bi bi-plus-lg"></i> 새로 시작하기
+                </a>
+            </div>
+
+            <!-- 카테고리 탭 -->
+            <ul class="nav nav-tabs" id="categoryTabs" role="tablist"></ul>
+
+            <!-- 콘텐츠 컨테이너 -->
+            <div id="content-container" class="tab-content project-card-grid"></div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/header.js"></script>
+
+        <!-- card_project.js 로드 -->
+        <script src="/js/card_project.js"></script>
+
+        <!-- 앱인벤터 전용 확장 스크립트 -->
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // ProjectCardManager 클래스가 로드된 후에 실행
+                if (typeof ProjectCardManager === 'function') {
+                    // 앱인벤터용 카드 매니저 확장 클래스
+                    class AppInventorCardManager extends ProjectCardManager {
+                        constructor(config) {
+                            // 기본 설정에 앱인벤터 API 엔드포인트 추가
+                            const updatedConfig = {
+                                ...config,
+                                apiEndpoints: {
+                                    ...config.apiEndpoints,
+                                    appinventor: '/api/sheets/aia'
+                                }
+                            };
+                            super(updatedConfig);
                         }
-                    }
-                    
-                    // 앱인벤터용 프로젝트 그룹화 메서드
-                    groupByProject(data) {
-                        const projects = {};
-                        
-                        data.forEach(row => {
-                            if (!Array.isArray(row) || row.length < 4) return;
-                            
-                            // 앱인벤터 데이터 구조: [카테고리, 콘텐츠명, 기능, aiaURL, C.T요소, IMG]
-                            const [category, name, type, url, ctElement = '', imgUrl = ''] = row;
-                            
-                            if (!projects[category]) {
-                                projects[category] = {};
+
+                        // API 엔드포인트 오버라이드
+                        async loadProjectData() {
+                            try {
+                                // 직접 앱인벤터 엔드포인트 사용
+                                const endpoint = this.config.apiEndpoints.appinventor;
+
+                                console.log(`로딩 앱인벤터 프로젝트: ${endpoint}`);
+                                const response = await fetch(endpoint);
+
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                }
+
+                                const data = await response.json();
+                                console.log(`앱인벤터 데이터 로드 성공:`, data.length, '항목');
+                                return data;
+                            } catch (error) {
+                                console.error('앱인벤터 데이터 로드 오류:', error);
+                                throw error;
                             }
-                            
-                            const projectKey = name.trim();
-                            
-                            if (!projects[category][projectKey]) {
-                                projects[category][projectKey] = {
-                                    name: projectKey,
-                                    ctElement: ctElement,
-                                    basic: '',  // 본문
-                                    practice: '', // 연습
-                                    ppt: ''     // PPT 추가
-                                };
-                            }
-                            
-                            // 타입에 따라 URL 할당 (본문/연습/PPT)
-                            if (type.toLowerCase().includes('본문')) {
-                                projects[category][projectKey].basic = url;
-                            } else if (type.toLowerCase().includes('연습')) {
-                                projects[category][projectKey].practice = url;
-                            } else if (type.toLowerCase().includes('ppt')) {
-                                projects[category][projectKey].ppt = url;
-                            }
-                        });
-                        
-                        return projects;
-                    }
-                    
-                    // 프로젝트 카드 생성 오버라이드
-                    createProjectCard(projectName, project) {
-                        const card = document.createElement('div');
-                        card.className = 'project-card';
-                        
-                        card.innerHTML = `
+                        }
+
+                        // 앱인벤터용 프로젝트 그룹화 메서드
+                        groupByProject(data) {
+                            const projects = {};
+
+                            data.forEach(row => {
+                                if (!Array.isArray(row) || row.length < 4) return;
+
+                                // 앱인벤터 데이터 구조: [카테고리, 콘텐츠명, 기능, aiaURL, C.T요소, IMG]
+                                const [category, name, type, url, ctElement = '', imgUrl = ''] = row;
+
+                                if (!projects[category]) {
+                                    projects[category] = {};
+                                }
+
+                                const projectKey = name.trim();
+
+                                if (!projects[category][projectKey]) {
+                                    projects[category][projectKey] = {
+                                        name: projectKey,
+                                        ctElement: ctElement,
+                                        basic: '',  // 본문
+                                        practice: '', // 연습
+                                        ppt: ''     // PPT 추가
+                                    };
+                                }
+
+                                // 타입에 따라 URL 할당 (본문/연습/PPT)
+                                if (type.toLowerCase().includes('본문')) {
+                                    projects[category][projectKey].basic = url;
+                                } else if (type.toLowerCase().includes('연습')) {
+                                    projects[category][projectKey].practice = url;
+                                } else if (type.toLowerCase().includes('ppt')) {
+                                    projects[category][projectKey].ppt = url;
+                                }
+                            });
+
+                            return projects;
+                        }
+
+                        // 프로젝트 카드 생성 오버라이드
+                        createProjectCard(projectName, project) {
+                            const card = document.createElement('div');
+                            card.className = 'project-card';
+
+                            card.innerHTML = `
                             <div class="project-card-header">
                                 <h3 class="project-card-title">${projectName}</h3>
                             </div>
@@ -157,75 +160,76 @@
                                 </div>
                             </div>
                         `;
-                        
-                        return card;
-                    }
-                    
-                    // 앱인벤터 로드 메서드
-                    loadProjectInAppInventor(projectUrl) {
-                        if (!projectUrl) {
-                            console.error('프로젝트 URL이 없습니다');
-                            return;
+
+                            return card;
                         }
-                        
-                        // 프로젝트 파일 다운로드
-                        const fileName = projectUrl.split('/').pop();
-                        const downloadLink = document.createElement('a');
-                        downloadLink.href = projectUrl;
-                        downloadLink.download = fileName;
-                        downloadLink.style.display = 'none';
-                        document.body.appendChild(downloadLink);
-                        
-                        // 새 창에서 앱인벤터 열기
-                        window.open('https://appinventor.mit.edu/', '_blank');
-                        
-                        // 약간의 지연 후 다운로드 실행
-                        setTimeout(() => {
-                            downloadLink.click();
-                            document.body.removeChild(downloadLink);
-                            
-                            // 사용자에게 안내 메시지 표시
-                            alert(`앱인벤터 프로젝트 파일(${fileName})이 다운로드되었습니다.\n앱인벤터에서 '프로젝트 가져오기' 메뉴를 선택하고 이 파일을 업로드하세요.`);
-                        }, 500);
-                    }
-                    
-                    // 이벤트 리스너 재설정
-                    setupEventListeners() {
-                        document.addEventListener('click', (e) => {
-                            if (e.target.classList.contains('load-project')) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                
-                                const projectUrl = e.target.getAttribute('data-url');
-                                if (!projectUrl) return;
-                                
-                                this.loadProjectInAppInventor(projectUrl);
+
+                        // 앱인벤터 로드 메서드
+                        loadProjectInAppInventor(projectUrl) {
+                            if (!projectUrl) {
+                                console.error('프로젝트 URL이 없습니다');
+                                return;
                             }
-                        });
+
+                            // 프로젝트 파일 다운로드
+                            const fileName = projectUrl.split('/').pop();
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = projectUrl;
+                            downloadLink.download = fileName;
+                            downloadLink.style.display = 'none';
+                            document.body.appendChild(downloadLink);
+
+                            // 새 창에서 앱인벤터 열기
+                            window.open('https://appinventor.mit.edu/', '_blank');
+
+                            // 약간의 지연 후 다운로드 실행
+                            setTimeout(() => {
+                                downloadLink.click();
+                                document.body.removeChild(downloadLink);
+
+                                // 사용자에게 안내 메시지 표시
+                                alert(`앱인벤터 프로젝트 파일(${fileName})이 다운로드되었습니다.\n앱인벤터에서 '프로젝트 가져오기' 메뉴를 선택하고 이 파일을 업로드하세요.`);
+                            }, 500);
+                        }
+
+                        // 이벤트 리스너 재설정
+                        setupEventListeners() {
+                            document.addEventListener('click', (e) => {
+                                if (e.target.classList.contains('load-project')) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+
+                                    const projectUrl = e.target.getAttribute('data-url');
+                                    if (!projectUrl) return;
+
+                                    this.loadProjectInAppInventor(projectUrl);
+                                }
+                            });
+                        }
                     }
+
+                    // 기존 카드 매니저를 제거하고 새 앱인벤터 매니저 생성
+                    if (window.projectCardManager) {
+                        delete window.projectCardManager;
+                    }
+
+                    // 앱인벤터 매니저 생성 및 초기화
+                    window.projectCardManager = new AppInventorCardManager({
+                        projectType: 'appinventor',
+                        contentContainerId: 'content-container',
+                        categoryTabsId: 'categoryTabs'
+                    });
+
+                    // 초기화 및 이벤트 리스너 설정
+                    window.projectCardManager.initialize();
+                    window.projectCardManager.setupEventListeners();
+                } else {
+                    console.error('ProjectCardManager 클래스를 찾을 수 없습니다. card_project.js가 제대로 로드되었는지 확인하세요.');
                 }
-                
-                // 기존 카드 매니저를 제거하고 새 앱인벤터 매니저 생성
-                if (window.projectCardManager) {
-                    delete window.projectCardManager;
-                }
-                
-                // 앱인벤터 매니저 생성 및 초기화
-                window.projectCardManager = new AppInventorCardManager({
-                    projectType: 'appinventor',
-                    contentContainerId: 'content-container',
-                    categoryTabsId: 'categoryTabs'
-                });
-                
-                // 초기화 및 이벤트 리스너 설정
-                window.projectCardManager.initialize();
-                window.projectCardManager.setupEventListeners();
-            } else {
-                console.error('ProjectCardManager 클래스를 찾을 수 없습니다. card_project.js가 제대로 로드되었는지 확인하세요.');
-            }
-        });
-        
-       
-    </script>
+            });
+
+
+        </script>
 </body>
+
 </html>
