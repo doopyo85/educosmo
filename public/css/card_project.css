@@ -122,7 +122,7 @@
 .project-card-actions {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   width: 100%;
   padding-top: 16px;
@@ -136,8 +136,7 @@
   gap: 6px;
   /* 좁은 간격 */
   flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
+  justify-content: flex-start;
 }
 
 /* 기본 버튼 스타일 */
@@ -243,15 +242,16 @@
   }
 
   .project-card-actions {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .project-card-btn-group {
-    flex-direction: column;
-    width: 100%;
+    flex-direction: row;
   }
 
   .project-card-btn-group>.btn {
-    width: 100%;
+    min-width: auto;
   }
 }

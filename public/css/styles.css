@@ -159,8 +159,8 @@ main {
     border-radius: 0;
 }
 
-/* 카드 버튼 */
-.btn-primary {
+/* 카드 버튼 - 메인 페이지 캐러셀 카드 전용 */
+.card .btn-primary {
     border-radius: 50px;
     padding: 8px 22px;
     font-size: 0.95rem;

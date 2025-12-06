@@ -528,14 +528,6 @@ class ProjectCardManager {
         return `
             ${pptBtn}
             
-            ${project.basic ? `
-                <div style="position: absolute; top: 24px; right: ${this.viewConfig.showPPTButton && project.ppt ? '70px' : '24px'};">
-                    <button class="entry-legacy-btn" data-url="${project.basic}">
-                        <i class="bi bi-download"></i> 다운로드
-                    </button>
-                </div>
-            ` : ''}
-            
             <div class="project-card-header">
                 <h3 class="project-card-title">${projectName}</h3>
             </div>
@@ -552,6 +544,11 @@ class ProjectCardManager {
                     ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary') : ''}
                     ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary') : ''}
                 </div>
+                ${project.basic ? `
+                    <button class="entry-legacy-btn" data-url="${project.basic}">
+                        <i class="bi bi-download"></i> 다운로드
+                    </button>
+                ` : ''}
             </div>
         `;
     }
