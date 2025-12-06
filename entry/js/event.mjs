@@ -30,7 +30,21 @@ export function installEntryEvent() {
         openPictureManager();
     });
     
-    Entry.addEventListener('openSoundManager', openSoundManager);
+    // 🔥 openSoundManager 이벤트를 래핑하여 중복 호출 방지
+    Entry.addEventListener('openSoundManager', (e) => {
+        console.log('🔊 Entry openSoundManager 이벤트 발생');
+        
+        // Entry 내부의 기본 동작 방지 시도
+        if (e && e.stopPropagation) {
+            e.stopPropagation();
+        }
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
+        
+        // 커스텀 팝업 열기
+        openSoundManager();
+    });
     Entry.addEventListener('openImportListModal', openImportListModal);
     Entry.addEventListener('openExportListModal', openExportListModal);
     Entry.addEventListener('openTableManager', openTableManager);

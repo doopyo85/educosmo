@@ -237,17 +237,85 @@ export async function openPictureManager() {
 }
 
 export async function openSoundManager() {
-    popup.removeAllListeners();
+    console.log('🔊 openSoundManager 호출됨, isPopupOpen:', isPopupOpen);
+    
+    // 🔥 팝업이 이미 열린 상태면 무시
+    if (isPopupOpen) {
+        console.log('⚠️ 팝업이 이미 열려있어 무시');
+        return;
+    }
+    
+    // 🔥 팝업이 초기화되지 않은 경우 대기
+    if (!popup) {
+        console.error('❌ 팝업이 초기화되지 않았습니다');
+        return;
+    }
+    
+    // 🔥 기존 리스너 제거 (close/hide 제외)
+    try {
+        popup.removeAllListeners('fetch');
+        popup.removeAllListeners('search');
+        popup.removeAllListeners('submit');
+        popup.removeAllListeners('loaded');
+        popup.removeAllListeners('load');
+        popup.removeAllListeners('play');
+        popup.removeAllListeners('stop');
+        popup.removeAllListeners('uploads');
+        popup.removeAllListeners('dummyUploads');
+        popup.removeAllListeners('uploadFail');
+        popup.removeAllListeners('fail');
+        popup.removeAllListeners('error');
+    } catch (e) {
+        console.log('⚠️ 리스너 제거 중 오류 (무시):', e.message);
+        popup.removeAllListeners();
+    }
+    
     setSoundPopupEvent(popup);
     
     // Entry 리소스 로드 확인
     if (!assets.sound || assets.sound.length === 0) {
+        console.log('⏳ Entry 사운드 리소스 로드 중...');
         await assets.loadResources();
     }
     
-    // 사운드 카테고리
-    const soundCategories = [
-        {
+    // 🔥 Entry 공식 사운드 카테고리
+    const SOUND_CATEGORIES = [
+        { id: 'people', name: '사람', order: 1 },
+        { id: 'animal', name: '동물', order: 2 },
+        { id: 'nature', name: '자연', order: 3 },
+        { id: 'instrument', name: '악기', order: 4 },
+        { id: 'music', name: '음악', order: 5 },
+        { id: 'effect', name: '효과', order: 6 },
+        { id: 'life', name: '생활', order: 7 },
+        { id: 'etc', name: '기타', order: 8 }
+    ];
+    
+    // sounds.json에서 실제 존재하는 카테고리만 추출
+    const existingCategories = new Set();
+    if (assets.sound && assets.sound.length > 0) {
+        assets.sound.forEach(sound => {
+            if (sound.category?.main) {
+                existingCategories.add(sound.category.main);
+            }
+        });
+    }
+    
+    // 공식 순서대로 카테고리 생성 (실제 존재하는 것만)
+    let soundCategories = SOUND_CATEGORIES
+        .filter(cat => existingCategories.has(cat.id))
+        .map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            value: cat.id,
+            label: { ko: cat.name, en: cat.id },
+            categoryType: 'sound',
+            depth: 1,
+            children: []
+        }));
+    
+    // 카테고리가 없으면 기본 '전체' 카테고리 추가
+    if (soundCategories.length === 0) {
+        soundCategories = [{
             id: 'all',
             name: '전체',
             value: 'all',
@@ -255,34 +323,33 @@ export async function openSoundManager() {
             categoryType: 'sound',
             depth: 1,
             children: []
-        },
-        {
-            id: 'people',
-            name: '사람',
-            value: 'people',
-            label: { ko: '사람' },
-            categoryType: 'sound',
-            depth: 1,
-            children: []
-        },
-        {
-            id: 'nature',
-            name: '자연',
-            value: 'nature',
-            label: { ko: '자연' },
-            categoryType: 'sound',
-            depth: 1,
-            children: []
-        }
-    ];
+        }];
+    }
+    
+    console.log('🔊 사운드 팝업 카테고리:', soundCategories.map(c => c.name));
     
     const sidebar = getSidebarTemplate({ category: soundCategories });
     popup.setData({ sidebar });
-    popup.show({ type: 'sound' }, {
-        data: {
-            data: assets.sound.slice(0, 50)
-        }
-    });
+    
+    // 초기 데이터 로드 (첫 번째 카테고리 기준)
+    const firstCategory = soundCategories[0]?.id || 'all';
+    let filteredSounds = assets.sound || [];
+    if (firstCategory !== 'all') {
+        filteredSounds = filteredSounds.filter(s => s.category?.main === firstCategory);
+    }
+    
+    // 🔥 팝업 열기 - 상태 먼저 설정
+    isPopupOpen = true;
+    
+    // 🔥 약간의 딜레이 후 팝업 표시 (이벤트 버블링 방지)
+    setTimeout(() => {
+        popup.show({ type: 'sound' }, {
+            data: {
+                data: filteredSounds.slice(0, 50)
+            }
+        });
+        console.log('✅ 사운드 추가 팝업 열림');
+    }, 50);
 }
 
 export function openTableManager(data) {
