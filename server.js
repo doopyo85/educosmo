@@ -275,13 +275,14 @@ app.use(session({
   secret: config.SESSION.SECRET,
   resave: false,
   saveUninitialized: false,
+  rolling: true,  // 🔥 매 요청마다 세션 TTL 갱신 (활동 시 로그아웃 방지)
   name: 'connect.sid',
   cookie: {
     secure: false,
     httpOnly: true,
     sameSite: 'lax',
     domain: '.codingnplay.co.kr',
-    maxAge: 10800000
+    maxAge: 10800000  // 3시간
   }
 }));
 
