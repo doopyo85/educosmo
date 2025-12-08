@@ -422,7 +422,7 @@ class ProjectCardManager {
     }
 
     /**
-     * Scratch 프로젝트 탭과 함께 표시 (Entry와 동일 방식)
+     * Scratch 프로젝트 탭과 함께 표시 (COS 섹션형 지원)
      */
     displayScratchProjects(projects) {
         const tabsContainer = document.getElementById(this.config.categoryTabsId);
@@ -440,44 +440,8 @@ class ProjectCardManager {
             return;
         }
 
-        // 초기화
-        tabsContainer.innerHTML = '';
-        contentContainer.innerHTML = '';
-
-        // 탭과 콘텐츠 생성
-        Object.keys(projects).forEach((category, index) => {
-            // 탭 생성
-            const tabButton = document.createElement('li');
-            tabButton.className = 'nav-item';
-            tabButton.innerHTML = `
-                <button class="nav-link ${index === 0 ? 'active' : ''}" 
-                        id="tab-${index}" 
-                        data-bs-toggle="tab" 
-                        data-bs-target="#content-${index}" 
-                        type="button" 
-                        role="tab">
-                    ${category}
-                </button>
-            `;
-            tabsContainer.appendChild(tabButton);
-
-            // 콘텐츠 패널 생성
-            const contentPanel = document.createElement('div');
-            contentPanel.className = `tab-pane fade ${index === 0 ? 'show active' : ''}`;
-            contentPanel.id = `content-${index}`;
-
-            // 프로젝트 카드 그리드 컨테이너
-            const gridContainer = document.createElement('div');
-            gridContainer.className = 'project-card-grid';
-
-            // 카테고리 내 프로젝트들에 대한 카드 생성
-            Object.values(projects[category]).forEach(project => {
-                gridContainer.appendChild(this.createProjectCard(project.name, project));
-            });
-
-            contentPanel.appendChild(gridContainer);
-            contentContainer.appendChild(contentPanel);
-        });
+        // 🔥 COS 지원 함수 호출
+        this.displayProjectsWithCOSSupport(projects, tabsContainer, contentContainer);
     }
 
     /**
@@ -504,7 +468,7 @@ class ProjectCardManager {
     }
 
     /**
-     * Entry 프로젝트 탭과 함께 표시
+     * Entry 프로젝트 탭과 함께 표시 (COS 섹션형 지원)
      */
     displayEntryProjectsWithTabs(projects) {
         const tabsContainer = document.getElementById(this.config.categoryTabsId);
@@ -515,44 +479,8 @@ class ProjectCardManager {
             return;
         }
 
-        // 초기화
-        tabsContainer.innerHTML = '';
-        contentContainer.innerHTML = '';
-
-        // 탭과 콘텐츠 생성
-        Object.keys(projects).forEach((category, index) => {
-            // 탭 생성
-            const tabButton = document.createElement('li');
-            tabButton.className = 'nav-item';
-            tabButton.innerHTML = `
-                <button class="nav-link ${index === 0 ? 'active' : ''}" 
-                        id="tab-${index}" 
-                        data-bs-toggle="tab" 
-                        data-bs-target="#content-${index}" 
-                        type="button" 
-                        role="tab">
-                    ${category}
-                </button>
-            `;
-            tabsContainer.appendChild(tabButton);
-
-            // 콘텐츠 패널 생성
-            const contentPanel = document.createElement('div');
-            contentPanel.className = `tab-pane fade ${index === 0 ? 'show active' : ''}`;
-            contentPanel.id = `content-${index}`;
-
-            // 프로젝트 카드 그리드 컨테이너
-            const gridContainer = document.createElement('div');
-            gridContainer.className = 'project-card-grid';
-
-            // 카테고리 내 프로젝트들에 대한 카드 생성
-            Object.values(projects[category]).forEach(project => {
-                gridContainer.appendChild(this.createProjectCard(project.name, project));
-            });
-
-            contentPanel.appendChild(gridContainer);
-            contentContainer.appendChild(contentPanel);
-        });
+        // 🔥 COS 지원 함수 호출
+        this.displayProjectsWithCOSSupport(projects, tabsContainer, contentContainer);
     }
 
     /**
@@ -561,6 +489,248 @@ class ProjectCardManager {
     displayAppInventorProjectsWithTabs(projects) {
         // Entry와 유사한 방식으로 구현
         this.displayEntryProjectsWithTabs(projects);
+    }
+
+    /**
+     * 🔥 COS 데이터를 급수 > 샘플 > 문제번호로 그룹핑
+     * @param {Object} projects - 카테고리별 프로젝트 데이터
+     * @returns {Object} - { '1': { '1': { '01': {...}, '02': {...} }, '2': {...} }, '2': {...} }
+     */
+    groupCOSProjects(projects) {
+        const cosData = {};
+        
+        // COS 카테고리만 필터링 (COS1E, COS2S 등)
+        Object.keys(projects).forEach(category => {
+            if (!category.toUpperCase().startsWith('COS')) return;
+            
+            Object.values(projects[category]).forEach(project => {
+                // "COS 1급 샘플1-01" 형식 파싱
+                const match = project.name.match(/COS\s*(\d)급\s*샘플(\d)-(\d+)/i);
+                if (!match) return;
+                
+                const [, grade, sample, problemNum] = match;
+                
+                // 계층 구조 생성
+                if (!cosData[grade]) cosData[grade] = {};
+                if (!cosData[grade][sample]) cosData[grade][sample] = {};
+                
+                cosData[grade][sample][problemNum] = {
+                    img: project.img || '',
+                    answer: project.answer || '',
+                    solution: project.solution || '',
+                    name: project.name
+                };
+            });
+        });
+        
+        return cosData;
+    }
+
+    /**
+     * 🔥 COS 섹션형 레이아웃 렌더링
+     * @param {Object} cosData - groupCOSProjects() 결과
+     * @returns {HTMLElement} - 섹션 컨테이너
+     */
+    createCOSSectionLayout(cosData) {
+        const container = document.createElement('div');
+        container.className = 'cos-section-container';
+        
+        const isTeacher = ['admin', 'teacher', 'manager'].includes(this.userRole);
+        const gradeEmojis = { '1': '🏆', '2': '🥈', '3': '🥉', '4': '📝' };
+        const gradeOrder = ['1', '2', '3', '4'];
+        
+        gradeOrder.forEach(grade => {
+            if (!cosData[grade]) return;
+            
+            // 급수 섹션 헤더
+            const section = document.createElement('div');
+            section.className = 'cos-grade-section mb-4';
+            section.innerHTML = `
+                <h4 class="cos-grade-title mb-3">
+                    ${gradeEmojis[grade] || '📝'} COS ${grade}급
+                </h4>
+            `;
+            
+            // 샘플 카드 그리드
+            const cardGrid = document.createElement('div');
+            cardGrid.className = 'row';
+            
+            // 샘플 1~3
+            ['1', '2', '3'].forEach(sample => {
+                if (!cosData[grade][sample]) return;
+                
+                const card = this.createCOSSampleCard(grade, sample, cosData[grade][sample], isTeacher);
+                cardGrid.appendChild(card);
+            });
+            
+            section.appendChild(cardGrid);
+            container.appendChild(section);
+        });
+        
+        return container;
+    }
+
+    /**
+     * 🔥 COS 샘플 카드 생성 (10문제 리스트)
+     * @param {string} grade - 급수
+     * @param {string} sample - 샘플 번호
+     * @param {Object} problems - 문제 데이터 { '01': {...}, '02': {...}, ... }
+     * @param {boolean} isTeacher - 교사 여부
+     * @returns {HTMLElement}
+     */
+    createCOSSampleCard(grade, sample, problems, isTeacher) {
+        const col = document.createElement('div');
+        col.className = 'col-md-4 mb-3';
+        
+        // 문제 번호 정렬 (01, 02, ..., 10)
+        const sortedNums = Object.keys(problems).sort((a, b) => parseInt(a) - parseInt(b));
+        
+        // 문제 리스트 HTML 생성
+        let problemListHtml = '';
+        sortedNums.forEach(num => {
+            const p = problems[num];
+            const displayNum = parseInt(num).toString().padStart(2, '0');
+            
+            // 학생: [풀이]만, 교사: [풀이][정답]
+            const buttons = `
+                <button class="btn btn-warning btn-sm load-project cos-btn" 
+                        data-url="${p.solution}" 
+                        data-img="${p.img}"
+                        title="풀이 + 문제 이미지">
+                    풀이
+                </button>
+                ${isTeacher && p.answer ? `
+                <button class="btn btn-success btn-sm load-project cos-btn" 
+                        data-url="${p.answer}" 
+                        data-img="${p.img}"
+                        title="정답 + 문제 이미지">
+                    정답
+                </button>
+                ` : ''}
+            `;
+            
+            problemListHtml += `
+                <div class="cos-problem-row d-flex justify-content-between align-items-center py-1 border-bottom">
+                    <span class="cos-problem-num">${displayNum}번</span>
+                    <div class="cos-problem-btns">
+                        ${buttons}
+                    </div>
+                </div>
+            `;
+        });
+        
+        col.innerHTML = `
+            <div class="card h-100 cos-sample-card">
+                <div class="card-header bg-primary text-white">
+                    <strong>📝 샘플 ${sample}회</strong>
+                </div>
+                <div class="card-body p-2">
+                    ${problemListHtml}
+                </div>
+            </div>
+        `;
+        
+        return col;
+    }
+
+    /**
+     * 🔥 COS/일반 카테고리 분리 및 표시 (공통 로직)
+     * @param {Object} projects - 전체 프로젝트 데이터
+     * @param {HTMLElement} tabsContainer - 탭 컨테이너
+     * @param {HTMLElement} contentContainer - 콘텐츠 컨테이너
+     */
+    displayProjectsWithCOSSupport(projects, tabsContainer, contentContainer) {
+        // COS와 일반 카테고리 분리
+        const cosCategories = {};
+        const normalCategories = {};
+        
+        Object.keys(projects).forEach(category => {
+            if (category.toUpperCase().startsWith('COS')) {
+                cosCategories[category] = projects[category];
+            } else {
+                normalCategories[category] = projects[category];
+            }
+        });
+        
+        // 초기화
+        tabsContainer.innerHTML = '';
+        contentContainer.innerHTML = '';
+        
+        let tabIndex = 0;
+        const hasCOS = Object.keys(cosCategories).length > 0;
+        const hasNormal = Object.keys(normalCategories).length > 0;
+        
+        // 탭 활성화 로직: COS가 있으면 COS가 첫 번째, 없으면 첫 번째 일반 탭
+        const firstActiveIsCOS = hasCOS;
+        
+        // COS 탭 (첫 번째로 추가)
+        if (hasCOS) {
+            const isActive = firstActiveIsCOS;
+            
+            // COS 탭 생성
+            const cosTab = document.createElement('li');
+            cosTab.className = 'nav-item';
+            cosTab.innerHTML = `
+                <button class="nav-link ${isActive ? 'active' : ''}" 
+                        id="tab-cos" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#content-cos" 
+                        type="button" 
+                        role="tab">
+                    🎯 COS 자격증
+                </button>
+            `;
+            tabsContainer.appendChild(cosTab);
+            
+            // COS 콘텐츠 패널
+            const cosPanel = document.createElement('div');
+            cosPanel.className = `tab-pane fade ${isActive ? 'show active' : ''}`;
+            cosPanel.id = 'content-cos';
+            
+            // COS 데이터 그룹핑 및 섹션 레이아웃 생성
+            const cosData = this.groupCOSProjects(cosCategories);
+            cosPanel.appendChild(this.createCOSSectionLayout(cosData));
+            
+            contentContainer.appendChild(cosPanel);
+            tabIndex++;
+        }
+        
+        // 일반 카테고리 탭들 (COS 뒤에 추가)
+        Object.keys(normalCategories).forEach((category, idx) => {
+            const isActive = !firstActiveIsCOS && (idx === 0);
+            const actualIndex = tabIndex + idx;
+            
+            // 탭 생성
+            const tabButton = document.createElement('li');
+            tabButton.className = 'nav-item';
+            tabButton.innerHTML = `
+                <button class="nav-link ${isActive ? 'active' : ''}" 
+                        id="tab-${actualIndex}" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#content-${actualIndex}" 
+                        type="button" 
+                        role="tab">
+                    ${category}
+                </button>
+            `;
+            tabsContainer.appendChild(tabButton);
+            
+            // 콘텐츠 패널 생성
+            const contentPanel = document.createElement('div');
+            contentPanel.className = `tab-pane fade ${isActive ? 'show active' : ''}`;
+            contentPanel.id = `content-${actualIndex}`;
+            
+            // 프로젝트 카드 그리드
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'project-card-grid';
+            
+            Object.values(normalCategories[category]).forEach(project => {
+                gridContainer.appendChild(this.createProjectCard(project.name, project));
+            });
+            
+            contentPanel.appendChild(gridContainer);
+            contentContainer.appendChild(contentPanel);
+        });
     }
 
     // createProjectButton 함수 (imgUrl 파라미터 추가)

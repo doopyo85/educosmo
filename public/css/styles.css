@@ -723,3 +723,140 @@ footer {
         max-width: 1800px;
     }
 }
+
+/* ============================================
+   COS 자격증 섹션형 레이아웃 스타일
+   ============================================ */
+
+/* COS 컨테이너 */
+.cos-section-container {
+    padding: 20px 0;
+}
+
+/* 급수별 섹션 */
+.cos-grade-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.cos-grade-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* 샘플 카드 */
+.cos-sample-card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cos-sample-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.cos-sample-card .card-header {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    font-size: 1.1rem;
+    padding: 12px 15px;
+}
+
+.cos-sample-card .card-body {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* 문제 행 */
+.cos-problem-row {
+    transition: background-color 0.2s;
+}
+
+.cos-problem-row:hover {
+    background-color: #e9ecef;
+}
+
+.cos-problem-row:last-child {
+    border-bottom: none !important;
+}
+
+.cos-problem-num {
+    font-weight: 600;
+    color: #495057;
+    min-width: 50px;
+}
+
+.cos-problem-btns {
+    display: flex;
+    gap: 5px;
+}
+
+/* COS 버튼 스타일 */
+.cos-btn {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    min-width: 50px;
+}
+
+.cos-btn.btn-warning {
+    background-color: #f39c12;
+    border-color: #f39c12;
+    color: #fff;
+}
+
+.cos-btn.btn-warning:hover {
+    background-color: #d68910;
+    border-color: #d68910;
+}
+
+.cos-btn.btn-success {
+    background-color: #27ae60;
+    border-color: #27ae60;
+}
+
+.cos-btn.btn-success:hover {
+    background-color: #1e8449;
+    border-color: #1e8449;
+}
+
+/* COS 탭 스타일 */
+#tab-cos {
+    font-weight: bold;
+}
+
+#tab-cos.active {
+    background-color: #3498db !important;
+    color: white !important;
+    border-color: #3498db !important;
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .cos-grade-section {
+        padding: 15px;
+    }
+    
+    .cos-grade-title {
+        font-size: 1.2rem;
+    }
+    
+    .cos-sample-card .card-body {
+        max-height: 300px;
+    }
+    
+    .cos-problem-btns {
+        flex-direction: column;
+        gap: 3px;
+    }
+    
+    .cos-btn {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+    }
+}
