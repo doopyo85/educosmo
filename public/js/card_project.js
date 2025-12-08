@@ -527,7 +527,83 @@ class ProjectCardManager {
     }
 
     /**
-     * 🔥 COS 섹션형 레이아웃 렌더링
+     * 🔥 COS 테이블형 레이아웃 렌더링
+     * 세로: 급수/샘플, 가로: 1~10번
+     * @param {Object} cosData - groupCOSProjects() 결과
+     * @returns {HTMLElement} - 테이블 컨테이너
+     */
+    createCOSTableLayout(cosData) {
+        const container = document.createElement('div');
+        container.className = 'cos-table-container';
+        
+        const isTeacher = ['admin', 'teacher', 'manager'].includes(this.userRole);
+        const gradeOrder = ['1', '2', '3', '4'];
+        
+        gradeOrder.forEach(grade => {
+            if (!cosData[grade]) return;
+            
+            // 급수별 섹션
+            const section = document.createElement('div');
+            section.className = 'cos-grade-section';
+            
+            // 급수 헤더
+            section.innerHTML = `<h5 class="cos-grade-header">COS ${grade}급</h5>`;
+            
+            // 테이블 생성
+            const table = document.createElement('table');
+            table.className = 'cos-table';
+            
+            // 테이블 헤더 (1~10번)
+            let headerHtml = '<thead><tr><th class="cos-th-label"></th>';
+            for (let i = 1; i <= 10; i++) {
+                headerHtml += `<th class="cos-th-num">${i}</th>`;
+            }
+            headerHtml += '</tr></thead>';
+            
+            // 테이블 바디 (샘플 1~3)
+            let bodyHtml = '<tbody>';
+            ['1', '2', '3'].forEach(sample => {
+                if (!cosData[grade][sample]) return;
+                
+                bodyHtml += `<tr><td class="cos-td-label">샘플 ${sample}</td>`;
+                
+                for (let i = 1; i <= 10; i++) {
+                    const numKey = i.toString().padStart(2, '0');
+                    const p = cosData[grade][sample][numKey];
+                    
+                    if (p && p.solution) {
+                        // 풀이 버튼 (+ 교사만 정답 버튼)
+                        bodyHtml += `<td class="cos-td-btn">`;
+                        bodyHtml += `<button class="btn btn-sm cos-btn cos-btn-solution load-project" 
+                                            data-url="${p.solution}" 
+                                            data-img="${p.img || ''}"
+                                            title="풀이">풀이</button>`;
+                        if (isTeacher && p.answer) {
+                            bodyHtml += `<button class="btn btn-sm cos-btn cos-btn-answer load-project" 
+                                                data-url="${p.answer}" 
+                                                data-img="${p.img || ''}"
+                                                title="정답">정답</button>`;
+                        }
+                        bodyHtml += `</td>`;
+                    } else {
+                        bodyHtml += `<td class="cos-td-empty">-</td>`;
+                    }
+                }
+                
+                bodyHtml += '</tr>';
+            });
+            bodyHtml += '</tbody>';
+            
+            table.innerHTML = headerHtml + bodyHtml;
+            section.appendChild(table);
+            container.appendChild(section);
+        });
+        
+        return container;
+    }
+
+    /**
+     * 🔥 COS 섹션형 레이아웃 렌더링 (deprecated - createCOSTableLayout 사용)
      * @param {Object} cosData - groupCOSProjects() 결과
      * @returns {HTMLElement} - 섹션 컨테이너
      */
@@ -660,12 +736,48 @@ class ProjectCardManager {
         const hasCOS = Object.keys(cosCategories).length > 0;
         const hasNormal = Object.keys(normalCategories).length > 0;
         
-        // 탭 활성화 로직: COS가 있으면 COS가 첫 번째, 없으면 첫 번째 일반 탭
-        const firstActiveIsCOS = hasCOS;
+        // 탭 활성화 로직: 첫 번째 일반 탭이 활성화, COS는 마지막
         
-        // COS 탭 (첫 번째로 추가)
+        // 일반 카테고리 탭들 (먼저 추가)
+        Object.keys(normalCategories).forEach((category, idx) => {
+            const isActive = (idx === 0);
+            
+            // 탭 생성
+            const tabButton = document.createElement('li');
+            tabButton.className = 'nav-item';
+            tabButton.innerHTML = `
+                <button class="nav-link ${isActive ? 'active' : ''}" 
+                        id="tab-${tabIndex}" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#content-${tabIndex}" 
+                        type="button" 
+                        role="tab">
+                    ${category}
+                </button>
+            `;
+            tabsContainer.appendChild(tabButton);
+            
+            // 콘텐츠 패널 생성
+            const contentPanel = document.createElement('div');
+            contentPanel.className = `tab-pane fade ${isActive ? 'show active' : ''}`;
+            contentPanel.id = `content-${tabIndex}`;
+            
+            // 프로젝트 카드 그리드
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'project-card-grid';
+            
+            Object.values(normalCategories[category]).forEach(project => {
+                gridContainer.appendChild(this.createProjectCard(project.name, project));
+            });
+            
+            contentPanel.appendChild(gridContainer);
+            contentContainer.appendChild(contentPanel);
+            tabIndex++;
+        });
+        
+        // COS 탭 (마지막에 추가)
         if (hasCOS) {
-            const isActive = firstActiveIsCOS;
+            const isActive = !hasNormal; // 일반 카테고리가 없을 때만 활성화
             
             // COS 탭 생성
             const cosTab = document.createElement('li');
@@ -687,50 +799,12 @@ class ProjectCardManager {
             cosPanel.className = `tab-pane fade ${isActive ? 'show active' : ''}`;
             cosPanel.id = 'content-cos';
             
-            // COS 데이터 그룹핑 및 섹션 레이아웃 생성
+            // COS 데이터 그룹핑 및 테이블 레이아웃 생성
             const cosData = this.groupCOSProjects(cosCategories);
-            cosPanel.appendChild(this.createCOSSectionLayout(cosData));
+            cosPanel.appendChild(this.createCOSTableLayout(cosData));
             
             contentContainer.appendChild(cosPanel);
-            tabIndex++;
         }
-        
-        // 일반 카테고리 탭들 (COS 뒤에 추가)
-        Object.keys(normalCategories).forEach((category, idx) => {
-            const isActive = !firstActiveIsCOS && (idx === 0);
-            const actualIndex = tabIndex + idx;
-            
-            // 탭 생성
-            const tabButton = document.createElement('li');
-            tabButton.className = 'nav-item';
-            tabButton.innerHTML = `
-                <button class="nav-link ${isActive ? 'active' : ''}" 
-                        id="tab-${actualIndex}" 
-                        data-bs-toggle="tab" 
-                        data-bs-target="#content-${actualIndex}" 
-                        type="button" 
-                        role="tab">
-                    ${category}
-                </button>
-            `;
-            tabsContainer.appendChild(tabButton);
-            
-            // 콘텐츠 패널 생성
-            const contentPanel = document.createElement('div');
-            contentPanel.className = `tab-pane fade ${isActive ? 'show active' : ''}`;
-            contentPanel.id = `content-${actualIndex}`;
-            
-            // 프로젝트 카드 그리드
-            const gridContainer = document.createElement('div');
-            gridContainer.className = 'project-card-grid';
-            
-            Object.values(normalCategories[category]).forEach(project => {
-                gridContainer.appendChild(this.createProjectCard(project.name, project));
-            });
-            
-            contentPanel.appendChild(gridContainer);
-            contentContainer.appendChild(contentPanel);
-        });
     }
 
     // createProjectButton 함수 (imgUrl 파라미터 추가)

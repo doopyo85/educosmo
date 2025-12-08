@@ -725,138 +725,181 @@ footer {
 }
 
 /* ============================================
-   COS 자격증 섹션형 레이아웃 스타일
+   COS 자격증 테이블형 레이아웃 스타일 (화이트톤)
    ============================================ */
 
-/* COS 컨테이너 */
-.cos-section-container {
+/* COS 테이블 컨테이너 */
+.cos-table-container {
     padding: 20px 0;
 }
 
-/* 급수별 섹션 */
+/* 급수별 섹션 - 화이트톤 카드 스타일 */
 .cos-grade-section {
-    background: #f8f9fa;
+    background: #ffffff;
     border-radius: 12px;
     padding: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
 }
 
-.cos-grade-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #2c3e50;
-    border-bottom: 3px solid #3498db;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
-
-/* 샘플 카드 */
-.cos-sample-card {
-    border: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.cos-sample-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-}
-
-.cos-sample-card .card-header {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    font-size: 1.1rem;
-    padding: 12px 15px;
-}
-
-.cos-sample-card .card-body {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-/* 문제 행 */
-.cos-problem-row {
-    transition: background-color 0.2s;
-}
-
-.cos-problem-row:hover {
-    background-color: #e9ecef;
-}
-
-.cos-problem-row:last-child {
-    border-bottom: none !important;
-}
-
-.cos-problem-num {
+/* 급수 헤더 */
+.cos-grade-header {
+    font-size: 1.25rem;
     font-weight: 600;
+    color: #343a40;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+/* COS 테이블 */
+.cos-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+}
+
+/* 테이블 헤더 */
+.cos-table thead th {
+    background: #f8f9fa;
     color: #495057;
-    min-width: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 12px 8px;
+    text-align: center;
+    border-bottom: 2px solid #dee2e6;
 }
 
-.cos-problem-btns {
-    display: flex;
-    gap: 5px;
+.cos-th-label {
+    width: 80px;
+    text-align: left !important;
+    padding-left: 16px !important;
 }
 
-/* COS 버튼 스타일 */
+.cos-th-num {
+    width: calc((100% - 80px) / 10);
+}
+
+/* 테이블 바디 */
+.cos-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.cos-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.cos-table tbody tr:not(:last-child) {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.cos-td-label {
+    font-weight: 500;
+    color: #495057;
+    padding: 10px 8px 10px 16px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.cos-td-btn {
+    padding: 8px 4px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.cos-td-empty {
+    padding: 10px 4px;
+    text-align: center;
+    color: #adb5bd;
+}
+
+/* COS 버튼 스타일 - 미니멀 화이트톤 */
 .cos-btn {
-    font-size: 0.8rem;
-    padding: 4px 10px;
-    min-width: 50px;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-block;
+    margin: 1px;
 }
 
-.cos-btn.btn-warning {
-    background-color: #f39c12;
-    border-color: #f39c12;
-    color: #fff;
+/* 풀이 버튼 - 연한 그레이 */
+.cos-btn-solution {
+    background-color: #f1f3f4;
+    border: 1px solid #dadce0;
+    color: #5f6368;
 }
 
-.cos-btn.btn-warning:hover {
-    background-color: #d68910;
-    border-color: #d68910;
+.cos-btn-solution:hover {
+    background-color: #e8eaed;
+    border-color: #c6c9cc;
+    color: #3c4043;
 }
 
-.cos-btn.btn-success {
-    background-color: #27ae60;
-    border-color: #27ae60;
+/* 정답 버튼 - 연한 블루 */
+.cos-btn-answer {
+    background-color: #e8f0fe;
+    border: 1px solid #c2d9fc;
+    color: #1967d2;
 }
 
-.cos-btn.btn-success:hover {
-    background-color: #1e8449;
-    border-color: #1e8449;
+.cos-btn-answer:hover {
+    background-color: #d2e3fc;
+    border-color: #aecbfa;
+    color: #1557b0;
 }
 
 /* COS 탭 스타일 */
 #tab-cos {
-    font-weight: bold;
+    font-weight: 500;
 }
 
 #tab-cos.active {
-    background-color: #3498db !important;
-    color: white !important;
-    border-color: #3498db !important;
+    background-color: #ffffff !important;
+    color: #1967d2 !important;
+    border-color: #dee2e6 #dee2e6 #ffffff !important;
+    border-bottom: 2px solid #1967d2 !important;
 }
 
 /* 모바일 대응 */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
+    .cos-table-container {
+        padding: 10px 0;
+    }
+    
     .cos-grade-section {
-        padding: 15px;
+        padding: 12px;
+        margin-bottom: 16px;
+        border-radius: 8px;
     }
     
-    .cos-grade-title {
-        font-size: 1.2rem;
+    .cos-grade-header {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
     }
     
-    .cos-sample-card .card-body {
-        max-height: 300px;
+    .cos-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
     }
     
-    .cos-problem-btns {
-        flex-direction: column;
-        gap: 3px;
+    .cos-table thead th,
+    .cos-table tbody td {
+        padding: 8px 4px;
+        font-size: 0.8rem;
     }
     
     .cos-btn {
-        font-size: 0.75rem;
-        padding: 3px 8px;
+        font-size: 0.65rem;
+        padding: 3px 5px;
+    }
+    
+    .cos-th-label,
+    .cos-td-label {
+        width: 60px;
+        padding-left: 8px !important;
     }
 }
