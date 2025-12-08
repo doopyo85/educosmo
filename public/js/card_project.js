@@ -239,7 +239,7 @@ class ProjectCardManager {
     }
 
     /**
-     * Scratch 프로젝트 그룹화
+     * Scratch 프로젝트 그룹화 (카테고리별)
      */
     groupScratchProjects(data) {
         const projects = {};
@@ -247,35 +247,56 @@ class ProjectCardManager {
         data.forEach(row => {
             if (!Array.isArray(row) || row.length < 4) return;
 
-            // 새로운 데이터 구조에 맞춰 인덱스 조정
-            const [category, name, type, url, ctElement = '', imgUrl = ''] = row;
-            const baseName = name.replace(/\([^)]*\)/g, '').trim();
+            // 데이터 구조: [카테고리, 콘텐츠명, 기능, sb3URL, C.T요소, 활용교구, imgURL]
+            const [category, name, type, url, ctElement = '', tools = '', imgUrl = ''] = row;
+            
+            if (!category || !name) return;
 
-            if (!projects[baseName]) {
-                projects[baseName] = {
+            // 카테고리별 그룹 생성
+            if (!projects[category]) {
+                projects[category] = {};
+            }
+
+            const projectKey = name.trim();
+
+            if (!projects[category][projectKey]) {
+                projects[category][projectKey] = {
+                    name: projectKey,
                     category: category,
                     ctElement: ctElement,
+                    tools: tools,
                     img: imgUrl,
+                    // CPS용 (기본/확장1/확장2)
                     basic: '',
                     ext1: '',
                     ext2: '',
+                    // COS용 (정답/풀이) - 문제는 imgUrl
+                    answer: '',
+                    solution: '',
                     ppt: ''
                 };
             }
 
             // 기능 컬럼의 값에 따라 URL 할당
-            switch (type.toLowerCase()) {
+            const typeLower = type.toLowerCase();
+            switch (typeLower) {
                 case '기본':
-                    projects[baseName].basic = url;
+                    projects[category][projectKey].basic = url;
                     break;
                 case '확장1':
-                    projects[baseName].ext1 = url;
+                    projects[category][projectKey].ext1 = url;
                     break;
                 case '확장2':
-                    projects[baseName].ext2 = url;
+                    projects[category][projectKey].ext2 = url;
+                    break;
+                case '정답':
+                    projects[category][projectKey].answer = url;
+                    break;
+                case '풀이':
+                    projects[category][projectKey].solution = url;
                     break;
                 case 'ppt':
-                    projects[baseName].ppt = url;
+                    projects[category][projectKey].ppt = url;
                     break;
             }
         });
@@ -386,24 +407,82 @@ class ProjectCardManager {
     }
 
     /**
-     * Scratch 프로젝트 표시 (탭 없음)
+     * Scratch 프로젝트 탭과 함께 표시 (Entry와 동일 방식)
      */
     displayScratchProjects(projects) {
-        const container = document.getElementById(this.config.contentContainerId);
-        if (!container) {
+        const tabsContainer = document.getElementById(this.config.categoryTabsId);
+        const contentContainer = document.getElementById(this.config.contentContainerId);
+
+        // 탭 컨테이너가 없으면 기존 방식으로 폴백
+        if (!tabsContainer) {
+            console.warn('탭 컨테이너 없음, 기존 방식으로 표시');
+            this.displayScratchProjectsLegacy(projects, contentContainer);
+            return;
+        }
+
+        if (!contentContainer) {
             console.error(`콘텐츠 컨테이너를 찾을 수 없음: #${this.config.contentContainerId}`);
             return;
         }
 
-        container.innerHTML = '';
+        // 초기화
+        tabsContainer.innerHTML = '';
+        contentContainer.innerHTML = '';
 
-        // 프로젝트 카드 그리드 생성
+        // 탭과 콘텐츠 생성
+        Object.keys(projects).forEach((category, index) => {
+            // 탭 생성
+            const tabButton = document.createElement('li');
+            tabButton.className = 'nav-item';
+            tabButton.innerHTML = `
+                <button class="nav-link ${index === 0 ? 'active' : ''}" 
+                        id="tab-${index}" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#content-${index}" 
+                        type="button" 
+                        role="tab">
+                    ${category}
+                </button>
+            `;
+            tabsContainer.appendChild(tabButton);
+
+            // 콘텐츠 패널 생성
+            const contentPanel = document.createElement('div');
+            contentPanel.className = `tab-pane fade ${index === 0 ? 'show active' : ''}`;
+            contentPanel.id = `content-${index}`;
+
+            // 프로젝트 카드 그리드 컨테이너
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'project-card-grid';
+
+            // 카테고리 내 프로젝트들에 대한 카드 생성
+            Object.values(projects[category]).forEach(project => {
+                gridContainer.appendChild(this.createProjectCard(project.name, project));
+            });
+
+            contentPanel.appendChild(gridContainer);
+            contentContainer.appendChild(contentPanel);
+        });
+    }
+
+    /**
+     * Scratch 프로젝트 레거시 표시 (탭 없음 - 폴백용)
+     */
+    displayScratchProjectsLegacy(projects, container) {
+        if (!container) {
+            container = document.getElementById(this.config.contentContainerId);
+        }
+        if (!container) return;
+
+        container.innerHTML = '';
         const gridContainer = document.createElement('div');
         gridContainer.className = 'project-card-grid';
 
-        Object.entries(projects).forEach(([projectName, project]) => {
-            const card = this.createProjectCard(projectName, project);
-            gridContainer.appendChild(card);
+        // 모든 카테고리의 프로젝트를 플랫하게 표시
+        Object.values(projects).forEach(categoryProjects => {
+            Object.values(categoryProjects).forEach(project => {
+                gridContainer.appendChild(this.createProjectCard(project.name, project));
+            });
         });
 
         container.appendChild(gridContainer);
@@ -489,13 +568,31 @@ class ProjectCardManager {
             </button>
         ` : '';
 
+        // 🔥 COS 카테고리 여부 확인 (COS로 시작하면 COS)
+        const isCOS = project.category && project.category.toUpperCase().startsWith('COS');
+
+        // COS용 버튼 (문제/정답/풀이)
+        // 문제 버튼은 이미지이므로 새 탭에서 열기 (별도 onclick)
+        const cosButtons = isCOS ? `
+            ${project.img ? `<button class="btn btn-info btn-sm" onclick="window.open('${project.img}', '_blank'); event.stopPropagation();">문제</button>` : ''}
+            ${project.answer ? this.createProjectButton('정답', project.answer, 'btn-success') : ''}
+            ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning') : ''}
+        ` : '';
+
+        // CPS용 버튼 (기본/확장1/확장2)
+        const cpsButtons = !isCOS ? `
+            ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary') : ''}
+            ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary') : ''}
+            ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary') : ''}
+        ` : '';
+
         return `
             ${pptBtn}
             <div class="project-card-header">
                 <h3 class="project-card-title">${projectName}</h3>
             </div>
             
-            ${project.img ? `
+            ${project.img && !isCOS ? `
                 <div class="project-card-image">
                     <img src="${project.img}" alt="${projectName}">
                 </div>
@@ -503,15 +600,18 @@ class ProjectCardManager {
             
             <div class="project-card-tags">
                 <span class="project-card-tag">
-                    <i class="bi bi-cpu"></i> ${project.ctElement || '정보 없음'}
+                    <i class="bi bi-cpu"></i> ${project.ctElement || '블록코딩'}
                 </span>
+                ${project.tools ? `
+                    <span class="project-card-tag">
+                        <i class="bi bi-tools"></i> ${project.tools}
+                    </span>
+                ` : ''}
             </div>
             
             <div class="project-card-actions">
                 <div class="project-card-btn-group">
-                    ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary') : ''}
-                    ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary') : ''}
-                    ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary') : ''}
+                    ${isCOS ? cosButtons : cpsButtons}
                 </div>
             </div>
         `;
