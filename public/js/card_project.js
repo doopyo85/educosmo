@@ -305,14 +305,16 @@ class ProjectCardManager {
     }
 
     /**
-     * Entry 프로젝트 그룹화
+     * Entry 프로젝트 그룹화 (COS 지원 추가)
      */
     groupEntryProjects(data) {
         const projects = {};
 
         data.forEach(row => {
-            // 구글 시트 데이터 구조에 맞게 인덱스 조정
-            const [category, name, type, url, ctElement = ''] = row;
+            // 구글 시트 데이터 구조: [카테고리, 콘텐츠명, 기능, entURL, C.T요소, imgURL]
+            const [category, name, type, url, ctElement = '', imgUrl = ''] = row;
+
+            if (!category || !name) return;
 
             if (!projects[category]) {
                 projects[category] = {};
@@ -323,16 +325,23 @@ class ProjectCardManager {
             if (!projects[category][projectKey]) {
                 projects[category][projectKey] = {
                     name: projectKey,
+                    category: category,
                     ctElement: ctElement,
+                    img: imgUrl,
+                    // CPE용 (기본/완성/확장)
                     basic: '',
                     complete: '',
                     extension: '',
+                    // COS용 (정답/풀이) - 문제는 imgUrl
+                    answer: '',
+                    solution: '',
                     ppt: ''
                 };
             }
 
             // 타입에 따라 URL 할당
-            switch (type.toLowerCase()) {
+            const typeLower = type.toLowerCase();
+            switch (typeLower) {
                 case '기본':
                     projects[category][projectKey].basic = url;
                     break;
@@ -341,6 +350,12 @@ class ProjectCardManager {
                     break;
                 case '확장':
                     projects[category][projectKey].extension = url;
+                    break;
+                case '정답':
+                    projects[category][projectKey].answer = url;
+                    break;
+                case '풀이':
+                    projects[category][projectKey].solution = url;
                     break;
                 case 'ppt':
                     projects[category][projectKey].ppt = url;
@@ -548,13 +563,11 @@ class ProjectCardManager {
         this.displayEntryProjectsWithTabs(projects);
     }
 
-    // createProjectButton 함수 추가
-    createProjectButton(label, url, type) {
-        // App Inventor uses 'btn' class often but let's stick to the type passed or default to 'btn-secondary'
-        // If type is empty or specific apple class, map it to bootstrap/card_project styles if needed.
-        // For now, assuming type is passed correctly or generic 'btn btn-sm btn-secondary' equivalent.
+    // createProjectButton 함수 (imgUrl 파라미터 추가)
+    createProjectButton(label, url, type, imgUrl = '') {
+        const imgAttr = imgUrl ? `data-img="${imgUrl}"` : '';
         return `
-            <button class="btn ${type} load-project" data-url="${url}">
+            <button class="btn ${type} btn-sm load-project" data-url="${url}" ${imgAttr}>
                 ${label}
             </button>
         `;
@@ -572,11 +585,12 @@ class ProjectCardManager {
         const isCOS = project.category && project.category.toUpperCase().startsWith('COS');
 
         // COS용 버튼 (문제/정답/풀이)
-        // 문제 버튼은 이미지이므로 새 탭에서 열기 (별도 onclick)
+        // 문제 버튼은 이미지이므로 새 탭에서 열기
+        // 정답/풀이 버튼은 에디터 로드 + 이미지 팝업
         const cosButtons = isCOS ? `
             ${project.img ? `<button class="btn btn-info btn-sm" onclick="window.open('${project.img}', '_blank'); event.stopPropagation();">문제</button>` : ''}
-            ${project.answer ? this.createProjectButton('정답', project.answer, 'btn-success') : ''}
-            ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning') : ''}
+            ${project.answer ? this.createProjectButton('정답', project.answer, 'btn-success', project.img) : ''}
+            ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', project.img) : ''}
         ` : '';
 
         // CPS용 버튼 (기본/확장1/확장2)
@@ -625,6 +639,32 @@ class ProjectCardManager {
             </button>
         ` : '';
 
+        // 🔥 COS 카테고리 여부 확인 (COS로 시작하면 COS)
+        const isCOS = project.category && project.category.toUpperCase().startsWith('COS');
+
+        // COS용 버튼 (문제/정답/풀이)
+        // 문제 버튼은 이미지이므로 새 탭에서 열기
+        // 정답/풀이 버튼은 에디터 로드 + 이미지 팝업
+        const cosButtons = isCOS ? `
+            ${project.img ? `<button class="btn btn-info btn-sm" onclick="window.open('${project.img}', '_blank'); event.stopPropagation();">문제</button>` : ''}
+            ${project.answer ? this.createProjectButton('정답', project.answer, 'btn-success', project.img) : ''}
+            ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', project.img) : ''}
+        ` : '';
+
+        // CPE용 버튼 (기본/완성/확장)
+        const cpeButtons = !isCOS ? `
+            ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary') : ''}
+            ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary') : ''}
+            ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary') : ''}
+        ` : '';
+
+        // 다운로드 버튼 (COS가 아닌 경우에만 표시)
+        const downloadBtn = !isCOS && project.basic ? `
+            <button class="entry-legacy-btn" data-url="${project.basic}">
+                <i class="bi bi-download"></i> 다운로드
+            </button>
+        ` : '';
+
         return `
             ${pptBtn}
             
@@ -634,21 +674,15 @@ class ProjectCardManager {
             
             <div class="project-card-tags">
                 <span class="project-card-tag">
-                    <i class="bi bi-cpu"></i> ${project.ctElement || '정보 없음'}
+                    <i class="bi bi-cpu"></i> ${project.ctElement || '블록코딩'}
                 </span>
             </div>
             
             <div class="project-card-actions">
                 <div class="project-card-btn-group">
-                    ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary') : ''}
-                    ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary') : ''}
-                    ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary') : ''}
+                    ${isCOS ? cosButtons : cpeButtons}
                 </div>
-                ${project.basic ? `
-                    <button class="entry-legacy-btn" data-url="${project.basic}">
-                        <i class="bi bi-download"></i> 다운로드
-                    </button>
-                ` : ''}
+                ${downloadBtn}
             </div>
         `;
     }
@@ -910,6 +944,13 @@ class ProjectCardManager {
                 const fileType = e.target.textContent.trim();
                 const card = e.target.closest('.project-card');
                 const projectName = card?.querySelector('.project-card-title')?.textContent || 'Unknown';
+
+                // 🔥 COS: 이미지 팝업 띄우기 (data-img 속성이 있으면)
+                const imgUrl = e.target.getAttribute('data-img');
+                if (imgUrl) {
+                    // 새 창으로 이미지 팝업 (새 탭 아님)
+                    window.open(imgUrl, 'problemImage', 'width=900,height=700,scrollbars=yes,resizable=yes,left=100,top=100');
+                }
 
                 // 학습 시작 기록
                 try {
