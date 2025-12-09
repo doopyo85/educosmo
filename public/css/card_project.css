@@ -217,6 +217,138 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* =============================================
+   COS 자격증 테이블 스타일
+   ============================================= */
+
+/* COS 테이블 컨테이너 - 가운데 정렬 */
+.cos-table-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 20px 0;
+}
+
+/* 급수별 섹션 */
+.cos-grade-section {
+  margin-bottom: 32px;
+  width: auto;
+  max-width: 100%;
+}
+
+/* 급수 헤더 */
+.cos-grade-header {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+/* COS 테이블 */
+.cos-table {
+  border-collapse: collapse;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 테이블 헤더 */
+.cos-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.cos-table th {
+  padding: 10px 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.cos-th-label {
+  min-width: 70px;
+}
+
+.cos-th-num {
+  min-width: 50px;
+}
+
+/* 테이블 바디 */
+.cos-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cos-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.cos-table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+/* 셀 스타일 */
+.cos-table td {
+  padding: 6px 4px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.cos-td-label {
+  font-weight: 600;
+  color: #1d1d1f;
+  background-color: #f8f9fa;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  padding: 6px 10px !important;
+}
+
+.cos-td-btn {
+  padding: 4px 2px !important;
+}
+
+.cos-td-empty {
+  color: #ccc;
+  font-size: 0.8rem;
+}
+
+/* COS 버튼 스타일 - 조밀한 배치 */
+.cos-btn {
+  font-size: 0.7rem !important;
+  padding: 3px 6px !important;
+  margin: 1px !important;
+  border-radius: 4px !important;
+  min-width: auto !important;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.cos-btn-solution {
+  background-color: #ffc107 !important;
+  border-color: #ffc107 !important;
+  color: #212529 !important;
+}
+
+.cos-btn-solution:hover {
+  background-color: #e0a800 !important;
+  border-color: #d39e00 !important;
+}
+
+.cos-btn-answer {
+  background-color: #28a745 !important;
+  border-color: #28a745 !important;
+  color: white !important;
+}
+
+.cos-btn-answer:hover {
+  background-color: #218838 !important;
+  border-color: #1e7e34 !important;
+}
+
 /* 반응형 미디어 쿼리 */
 @media (max-width: 1400px) {
   .project-card-grid {
