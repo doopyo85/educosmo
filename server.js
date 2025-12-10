@@ -676,30 +676,47 @@ app.get('/scratch', authenticateUser, (req, res) => {
 
 // 🔥 COS 자격증 문제풀이 에디터 (문제 이미지 + 에디터 분할 화면)
 app.get('/cos-editor', authenticateUser, (req, res) => {
-  const { platform, projectUrl, imgUrl } = req.query;
+  const { platform, grade, sample, problem, buttonType, problems, projectUrl, imgUrl } = req.query;
   
   if (!platform || !projectUrl) {
     return res.status(400).send('필수 파라미터가 없습니다. (platform, projectUrl)');
   }
+  
+  // problems JSON 파싱
+  let problemsData = {};
+  try {
+    if (problems) {
+      problemsData = JSON.parse(problems);
+    }
+  } catch (e) {
+    console.error('COS problems JSON 파싱 오류:', e);
+  }
+  
+  // 사용자 정보
+  const userID = req.session.userID || 'guest';
+  const userRole = req.session.role || 'guest';
   
   // 플랫폼별 에디터 URL 생성
   let editorUrl = '';
   if (platform === 'scratch') {
     editorUrl = `/scratch/?project_file=${encodeURIComponent(projectUrl)}`;
   } else if (platform === 'entry') {
-    const userID = req.session.userID || 'guest';
-    const role = req.session.role || 'guest';
-    editorUrl = `/entry_editor/?s3Url=${encodeURIComponent(projectUrl)}&userID=${userID}&role=${role}`;
+    editorUrl = `/entry_editor/?s3Url=${encodeURIComponent(projectUrl)}&userID=${userID}&role=${userRole}`;
   } else {
     return res.status(400).send('지원하지 않는 플랫폼입니다.');
   }
   
   res.render('cos_editor', {
     platform: platform,
+    grade: grade || '3',
+    sample: sample || '1',
+    currentProblem: problem || '01',
+    buttonType: buttonType || 'solution',
+    problems: problemsData,
     editorUrl: editorUrl,
     imgUrl: imgUrl || '',
-    userID: req.session.userID,
-    userRole: req.session.role
+    userID: userID,
+    userRole: userRole
   });
 });
 

@@ -94,7 +94,7 @@
             transition: all 0.2s;
         }
         
-        .problem-btn:hover {
+        .problem-btn:hover:not(.disabled) {
             border-color: #ff9a00;
             color: #ff9a00;
             transform: scale(1.05);
@@ -110,12 +110,6 @@
         .problem-btn.disabled {
             opacity: 0.3;
             cursor: not-allowed;
-        }
-        
-        .problem-btn.disabled:hover {
-            transform: none;
-            border-color: #495057;
-            color: #adb5bd;
         }
         
         /* 오른쪽 컨트롤 */
@@ -145,14 +139,6 @@
             box-shadow: 0 2px 10px rgba(255,107,53,0.4);
         }
         
-        .toggle-problem-btn .icon {
-            transition: transform 0.3s;
-        }
-        
-        .toggle-problem-btn.panel-open .icon {
-            transform: rotate(180deg);
-        }
-        
         /* 메인 콘텐츠 영역 */
         .main-content {
             flex: 1;
@@ -163,8 +149,8 @@
         /* 왼쪽: 문제 이미지 패널 */
         .problem-panel {
             width: 700px;
-            min-width: 500px;
-            max-width: 900px;
+            min-width: 400px;
+            max-width: 1000px;
             height: 100%;
             background: #f8f9fa;
             border-right: 3px solid #dee2e6;
@@ -222,6 +208,7 @@
             height: auto;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             border-radius: 4px;
+            transition: transform 0.2s;
         }
         
         /* 리사이즈 핸들 */
@@ -331,13 +318,10 @@
                         const numStr = i.toString().padStart(2, '0');
                         const problemData = problems[numStr];
                         const isActive = (currentProblem === numStr);
-                        const isDisabled = !problemData;
+                        const isDisabled = !problemData || (!problemData.solution && !problemData.answer);
                     %>
                     <button class="problem-btn <%= isActive ? 'active' : '' %> <%= isDisabled ? 'disabled' : '' %>"
                             data-problem="<%= numStr %>"
-                            data-solution="<%= problemData ? problemData.solution : '' %>"
-                            data-answer="<%= problemData ? problemData.answer : '' %>"
-                            data-img="<%= problemData ? problemData.img : '' %>"
                             <%= isDisabled ? 'disabled' : '' %>>
                         <%= i %>
                     </button>
@@ -346,7 +330,7 @@
             
             <div class="right-controls">
                 <button class="toggle-problem-btn" id="toggleProblemBtn">
-                    <i class="bi bi-image icon"></i>
+                    <i class="bi bi-image"></i>
                     <span class="btn-text">문제 보기</span>
                 </button>
                 <button class="btn btn-outline-light btn-sm" id="newWindowBtn" title="문제를 새 창에서 열기">
@@ -362,15 +346,15 @@
                 <div class="problem-header">
                     <span class="title">
                         <i class="bi bi-file-image"></i>
-                        <span id="problemTitle"><%= currentProblem %>번 문제</span>
+                        <span id="problemTitle"><%= parseInt(currentProblem) %>번 문제</span>
                     </span>
                     <div class="controls">
                         <div class="zoom-controls">
-                            <button class="btn btn-light btn-sm" id="zoomOutBtn" title="축소">
+                            <button class="btn btn-light btn-sm" id="zoomOutBtn" title="축소 (-)">
                                 <i class="bi bi-zoom-out"></i>
                             </button>
                             <span class="zoom-level" id="zoomLevel">100%</span>
-                            <button class="btn btn-light btn-sm" id="zoomInBtn" title="확대">
+                            <button class="btn btn-light btn-sm" id="zoomInBtn" title="확대 (+)">
                                 <i class="bi bi-zoom-in"></i>
                             </button>
                         </div>
@@ -383,7 +367,9 @@
                         </div>
                         <div class="loading-text">문제 이미지 로딩 중...</div>
                     </div>
-                    <img src="<%= imgUrl %>" alt="COS 문제" id="problemImage" onload="document.getElementById('imageLoading').classList.add('hidden')">
+                    <img src="<%= imgUrl %>" alt="COS 문제" id="problemImage" 
+                         onload="document.getElementById('imageLoading').classList.add('hidden')" 
+                         onerror="document.getElementById('imageLoading').innerHTML='<div style=\'color:#999;\'>이미지를 불러올 수 없습니다</div>'">
                 </div>
                 <div class="resize-handle" id="resizeHandle"></div>
             </div>
@@ -420,13 +406,18 @@
             let isPanelOpen = false;
             let isResizing = false;
             
-            // 현재 문제 정보
-            let currentProblemNum = '<%= currentProblem %>';
-            let currentImgUrl = '<%= imgUrl %>';
+            // 서버에서 전달받은 데이터
             const platform = '<%= platform %>';
             const grade = '<%= grade %>';
             const sample = '<%= sample %>';
-            const buttonType = '<%= buttonType %>';  // 'solution' or 'answer'
+            const buttonType = '<%= buttonType %>';
+            const userID = '<%= userID %>';
+            const userRole = '<%= userRole %>';
+            let currentProblemNum = '<%= currentProblem %>';
+            let currentImgUrl = '<%= imgUrl %>';
+            
+            // 전체 문제 데이터 (서버에서 JSON으로 전달)
+            const problems = <%- JSON.stringify(problems) %>;
             
             // 문제 패널 토글
             toggleProblemBtn.addEventListener('click', function() {
@@ -434,12 +425,10 @@
                 
                 if (isPanelOpen) {
                     problemPanel.classList.remove('hidden');
-                    toggleProblemBtn.innerHTML = '<i class="bi bi-x-lg icon"></i><span class="btn-text">문제 닫기</span>';
-                    toggleProblemBtn.classList.add('panel-open');
+                    toggleProblemBtn.innerHTML = '<i class="bi bi-x-lg"></i><span class="btn-text">문제 닫기</span>';
                 } else {
                     problemPanel.classList.add('hidden');
-                    toggleProblemBtn.innerHTML = '<i class="bi bi-image icon"></i><span class="btn-text">문제 보기</span>';
-                    toggleProblemBtn.classList.remove('panel-open');
+                    toggleProblemBtn.innerHTML = '<i class="bi bi-image"></i><span class="btn-text">문제 보기</span>';
                 }
             });
             
@@ -468,7 +457,7 @@
             
             document.addEventListener('mousemove', function(e) {
                 if (!isResizing) return;
-                const newWidth = Math.min(900, Math.max(500, e.clientX));
+                const newWidth = Math.min(1000, Math.max(400, e.clientX));
                 problemPanel.style.width = newWidth + 'px';
             });
             
@@ -482,9 +471,9 @@
             document.querySelectorAll('.problem-btn:not(.disabled)').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const problemNum = this.dataset.problem;
-                    const solutionUrl = this.dataset.solution;
-                    const answerUrl = this.dataset.answer;
-                    const imgUrl = this.dataset.img;
+                    const problemData = problems[problemNum];
+                    
+                    if (!problemData) return;
                     
                     // 버튼 활성화 상태 변경
                     document.querySelectorAll('.problem-btn').forEach(b => b.classList.remove('active'));
@@ -492,32 +481,33 @@
                     
                     // 현재 문제 업데이트
                     currentProblemNum = problemNum;
-                    currentImgUrl = imgUrl;
+                    currentImgUrl = problemData.img || '';
                     
                     // 문제 제목 업데이트
                     problemTitle.textContent = parseInt(problemNum) + '번 문제';
                     
                     // 이미지 로딩 표시
-                    imageLoading.classList.remove('hidden');
-                    
-                    // 문제 이미지 변경
-                    problemImage.src = imgUrl;
+                    if (currentImgUrl) {
+                        imageLoading.classList.remove('hidden');
+                        imageLoading.innerHTML = '<div class="loading-spinner"><div class="spinner-border" role="status"></div></div><div class="loading-text">문제 이미지 로딩 중...</div>';
+                        problemImage.src = currentImgUrl;
+                    }
                     
                     // 에디터 URL 변경 (buttonType에 따라 solution 또는 answer)
-                    const projectUrl = buttonType === 'answer' ? answerUrl : solutionUrl;
+                    const projectUrl = buttonType === 'answer' ? problemData.answer : problemData.solution;
                     let newEditorUrl = '';
                     
                     if (platform === 'scratch') {
                         newEditorUrl = `/scratch/?project_file=${encodeURIComponent(projectUrl)}`;
                     } else if (platform === 'entry') {
-                        newEditorUrl = `/entry_editor/?s3Url=${encodeURIComponent(projectUrl)}&userID=<%= userID %>&role=<%= userRole %>`;
+                        newEditorUrl = `/entry_editor/?s3Url=${encodeURIComponent(projectUrl)}&userID=${userID}&role=${userRole}`;
                     }
                     
                     editorIframe.src = newEditorUrl;
                     
-                    // URL 업데이트 (히스토리)
-                    const newUrl = `/cos-editor?platform=${platform}&grade=${grade}&sample=${sample}&problem=${problemNum}&buttonType=${buttonType}`;
-                    history.pushState({}, '', newUrl);
+                    // URL 업데이트 (브라우저 히스토리)
+                    const newUrl = `/cos-editor?platform=${platform}&grade=${grade}&sample=${sample}&problem=${problemNum}&buttonType=${buttonType}&problems=${encodeURIComponent(JSON.stringify(problems))}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(currentImgUrl)}`;
+                    history.replaceState({}, '', newUrl);
                     
                     // 줌 리셋
                     updateZoom(100);
@@ -526,12 +516,15 @@
             
             // 키보드 단축키
             document.addEventListener('keydown', function(e) {
+                // iframe 내부에서 발생한 이벤트는 무시
+                if (e.target.tagName === 'IFRAME') return;
+                
                 // ESC: 문제 패널 토글
                 if (e.key === 'Escape') {
                     toggleProblemBtn.click();
                 }
                 // 숫자 1-9, 0: 문제 번호 선택
-                if (e.key >= '0' && e.key <= '9' && !e.ctrlKey && !e.altKey) {
+                if (e.key >= '0' && e.key <= '9' && !e.ctrlKey && !e.altKey && !e.metaKey) {
                     const num = e.key === '0' ? '10' : e.key.padStart(2, '0');
                     const btn = document.querySelector(`.problem-btn[data-problem="${num}"]`);
                     if (btn && !btn.disabled) {

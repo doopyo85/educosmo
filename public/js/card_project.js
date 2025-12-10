@@ -571,6 +571,10 @@ class ProjectCardManager {
             ['1', '2', '3'].forEach(sample => {
                 if (!cosData[grade][sample]) return;
                 
+                // 🔥 해당 샘플의 전체 문제 데이터를 JSON으로 준비
+                const problemsJson = JSON.stringify(cosData[grade][sample]);
+                const problemsAttr = problemsJson.replace(/"/g, '&quot;');
+                
                 bodyHtml += `<tr><td class="cos-td-label">샘플 ${sample}</td>`;
                 
                 for (let i = 1; i <= 10; i++) {
@@ -578,16 +582,26 @@ class ProjectCardManager {
                     const p = cosData[grade][sample][numKey];
                     
                     if (p && p.solution) {
-                        // 풀이 버튼 (+ 교사만 정답 버튼)
+                        // 🔥 풀이 버튼 - 급수/샘플/문제번호/전체문제 데이터 포함
                         bodyHtml += `<td class="cos-td-btn">`;
-                        bodyHtml += `<button class="btn btn-sm cos-btn cos-btn-solution load-project" 
+                        bodyHtml += `<button class="btn btn-sm cos-btn cos-btn-solution cos-problem-btn" 
                                             data-url="${p.solution}" 
                                             data-img="${p.img || ''}"
+                                            data-grade="${grade}"
+                                            data-sample="${sample}"
+                                            data-problem="${numKey}"
+                                            data-button-type="solution"
+                                            data-problems="${problemsAttr}"
                                             title="풀이">풀이</button>`;
                         if (isTeacher && p.answer) {
-                            bodyHtml += `<button class="btn btn-sm cos-btn cos-btn-answer load-project" 
+                            bodyHtml += `<button class="btn btn-sm cos-btn cos-btn-answer cos-problem-btn" 
                                                 data-url="${p.answer}" 
                                                 data-img="${p.img || ''}"
+                                                data-grade="${grade}"
+                                                data-sample="${sample}"
+                                                data-problem="${numKey}"
+                                                data-button-type="answer"
+                                                data-problems="${problemsAttr}"
                                                 title="정답">정답</button>`;
                         }
                         bodyHtml += `</td>`;
@@ -1184,6 +1198,54 @@ class ProjectCardManager {
 
     setupEventListeners() {
         document.addEventListener('click', async (e) => {
+            // 🔥 COS 테이블 버튼 클릭 (cos-problem-btn 클래스)
+            if (e.target.classList.contains('cos-problem-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const btn = e.target;
+                const grade = btn.getAttribute('data-grade');
+                const sample = btn.getAttribute('data-sample');
+                const problem = btn.getAttribute('data-problem');
+                const buttonType = btn.getAttribute('data-button-type');
+                const problems = btn.getAttribute('data-problems');
+                const projectUrl = btn.getAttribute('data-url');
+                const imgUrl = btn.getAttribute('data-img');
+                
+                // COS 에디터로 이동 (전체 문제 데이터 포함)
+                const params = new URLSearchParams({
+                    platform: this.config.projectType,
+                    grade: grade,
+                    sample: sample,
+                    problem: problem,
+                    buttonType: buttonType,
+                    problems: problems,
+                    projectUrl: projectUrl,
+                    imgUrl: imgUrl
+                });
+                
+                window.open(`/cos-editor?${params.toString()}`, '_blank');
+                
+                // 학습 기록
+                try {
+                    await fetch('/learning/project-load', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            platform: this.config.projectType,
+                            project_name: `COS ${grade}급 샘플${sample} ${problem}번`,
+                            file_type: buttonType,
+                            s3_url: projectUrl,
+                            is_cos: true
+                        })
+                    });
+                } catch (error) {
+                    console.error('학습 기록 실패:', error);
+                }
+                return;
+            }
+            
+            // 기존 load-project 버튼 처리 (COS 카드 버튼 등)
             if (e.target.classList.contains('load-project')) {
                 e.preventDefault();
                 e.stopPropagation();
