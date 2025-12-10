@@ -148,8 +148,8 @@
         
         /* 왼쪽: 문제 이미지 패널 */
         .problem-panel {
-            width: 700px;
-            min-width: 400px;
+            width: 400px;
+            min-width: 300px;
             max-width: 1000px;
             height: 100%;
             background: #f8f9fa;
@@ -330,8 +330,8 @@
             
             <div class="right-controls">
                 <button class="toggle-problem-btn" id="toggleProblemBtn">
-                    <i class="bi bi-image"></i>
-                    <span class="btn-text">문제 보기</span>
+                    <i class="bi bi-x-lg"></i>
+                    <span class="btn-text">문제 닫기</span>
                 </button>
                 <button class="btn btn-outline-light btn-sm" id="newWindowBtn" title="문제를 새 창에서 열기">
                     <i class="bi bi-box-arrow-up-right"></i>
@@ -341,8 +341,8 @@
         
         <!-- 메인 콘텐츠 -->
         <div class="main-content">
-            <!-- 왼쪽: 문제 이미지 패널 (기본 숨김) -->
-            <div class="problem-panel hidden" id="problemPanel">
+            <!-- 왼쪽: 문제 이미지 패널 (기본 표시) -->
+            <div class="problem-panel" id="problemPanel">
                 <div class="problem-header">
                     <span class="title">
                         <i class="bi bi-file-image"></i>
@@ -403,7 +403,7 @@
             
             // 상태
             let currentZoom = 100;
-            let isPanelOpen = false;
+            let isPanelOpen = true;
             let isResizing = false;
             
             // 서버에서 전달받은 데이터
