@@ -13,9 +13,9 @@ module.exports = {
         PORT: 3000
       }
     },
-    {
+{
       name: 'jupyter-server',
-      script: '/usr/bin/python3',
+      script: '/var/www/html/jupyter_env_ubuntu/bin/python',
       args: [
         '-m', 'notebook',
         '--ip=0.0.0.0',
@@ -38,8 +38,9 @@ module.exports = {
       max_memory_restart: '500M',
       env: {
         NODE_ENV: 'production',
-        PATH: '/usr/bin:/bin:/usr/local/bin',
-        HOME: '/home/ubuntu'
+        PATH: '/var/www/html/jupyter_env_ubuntu/bin:/usr/bin:/bin:/usr/local/bin',
+        HOME: '/home/ubuntu',
+        VIRTUAL_ENV: '/var/www/html/jupyter_env_ubuntu'
       }
     }
   ]
