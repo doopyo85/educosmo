@@ -13,7 +13,31 @@ module.exports = {
         PORT: 3000
       }
     },
-{
+    {
+      name: 'scratch',
+      script: './server.js',
+      cwd: '/var/www/html/scratch',
+      instances: 1,
+      exec_mode: 'fork',
+      watch: false
+    },
+    {
+      name: 'entry-server',
+      script: './server.js',
+      cwd: '/var/www/html/entry',
+      instances: 1,
+      exec_mode: 'fork',
+      watch: false
+    },
+    {
+      name: 'appinventor-server',
+      script: './server.js',
+      cwd: '/var/www/html/appinventor',
+      instances: 1,
+      exec_mode: 'fork',
+      watch: false
+    },
+   {
       name: 'jupyter-server',
       script: '/var/www/html/jupyter_env_ubuntu/bin/python',
       args: [
