@@ -674,6 +674,35 @@ app.get('/scratch', authenticateUser, (req, res) => {
   res.redirect(config.SERVICES.SCRATCH);
 });
 
+// 🔥 COS 자격증 문제풀이 에디터 (문제 이미지 + 에디터 분할 화면)
+app.get('/cos-editor', authenticateUser, (req, res) => {
+  const { platform, projectUrl, imgUrl } = req.query;
+  
+  if (!platform || !projectUrl) {
+    return res.status(400).send('필수 파라미터가 없습니다. (platform, projectUrl)');
+  }
+  
+  // 플랫폼별 에디터 URL 생성
+  let editorUrl = '';
+  if (platform === 'scratch') {
+    editorUrl = `/scratch/?project_file=${encodeURIComponent(projectUrl)}`;
+  } else if (platform === 'entry') {
+    const userID = req.session.userID || 'guest';
+    const role = req.session.role || 'guest';
+    editorUrl = `/entry_editor/?s3Url=${encodeURIComponent(projectUrl)}&userID=${userID}&role=${role}`;
+  } else {
+    return res.status(400).send('지원하지 않는 플랫폼입니다.');
+  }
+  
+  res.render('cos_editor', {
+    platform: platform,
+    editorUrl: editorUrl,
+    imgUrl: imgUrl || '',
+    userID: req.session.userID,
+    userRole: req.session.role
+  });
+});
+
 app.get('/appinventor_project', authenticateUser, checkPageAccess('/appinventor_project'), (req, res) => {
   res.render('appinventor_project', {
     userID: req.session.userID,

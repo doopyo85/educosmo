@@ -1192,17 +1192,36 @@ class ProjectCardManager {
                 if (!projectUrl) return;
 
                 const fileType = e.target.textContent.trim();
-                const card = e.target.closest('.project-card');
-                const projectName = card?.querySelector('.project-card-title')?.textContent || 'Unknown';
+                const card = e.target.closest('.project-card') || e.target.closest('.cos-td-btn');
+                const projectName = card?.querySelector('.project-card-title')?.textContent || 'COS 문제';
 
-                // 🔥 COS: 이미지 팝업 띄우기 (data-img 속성이 있으면)
+                // 🔥 COS: data-img 속성이 있으면 분할 화면 에디터로 이동
                 const imgUrl = e.target.getAttribute('data-img');
                 if (imgUrl) {
-                    // 새 창으로 이미지 팝업 (새 탭 아님)
-                    window.open(imgUrl, 'problemImage', 'width=900,height=700,scrollbars=yes,resizable=yes,left=100,top=100');
+                    // COS 자격증 문제 - 분할 화면 에디터로 이동
+                    const cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
+                    window.open(cosEditorUrl, '_blank');
+                    
+                    // 학습 기록
+                    try {
+                        await fetch('/learning/project-load', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                platform: this.config.projectType,
+                                project_name: projectName,
+                                file_type: fileType,
+                                s3_url: projectUrl,
+                                is_cos: true
+                            })
+                        });
+                    } catch (error) {
+                        console.error('학습 기록 실패:', error);
+                    }
+                    return; // COS는 여기서 종료
                 }
 
-                // 학습 시작 기록
+                // 일반 프로젝트: 학습 시작 기록
                 try {
                     await fetch('/learning/project-load', {
                         method: 'POST',
