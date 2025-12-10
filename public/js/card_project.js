@@ -289,6 +289,9 @@ class ProjectCardManager {
                 case '확장2':
                     projects[category][projectKey].ext2 = url;
                     break;
+                case '문제':  // 🔥 COS 문제 이미지 URL
+                    projects[category][projectKey].img = url;
+                    break;
                 case '정답':
                     projects[category][projectKey].answer = url;
                     break;
@@ -350,6 +353,9 @@ class ProjectCardManager {
                     break;
                 case '확장':
                     projects[category][projectKey].extension = url;
+                    break;
+                case '문제':  // 🔥 COS 문제 이미지 URL
+                    projects[category][projectKey].img = url;
                     break;
                 case '정답':
                     projects[category][projectKey].answer = url;
