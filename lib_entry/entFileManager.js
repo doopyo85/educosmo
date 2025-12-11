@@ -721,65 +721,122 @@ class EntFileManager {
                     // 스프라이트 이미지 경로 수정
                     if (obj.sprite && obj.sprite.pictures) {
                         obj.sprite.pictures.forEach((picture, picIndex) => {
-                            // 🔥 Case 1: file:/// 로컬 경로 처리 (Windows 절대경로)
-                            if (picture.fileurl && picture.fileurl.startsWith('file:///')) {
-                                // 해시 추출: file:///C:/.../a2b07059405a83d7c0fcbaa1700cf6be.png
-                                const hashMatch = picture.fileurl.match(/([a-f0-9]{32})\.(png|jpg|jpeg|gif|svg|webp)$/i);
-                                if (hashMatch) {
-                                    const imageHash = hashMatch[1];
-                                    const extension = hashMatch[2];
-                                    const folderPath = `${imageHash.substring(0, 2)}/${imageHash.substring(2, 4)}/image`;
-                                    picture.fileurl = `/temp/${folderPath}/${imageHash}.${extension}`;
-
-                                    console.log(`🔄 로컬경로→서버경로 변환 [${index}-${picIndex}]:`, {
-                                        original: 'file:///...',
-                                        converted: picture.fileurl
-                                    });
-                                } else {
-                                    console.warn(`⚠️ 이미지 해시 추출 실패 [${index}-${picIndex}]:`, picture.fileurl);
+                            if (picture.fileurl) {
+                                // 🔥 URL 디코딩 먼저 (C:%5C → C:\)
+                                let decodedUrl = picture.fileurl;
+                                try {
+                                    decodedUrl = decodeURIComponent(picture.fileurl);
+                                } catch (e) {
+                                    // 디코딩 실패시 원본 사용
+                                }
+                                
+                                // 🔥 Windows 로컬 경로 감지 (모든 형태)
+                                const isWindowsPath = decodedUrl.startsWith('file:///') || 
+                                                      decodedUrl.startsWith('C:/') || 
+                                                      decodedUrl.startsWith('C:\\') ||
+                                                      /^[A-Z]:[\\/]/i.test(decodedUrl);
+                                
+                                if (isWindowsPath) {
+                                    // 해시 추출: ...temp/a2/b0/image/a2b07059405a83d7c0fcbaa1700cf6be.png
+                                    const hashMatch = decodedUrl.match(/([a-f0-9]{32})\.(png|jpg|jpeg|gif|svg|webp|mp3|wav)$/i);
+                                    if (hashMatch) {
+                                        const fileHash = hashMatch[1];
+                                        const extension = hashMatch[2];
+                                        // 이미지/사운드 구분
+                                        const isSound = ['mp3', 'wav'].includes(extension.toLowerCase());
+                                        const assetType = isSound ? 'sound' : 'image';
+                                        const folderPath = `${fileHash.substring(0, 2)}/${fileHash.substring(2, 4)}/${assetType}`;
+                                        picture.fileurl = `/temp/${folderPath}/${fileHash}.${extension}`;
+                                        
+                                        console.log(`🔄 Windows경로→서버경로 변환 [${index}-${picIndex}]:`, {
+                                            original: decodedUrl.substring(0, 50) + '...',
+                                            converted: picture.fileurl
+                                        });
+                                    } else {
+                                        console.warn(`⚠️ 해시 추출 실패 [${index}-${picIndex}]:`, decodedUrl.substring(0, 80));
+                                    }
+                                }
+                                // 🔥 temp/로 시작하는 상대경로
+                                else if (picture.fileurl.startsWith('temp/')) {
+                                    picture.fileurl = '/' + picture.fileurl;
+                                    console.log(`🔄 상대경로 수정 [${index}-${picIndex}]:`, picture.fileurl);
                                 }
                             }
-                            // 🔥 Case 2: filename만 있고 fileurl이 없는 경우
+                            // 🔥 filename만 있고 fileurl이 없는 경우
                             else if (picture.filename && !picture.fileurl) {
                                 const filename = picture.filename;
                                 const imageType = picture.imageType || 'png';
                                 const folderPath = `${filename.substring(0, 2)}/${filename.substring(2, 4)}/image`;
                                 picture.fileurl = `/temp/${folderPath}/${filename}.${imageType}`;
-
+                                
                                 console.log(`📸 이미지 경로 설정 [${index}-${picIndex}]:`, {
                                     filename: filename,
                                     fileurl: picture.fileurl
                                 });
                             }
-                            // 🔥 Case 3: temp/로 시작하는 상대경로
-                            else if (picture.fileurl && picture.fileurl.startsWith('temp/')) {
-                                picture.fileurl = '/' + picture.fileurl;
-                                console.log(`🔄 상대경로 수정 [${index}-${picIndex}]:`, picture.fileurl);
+                        });
+                    }
+                    
+                    // 🔥 사운드 경로도 수정
+                    if (obj.sprite && obj.sprite.sounds) {
+                        obj.sprite.sounds.forEach((sound, soundIndex) => {
+                            if (sound.fileurl) {
+                                let decodedUrl = sound.fileurl;
+                                try {
+                                    decodedUrl = decodeURIComponent(sound.fileurl);
+                                } catch (e) {}
+                                
+                                const isWindowsPath = decodedUrl.startsWith('file:///') || 
+                                                      decodedUrl.startsWith('C:/') || 
+                                                      decodedUrl.startsWith('C:\\') ||
+                                                      /^[A-Z]:[\\/]/i.test(decodedUrl);
+                                
+                                if (isWindowsPath) {
+                                    const hashMatch = decodedUrl.match(/([a-f0-9]{32})\.(mp3|wav|ogg)$/i);
+                                    if (hashMatch) {
+                                        const soundHash = hashMatch[1];
+                                        const extension = hashMatch[2];
+                                        const folderPath = `${soundHash.substring(0, 2)}/${soundHash.substring(2, 4)}/sound`;
+                                        sound.fileurl = `/temp/${folderPath}/${soundHash}.${extension}`;
+                                        console.log(`🔊 사운드 Windows경로 변환 [${index}-${soundIndex}]:`, sound.fileurl);
+                                    }
+                                }
+                                else if (sound.fileurl.startsWith('temp/')) {
+                                    sound.fileurl = '/' + sound.fileurl;
+                                }
                             }
                         });
                     }
 
                     // 오브젝트 썸네일 경로 수정
                     if (obj.thumbnail && typeof obj.thumbnail === 'string') {
-                        // 🔥 file:/// 로컬 경로 처리
-                        if (obj.thumbnail.startsWith('file:///')) {
-                            const hashMatch = obj.thumbnail.match(/([a-f0-9]{32})\.(png|jpg|jpeg|gif|svg|webp)$/i);
+                        let decodedThumb = obj.thumbnail;
+                        try {
+                            decodedThumb = decodeURIComponent(obj.thumbnail);
+                        } catch (e) {}
+                        
+                        const isWindowsPath = decodedThumb.startsWith('file:///') || 
+                                              decodedThumb.startsWith('C:/') || 
+                                              decodedThumb.startsWith('C:\\') ||
+                                              /^[A-Z]:[\\/]/i.test(decodedThumb);
+                        
+                        if (isWindowsPath) {
+                            const hashMatch = decodedThumb.match(/([a-f0-9]{32})\.(png|jpg|jpeg|gif|svg|webp)$/i);
                             if (hashMatch) {
                                 const imageHash = hashMatch[1];
                                 const extension = hashMatch[2];
                                 const folderPath = `${imageHash.substring(0, 2)}/${imageHash.substring(2, 4)}/image`;
                                 obj.thumbnail = `/temp/${folderPath}/${imageHash}.${extension}`;
-                                console.log(`🖼️ 썸네일 로컬경로 변환 [${index}]:`, obj.thumbnail);
+                                console.log(`🖼️ 썸네일 Windows경로 변환 [${index}]:`, obj.thumbnail);
                             }
                         }
-                        // temp/로 시작하는 상대경로
                         else if (obj.thumbnail.startsWith('temp/')) {
                             obj.thumbnail = '/' + obj.thumbnail;
                             console.log(`🖼️ 썸네일 경로 수정 [${index}]:`, obj.thumbnail);
                         }
                     }
                 });
-                console.log('✅ 오브젝트 이미지 경로를 8070번 서버용으로 수정 완료');
+                console.log('✅ 오브젝트 이미지/사운드 경로를 8070번 서버용으로 수정 완료');
             }
 
             return {
