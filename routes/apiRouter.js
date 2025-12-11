@@ -1501,4 +1501,13 @@ router.post('/picture/paint', authenticateUser, async (req, res) => {
   }
 });
 
+// 🔥 Storage 관리 API 라우터 등록
+try {
+  const storageRouter = require('./api/storageRouter');
+  router.use('/storage', storageRouter);
+  console.log('✅ StorageRouter 등록 완료');
+} catch (error) {
+  console.error('❌ StorageRouter 로드 실패:', error);
+}
+
 module.exports = router;

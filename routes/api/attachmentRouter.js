@@ -6,134 +6,209 @@ const { validateUploadSecurity } = require('../../lib_board/securityValidator');
 const { saveAttachment, getAttachmentsByPostId, deleteAttachment, getDownloadUrl } = require('../../lib_board/attachmentService');
 const db = require('../../lib_login/db');
 
+// 🔥 용량 체크 및 사용량 업데이트 함수 import
+const { 
+    canUpload, 
+    increaseUsage, 
+    decreaseUsage,
+    recordFile 
+} = require('../../lib_storage/quotaChecker');
+const { formatBytes } = require('../../lib_storage/storagePolicy');
+
 /**
  * 첨부파일 업로드 API
  * POST /api/board/attachments/upload
  */
-router.post('/upload', authenticateUser, (req, res) => {
-    // multer 미들웨어 실행
-    attachmentUpload.array('files', 10)(req, res, async (err) => {
-        if (err) {
-            console.error('파일 업로드 오류:', err);
-            
-            let errorMessage = '파일 업로드 중 오류가 발생했습니다.';
-            
-            if (err.code === 'LIMIT_FILE_SIZE') {
-                errorMessage = '파일 크기가 너무 큽니다.';
-            } else if (err.code === 'LIMIT_FILE_COUNT') {
-                errorMessage = '파일 개수가 너무 많습니다. (최대 10개)';
-            } else if (err.message) {
-                errorMessage = err.message;
-            }
-            
-            return res.status(400).json({
+router.post('/upload', authenticateUser, async (req, res) => {
+    try {
+        // 🔥 Step 1: 사용자 정보 조회 (용량 체크용)
+        const userId = req.session.userID;
+        const [user] = await db.queryDatabase(
+            'SELECT id, centerID FROM Users WHERE userID = ?',
+            [userId]
+        );
+        
+        if (!user) {
+            return res.status(401).json({
                 success: false,
-                error: errorMessage
+                error: '사용자 정보를 찾을 수 없습니다.'
             });
         }
         
-        try {
-            if (!req.files || req.files.length === 0) {
+        // multer 미들웨어 실행
+        attachmentUpload.array('files', 10)(req, res, async (err) => {
+            if (err) {
+                console.error('파일 업로드 오류:', err);
+                
+                let errorMessage = '파일 업로드 중 오류가 발생했습니다.';
+                
+                if (err.code === 'LIMIT_FILE_SIZE') {
+                    errorMessage = '파일 크기가 너무 큽니다.';
+                } else if (err.code === 'LIMIT_FILE_COUNT') {
+                    errorMessage = '파일 개수가 너무 많습니다. (최대 10개)';
+                } else if (err.message) {
+                    errorMessage = err.message;
+                }
+                
                 return res.status(400).json({
                     success: false,
-                    error: '업로드할 파일을 선택해주세요.'
+                    error: errorMessage
                 });
             }
             
-            const userId = req.session.userID;
-            const userRole = req.session.role;
-            const clientIP = req.ip || req.connection.remoteAddress;
-            
-            console.log('파일 업로드 요청:', {
-                userId,
-                userRole,
-                fileCount: req.files.length,
-                clientIP
-            });
-            
-            const uploadedFiles = [];
-            const errors = [];
-            
-            // 각 파일에 대해 보안 검증 및 처리
-            for (const file of req.files) {
-                try {
-                    // 🔥 한글 파일명 처리 (이미 multer에서 처리되었지만 한번 더 확인)
-                    const originalName = processKoreanFilename(file.originalname);
-                    
-                    console.log('🔥 파일 처리:', {
-                        original: file.originalname,
-                        processed: originalName,
-                        size: file.size,
-                        type: file.mimetype
-                    });
-                    
-                    // 보안 검증
-                    const securityCheck = await validateUploadSecurity(
-                        file, userId, userRole, null, clientIP
-                    );
-                    
-                    if (!securityCheck.isValid) {
-                        errors.push({
-                            filename: originalName,
-                            errors: securityCheck.errors
-                        });
-                        continue;
-                    }
-                    
-                    // 파일 정보 구성
-                    const fileInfo = {
-                        key: file.key,
-                        originalname: originalName, // 🔥 처리된 한글 파일명 사용
-                        size: file.size,
-                        mimetype: file.mimetype,
-                        location: file.location,
-                        bucket: file.bucket
-                    };
-                    
-                    uploadedFiles.push({
-                        tempId: Date.now() + Math.random(), // 임시 ID
-                        key: file.key,
-                        originalName: originalName, // 🔥 처리된 한글 파일명 사용
-                        size: file.size,
-                        type: file.mimetype,
-                        url: file.location,
-                        isImage: file.mimetype.startsWith('image/')
-                    });
-                    
-                    console.log('파일 업로드 성공:', originalName);
-                    
-                } catch (fileError) {
-                    console.error('파일 처리 오류:', fileError);
-                    errors.push({
-                        filename: file.originalname,
-                        errors: [fileError.message]
+            try {
+                if (!req.files || req.files.length === 0) {
+                    return res.status(400).json({
+                        success: false,
+                        error: '업로드할 파일을 선택해주세요.'
                     });
                 }
+                
+                const userRole = req.session.role;
+                const clientIP = req.ip || req.connection.remoteAddress;
+                
+                // 🔥 Step 2: 총 파일 크기 계산 및 용량 체크
+                const totalSize = req.files.reduce((sum, file) => sum + file.size, 0);
+                console.log(`📊 업로드 용량 체크: ${formatBytes(totalSize)}`);
+                
+                const quotaCheck = await canUpload(user.id, user.centerID, totalSize);
+                
+                if (!quotaCheck.allowed) {
+                    console.log('❌ 용량 초과:', quotaCheck.message);
+                    return res.status(413).json({
+                        success: false,
+                        error: quotaCheck.message,
+                        details: {
+                            reason: quotaCheck.reason,
+                            current: formatBytes(quotaCheck.current),
+                            limit: formatBytes(quotaCheck.limit),
+                            required: formatBytes(quotaCheck.required)
+                        }
+                    });
+                }
+                
+                console.log('파일 업로드 요청:', {
+                    userId,
+                    userRole,
+                    fileCount: req.files.length,
+                    totalSize: formatBytes(totalSize),
+                    clientIP
+                });
+                
+                const uploadedFiles = [];
+                const errors = [];
+                let totalUploadedSize = 0;
+                
+                // 각 파일에 대해 보안 검증 및 처리
+                for (const file of req.files) {
+                    try {
+                        // 🔥 한글 파일명 처리 (이미 multer에서 처리되었지만 한번 더 확인)
+                        const originalName = processKoreanFilename(file.originalname);
+                        
+                        console.log('🔥 파일 처리:', {
+                            original: file.originalname,
+                            processed: originalName,
+                            size: file.size,
+                            type: file.mimetype
+                        });
+                        
+                        // 보안 검증
+                        const securityCheck = await validateUploadSecurity(
+                            file, userId, userRole, null, clientIP
+                        );
+                        
+                        if (!securityCheck.isValid) {
+                            errors.push({
+                                filename: originalName,
+                                errors: securityCheck.errors
+                            });
+                            continue;
+                        }
+                        
+                        // 파일 정보 구성
+                        const fileInfo = {
+                            key: file.key,
+                            originalname: originalName,
+                            size: file.size,
+                            mimetype: file.mimetype,
+                            location: file.location,
+                            bucket: file.bucket
+                        };
+                        
+                        uploadedFiles.push({
+                            tempId: Date.now() + Math.random(),
+                            key: file.key,
+                            originalName: originalName,
+                            size: file.size,
+                            type: file.mimetype,
+                            url: file.location,
+                            isImage: file.mimetype.startsWith('image/')
+                        });
+                        
+                        totalUploadedSize += file.size;
+                        
+                        // 🔥 Step 3: UserFiles 테이블에 파일 기록
+                        await recordFile(user.id, user.centerID, {
+                            category: 'board',
+                            originalName: originalName,
+                            storedName: file.key,
+                            size: file.size,
+                            type: file.mimetype,
+                            url: file.location
+                        });
+                        
+                        console.log('파일 업로드 성공:', originalName);
+                        
+                    } catch (fileError) {
+                        console.error('파일 처리 오류:', fileError);
+                        errors.push({
+                            filename: file.originalname,
+                            errors: [fileError.message]
+                        });
+                    }
+                }
+                
+                // 🔥 Step 4: 성공적으로 업로드된 파일들의 용량 증가
+                if (totalUploadedSize > 0) {
+                    await increaseUsage(user.id, user.centerID, totalUploadedSize, 'board');
+                    console.log(`✅ 사용량 업데이트: +${formatBytes(totalUploadedSize)}`);
+                }
+                
+                // 업로드 로그 기록
+                try {
+                    await logUploadActivity(userId, clientIP, req.files, uploadedFiles, errors);
+                } catch (logError) {
+                    console.error('업로드 로그 기록 오류:', logError);
+                }
+                
+                // 결과 반환
+                res.json({
+                    success: true,
+                    files: uploadedFiles,
+                    errors: errors,
+                    message: `${uploadedFiles.length}개 파일이 업로드되었습니다.`,
+                    // 🔥 사용량 정보 추가
+                    storageInfo: quotaCheck.allowed ? {
+                        uploadedSize: formatBytes(totalUploadedSize),
+                        userUsage: quotaCheck.userUsage
+                    } : null
+                });
+                
+            } catch (error) {
+                console.error('파일 업로드 처리 오류:', error);
+                res.status(500).json({
+                    success: false,
+                    error: '파일 업로드 처리 중 오류가 발생했습니다.'
+                });
             }
-            
-            // 업로드 로그 기록
-            try {
-                await logUploadActivity(userId, clientIP, req.files, uploadedFiles, errors);
-            } catch (logError) {
-                console.error('업로드 로그 기록 오류:', logError);
-            }
-            
-            // 결과 반환
-            res.json({
-                success: true,
-                files: uploadedFiles,
-                errors: errors,
-                message: `${uploadedFiles.length}개 파일이 업로드되었습니다.`
-            });
-            
-        } catch (error) {
-            console.error('파일 업로드 처리 오류:', error);
-            res.status(500).json({
-                success: false,
-                error: '파일 업로드 처리 중 오류가 발생했습니다.'
-            });
-        }
-    });
+        });
+    } catch (error) {
+        console.error('업로드 API 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: '서버 오류가 발생했습니다.'
+        });
+    }
 });
 
 /**
@@ -381,9 +456,22 @@ router.delete('/:id', authenticateUser, async (req, res) => {
         }
         
         const attachment = attachments[0];
+        const fileSize = attachment.file_size || 0;
+        
+        // 🔥 사용자 DB ID 조회 (용량 감소용)
+        const [user] = await db.queryDatabase(
+            'SELECT id, centerID FROM Users WHERE userID = ?',
+            [userId]
+        );
         
         // 삭제 실행
         const result = await deleteAttachment(id, userId, userRole);
+        
+        // 🔥 파일 삭제 성공 시 사용량 감소
+        if (user && fileSize > 0) {
+            await decreaseUsage(user.id, user.centerID, fileSize, 'board');
+            console.log(`📊 사용량 감소: -${formatBytes(fileSize)}`);
+        }
         
         // 게시글 첨부파일 개수 업데이트
         await updatePostAttachmentCount(attachment.post_id);
@@ -391,12 +479,14 @@ router.delete('/:id', authenticateUser, async (req, res) => {
         console.log('첨부파일 삭제 완료:', {
             attachmentId: id,
             filename: attachment.original_name,
-            s3Key: attachment.stored_name
+            s3Key: attachment.stored_name,
+            freedSpace: formatBytes(fileSize)
         });
         
         res.json({
             success: true,
-            message: `파일 '${attachment.original_name}'이(가) 삭제되었습니다.`
+            message: `파일 '${attachment.original_name}'이(가) 삭제되었습니다.`,
+            freedSpace: formatBytes(fileSize)
         });
         
     } catch (error) {
