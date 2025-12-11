@@ -7,6 +7,9 @@ const { authenticateUser } = require('../../lib_login/authMiddleware');
 const attachmentRouter = require('./attachmentRouter');
 const imageRouter = require('./imageRouter');
 
+// 🔥 S3 이미지 영구화 함수 불러오기
+const { processContentImages, processAttachmentFiles } = require('../../lib_board/s3Utils');
+
 // 날짜 포맷 함수
 function formatDate(date) {
     const d = new Date(date);
@@ -199,10 +202,10 @@ router.get('/posts', async (req, res) => {
     }
 });
 
-// 🔥 게시글 작성 API (첨부파일 지원)
+// 🔥 게시글 작성 API (첨부파일 지원 + 이미지 영구화)
 router.post('/posts', authenticateUser, async (req, res) => {
     try {
-        const { title, content, category_id, source, ccl, is_notice, is_pinned, attachments } = req.body;
+        let { title, content, category_id, source, ccl, is_notice, is_pinned, attachments } = req.body;
         const userId = req.session.userID;
         
         // 필수 필드 검증
@@ -230,6 +233,18 @@ router.post('/posts', authenticateUser, async (req, res) => {
         // 카테고리 유효성 검사
         if (![1, 2, 3].includes(categoryIdInt)) {
             return res.status(400).json({ error: '존재하지 않는 카테고리입니다.' });
+        }
+        
+        // 🔥 Step 1: content 내 temp 이미지를 정식 경로로 이동
+        console.log('=== 게시글 작성: 이미지 영구화 시작 ===');
+        const imageResult = await processContentImages(content);
+        content = imageResult.content;  // 업데이트된 content
+        console.log(`이동된 이미지: ${imageResult.movedImages.length}개`);
+        
+        // 🔥 Step 2: 첨부파일 temp → 정식 경로 이동
+        if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+            console.log(`=== 첨부파일 영구화 시작: ${attachments.length}개 ===`);
+            attachments = await processAttachmentFiles(attachments);
         }
         
         // 첨부파일 정보 계산
@@ -305,11 +320,11 @@ router.post('/posts', authenticateUser, async (req, res) => {
     }
 });
 
-// 🔥 게시글 수정 API (첨부파일 지원)
+// 🔥 게시글 수정 API (첨부파일 지원 + 이미지 영구화)
 router.put('/posts/:id', authenticateUser, async (req, res) => {
     try {
         const postId = req.params.id;
-        const { title, content, category_id, source, ccl, is_notice, is_pinned, attachments } = req.body;
+        let { title, content, category_id, source, ccl, is_notice, is_pinned, attachments } = req.body;
         const userID = req.session.userID;
         const userRole = req.session.role;
         
@@ -335,6 +350,18 @@ router.put('/posts/:id', authenticateUser, async (req, res) => {
         if (!canEdit) {
             console.log('❌ 권한 없음:', { author: existingPost.author, userID });
             return res.status(403).json({ error: '수정 권한이 없습니다.' });
+        }
+        
+        // 🔥 Step 1: content 내 temp 이미지를 정식 경로로 이동
+        console.log('=== 게시글 수정: 이미지 영구화 시작 ===');
+        const imageResult = await processContentImages(content);
+        content = imageResult.content;  // 업데이트된 content
+        console.log(`이동된 이미지: ${imageResult.movedImages.length}개`);
+        
+        // 🔥 Step 2: 첨부파일 temp → 정식 경로 이동
+        if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+            console.log(`=== 첨부파일 영구화 시작: ${attachments.length}개 ===`);
+            attachments = await processAttachmentFiles(attachments);
         }
         
         // 첨부파일 정보 계산

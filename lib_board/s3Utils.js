@@ -344,6 +344,135 @@ async function checkFileExists(key) {
     }
 }
 
+/**
+ * 🔥 게시글 content 내 temp 이미지를 정식 경로로 이동
+ * @param {string} content - 게시글 HTML content
+ * @returns {Promise<{content: string, movedImages: Array}>} - 업데이트된 content와 이동된 이미지 목록
+ */
+async function processContentImages(content) {
+    if (!content) {
+        return { content: content, movedImages: [] };
+    }
+    
+    const movedImages = [];
+    let updatedContent = content;
+    
+    try {
+        // S3 temp 이미지 URL 패턴 찾기
+        // 예: https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/board/images/temp/uuid.png
+        const tempImagePattern = new RegExp(
+            `https://${BUCKET_NAME}\\.s3\\.[^/]+\\.amazonaws\\.com/(board/images/temp/[^"'\\s]+)`,
+            'gi'
+        );
+        
+        const matches = content.match(tempImagePattern) || [];
+        console.log(`📸 content 내 temp 이미지 발견: ${matches.length}개`);
+        
+        for (const match of matches) {
+            try {
+                // URL에서 S3 키 추출
+                const urlObj = new URL(match);
+                const tempKey = decodeURIComponent(urlObj.pathname.substring(1)); // 앞의 '/' 제거
+                
+                console.log(`🔄 이미지 이동 시작: ${tempKey}`);
+                
+                // temp 경로인지 확인
+                if (!tempKey.includes('/temp/')) {
+                    console.log(`⏭️ temp 경로가 아님, 건너뜀: ${tempKey}`);
+                    continue;
+                }
+                
+                // 정식 경로로 이동
+                const permanentKey = await moveFromTempToPermanent(tempKey);
+                const permanentUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'ap-northeast-2'}.amazonaws.com/${permanentKey}`;
+                
+                // content 내 URL 교체
+                updatedContent = updatedContent.split(match).join(permanentUrl);
+                
+                movedImages.push({
+                    originalUrl: match,
+                    originalKey: tempKey,
+                    newUrl: permanentUrl,
+                    newKey: permanentKey
+                });
+                
+                console.log(`✅ 이미지 이동 완료: ${tempKey} → ${permanentKey}`);
+                
+            } catch (moveError) {
+                console.error(`❌ 이미지 이동 실패: ${match}`, moveError.message);
+                // 개별 이미지 이동 실패해도 계속 진행
+            }
+        }
+        
+        console.log(`📸 총 ${movedImages.length}개 이미지 영구 저장 완료`);
+        
+        return {
+            content: updatedContent,
+            movedImages: movedImages
+        };
+        
+    } catch (error) {
+        console.error('❌ content 이미지 처리 오류:', error);
+        // 오류 발생해도 원본 content 반환
+        return { content: content, movedImages: [] };
+    }
+}
+
+/**
+ * 🔥 첨부파일을 temp에서 정식 경로로 이동
+ * @param {Array} attachments - 첨부파일 배열 [{key, url, ...}]
+ * @returns {Promise<Array>} - 업데이트된 첨부파일 배열
+ */
+async function processAttachmentFiles(attachments) {
+    if (!attachments || !Array.isArray(attachments) || attachments.length === 0) {
+        return attachments;
+    }
+    
+    const processedAttachments = [];
+    
+    for (const attachment of attachments) {
+        try {
+            const key = attachment.key || attachment.stored_name;
+            
+            if (!key) {
+                processedAttachments.push(attachment);
+                continue;
+            }
+            
+            // temp 경로인지 확인
+            if (!key.includes('/temp/')) {
+                console.log(`⏭️ 첨부파일 temp 경로 아님, 건너뜀: ${key}`);
+                processedAttachments.push(attachment);
+                continue;
+            }
+            
+            console.log(`🔄 첨부파일 이동 시작: ${key}`);
+            
+            // 정식 경로로 이동
+            const permanentKey = await moveFromTempToPermanent(key);
+            const permanentUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'ap-northeast-2'}.amazonaws.com/${permanentKey}`;
+            
+            // 업데이트된 정보로 교체
+            processedAttachments.push({
+                ...attachment,
+                key: permanentKey,
+                stored_name: permanentKey,
+                url: permanentUrl,
+                s3_url: permanentUrl
+            });
+            
+            console.log(`✅ 첨부파일 이동 완료: ${key} → ${permanentKey}`);
+            
+        } catch (moveError) {
+            console.error(`❌ 첨부파일 이동 실패:`, moveError.message);
+            // 실패해도 원본 정보 유지
+            processedAttachments.push(attachment);
+        }
+    }
+    
+    return processedAttachments;
+}
+
 module.exports = {
     s3Client,
     BUCKET_NAME,
@@ -359,5 +488,8 @@ module.exports = {
     generateImageKey,
     generateAttachmentKey,
     moveFromTempToPermanent,
-    checkFileExists
+    checkFileExists,
+    // 🔥 새로 추가된 함수들
+    processContentImages,
+    processAttachmentFiles
 };
