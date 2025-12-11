@@ -54,7 +54,39 @@ export function installPopup() {
 }
 
 export async function openSpriteManager() {
-    popup.removeAllListeners();
+    console.log('🎭 openSpriteManager 호출됨');
+    
+    // 🔥 팝업이 초기화되지 않은 경우 대기
+    if (!popup) {
+        console.error('❌ 팝업이 초기화되지 않았습니다');
+        return;
+    }
+    
+    // 🔥 기존 리스너 제거 (close/hide 제외)
+    try {
+        popup.removeAllListeners('fetch');
+        popup.removeAllListeners('search');
+        popup.removeAllListeners('submit');
+        popup.removeAllListeners('draw');
+        popup.removeAllListeners('uploads');
+        popup.removeAllListeners('dummyUploads');
+        popup.removeAllListeners('uploadFail');
+        popup.removeAllListeners('fail');
+        popup.removeAllListeners('error');
+    } catch (e) {
+        console.log('⚠️ 리스너 제거 중 오류 (무시):', e.message);
+        popup.removeAllListeners();
+        // close/hide 리스너 다시 등록
+        popup.on('close', () => {
+            console.log('🚪 팝업 닫힘');
+            isPopupOpen = false;
+        });
+        popup.on('hide', () => {
+            console.log('🚪 팝업 숨김');
+            isPopupOpen = false;
+        });
+    }
+    
     setSpritePopupEvent(popup);
     
     // Entry 리소스가 로드되었는지 확인
@@ -150,6 +182,15 @@ export async function openPictureManager() {
     } catch (e) {
         console.log('⚠️ 리스너 제거 중 오류 (무시):', e.message);
         popup.removeAllListeners();
+        // close/hide 리스너 다시 등록
+        popup.on('close', () => {
+            console.log('🚪 팝업 닫힘');
+            isPopupOpen = false;
+        });
+        popup.on('hide', () => {
+            console.log('🚪 팝업 숨김');
+            isPopupOpen = false;
+        });
     }
     
     setPicturePopupEvent(popup);
@@ -268,6 +309,15 @@ export async function openSoundManager() {
     } catch (e) {
         console.log('⚠️ 리스너 제거 중 오류 (무시):', e.message);
         popup.removeAllListeners();
+        // close/hide 리스너 다시 등록
+        popup.on('close', () => {
+            console.log('🚪 팝업 닫힘');
+            isPopupOpen = false;
+        });
+        popup.on('hide', () => {
+            console.log('🚪 팝업 숨김');
+            isPopupOpen = false;
+        });
     }
     
     setSoundPopupEvent(popup);
@@ -278,16 +328,16 @@ export async function openSoundManager() {
         await assets.loadResources();
     }
     
-    // 🔥 Entry 공식 사운드 카테고리
+    // 🔥 Entry 공식 사운드 카테고리 (sounds.json의 main이 한글이므로 id도 한글로!)
     const SOUND_CATEGORIES = [
-        { id: 'people', name: '사람', order: 1 },
-        { id: 'animal', name: '동물', order: 2 },
-        { id: 'nature', name: '자연', order: 3 },
-        { id: 'instrument', name: '악기', order: 4 },
-        { id: 'music', name: '음악', order: 5 },
-        { id: 'effect', name: '효과', order: 6 },
-        { id: 'life', name: '생활', order: 7 },
-        { id: 'etc', name: '기타', order: 8 }
+        { id: '사람', name: '사람', order: 1 },
+        { id: '자연', name: '자연', order: 2 },
+        { id: '악기', name: '악기', order: 3 },
+        { id: '음악', name: '음악', order: 4 },
+        { id: '효과', name: '효과', order: 5 },
+        { id: '생활', name: '생활', order: 6 },
+        { id: '판타지', name: '판타지', order: 7 },
+        { id: '기타', name: '기타', order: 8 }
     ];
     
     // sounds.json에서 실제 존재하는 카테고리만 추출
