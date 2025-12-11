@@ -328,72 +328,12 @@ export async function openSoundManager() {
         await assets.loadResources();
     }
     
-    // 🔥 playentry.org 기준 공식 사운드 카테고리 순서
-    const SOUND_CATEGORIES = [
-        { id: '사람', name: '사람', order: 1 },
-        { id: '자연', name: '자연', order: 2 },
-        { id: '사물', name: '사물', order: 3 },
-        { id: '악기', name: '악기', order: 4 },
-        { id: '배경음악', name: '배경음악', order: 5 },
-        { id: '레트로', name: '레트로', order: 6 },
-        { id: '연출', name: '연출', order: 7 },
-        { id: '기타', name: '기타', order: 8 }
-    ];
+    // 🔥 서브카테고리 포함 카테고리 추출
+    const soundCategories = assets.extractSoundCategories ? 
+        assets.extractSoundCategories() : 
+        extractSoundCategoriesLocal();
     
-    // sounds.json에서 실제 존재하는 카테고리만 추출
-    const existingCategories = new Set();
-    if (assets.sound && assets.sound.length > 0) {
-        assets.sound.forEach(sound => {
-            if (sound.category?.main) {
-                existingCategories.add(sound.category.main);
-            }
-        });
-    }
-    
-    console.log('🔊 sounds.json 카테고리:', Array.from(existingCategories));
-    
-    // 공식 순서대로 카테고리 생성 (실제 존재하는 것만)
-    let soundCategories = SOUND_CATEGORIES
-        .filter(cat => existingCategories.has(cat.id))
-        .map(cat => ({
-            id: cat.id,
-            name: cat.name,
-            value: cat.id,
-            label: { ko: cat.name, en: cat.id },
-            categoryType: 'sound',
-            depth: 1,
-            children: []
-        }));
-    
-    // 🔥 존재하지만 공식 카테고리에 없는 것들 추가 (기타로 분류 안 된 것들)
-    existingCategories.forEach(cat => {
-        if (!SOUND_CATEGORIES.find(c => c.id === cat) && cat !== 'EBS' && !cat.startsWith('EBS')) {
-            soundCategories.push({
-                id: cat,
-                name: cat,
-                value: cat,
-                label: { ko: cat, en: cat },
-                categoryType: 'sound',
-                depth: 1,
-                children: []
-            });
-        }
-    });
-    
-    // 카테고리가 없으면 기본 '전체' 카테고리 추가
-    if (soundCategories.length === 0) {
-        soundCategories = [{
-            id: 'all',
-            name: '전체',
-            value: 'all',
-            label: { ko: '전체' },
-            categoryType: 'sound',
-            depth: 1,
-            children: []
-        }];
-    }
-    
-    console.log('🔊 사운드 팝업 카테고리:', soundCategories.map(c => c.name));
+    console.log('🔊 사운드 팝업 카테고리:', soundCategories.map(c => `${c.name}(${c.children?.length || 0})`));
     
     const sidebar = getSidebarTemplate({ category: soundCategories });
     popup.setData({ sidebar });
@@ -419,6 +359,41 @@ export async function openSoundManager() {
         });
         console.log('✅ 사운드 추가 팝업 열림');
     }, 50);
+}
+
+// 🔥 로컬 fallback 함수
+function extractSoundCategoriesLocal() {
+    const SOUND_CATEGORIES = [
+        { id: '사람', name: '사람', order: 1 },
+        { id: '자연', name: '자연', order: 2 },
+        { id: '사물', name: '사물', order: 3 },
+        { id: '악기', name: '악기', order: 4 },
+        { id: '배경음악', name: '배경음악', order: 5 },
+        { id: '레트로', name: '레트로', order: 6 },
+        { id: '연출', name: '연출', order: 7 },
+        { id: '기타', name: '기타', order: 8 }
+    ];
+    
+    const existingCategories = new Set();
+    if (assets.sound && assets.sound.length > 0) {
+        assets.sound.forEach(sound => {
+            if (sound.category?.main) {
+                existingCategories.add(sound.category.main);
+            }
+        });
+    }
+    
+    return SOUND_CATEGORIES
+        .filter(cat => existingCategories.has(cat.id))
+        .map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            value: cat.id,
+            label: { ko: cat.name, en: cat.id },
+            categoryType: 'sound',
+            depth: 1,
+            children: []
+        }));
 }
 
 export function openTableManager(data) {

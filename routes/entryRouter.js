@@ -607,4 +607,218 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
     }
 });
 
+// =============================================================================
+// 🔊 소리 업로드 API (파일 올리기)
+// =============================================================================
+
+const multer = require('multer');
+
+// 소리 파일 업로드용 multer 설정
+const soundUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB
+    },
+    fileFilter: (req, file, cb) => {
+        // 허용하는 오디오 확장자
+        const allowedTypes = ['audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm', 'audio/x-m4a', 'audio/mp4'];
+        const allowedExtensions = ['.mp3', '.wav', '.ogg', '.webm', '.m4a'];
+        
+        const ext = path.extname(file.originalname).toLowerCase();
+        
+        if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(ext)) {
+            cb(null, true);
+        } else {
+            cb(new Error(`지원하지 않는 오디오 형식입니다: ${file.mimetype} (${ext})`), false);
+        }
+    }
+});
+
+router.post('/api/upload-sound', authenticateUser, soundUpload.single('sound'), async (req, res) => {
+    try {
+        const userID = req.session?.userID || 'anonymous';
+        const sessionID = req.query.sessionID || Date.now().toString();
+        
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                error: '소리 파일이 필요합니다.'
+            });
+        }
+        
+        const file = req.file;
+        console.log('🔊 [소리 업로드] 요청:', {
+            userID,
+            sessionID,
+            originalName: file.originalname,
+            size: file.size,
+            mimetype: file.mimetype
+        });
+        
+        // 파일명 생성
+        const timestamp = Date.now();
+        const ext = path.extname(file.originalname).toLowerCase() || '.mp3';
+        const baseName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9가-힣_-]/g, '_');
+        const finalFileName = `${timestamp}_${baseName}${ext}`;
+        
+        const fs = require('fs').promises;
+        
+        let s3Url = null;
+        
+        try {
+            // 🔥 S3Manager 사용 (IAM Role 지원)
+            const S3Manager = require('../lib_storage/s3Manager');
+            const s3Manager = new S3Manager();
+            
+            // S3 키 생성 - ent/uploads 경로 사용
+            const s3Key = `ent/uploads/${userID}_${sessionID}/sounds/${finalFileName}`;
+            
+            // S3Manager의 uploadProject 메서드 사용
+            s3Url = await s3Manager.uploadProject(s3Key, file.buffer, file.mimetype);
+            
+            console.log(`✅ S3 업로드 완료: ${s3Url}`);
+            
+        } catch (s3Error) {
+            console.error('⚠️ S3 업로드 실패, 로컬 저장으로 폴백:', s3Error.message);
+            
+            // 로컬 저장
+            const tempDir = '/var/www/html/temp/ent_files/current/sounds';
+            await fs.mkdir(tempDir, { recursive: true });
+            
+            const localFilePath = path.join(tempDir, finalFileName);
+            await fs.writeFile(localFilePath, file.buffer);
+            
+            s3Url = `/entry/temp/sounds/${finalFileName}`;
+            console.log(`✅ 로컬 저장 완료: ${s3Url}`);
+        }
+        
+        res.json({
+            success: true,
+            filename: finalFileName,
+            fileurl: s3Url,
+            path: s3Url,
+            ext: ext,
+            duration: 1, // TODO: ffprobe로 실제 duration 계산
+            originalName: file.originalname,
+            size: file.size,
+            message: '소리 파일 업로드 성공'
+        });
+        
+    } catch (error) {
+        console.error('❌ 소리 업로드 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// =============================================================================
+// 🔊 편집된 소리 저장 API
+// =============================================================================
+
+router.post('/api/save-sound', authenticateUser, async (req, res) => {
+    try {
+        const userID = req.session?.userID || 'anonymous';
+        const sessionID = req.query.sessionID || Date.now().toString();
+        
+        const { name, source, ext, duration } = req.body;
+        
+        if (!source) {
+            return res.status(400).json({
+                success: false,
+                error: '소리 데이터가 필요합니다.'
+            });
+        }
+        
+        console.log('💾 [소리 저장] 요청:', {
+            userID,
+            sessionID,
+            name,
+            ext,
+            duration,
+            sourceLength: typeof source === 'string' ? source.length : 'ArrayBuffer'
+        });
+        
+        // Base64 또는 ArrayBuffer 처리
+        let audioBuffer;
+        if (typeof source === 'string') {
+            // Base64 데이터
+            const base64Data = source.replace(/^data:audio\/\w+;base64,/, '');
+            audioBuffer = Buffer.from(base64Data, 'base64');
+        } else if (Array.isArray(source)) {
+            // ArrayBuffer (배열로 전송된 경우)
+            audioBuffer = Buffer.from(source);
+        } else {
+            return res.status(400).json({
+                success: false,
+                error: '지원하지 않는 소리 데이터 형식입니다.'
+            });
+        }
+        
+        // 파일명 생성
+        const timestamp = Date.now();
+        const finalExt = ext || '.mp3';
+        const baseName = (name || 'edited_sound').replace(/[^a-zA-Z0-9가-힣_-]/g, '_');
+        const finalFileName = `${timestamp}_${baseName}${finalExt}`;
+        
+        const fs = require('fs').promises;
+        
+        let s3Url = null;
+        
+        try {
+            // 🔥 S3Manager 사용
+            const S3Manager = require('../lib_storage/s3Manager');
+            const s3Manager = new S3Manager();
+            
+            // S3 키 생성
+            const s3Key = `ent/uploads/${userID}_${sessionID}/sounds/${finalFileName}`;
+            
+            // MIME 타입 결정
+            const mimeTypes = {
+                '.mp3': 'audio/mpeg',
+                '.wav': 'audio/wav',
+                '.ogg': 'audio/ogg',
+                '.webm': 'audio/webm',
+                '.m4a': 'audio/mp4'
+            };
+            const mimeType = mimeTypes[finalExt] || 'audio/mpeg';
+            
+            s3Url = await s3Manager.uploadProject(s3Key, audioBuffer, mimeType);
+            
+            console.log(`✅ S3 저장 완료: ${s3Url}`);
+            
+        } catch (s3Error) {
+            console.error('⚠️ S3 저장 실패, 로컬 저장으로 폴백:', s3Error.message);
+            
+            // 로컬 저장
+            const tempDir = '/var/www/html/temp/ent_files/current/sounds';
+            await fs.mkdir(tempDir, { recursive: true });
+            
+            const localFilePath = path.join(tempDir, finalFileName);
+            await fs.writeFile(localFilePath, audioBuffer);
+            
+            s3Url = `/entry/temp/sounds/${finalFileName}`;
+            console.log(`✅ 로컬 저장 완료: ${s3Url}`);
+        }
+        
+        res.json({
+            success: true,
+            filename: finalFileName,
+            fileurl: s3Url,
+            path: s3Url,
+            ext: finalExt,
+            duration: duration || 1,
+            message: '편집된 소리 저장 성공'
+        });
+        
+    } catch (error) {
+        console.error('❌ 소리 저장 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

@@ -99,7 +99,7 @@ function generateSoundPath(filename, ext) {
 }
 
 export function setSoundPopupEvent(popup) {
-    // 🔥 fetch 이벤트: 로컬 assets 사용
+    // 🔥 fetch 이벤트: 로컬 assets 사용 + 서브카테고리 필터링
     popup.on('fetch', async (category) => {
         try {
             const { sidebar, subMenu } = category;
@@ -114,18 +114,17 @@ export function setSoundPopupEvent(popup) {
             // 로컬 데이터 사용
             let data = assets.sound || [];
             
-            // 카테고리 필터링 (한글 카테고리명 사용)
+            // 🔥 메인 카테고리 필터링 (한글 카테고리명 사용)
             if (sidebar && sidebar !== 'all') {
                 data = data.filter(item => {
                     const mainCategory = item.category?.main;
-                    const subCategory = item.category?.sub;
-                    return mainCategory === sidebar || subCategory === sidebar;
+                    return mainCategory === sidebar;
                 });
-                console.log(`📂 카테고리 필터링 (${sidebar}):`, data.length);
+                console.log(`📂 메인 카테고리 필터링 (${sidebar}):`, data.length);
             }
             
-            // 서브 카테고리 필터링
-            if (subMenu && subMenu !== 'all') {
+            // 🔥 서브 카테고리 필터링
+            if (subMenu && subMenu !== 'all' && subMenu !== '전체') {
                 data = data.filter(item => {
                     const subCategory = item.category?.sub;
                     return subCategory === subMenu;
@@ -234,7 +233,7 @@ export function setSoundPopupEvent(popup) {
                 console.log(`🚀 API 업로드: ${file.name}`);
                 
                 // 사운드 업로드 API 호출
-                const response = await fetch(`/entry/data/upload-sound?sessionID=${sessionID}`, {
+                const response = await fetch(`/entry/api/upload-sound?sessionID=${sessionID}`, {
                     method: 'POST',
                     body: uploadFormData,
                     credentials: 'include'
@@ -281,6 +280,65 @@ export function setSoundPopupEvent(popup) {
             console.error('❌ 사운드 업로드 오류:', error);
             alert(`소리 업로드에 실패했습니다: ${error.message}`);
             popup.setData({ data: { uploads: [], data: [] } });
+        }
+    });
+    
+    // 🔥 write 이벤트: 편집된 소리 저장 (새로 추가)
+    popup.on('write', async (data) => {
+        try {
+            console.log('💾 소리 저장 요청:', data);
+            
+            const { sound, source } = data;
+            
+            if (!sound || !source) {
+                console.error('❌ 저장할 소리 데이터가 없습니다');
+                return;
+            }
+            
+            // sessionID 추출
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionID = urlParams.get('sessionID') || Date.now().toString();
+            
+            // 소리 저장 API 호출
+            const response = await fetch(`/entry/api/save-sound?sessionID=${sessionID}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: sound.name || 'edited_sound',
+                    source: source, // ArrayBuffer 또는 Base64
+                    ext: sound.ext || '.mp3',
+                    duration: sound.duration || 1
+                }),
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('✅ 소리 저장 성공:', result);
+            
+            // Entry에 소리 추가
+            const newSound = {
+                id: Entry.generateHash(),
+                name: sound.name || 'edited_sound',
+                filename: result.filename,
+                fileurl: result.fileurl,
+                path: result.fileurl,
+                ext: result.ext || '.mp3',
+                duration: result.duration || sound.duration || 1,
+                type: 'user'
+            };
+            
+            Entry.playground.addSound(newSound, true);
+            console.log('✅ Entry에 소리 추가 완료');
+            
+        } catch (error) {
+            console.error('❌ 소리 저장 오류:', error);
+            alert(`소리 저장에 실패했습니다: ${error.message}`);
         }
     });
     

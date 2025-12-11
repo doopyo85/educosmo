@@ -27,7 +27,18 @@ const HIDDEN_CATEGORIES = [
     'main_IYYpuwnMXN', 'other', 'thing', 'characters'
 ];
 
-// 🔥 categoryId → category 매핑 테이블 (sounds.json용)
+// 🔥 playentry.org 기준 사운드 카테고리 + 서브카테고리 구조
+const SOUND_CATEGORY_STRUCTURE = {
+    '사람': ['전체', '일상생활', '음성', '음식', '축하/박수'],
+    '자연': ['전체', '동물', '곤충', '자연환경'],
+    '사물': ['전체', '자동차', '배/비행기', '로봇/기계', '기타'],
+    '악기': ['전체', '피아노', '마림바', '드럼', '타악기', '기타'],
+    '배경음악': ['전체', '경쾌한', '모험', '신나는', '차분한', '8비트', '16비트', '마이 유니버스'],
+    '레트로': ['전체', '행동', '폭발/발사', '자동차/비행기', '로봇/기계', '레이저', '연출', '알림', '긍정', '부정', '캐릭터'],
+    '연출': ['전체', '긍정', '부정', '등장/퇴장', '알림', '폭발/발사', '기타']
+};
+
+// 🔥 categoryId → category 매핑 테이블 (sounds.json용) - 서브카테고리 포함
 const SOUND_CATEGORY_ID_MAP = {
     // 사람
     '5e20464eac9e9644cc0ab646': { main: '사람', sub: '일상생활' },
@@ -37,55 +48,55 @@ const SOUND_CATEGORY_ID_MAP = {
     
     // 자연
     '5e20464eac9e9644cc0ab648': { main: '자연', sub: '동물' },
-    '5e20464eac9e9644cc0ab649': { main: '자연', sub: '날씨' },
+    '5e20464eac9e9644cc0ab649': { main: '자연', sub: '자연환경' },
     '635a2ee522472a003034e7a0': { main: '자연', sub: '곤충' },
     
     // 사물
     '5e20464eac9e9644cc0ab64a': { main: '사물', sub: '자동차' },
-    '5e20464eac9e9644cc0ab64b': { main: '사물', sub: '주방' },
-    '6369f6a39784f9003033708b': { main: '사물', sub: '탈것' },
+    '5e20464eac9e9644cc0ab64b': { main: '사물', sub: '기타' },
+    '6369f6a39784f9003033708b': { main: '사물', sub: '배/비행기' },
     
     // 악기
     '5e20464eac9e9644cc0ab64c': { main: '악기', sub: '피아노' },
     '5e20464eac9e9644cc0ab64d': { main: '악기', sub: '마림바' },
     '5e20464eac9e9644cc0ab64e': { main: '악기', sub: '드럼' },
-    '5e20464eac9e9644cc0ab651': { main: '악기', sub: '전통악기' },
+    '5e20464eac9e9644cc0ab651': { main: '악기', sub: '타악기' },
     '63acfc74af886f003138bf6a': { main: '악기', sub: '기타' },
     
     // 배경음악
-    '6359e23a015caa00307b8fed': { main: '배경음악', sub: '동요' },
-    '6359e23a015caa00307b8fee': { main: '배경음악', sub: '게임' },
-    '6359e23a015caa00307b8fef': { main: '배경음악', sub: '시즌' },
-    '6359e23a015caa00307b8ff0': { main: '배경음악', sub: '클래식' },
-    '64ec30b3e8532700301bdd8e': { main: '배경음악', sub: '밝은' },
-    '64ec30b3e8532700301bdd8f': { main: '배경음악', sub: '어두운' },
+    '6359e23a015caa00307b8fed': { main: '배경음악', sub: '경쾌한' },
+    '6359e23a015caa00307b8fee': { main: '배경음악', sub: '모험' },
+    '6359e23a015caa00307b8fef': { main: '배경음악', sub: '신나는' },
+    '6359e23a015caa00307b8ff0': { main: '배경음악', sub: '차분한' },
+    '64ec30b3e8532700301bdd8e': { main: '배경음악', sub: '8비트' },
+    '64ec30b3e8532700301bdd8f': { main: '배경음악', sub: '16비트' },
     
     // 레트로
-    '64ec6b08e8532700301bde1f': { main: '레트로', sub: '타격' },
-    '64ec6b08e8532700301bde20': { main: '레트로', sub: '공격' },
-    '64ec6b08e8532700301bde21': { main: '레트로', sub: '비행' },
-    '64ec6b08e8532700301bde22': { main: '레트로', sub: '로봇' },
+    '64ec6b08e8532700301bde1f': { main: '레트로', sub: '행동' },
+    '64ec6b08e8532700301bde20': { main: '레트로', sub: '폭발/발사' },
+    '64ec6b08e8532700301bde21': { main: '레트로', sub: '자동차/비행기' },
+    '64ec6b08e8532700301bde22': { main: '레트로', sub: '로봇/기계' },
     '64ec6b08e8532700301bde23': { main: '레트로', sub: '레이저' },
-    '64ec6b08e8532700301bde24': { main: '레트로', sub: '무기' },
-    '64ec6b08e8532700301bde27': { main: '레트로', sub: '효과' },
+    '64ec6b08e8532700301bde24': { main: '레트로', sub: '연출' },
+    '64ec6b08e8532700301bde27': { main: '레트로', sub: '부정' },
     '64ec6b08e8532700301bde28': { main: '레트로', sub: '캐릭터' },
+    '64ec6b08e8532700301bde25': { main: '레트로', sub: '알림' },
+    '64ec6b08e8532700301bde26': { main: '레트로', sub: '긍정' },
     
     // 연출
-    '6359f49122472a003034e757': { main: '연출', sub: '빛' },
-    '6359f49122472a003034e758': { main: '연출', sub: '분위기' },
-    '6359f49122472a003034e759': { main: '연출', sub: '등퇴장' },
+    '6359f49122472a003034e757': { main: '연출', sub: '긍정' },
+    '6359f49122472a003034e758': { main: '연출', sub: '부정' },
+    '6359f49122472a003034e759': { main: '연출', sub: '등장/퇴장' },
     '6359f49122472a003034e75a': { main: '연출', sub: '알림' },
-    '6359f49122472a003034e75b': { main: '연출', sub: '폭발' },
-    '6359f49122472a003034e75c': { main: '연출', sub: '효과' },
-    '6359f50a22472a003034e75e': { main: '연출', sub: '전자' },
-    '64ec6b08e8532700301bde25': { main: '연출', sub: '경고' },
-    '64ec6b08e8532700301bde26': { main: '연출', sub: '성공' },
+    '6359f49122472a003034e75b': { main: '연출', sub: '폭발/발사' },
+    '6359f49122472a003034e75c': { main: '연출', sub: '기타' },
+    '6359f50a22472a003034e75e': { main: '연출', sub: '기타' },
     
     // EBS (숨김 처리)
     '667bb7629776a4d6c168cf0a': { main: 'EBS', sub: 'EBS' }
 };
 
-// 🔥 사운드 공식 카테고리 (playentry.org 기준)
+// 🔥 사운드 공식 카테고리 순서
 const OFFICIAL_SOUND_CATEGORIES = [
     { id: '사람', name: '사람', order: 1 },
     { id: '자연', name: '자연', order: 2 },
@@ -141,11 +152,21 @@ async function loadEntryResources() {
         });
         
         // 🔥 사운드 카테고리 디버그 출력
-        const soundCategories = new Set();
+        const soundCategories = new Map();
         soundData.forEach(s => {
-            if (s.category?.main) soundCategories.add(s.category.main);
+            if (s.category?.main) {
+                const main = s.category.main;
+                const sub = s.category.sub || '전체';
+                if (!soundCategories.has(main)) {
+                    soundCategories.set(main, new Set());
+                }
+                soundCategories.get(main).add(sub);
+            }
         });
-        console.log('🔊 사운드 카테고리 목록:', Array.from(soundCategories));
+        console.log('🔊 사운드 카테고리 구조:');
+        soundCategories.forEach((subs, main) => {
+            console.log(`  ${main}: ${Array.from(subs).join(', ')}`);
+        });
         
         return true;
     } catch (error) {
@@ -286,13 +307,15 @@ export function extractCategories() {
         .sort((a, b) => a.order - b.order);
 }
 
-// 🔥 사운드 카테고리 추출 함수 (신규)
+// 🔥 사운드 카테고리 추출 함수 (서브카테고리 포함)
 export function extractSoundCategories() {
     const categoryMap = new Map();
     
+    // 먼저 데이터에서 실제 존재하는 카테고리/서브카테고리 수집
     soundData.forEach(sound => {
         if (sound.category?.main) {
             const main = sound.category.main;
+            const sub = sound.category.sub || '전체';
             
             // 숨길 카테고리 제외
             if (HIDDEN_SOUND_CATEGORIES.includes(main)) {
@@ -300,27 +323,82 @@ export function extractSoundCategories() {
             }
             
             if (!categoryMap.has(main)) {
-                // 공식 카테고리에서 순서 찾기
-                const official = OFFICIAL_SOUND_CATEGORIES.find(c => c.id === main);
-                const order = official ? official.order : 999;
-                
-                categoryMap.set(main, {
-                    id: main,
-                    name: main,
-                    value: main,
-                    label: { ko: main, en: main },
-                    categoryType: 'sound',
-                    depth: 1,
-                    order: order,
-                    children: []
-                });
+                categoryMap.set(main, new Set());
             }
+            categoryMap.get(main).add(sub);
         }
     });
     
-    return Array.from(categoryMap.values())
-        .sort((a, b) => a.order - b.order);
+    // 공식 순서대로 카테고리 구조 생성
+    const result = [];
+    
+    OFFICIAL_SOUND_CATEGORIES.forEach(official => {
+        if (categoryMap.has(official.id)) {
+            const subs = categoryMap.get(official.id);
+            
+            // 서브카테고리 children 생성
+            const children = [
+                // '전체' 항상 첫번째
+                {
+                    id: `${official.id}_all`,
+                    name: '전체',
+                    value: 'all',
+                    label: { ko: '전체' },
+                    categoryType: 'sound',
+                    depth: 2,
+                    parent: official.id
+                }
+            ];
+            
+            // SOUND_CATEGORY_STRUCTURE에서 정의된 순서대로 서브카테고리 추가
+            const structure = SOUND_CATEGORY_STRUCTURE[official.id] || [];
+            structure.forEach(subName => {
+                if (subName !== '전체' && subs.has(subName)) {
+                    children.push({
+                        id: `${official.id}_${subName}`,
+                        name: subName,
+                        value: subName,
+                        label: { ko: subName },
+                        categoryType: 'sound',
+                        depth: 2,
+                        parent: official.id
+                    });
+                }
+            });
+            
+            // 구조에 없지만 데이터에 있는 서브카테고리도 추가
+            subs.forEach(subName => {
+                if (subName !== '전체' && !structure.includes(subName)) {
+                    children.push({
+                        id: `${official.id}_${subName}`,
+                        name: subName,
+                        value: subName,
+                        label: { ko: subName },
+                        categoryType: 'sound',
+                        depth: 2,
+                        parent: official.id
+                    });
+                }
+            });
+            
+            result.push({
+                id: official.id,
+                name: official.name,
+                value: official.id,
+                label: { ko: official.name },
+                categoryType: 'sound',
+                depth: 1,
+                order: official.order,
+                children: children
+            });
+        }
+    });
+    
+    return result;
 }
+
+// 🔥 사운드 카테고리 구조 export
+export const SOUND_CATEGORIES_WITH_SUBS = SOUND_CATEGORY_STRUCTURE;
 
 // 초기 로드 실행
 loadEntryResources();
@@ -331,7 +409,8 @@ export const assets = {
     get picture() { return pictureData; },
     get sound() { return soundData; },
     loadResources: loadEntryResources,
-    extractSoundCategories: extractSoundCategories
+    extractSoundCategories: extractSoundCategories,
+    SOUND_CATEGORY_STRUCTURE: SOUND_CATEGORY_STRUCTURE
 };
 
 assets.loadResources = loadEntryResources;
