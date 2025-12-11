@@ -328,15 +328,15 @@ export async function openSoundManager() {
         await assets.loadResources();
     }
     
-    // 🔥 Entry 공식 사운드 카테고리 (sounds.json의 main이 한글이므로 id도 한글로!)
+    // 🔥 playentry.org 기준 공식 사운드 카테고리 순서
     const SOUND_CATEGORIES = [
         { id: '사람', name: '사람', order: 1 },
         { id: '자연', name: '자연', order: 2 },
-        { id: '악기', name: '악기', order: 3 },
-        { id: '음악', name: '음악', order: 4 },
-        { id: '효과', name: '효과', order: 5 },
-        { id: '생활', name: '생활', order: 6 },
-        { id: '판타지', name: '판타지', order: 7 },
+        { id: '사물', name: '사물', order: 3 },
+        { id: '악기', name: '악기', order: 4 },
+        { id: '배경음악', name: '배경음악', order: 5 },
+        { id: '레트로', name: '레트로', order: 6 },
+        { id: '연출', name: '연출', order: 7 },
         { id: '기타', name: '기타', order: 8 }
     ];
     
@@ -350,6 +350,8 @@ export async function openSoundManager() {
         });
     }
     
+    console.log('🔊 sounds.json 카테고리:', Array.from(existingCategories));
+    
     // 공식 순서대로 카테고리 생성 (실제 존재하는 것만)
     let soundCategories = SOUND_CATEGORIES
         .filter(cat => existingCategories.has(cat.id))
@@ -362,6 +364,21 @@ export async function openSoundManager() {
             depth: 1,
             children: []
         }));
+    
+    // 🔥 존재하지만 공식 카테고리에 없는 것들 추가 (기타로 분류 안 된 것들)
+    existingCategories.forEach(cat => {
+        if (!SOUND_CATEGORIES.find(c => c.id === cat) && cat !== 'EBS' && !cat.startsWith('EBS')) {
+            soundCategories.push({
+                id: cat,
+                name: cat,
+                value: cat,
+                label: { ko: cat, en: cat },
+                categoryType: 'sound',
+                depth: 1,
+                children: []
+            });
+        }
+    });
     
     // 카테고리가 없으면 기본 '전체' 카테고리 추가
     if (soundCategories.length === 0) {
@@ -387,6 +404,8 @@ export async function openSoundManager() {
     if (firstCategory !== 'all') {
         filteredSounds = filteredSounds.filter(s => s.category?.main === firstCategory);
     }
+    
+    console.log(`🔊 초기 사운드 (${firstCategory}): ${filteredSounds.length}개`);
     
     // 🔥 팝업 열기 - 상태 먼저 설정
     isPopupOpen = true;
