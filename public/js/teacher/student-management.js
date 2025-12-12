@@ -139,7 +139,7 @@ const StudentManagement = {
         if (this.progressData.length === 0) {
             tbody.append(`
                 <tr>
-                    <td colspan="10" class="text-center text-muted py-4">
+                    <td colspan="9" class="text-center text-muted py-4">
                         학습 진도 데이터가 없습니다.
                     </td>
                 </tr>
@@ -155,6 +155,11 @@ const StudentManagement = {
                     <td>
                         <img src="${student.profile_image || '/resource/profiles/default.webp'}" 
                             class="rounded-circle" width="40" height="40">
+                    </td>
+                    <td>
+                        <span class="badge bg-success">
+                            ${student.ct_level || 0}
+                        </span>
                     </td>
                     <td>${student.name || '-'}</td>
                     <td>
@@ -177,26 +182,13 @@ const StudentManagement = {
                         </span>
                     </td>
                     <td>
-                        <span class="badge bg-success">
-                            CT ${student.ct_level || 0}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="badge bg-secondary">
-                            ${storageUsage}
-                        </span>
+                        <a href="#" onclick="openStudentS3Folder('${student.username}'); return false;" 
+                           title="파일 폴더 열기" style="color: #6c757d; margin-right: 6px;">
+                            <i class="bi bi-folder2-open"></i>
+                        </a>
+                        <span class="text-muted small">${storageUsage}</span>
                     </td>
                     <td>${student.last_learning_at || '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary me-1" 
-                                onclick="StudentManagement.openStudentDetail(${student.user_id})" title="상세보기">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary" 
-                                onclick="openStudentS3Folder('${student.username}')" title="파일 폴더">
-                            <i class="bi bi-folder2-open"></i>
-                        </button>
-                    </td>
                 </tr>
             `);
         });
@@ -287,7 +279,7 @@ const StudentManagement = {
         if (filteredList.length === 0) {
             tbody.append(`
                 <tr>
-                    <td colspan="10" class="text-center text-muted py-4">
+                    <td colspan="9" class="text-center text-muted py-4">
                         검색 결과가 없습니다.
                     </td>
                 </tr>
@@ -303,6 +295,11 @@ const StudentManagement = {
                     <td>
                         <img src="${student.profile_image || '/resource/profiles/default.webp'}" 
                             class="rounded-circle" width="40" height="40">
+                    </td>
+                    <td>
+                        <span class="badge bg-success">
+                            ${student.ct_level || 0}
+                        </span>
                     </td>
                     <td>${student.name || '-'}</td>
                     <td>
@@ -325,26 +322,13 @@ const StudentManagement = {
                         </span>
                     </td>
                     <td>
-                        <span class="badge bg-success">
-                            CT ${student.ct_level || 0}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="badge bg-secondary">
-                            ${storageUsage}
-                        </span>
+                        <a href="#" onclick="openStudentS3Folder('${student.username}'); return false;" 
+                           title="파일 폴더 열기" style="color: #6c757d; margin-right: 6px;">
+                            <i class="bi bi-folder2-open"></i>
+                        </a>
+                        <span class="text-muted small">${storageUsage}</span>
                     </td>
                     <td>${student.last_learning_at || '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary me-1" 
-                                onclick="StudentManagement.openStudentDetail(${student.user_id})" title="상세보기">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary" 
-                                onclick="openStudentS3Folder('${student.username}')" title="파일 폴더">
-                            <i class="bi bi-folder2-open"></i>
-                        </button>
-                    </td>
                 </tr>
             `);
         });
