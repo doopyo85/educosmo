@@ -18,8 +18,9 @@ router.get('/browser', authenticateUser, (req, res) => {
     const userID = req.session.userID;
     const role = req.session.role;
     const centerID = req.session.centerID;
+    const initialPath = req.query.initialPath || ''; // 🔥 초기 경로 파라미터
     
-    console.log(`📂 S3 브라우저 접근 - User: ${userID}, Role: ${role}`);
+    console.log(`📂 S3 브라우저 접근 - User: ${userID}, Role: ${role}, InitialPath: ${initialPath}`);
     
     // 🔥 역할별 설정
     let config = {
@@ -27,7 +28,8 @@ router.get('/browser', authenticateUser, (req, res) => {
       role: role,
       is_logined: req.session.is_logined,
       centerID: centerID,
-      pageTitle: 'S3 파일 관리'
+      pageTitle: 'S3 파일 관리',
+      initialPath: initialPath // 🔥 초기 경로 전달
     };
     
     // 🎯 역할별 scope, enableDelete 설정

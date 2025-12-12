@@ -17,11 +17,6 @@
                 <i class="bi bi-people-fill me-2"></i>학생 목록
             </button>
         </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#student-files" type="button" role="tab">
-                <i class="bi bi-folder-open me-2"></i>학생 파일
-            </button>
-        </li>
     </ul>
 
     <!-- 탭 콘텐츠 -->
@@ -44,6 +39,7 @@
                         <th>진도율</th>
                         <th>현재 플랫폼</th>
                         <th>CT 레벨</th>
+                        <th>스토리지</th>
                         <th>최근 학습일</th>
                         <th>관리</th>
                     </tr>
@@ -85,18 +81,6 @@
                         <!-- 동적 생성 -->
                     </tbody>
                 </table>
-            </div>
-        </div>
-        
-        <!-- 🔥 학생 파일 탭 -->
-        <div class="tab-pane fade" id="student-files" role="tabpanel">
-            <div class="text-center py-5">
-                <i class="bi bi-folder-open" style="font-size: 4rem; color: #0d6efd;"></i>
-                <h4 class="mt-3">학생 파일 브라우저</h4>
-                <p class="text-muted">소속 학생들의 저장 파일을 조회할 수 있습니다.</p>
-                <button class="btn btn-primary btn-lg mt-3" data-bs-toggle="modal" data-bs-target="#s3BrowserModal">
-                    <i class="bi bi-folder-open me-2"></i>파일 브라우저 열기
-                </button>
             </div>
         </div>
     </div>
@@ -170,11 +154,14 @@
 
 <!-- 🔥 S3 모달 초기화 스크립트 -->
 <script>
-    // 모달이 열릴 때 iframe src 설정
-    document.getElementById('s3BrowserModal').addEventListener('show.bs.modal', function () {
+    // 학생 S3 폴더 열기 함수
+    function openStudentS3Folder(userID) {
         const iframe = document.getElementById('s3BrowserFrame');
-        iframe.src = '/s3';
-    });
+        // S3 브라우저에 학생 폴더 경로 전달
+        iframe.src = `/s3/browser?initialPath=users/${encodeURIComponent(userID)}/`;
+        const modal = new bootstrap.Modal(document.getElementById('s3BrowserModal'));
+        modal.show();
+    }
     
     // 모달이 닫힐 때 iframe src 초기화 (메모리 절약)
     document.getElementById('s3BrowserModal').addEventListener('hidden.bs.modal', function () {

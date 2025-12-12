@@ -516,14 +516,16 @@ router.get('/api/student-progress', requireTeacher, async (req, res) => {
                     WHEN COUNT(DISTINCT l.content_name) >= 50 THEN 50
                     WHEN COUNT(DISTINCT l.content_name) >= 30 THEN 30
                     ELSE 0
-                END AS ct_level
+                END AS ct_level,
+                COALESCE(usu.total_usage, 0) AS storage_usage
             FROM Users u
             LEFT JOIN LearningLogs l ON l.user_id = u.id
+            LEFT JOIN UserStorageUsage usu ON usu.user_id = u.id
             LEFT JOIN (
                 SELECT COUNT(*) AS total_count FROM ContentMap WHERE is_active = 1
             ) AS total_contents ON 1 = 1
             ${whereClause}
-            GROUP BY u.id, u.name, u.userID, u.profile_image, total_contents.total_count
+            GROUP BY u.id, u.name, u.userID, u.profile_image, total_contents.total_count, usu.total_usage
             ORDER BY u.name
         `;
         

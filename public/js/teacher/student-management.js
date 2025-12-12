@@ -123,6 +123,15 @@ const StudentManagement = {
         });
     },
     
+    // 파일 용량 포맷팅 함수
+    formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    },
+
     renderProgress() {
         const tbody = $('#progressTableBody');
         tbody.empty();
@@ -130,7 +139,7 @@ const StudentManagement = {
         if (this.progressData.length === 0) {
             tbody.append(`
                 <tr>
-                    <td colspan="9" class="text-center text-muted py-4">
+                    <td colspan="10" class="text-center text-muted py-4">
                         학습 진도 데이터가 없습니다.
                     </td>
                 </tr>
@@ -140,6 +149,7 @@ const StudentManagement = {
         
         this.progressData.forEach(student => {
             const progressRate = student.progress_rate || 0;
+            const storageUsage = this.formatBytes(student.storage_usage || 0);
             tbody.append(`
                 <tr>
                     <td>
@@ -171,11 +181,20 @@ const StudentManagement = {
                             CT ${student.ct_level || 0}
                         </span>
                     </td>
+                    <td>
+                        <span class="badge bg-secondary">
+                            ${storageUsage}
+                        </span>
+                    </td>
                     <td>${student.last_learning_at || '-'}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary" 
-                                onclick="StudentManagement.openStudentDetail(${student.user_id})">
-                            <i class="bi bi-eye"></i> 보기
+                        <button class="btn btn-sm btn-outline-primary me-1" 
+                                onclick="StudentManagement.openStudentDetail(${student.user_id})" title="상세보기">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" 
+                                onclick="openStudentS3Folder('${student.username}')" title="파일 폴더">
+                            <i class="bi bi-folder2-open"></i>
                         </button>
                     </td>
                 </tr>
@@ -268,7 +287,7 @@ const StudentManagement = {
         if (filteredList.length === 0) {
             tbody.append(`
                 <tr>
-                    <td colspan="9" class="text-center text-muted py-4">
+                    <td colspan="10" class="text-center text-muted py-4">
                         검색 결과가 없습니다.
                     </td>
                 </tr>
@@ -278,6 +297,7 @@ const StudentManagement = {
         
         filteredList.forEach(student => {
             const progressRate = student.progress_rate || 0;
+            const storageUsage = this.formatBytes(student.storage_usage || 0);
             tbody.append(`
                 <tr>
                     <td>
@@ -309,11 +329,20 @@ const StudentManagement = {
                             CT ${student.ct_level || 0}
                         </span>
                     </td>
+                    <td>
+                        <span class="badge bg-secondary">
+                            ${storageUsage}
+                        </span>
+                    </td>
                     <td>${student.last_learning_at || '-'}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary" 
-                                onclick="StudentManagement.openStudentDetail(${student.user_id})">
-                            <i class="bi bi-eye"></i> 보기
+                        <button class="btn btn-sm btn-outline-primary me-1" 
+                                onclick="StudentManagement.openStudentDetail(${student.user_id})" title="상세보기">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" 
+                                onclick="openStudentS3Folder('${student.username}')" title="파일 폴더">
+                            <i class="bi bi-folder2-open"></i>
                         </button>
                     </td>
                 </tr>
