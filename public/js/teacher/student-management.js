@@ -259,27 +259,12 @@ const StudentManagement = {
                 // Clickable chart triggering collapse
                 platformCells += `
                     <td class="text-center clickable-cell">
-                        <div onclick="StudentManagement.toggleDetail(this, ${student.user_id}, '${p.key}')" style="cursor: pointer;">
+                        <div onclick="StudentManagement.toggleDetail(this, ${student.user_id}, '${p.key}', event)" style="cursor: pointer;">
                             <div class="circular-chart small" data-percent="${percent}" 
                                 style="background: conic-gradient(#0d6efd 0% ${percent}%, #e9ecef ${percent}% 100%); width: 28px; height: 28px; margin: 0 auto;"
                                 title="${p.label}: ${p.completed}/${p.total}">
                             </div>
                             <div class="small text-muted mt-1" style="font-size: 0.7rem;">${p.completed}/${p.total}</div>
-                        </div>
-                        
-                        <!-- Popover (Hidden by default) -->
-                        <div id="popover-${student.user_id}-${p.key}" class="platform-popover" onclick="event.stopPropagation()">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div>
-                                    <span class="badge bg-primary me-1">${p.label}</span>
-                                    <span class="small text-muted">${p.completed} / ${p.total} 완료</span>
-                                </div>
-                                <button type="button" class="btn-close btn-close-sm" aria-label="Close" 
-                                        onclick="StudentManagement.closeAllPopovers()"></button>
-                            </div>
-                            <div class="completion-dots" style="justify-content: flex-start;">
-                                ${this.generateDots(p.completed, p.total)}
-                            </div>
                         </div>
                     </td>
                 `;
@@ -313,18 +298,23 @@ const StudentManagement = {
                            class="btn-icon mb-1" title="파일 폴더 열기">
                             <i class="bi bi-folder2-open fs-5"></i>
                         </a>
-                        <div class="small text-muted">${storageUsage}</div>
+                        <div class="small text-muted" style="line-height:1;">${storageUsage}</div>
                     </td>
                     <td><span class="text-muted small">${student.last_learning_at || '-'}</span></td>
                 </tr>
             `);
         });
 
-        // Click outside to close popovers
+        // Click outside to close global popover
         $(document).off('click.popover').on('click.popover', (e) => {
-            if (!$(e.target).closest('.clickable-cell').length) {
+            if (!$(e.target).closest('.clickable-cell').length && !$(e.target).closest('#global-platform-popover').length) {
                 this.closeAllPopovers();
             }
+        });
+
+        // Scroll event to close popover (optional, but good for UX if position is absolute/fixed)
+        $(window).off('scroll.popover').on('scroll.popover', () => {
+            this.closeAllPopovers();
         });
     },
 
@@ -338,22 +328,68 @@ const StudentManagement = {
         return dotsHtml;
     },
 
-    toggleDetail(element, userId, platformKey) {
-        const popoverId = `#popover-${userId}-${platformKey}`;
-        const $popover = $(popoverId);
-        const isVisible = $popover.is(':visible');
+    toggleDetail(element, userId, platformKey, event) {
+        if (event) event.stopPropagation();
 
-        // Close all first
-        this.closeAllPopovers();
+        const $popover = $('#global-platform-popover');
 
-        // If it wasn't visible, show it
-        if (!isVisible) {
-            $popover.fadeIn(200);
+        // Identify if this is a toggle (clicking same element while open)
+        // We can store the current target on the popover
+        const currentTargetId = $popover.data('target-id');
+        const newTargetId = `${userId}-${platformKey}`;
+
+        if ($popover.is(':visible') && currentTargetId === newTargetId) {
+            this.closeAllPopovers();
+            return;
         }
+
+        // Find student data
+        const student = this.progressData.find(s => s.user_id === userId);
+        if (!student) return;
+
+        // Map platform key to data fields
+        let completed = 0, total = 0, label = '';
+        if (platformKey === 'scratch') { completed = student.scratch_completed; total = student.scratch_total; label = '스크래치'; }
+        else if (platformKey === 'entry') { completed = student.entry_completed; total = student.entry_total; label = '엔트리'; }
+        else if (platformKey === 'appinventor') { completed = student.appinventor_completed; total = student.appinventor_total; label = '앱인벤터'; }
+        else if (platformKey === 'python') { completed = student.python_completed; total = student.python_total; label = '파이썬'; }
+        else if (platformKey === 'dataanalysis') { completed = student.dataanalysis_completed; total = student.dataanalysis_total; label = '데이터분석'; }
+
+        // Content
+        let contentHtml = `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <span class="badge bg-primary me-1">${label}</span>
+                    <span class="small text-muted">${completed} / ${total} 완료</span>
+                </div>
+                <button type="button" class="btn-close btn-close-sm" aria-label="Close" 
+                        onclick="StudentManagement.closeAllPopovers()"></button>
+            </div>
+            <div class="completion-dots" style="justify-content: flex-start;">
+                ${this.generateDots(completed, total)}
+            </div>
+        `;
+        $popover.html(contentHtml);
+
+        // Positioning
+        // element is the .clickable-cell or internal div. Better to use the cell (td) or wrapper.
+        // The element passed is the inner div.
+        const rect = element.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const scrollLeft = window.scrollLeft || document.documentElement.scrollLeft;
+
+        // Position centered below the element
+        const top = rect.bottom + scrollTop + 10; // 10px spacing
+        const left = rect.left + scrollLeft + (rect.width / 2) - ($popover.outerWidth() / 2 || 120); // Center
+
+        $popover.css({
+            top: top + 'px',
+            left: left + 'px'
+        }).data('target-id', newTargetId).fadeIn(150);
     },
 
     closeAllPopovers() {
-        $('.platform-popover').fadeOut(100);
+        $('#global-platform-popover').fadeOut(100).data('target-id', null);
     },
 
     // ============================================

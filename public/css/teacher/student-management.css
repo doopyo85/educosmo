@@ -4,7 +4,8 @@
 .student-management-page {
     padding: 2rem;
     background-color: #f5f7fa;
-    height: 100%;
+    height: calc(100vh - 60px);
+    /* Limit height to viewport to force internal scroll */
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -428,57 +429,102 @@
     color: #0d6efd;
 }
 
-/* Number Column */
-.col-number {
-    color: #95a5a6;
-    font-size: 0.85rem;
-    font-weight: 500;
-}
-
-/* Clickable Cell for Popover Position */
-.clickable-cell {
-    position: relative;
-    /* Anchor for popover */
-}
-
-/* Platform Detail Popover */
-.platform-popover {
+/* Global Popover (Attached to Body) */
+#global-platform-popover {
     position: absolute;
-    top: 80%;
-    /* Show below the cell */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 220px;
-    background: #fff;
+    width: 240px;
+    background: #ffffff;
     border: 1px solid #dee2e6;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    padding: 12px;
-    z-index: 100;
-    text-align: left;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    z-index: 9999;
+    /* High z-index to float above everything */
     display: none;
-    /* Hidden by default */
 }
 
-/* Popover Arrow */
-.platform-popover::after {
+/* Arrow for Global Popover */
+#global-platform-popover::after {
     content: '';
     position: absolute;
     bottom: 100%;
     left: 50%;
-    margin-left: -6px;
-    border-width: 6px;
+    margin-left: -8px;
+    border-width: 8px;
     border-style: solid;
-    border-color: transparent transparent #fff transparent;
+    border-color: transparent transparent #ffffff transparent;
 }
 
-.platform-popover::before {
+#global-platform-popover::before {
     content: '';
     position: absolute;
     bottom: 100%;
     left: 50%;
-    margin-left: -7px;
-    border-width: 7px;
+    margin-left: -9px;
+    border-width: 9px;
     border-style: solid;
     border-color: transparent transparent #dee2e6 transparent;
+}
+
+/* 
+   Progress Table Specific Column Widths 
+   Total 10 Columns
+   Left Info (37%) + Platforms (40%) + Right (23%)
+*/
+
+/* 1. No */
+#progressTableWrapper col:nth-child(1) {
+    width: 3%;
+}
+
+/* 2. Profile (Increased) */
+#progressTableWrapper col:nth-child(2) {
+    width: 6%;
+}
+
+/* 3. CT (Increased) */
+#progressTableWrapper col:nth-child(3) {
+    width: 6%;
+}
+
+/* 4. Name (Decreased) */
+#progressTableWrapper col:nth-child(4) {
+    width: 10%;
+}
+
+/* 5. ID (Decreased) */
+#progressTableWrapper col:nth-child(5) {
+    width: 11%;
+}
+
+/* Platforms: 6-10 (Total 40% -> 8% each) */
+#progressTableWrapper col:nth-child(6) {
+    width: 8%;
+}
+
+#progressTableWrapper col:nth-child(7) {
+    width: 8%;
+}
+
+#progressTableWrapper col:nth-child(8) {
+    width: 8%;
+}
+
+#progressTableWrapper col:nth-child(9) {
+    width: 8%;
+}
+
+#progressTableWrapper col:nth-child(10) {
+    width: 8%;
+}
+
+/* Right: 11, 12 (Total 20% -> 10% each) */
+/* 11. Storage (Swapped) */
+#progressTableWrapper col:nth-child(11) {
+    width: 10%;
+}
+
+/* 12. Last Learning (Moved to end) */
+#progressTableWrapper col:nth-child(12) {
+    width: 10%;
 }
