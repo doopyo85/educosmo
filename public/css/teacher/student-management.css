@@ -1,103 +1,149 @@
-/* Teacher Student Management Premium UI */
+/* Teacher Student Management Premium UI - Compact Layout */
 
-/* General Container & Card Style */
+/* General Container */
 .student-management-page {
-    padding: 2rem;
+    padding: 0;
     background-color: #f5f7fa;
-    /* Light subtle gray background for the page */
-    min-height: 100%;
-    box-sizing: border-box;
+    height: 100%;
+    /* Full height of parent */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Prevent body scroll */
 }
 
-.page-header {
-    margin-bottom: 2rem;
+/* Compact Header */
+.compact-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    padding: 0 1.5rem;
+    height: 60px;
+    border-bottom: 1px solid #dee2e6;
+    flex-shrink: 0;
+    /* Prevent shrinking */
+    z-index: 100;
 }
 
-.page-header h3 {
-    font-size: 1.75rem;
+.page-branding {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.page-title {
+    font-size: 1.25rem;
     font-weight: 700;
     color: #2c3e50;
-    margin-bottom: 0.5rem;
+    margin: 0;
+    white-space: nowrap;
 }
 
-.page-header .text-muted {
-    font-size: 0.95rem;
-    color: #7f8c8d !important;
+/* Compact Tabs in Header */
+.header-tabs .nav-tabs {
+    border-bottom: none;
+    margin-bottom: 0;
+    display: flex;
+    gap: 0.5rem;
 }
 
-/* Tabs Styling */
-.nav-tabs {
-    border-bottom: 2px solid #e9ecef;
-    margin-bottom: 1.5rem;
-}
-
-.nav-tabs .nav-link {
+.header-tabs .nav-link {
     border: none;
-    border-bottom: 2px solid transparent;
+    background: transparent;
     color: #6c757d;
     font-weight: 600;
-    padding: 0.75rem 1.5rem;
-    transition: all 0.2s ease;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    transition: all 0.2s;
 }
 
-.nav-tabs .nav-link:hover {
+.header-tabs .nav-link:hover {
+    background-color: #f8f9fa;
     color: #495057;
-    border-color: transparent;
-    background-color: rgba(233, 236, 239, 0.3);
 }
 
-.nav-tabs .nav-link.active {
+.header-tabs .nav-link.active {
+    background-color: #e7f1ff;
     color: #0d6efd;
-    background-color: transparent;
-    border-bottom: 2px solid #0d6efd;
 }
 
-.nav-tabs .nav-link i {
-    margin-right: 0.5rem;
+.header-tabs .nav-link i {
+    margin-right: 0.4rem;
 }
 
-/* Card Container for Content */
-.content-card {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 0 10px 15px rgba(0, 0, 0, 0.03);
-    padding: 1.5rem;
-    border: 1px solid rgba(0, 0, 0, 0.03);
+/* Header Controls */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-/* Search Box Premium Styling */
 .search-wrapper {
     position: relative;
-    margin-bottom: 1.5rem;
-    max-width: 400px;
+    width: 250px;
+    margin: 0;
 }
 
 .search-wrapper .form-control {
-    padding-left: 2.75rem;
-    border-radius: 50px;
+    padding-left: 2.25rem;
+    border-radius: 20px;
+    /* More compact pill shape */
     border: 1px solid #dee2e6;
     background-color: #f8f9fa;
-    transition: all 0.2s;
-    height: 48px;
-    font-size: 0.95rem;
+    height: 36px;
+    font-size: 0.9rem;
 }
 
 .search-wrapper .form-control:focus {
     background-color: #fff;
     border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
 }
 
 .search-wrapper .search-icon {
     position: absolute;
-    left: 1rem;
+    left: 0.8rem;
     top: 50%;
     transform: translateY(-50%);
     color: #adb5bd;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
 }
 
-/* Premium Table Styling */
+/* Main Content Area */
+.tab-content {
+    flex: 1;
+    overflow: hidden;
+    /* Internal scroll */
+    padding: 1rem;
+    position: relative;
+}
+
+.tab-pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Table Card Container */
+.content-card {
+    flex: 1;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #dfe3e8;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-responsive {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Premium Table Styles */
 .premium-table {
     width: 100%;
     border-collapse: separate;
@@ -105,95 +151,69 @@
 }
 
 .premium-table thead th {
-    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f9fafb;
     color: #6c757d;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.75rem;
-    letter-spacing: 0.05em;
-    padding: 1rem;
-    border-bottom: 1px solid #edf2f7;
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
     text-align: center;
+    box-shadow: 0 1px 0 #dee2e6;
+    /* Fake border for sticky */
 }
 
-.premium-table thead th:first-child {
-    border-top-left-radius: 12px;
-}
-
-.premium-table thead th:last-child {
-    border-top-right-radius: 12px;
-}
-
-.premium-table tbody tr {
-    transition: background-color 0.2s ease, transform 0.2s ease;
+.premium-table tbody td {
+    padding: 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf2f7;
+    color: #495057;
+    font-size: 0.9rem;
+    text-align: center;
 }
 
 .premium-table tbody tr:hover {
     background-color: #f8f9fa;
-    /* transform: scale(1.005); */
-    /* Optional: subtle zoom */
-}
-
-.premium-table tbody td {
-    padding: 1rem;
-    vertical-align: middle;
-    border-bottom: 1px solid #edf2f7;
-    color: #495057;
-    font-size: 0.95rem;
-    text-align: center;
-}
-
-.premium-table tbody tr:last-child td {
-    border-bottom: none;
 }
 
 /* Profile Image */
-.premium-table .profile-img {
-    width: 42px;
-    height: 42px;
+.profile-img {
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Badges - Soft Style */
+/* Badges */
 .badge-soft-success {
     background-color: #d1e7dd;
     color: #0f5132;
-    padding: 0.4em 0.8em;
+    padding: 0.35em 0.65em;
     border-radius: 50px;
     font-weight: 600;
-    font-size: 0.85em;
+    font-size: 0.8em;
 }
 
 .badge-soft-info {
     background-color: #cff4fc;
     color: #055160;
-    padding: 0.4em 0.8em;
+    padding: 0.35em 0.65em;
     border-radius: 50px;
     font-weight: 600;
-    font-size: 0.85em;
-}
-
-.badge-soft-primary {
-    background-color: #cfe2ff;
-    color: #084298;
-    padding: 0.4em 0.8em;
-    border-radius: 50px;
-    font-weight: 600;
-    font-size: 0.85em;
+    font-size: 0.8em;
 }
 
 /* Progress Bar */
 .progress-premium {
-    height: 8px;
+    height: 6px;
     background-color: #e9ecef;
     border-radius: 10px;
-    overflow: hidden;
-    position: relative;
-    width: 100px;
-    /* Fixed width for consistency */
+    width: 80px;
     display: inline-block;
     vertical-align: middle;
 }
@@ -201,12 +221,13 @@
 .progress-premium .progress-bar {
     background: linear-gradient(90deg, #0d6efd 0%, #0a58ca 100%);
     border-radius: 10px;
+    height: 100%;
 }
 
 .progress-text {
     display: inline-block;
-    margin-left: 8px;
-    font-size: 0.85rem;
+    margin-left: 6px;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #0d6efd;
     vertical-align: middle;
@@ -214,17 +235,16 @@
 
 /* Action Buttons */
 .btn-icon {
-    width: 32px;
-    height: 32px;
-    padding: 0;
+    width: 28px;
+    height: 28px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    transition: all 0.2s;
+    border-radius: 6px;
     border: none;
     background: transparent;
     color: #6c757d;
+    transition: all 0.2s;
 }
 
 .btn-icon:hover {
@@ -242,28 +262,26 @@
     color: #dc3545;
 }
 
-/* Link Styling */
-.student-link {
-    color: #2c3e50;
-    font-weight: 600;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.student-link:hover {
-    color: #0d6efd;
-}
-
 /* Empty State */
 .empty-state {
-    padding: 4rem 2rem;
+    padding: 3rem;
     text-align: center;
     color: #adb5bd;
 }
 
 .empty-state i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
     display: block;
-    color: #dee2e6;
+}
+
+/* Links */
+.student-link {
+    color: #2c3e50;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.student-link:hover {
+    color: #0d6efd;
 }

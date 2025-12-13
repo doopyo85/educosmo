@@ -2,37 +2,52 @@
 <link rel="stylesheet" href="/css/teacher/student-management.css">
 
 <div class="student-management-page">
-    <div class="page-header">
-        <h3>학생 관리</h3>
-        <p class="text-muted">우리 센터 학생들의 목록과 학습 진도를 관리할 수 있습니다.</p>
-    </div>
+    <!-- Compact Header -->
+    <div class="compact-header">
+        <div class="page-branding">
+            <h3 class="page-title">학생 관리</h3>
 
-    <!-- 탭 네비게이션 -->
-    <ul class="nav nav-tabs mb-4" id="studentTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="progress-tab" data-bs-toggle="tab" data-bs-target="#student-progress"
-                type="button" role="tab">
-                <i class="bi bi-graph-up-arrow me-2"></i>학습 진도
+            <div class="header-tabs">
+                <ul class="nav nav-tabs" id="studentTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="progress-tab" data-bs-toggle="tab"
+                            data-bs-target="#student-progress" type="button" role="tab">
+                            <i class="bi bi-graph-up-arrow"></i>학습 진도
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#student-list"
+                            type="button" role="tab">
+                            <i class="bi bi-people-fill"></i>학생 목록
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="header-controls">
+            <!-- Search Inputs (Toggled via JS) -->
+            <div class="search-wrapper" id="progressSearchWrapper">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="progressSearch" class="form-control" placeholder="학생 이름/아이디 검색..." />
+            </div>
+
+            <div class="search-wrapper" id="studentSearchWrapper" style="display: none;">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="studentSearch" class="form-control" placeholder="학생 이름/아이디 검색..." />
+            </div>
+
+            <!-- Add Button (Only visible on list tab) -->
+            <button class="btn btn-primary rounded-pill btn-sm px-3" id="addStudentBtn" style="display: none;">
+                <i class="bi bi-person-plus me-1"></i> 추가
             </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#student-list" type="button"
-                role="tab">
-                <i class="bi bi-people-fill me-2"></i>학생 목록
-            </button>
-        </li>
-    </ul>
+        </div>
+    </div>
 
     <!-- 탭 콘텐츠 -->
     <div class="tab-content" id="studentTabContent">
         <!-- 학습 진도 탭 -->
         <div class="tab-pane fade show active" id="student-progress" role="tabpanel">
-            <!-- 검색창 -->
-            <div class="search-wrapper mb-4">
-                <i class="bi bi-search search-icon"></i>
-                <input type="text" id="progressSearch" class="form-control" placeholder="학생 이름 또는 아이디 검색..." />
-            </div>
-
             <!-- 진도표 테이블 -->
             <div class="content-card">
                 <div class="table-responsive">
@@ -60,17 +75,6 @@
 
         <!-- 학생 목록 탭 -->
         <div class="tab-pane fade" id="student-list" role="tabpanel">
-            <!-- 상단 액션 바 -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="search-wrapper m-0">
-                    <i class="bi bi-search search-icon"></i>
-                    <input type="text" id="studentSearch" class="form-control" placeholder="학생 이름 또는 아이디 검색...">
-                </div>
-                <button class="btn btn-primary rounded-pill px-4" id="addStudentBtn">
-                    <i class="bi bi-person-plus me-2"></i> 학생 추가
-                </button>
-            </div>
-
             <!-- 학생 목록 테이블 -->
             <div class="content-card">
                 <div class="table-responsive">

@@ -10,12 +10,20 @@ const StudentManagement = {
 
         // 탭 전환 이벤트
         $('#progress-tab').on('shown.bs.tab', () => {
+            $('#progressSearchWrapper').show();
+            $('#studentSearchWrapper').hide();
+            $('#addStudentBtn').hide();
+
             if (this.progressData.length === 0) {
                 this.loadProgress();
             }
         });
 
         $('#list-tab').on('shown.bs.tab', () => {
+            $('#progressSearchWrapper').hide();
+            $('#studentSearchWrapper').show();
+            $('#addStudentBtn').show();
+
             if (this.students.length === 0) {
                 this.loadStudents();
             }
