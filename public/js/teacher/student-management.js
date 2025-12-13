@@ -14,27 +14,8 @@ const StudentManagement = {
         this.loadStudents();
         this.loadProgress();
 
-        // 탭 전환 이벤트 (상단 탭 버전)
-        const triggerTabList = [].slice.call(document.querySelectorAll('#studentTabs button'))
-        triggerTabList.forEach((triggerEl) => {
-            const tabTrigger = new bootstrap.Tab(triggerEl)
-
-            triggerEl.addEventListener('shown.bs.tab', (event) => {
-                const targetId = event.target.getAttribute('data-bs-target');
-
-                if (targetId === '#student-progress') {
-                    $('#progressSearchWrapper').show();
-                    $('#studentSearchWrapper').hide();
-                    $('#addStudentBtn').hide();
-                    if (this.progressData.length === 0) this.loadProgress();
-                } else if (targetId === '#student-list') {
-                    $('#progressSearchWrapper').hide();
-                    $('#studentSearchWrapper').show();
-                    $('#addStudentBtn').show();
-                    if (this.students.length === 0) this.loadStudents();
-                }
-            })
-        });
+        // 초기 뷰 설정 (학습 진도)
+        this.switchView('progress');
     },
 
     bindEvents() {
@@ -65,6 +46,33 @@ const StudentManagement = {
             const sortKey = $th.data('sort');
             this.handleSort(sortKey, $th);
         });
+    },
+
+    // ============================================
+    // 뷰 전환 (Button Toggle)
+    // ============================================
+    switchView(viewName) {
+        // 버튼 활성화 상태 업데이트
+        $('.toggle-btn').removeClass('active');
+        $(`#btn-${viewName}`).addClass('active');
+
+        // 컨텐츠 표시 전환
+        $('.tab-pane').removeClass('show active');
+        $(`#student-${viewName}`).addClass('show active');
+
+        // 검색창 및 버튼 상태 업데이트
+        if (viewName === 'progress') {
+            $('#progressSearchWrapper').show();
+            $('#studentSearchWrapper').hide();
+            $('#addStudentBtn').hide();
+            // 활성화 시 데이터가 없으면 로드
+            if (this.progressData.length === 0) this.loadProgress();
+        } else {
+            $('#progressSearchWrapper').hide();
+            $('#studentSearchWrapper').show();
+            $('#addStudentBtn').show();
+            if (this.students.length === 0) this.loadStudents();
+        }
     },
 
     // ============================================
@@ -122,9 +130,9 @@ const StudentManagement = {
         }
 
         // 활성화된 탭에 따라 데이터 정렬 및 렌더링
-        const activeTab = $('#studentTabs .nav-link.active').attr('data-bs-target');
+        const activeView = $('.tab-pane.active').attr('id');
 
-        if (activeTab === '#student-progress') {
+        if (activeView === 'student-progress') {
             this.sortData(this.progressData);
             this.renderProgress();
         } else {
@@ -243,27 +251,20 @@ const StudentManagement = {
             // Completion Dots (Visualizing Completed / Total)
             const totalContents = student.total_contents || 0;
             const completedContents = student.completed_contents || 0;
-            // Max dots to prevent UI overflow (e.g. limit to 20 or adjust size)
-            // For now, let's limit dots display or just use 'completed' count to safeguard
 
-            // NOTE: Since we don't have per-content status array, we render dots sequentially
+            // Note: Since we don't have per-content status array, we render dots sequentially
             let dotsHtml = '<div class="completion-dots">';
-            const activePlatform = student.current_platform || 'all';
-
-            // Limit render to avoid performance hit on huge numbers, maybe show up to 15-20 dots
             const displayLimit = Math.min(totalContents, 15);
 
             for (let i = 0; i < displayLimit; i++) {
                 const isCompleted = i < completedContents;
                 const activeClass = isCompleted ? 'completed' : '';
-                // Color based on platform if desired, using default blue for now
                 dotsHtml += `<div class="dot ${activeClass}" title="콘텐츠 ${i + 1}"></div>`;
             }
             if (totalContents > displayLimit) {
                 dotsHtml += `<span class="small text-muted ms-1">+${totalContents - displayLimit}</span>`;
             }
             dotsHtml += '</div>';
-
 
             tbody.append(`
                 <tr>
