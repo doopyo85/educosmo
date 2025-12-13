@@ -141,7 +141,7 @@
     /* Crucial for nested flex scroll */
 }
 
-.tab-pane {
+.tab-pane.active {
     height: 100%;
     flex: 1;
     /* Ensure it fills the flex container */
