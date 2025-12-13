@@ -247,8 +247,9 @@ router.delete('/api/students/:id', requireTeacher, checkSameCenter, async (req, 
     try {
         const studentId = req.params.id;
 
-        // 1. UserActivityLogs (Foreign Key) 먼저 삭제
+        // 1. 연관 데이터(로그 등) 먼저 삭제
         await db.queryDatabase('DELETE FROM UserActivityLogs WHERE user_id = ?', [studentId]);
+        await db.queryDatabase('DELETE FROM MenuAccessLogs WHERE user_id = ?', [studentId]);
 
         // 2. 학생 삭제
         const query = `
