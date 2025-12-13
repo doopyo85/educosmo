@@ -247,9 +247,19 @@ router.delete('/api/students/:id', requireTeacher, checkSameCenter, async (req, 
     try {
         const studentId = req.params.id;
 
-        // 1. 연관 데이터(로그 등) 먼저 삭제
+        // 1. 연관 데이터(로그 및 활동 내역) 먼저 삭제
         await db.queryDatabase('DELETE FROM UserActivityLogs WHERE user_id = ?', [studentId]);
         await db.queryDatabase('DELETE FROM MenuAccessLogs WHERE user_id = ?', [studentId]);
+        await db.queryDatabase('DELETE FROM LearningLogs WHERE user_id = ?', [studentId]);
+
+        // 게임 점수 및 퀴즈 결과
+        await db.queryDatabase('DELETE FROM DragGameScores WHERE user_id = ?', [studentId]);
+        await db.queryDatabase('DELETE FROM MoleGameScores WHERE user_id = ?', [studentId]);
+        await db.queryDatabase('DELETE FROM QuizResults WHERE user_id = ?', [studentId]);
+
+        // 포트폴리오 및 커뮤니티 글
+        await db.queryDatabase('DELETE FROM PortfolioProjects WHERE user_id = ?', [studentId]);
+        await db.queryDatabase('DELETE FROM nuguritalk_posts WHERE author_id = ?', [studentId]);
 
         // 2. 학생 삭제
         const query = `
