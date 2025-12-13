@@ -378,19 +378,25 @@ const StudentManagement = {
         $popover.html(contentHtml);
 
         // Positioning
-        // element is the .clickable-cell or internal div. Better to use the cell (td) or wrapper.
-        // The element passed is the inner div.
+        // Positioning (Fixed - Viewport Relative)
         const rect = element.getBoundingClientRect();
-        const scrollTop = window.scrollY || document.documentElement.scrollTop;
-        const scrollLeft = window.scrollLeft || document.documentElement.scrollLeft;
 
-        // Position centered below the element
-        const top = rect.bottom + scrollTop + 10; // 10px spacing
-        const left = rect.left + scrollLeft + (rect.width / 2) - ($popover.outerWidth() / 2 || 120); // Center
+        // Center horizontally relative to the clicked element
+        let left = rect.left + (rect.width / 2) - ($popover.outerWidth() / 2);
+        // Position below, with a small gap
+        let top = rect.bottom + 8;
+
+        // Boundary checks (Simple)
+        // If it goes too far right, shift left
+        if (left + $popover.outerWidth() > window.innerWidth) {
+            left = window.innerWidth - $popover.outerWidth() - 20;
+        }
+        if (left < 10) left = 10;
 
         $popover.css({
             top: top + 'px',
-            left: left + 'px'
+            left: left + 'px',
+            position: 'fixed' // Ensure fixed positioning via JS too
         }).data('target-id', newTargetId).fadeIn(150);
     },
 
