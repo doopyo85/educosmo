@@ -179,8 +179,9 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    background-color: #f9fafb;
-    color: #6c757d;
+    background-color: #eff2f5;
+    /* Darker gray for distinct header */
+    color: #495057;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.75rem;
