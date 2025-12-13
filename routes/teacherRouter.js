@@ -263,20 +263,13 @@ router.delete('/api/students/:id', requireTeacher, checkSameCenter, async (req, 
 
         // 3. User의 centerID가 FK로 걸려있는 경우를 대비해 연결 해제
         // (LearningLogs 등이 Users.centerID를 참조하고 있어, 같은 centerID를 가진 학생 삭제 시 FK 제약 충돌 발생 가능)
-        try {
-            await db.queryDatabase('UPDATE Users SET centerID = NULL WHERE id = ?', [studentId]);
-        } catch (e) {
-            console.log('centerID NULL 처리 실패 (필수가능성):', e.message);
-            // 실패시 무시하고 진행 (NOT NULL 컬럼일 경우 등)
-        }
-
-        // 4. 학생 삭제
+        // -> 위 UPDATE 방식보다 확실하게, FK 체크를 일시 해제하고 삭제 (이미 자식 데이터는 삭제했으므로 안전)
         const query = `
             DELETE FROM Users 
             WHERE id = ? AND role = 'student'
         `;
 
-        const result = await db.queryDatabase(query, [studentId]);
+        const result = await db.executeNoFKCheck(query, [studentId]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({

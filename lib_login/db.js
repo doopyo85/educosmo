@@ -61,7 +61,7 @@ async function queryDatabase(query, params = []) {
         });
 
         const [results] = await pool.execute(query, params);
-        
+
         // 성공 로깅
         console.log('Query executed successfully:', {
             rowCount: results.length,
@@ -177,5 +177,6 @@ module.exports = {
     addPaymentRecord,
     testDatabaseConnection,
     getStudentById,
-    getStudentLogs  
+    getStudentLogs,
+    executeNoFKCheck
 };
