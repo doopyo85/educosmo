@@ -258,12 +258,29 @@ const StudentManagement = {
 
                 // Clickable chart triggering collapse
                 platformCells += `
-                    <td class="text-center clickable-cell" onclick="StudentManagement.toggleDetail(${student.user_id}, '${p.key}')">
-                        <div class="circular-chart small" data-percent="${percent}" 
-                             style="background: conic-gradient(#0d6efd 0% ${percent}%, #e9ecef ${percent}% 100%); width: 28px; height: 28px; margin: 0 auto; cursor: pointer;"
-                             title="${p.label}: ${p.completed}/${p.total}">
+                    <td class="text-center clickable-cell">
+                        <div onclick="StudentManagement.toggleDetail(this, ${student.user_id}, '${p.key}')" style="cursor: pointer;">
+                            <div class="circular-chart small" data-percent="${percent}" 
+                                style="background: conic-gradient(#0d6efd 0% ${percent}%, #e9ecef ${percent}% 100%); width: 28px; height: 28px; margin: 0 auto;"
+                                title="${p.label}: ${p.completed}/${p.total}">
+                            </div>
+                            <div class="small text-muted mt-1" style="font-size: 0.7rem;">${p.completed}/${p.total}</div>
                         </div>
-                        <div class="small text-muted mt-1" style="font-size: 0.7rem;">${p.completed}/${p.total}</div>
+                        
+                        <!-- Popover (Hidden by default) -->
+                        <div id="popover-${student.user_id}-${p.key}" class="platform-popover" onclick="event.stopPropagation()">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="badge bg-primary me-1">${p.label}</span>
+                                    <span class="small text-muted">${p.completed} / ${p.total} 완료</span>
+                                </div>
+                                <button type="button" class="btn-close btn-close-sm" aria-label="Close" 
+                                        onclick="StudentManagement.closeAllPopovers()"></button>
+                            </div>
+                            <div class="completion-dots" style="justify-content: flex-start;">
+                                ${this.generateDots(p.completed, p.total)}
+                            </div>
+                        </div>
                     </td>
                 `;
             });
@@ -288,74 +305,55 @@ const StudentManagement = {
                             ${student.username}
                         </a>
                     </td>
-                    <td><span class="text-muted small">${student.last_learning_at || '-'}</span></td>
                     
                     ${platformCells}
 
-                    <td>
-                        <span class="text-muted small">${storageUsage}</span>
-                    </td>
-                    <td>
+                    <td class="text-center">
                         <a href="#" onclick="openStudentS3Folder('${student.username}'); return false;" 
-                           class="btn-icon">
-                            <i class="bi bi-folder2-open"></i>
+                           class="btn-icon mb-1" title="파일 폴더 열기">
+                            <i class="bi bi-folder2-open fs-5"></i>
                         </a>
+                        <div class="small text-muted">${storageUsage}</div>
                     </td>
-                </tr>
-            `);
-
-            // Detail Row (Hidden by default)
-            // We create a container for EACH platform's details, but initially all hidden.
-            // When clicked, we show the specific platform's dots in this row.
-            tbody.append(`
-                <tr id="detail-${student.user_id}" class="detail-row" style="display: none; background-color: #f8f9fa;">
-                    <td colspan="12" class="p-3">
-                        <div id="detail-content-${student.user_id}" class="detail-content-wrapper">
-                            <!-- Dynamic Content Loaded Here via JS on click -->
-                        </div>
-                    </td>
+                    <td><span class="text-muted small">${student.last_learning_at || '-'}</span></td>
                 </tr>
             `);
         });
+
+        // Click outside to close popovers
+        $(document).off('click.popover').on('click.popover', (e) => {
+            if (!$(e.target).closest('.clickable-cell').length) {
+                this.closeAllPopovers();
+            }
+        });
     },
 
-    toggleDetail(userId, platformKey) {
-        const $detailRow = $(`#detail-${userId}`);
-        const $content = $(`#detail-content-${userId}`);
-        const isVisible = $detailRow.is(':visible');
-        const currentPlatform = $detailRow.data('platform');
-
-        // IF already open AND same platform click -> Close
-        if (isVisible && currentPlatform === platformKey) {
-            $detailRow.hide();
-            return;
-        }
-
-        // Find student data
-        const student = this.progressData.find(s => s.user_id === userId); // Note: API changed id -> user_id
-        if (!student) return;
-
-        // Map platform key to data fields
-        let completed = 0, total = 0, label = '';
-        if (platformKey === 'scratch') { completed = student.scratch_completed; total = student.scratch_total; label = '스크래치'; }
-        else if (platformKey === 'entry') { completed = student.entry_completed; total = student.entry_total; label = '엔트리'; }
-        else if (platformKey === 'appinventor') { completed = student.appinventor_completed; total = student.appinventor_total; label = '앱인벤터'; }
-        else if (platformKey === 'python') { completed = student.python_completed; total = student.python_total; label = '파이썬'; }
-        else if (platformKey === 'dataanalysis') { completed = student.dataanalysis_completed; total = student.dataanalysis_total; label = '데이터분석'; }
-
-        // Generate Dots
-        let dotsHtml = `<div class="d-flex align-items-center mb-2"><span class="badge bg-primary me-2">${label}</span> <span class="small text-muted">${completed} / ${total} 완료</span></div>`;
-        dotsHtml += '<div class="completion-dots" style="justify-content: flex-start;">';
-
+    generateDots(completed, total) {
+        let dotsHtml = '';
         for (let i = 0; i < total; i++) {
             const isCompleted = i < completed;
             const activeClass = isCompleted ? 'completed' : '';
-            dotsHtml += `<div class="dot ${activeClass}" style="width: 10px; height: 10px; margin: 2px;" title="콘텐츠 ${i + 1}"></div>`;
+            dotsHtml += `<div class="dot ${activeClass}" style="width: 8px; height: 8px; margin: 2px;" title="콘텐츠 ${i + 1}"></div>`;
         }
-        dotsHtml += '</div>';
+        return dotsHtml;
+    },
 
-        $content.html(dotsHtml);
-        $detailRow.data('platform', platformKey).fadeIn(200);
+    toggleDetail(element, userId, platformKey) {
+        const popoverId = `#popover-${userId}-${platformKey}`;
+        const $popover = $(popoverId);
+        const isVisible = $popover.is(':visible');
+
+        // Close all first
+        this.closeAllPopovers();
+
+        // If it wasn't visible, show it
+        if (!isVisible) {
+            $popover.fadeIn(200);
+        }
+    },
+
+    closeAllPopovers() {
+        $('.platform-popover').fadeOut(100);
     },
 
     // ============================================

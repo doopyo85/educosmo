@@ -434,3 +434,51 @@
     font-size: 0.85rem;
     font-weight: 500;
 }
+
+/* Clickable Cell for Popover Position */
+.clickable-cell {
+    position: relative;
+    /* Anchor for popover */
+}
+
+/* Platform Detail Popover */
+.platform-popover {
+    position: absolute;
+    top: 80%;
+    /* Show below the cell */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 220px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 12px;
+    z-index: 100;
+    text-align: left;
+    display: none;
+    /* Hidden by default */
+}
+
+/* Popover Arrow */
+.platform-popover::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -6px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent #fff transparent;
+}
+
+.platform-popover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -7px;
+    border-width: 7px;
+    border-style: solid;
+    border-color: transparent transparent #dee2e6 transparent;
+}
