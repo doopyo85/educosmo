@@ -1,4 +1,4 @@
-<!-- 학생 관리 페이지 (Sidebar Layout) -->
+<!-- 학생 관리 페이지 (Top Tab Layout) -->
 <link rel="stylesheet" href="/css/teacher/student-management.css">
 
 <div class="student-management-page">
@@ -30,84 +30,76 @@
         </div>
     </div>
 
-    <!-- Page Body -->
-    <div class="page-body">
-        <!-- Sidebar -->
-        <div class="side-menu">
-            <div class="nav flex-column nav-pills-custom" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                <button class="nav-link active" id="progress-tab" data-bs-toggle="pill"
-                    data-bs-target="#student-progress" type="button" role="tab">
-                    <i class="bi bi-graph-up-arrow"></i>학습 진도
-                </button>
-                <button class="nav-link" id="list-tab" data-bs-toggle="pill" data-bs-target="#student-list"
-                    type="button" role="tab">
-                    <i class="bi bi-people-fill"></i>학생 목록
-                </button>
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="studentTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="progress-tab" data-bs-toggle="tab" data-bs-target="#student-progress"
+                type="button" role="tab">
+                <i class="bi bi-graph-up-arrow"></i>학습 진도
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#student-list" type="button"
+                role="tab">
+                <i class="bi bi-people-fill"></i>학생 목록
+            </button>
+        </li>
+    </ul>
+
+    <!-- Main Content (Tables) -->
+    <div class="tab-content" id="studentTabContent">
+
+        <!-- 학습 진도 탭 -->
+        <div class="tab-pane fade show active" id="student-progress" role="tabpanel">
+            <div class="content-card">
+                <div class="table-responsive">
+                    <table class="premium-table">
+                        <thead>
+                            <tr>
+                                <th width="60px">No.</th>
+                                <th width="80px">프로필</th>
+                                <th data-sort="ct_level">CT <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th data-sort="name">이름 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th data-sort="username">아이디 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th data-sort="current_platform">현재 플랫폼 <i class="bi bi-caret-down-fill sort-icon"></i>
+                                </th>
+                                <th data-sort="progress_rate">진도율 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th data-sort="completed_contents">완료 현황 <i class="bi bi-caret-down-fill sort-icon"></i>
+                                </th>
+                                <th data-sort="storage_usage">스토리지 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th data-sort="last_learning_at">최근 학습일 <i class="bi bi-caret-down-fill sort-icon"></i>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="progressTableBody">
+                            <!-- 동적으로 로드 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- Main Content (Tables) -->
-        <div class="main-content">
-            <div class="tab-content" id="studentTabContent">
-
-                <!-- 학습 진도 탭 -->
-                <div class="tab-pane fade show active" id="student-progress" role="tabpanel">
-                    <div class="content-card">
-                        <div class="table-responsive">
-                            <table class="premium-table">
-                                <thead>
-                                    <tr>
-                                        <th width="60px">No.</th>
-                                        <th width="80px">프로필</th>
-                                        <th data-sort="ct_level">CT <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                        <th data-sort="name">이름 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                        <th data-sort="username">아이디 <i class="bi bi-caret-down-fill sort-icon"></i>
-                                        </th>
-                                        <th data-sort="current_platform">현재 플랫폼 <i
-                                                class="bi bi-caret-down-fill sort-icon"></i></th>
-                                        <th data-sort="progress_rate">진도율 <i
-                                                class="bi bi-caret-down-fill sort-icon"></i></th>
-                                        <th data-sort="completed_contents">완료 현황 <i
-                                                class="bi bi-caret-down-fill sort-icon"></i></th>
-                                        <th data-sort="storage_usage">스토리지 <i
-                                                class="bi bi-caret-down-fill sort-icon"></i></th>
-                                        <th data-sort="last_learning_at">최근 학습일 <i
-                                                class="bi bi-caret-down-fill sort-icon"></i></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="progressTableBody">
-                                    <!-- 동적으로 로드 -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 학생 목록 탭 -->
-                <div class="tab-pane fade" id="student-list" role="tabpanel">
-                    <div class="content-card">
-                        <div class="table-responsive">
-                            <table class="premium-table" id="studentTable">
-                                <thead>
-                                    <tr>
-                                        <th width="60px">No.</th>
-                                        <th width="80px">프로필</th>
-                                        <th data-sort="name">이름 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                        <th data-sort="userID">아이디 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                        <th data-sort="email">이메일 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                        <th data-sort="created_at">가입일 <i class="bi bi-caret-down-fill sort-icon"></i>
-                                        </th>
-                                        <th data-sort="last_access">최근 접속 <i
-                                                class="bi bi-caret-down-fill sort-icon"></i></th>
-                                        <th width="100px">관리</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="studentTableBody">
-                                    <!-- 동적 생성 -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+        <!-- 학생 목록 탭 -->
+        <div class="tab-pane fade" id="student-list" role="tabpanel">
+            <div class="content-card">
+                <div class="table-responsive">
+                    <table class="premium-table" id="studentTable">
+                        <thead>
+                            <tr>
+                                <th width="60px">No.</th>
+                                <th width="80px">프로필</th>
+                                <th data-sort="name">이름 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th data-sort="userID">아이디 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th data-sort="email">이메일 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th data-sort="created_at">가입일 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th data-sort="last_access">최근 접속 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th width="100px">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            <!-- 동적 생성 -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

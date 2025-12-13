@@ -14,8 +14,8 @@ const StudentManagement = {
         this.loadStudents();
         this.loadProgress();
 
-        // 탭 전환 이벤트 (사이드바 버전)
-        const triggerTabList = [].slice.call(document.querySelectorAll('#v-pills-tab button'))
+        // 탭 전환 이벤트 (상단 탭 버전)
+        const triggerTabList = [].slice.call(document.querySelectorAll('#studentTabs button'))
         triggerTabList.forEach((triggerEl) => {
             const tabTrigger = new bootstrap.Tab(triggerEl)
 
@@ -122,7 +122,7 @@ const StudentManagement = {
         }
 
         // 활성화된 탭에 따라 데이터 정렬 및 렌더링
-        const activeTab = $('#v-pills-tab .nav-link.active').attr('data-bs-target');
+        const activeTab = $('#studentTabs .nav-link.active').attr('data-bs-target');
 
         if (activeTab === '#student-progress') {
             this.sortData(this.progressData);
