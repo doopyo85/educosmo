@@ -14,16 +14,41 @@
   </div>
 
   <!-- 진도표 테이블 -->
-  <table class="table table-bordered table-hover">
+  <style>
+    /* 테이블 셀 가운데 정렬 */
+    .progress-table th,
+    .progress-table td {
+      text-align: center;
+      vertical-align: middle;
+    }
+    
+    /* 화이트 톤 배지 스타일 */
+    .badge-white {
+      background-color: #f8f9fa !important;
+      color: #495057 !important;
+      border: 1px solid #dee2e6;
+    }
+    
+    /* 진도율 프로그레스 바 화이트 톤 */
+    .progress-white {
+      background-color: #e9ecef;
+    }
+    .progress-white .progress-bar {
+      background-color: #6c757d;
+    }
+  </style>
+
+  <table class="table table-bordered table-hover progress-table">
     <thead class="table-light">
       <tr>
         <th>프로필</th>
+        <th>CT</th>
         <th>이름</th>
         <th>아이디</th>
-        <th>완료 수 / 전체</th>
-        <th>진도율</th>
         <th>현재 플랫폼</th>
-        <th>CT 레벨</th>
+        <th>진도율</th>
+        <th>완료 수 / 전체</th>
+        <th>스토리지</th>
         <th>최근 학습일</th>
         <th>관리</th>
       </tr>
@@ -31,29 +56,47 @@
     <tbody id="progressTableBody">
       <% students.forEach(student => { %>
         <tr>
-          <td><img src="<%= student.profile_image %>" alt="프로필" class="rounded-circle" width="40" height="40"></td>
-          <td><%= student.name %></td>
-          <td><%= student.username %></td>
-          <td><%= student.completed_contents %> / <%= student.total_contents %></td>
           <td>
-            <div class="progress" style="height: 20px;">
-              <div class="progress-bar" role="progressbar" style="width: <%= student.progress_rate %>%;">
-                <%= student.progress_rate %>%
-              </div>
-            </div>
+            <img src="<%= student.profile_image || '/resource/profiles/default.webp' %>" alt="프로필" class="rounded-circle" width="40" height="40">
           </td>
           <td>
-            <span class="badge bg-info text-dark">
+            <span class="badge badge-white">
+              <%= student.ct_level || '0' %>
+            </span>
+          </td>
+          <td><%= student.name %></td>
+          <td><%= student.username %></td>
+          <td>
+            <span class="badge badge-white">
               <%= student.current_platform || '-' %>
             </span>
           </td>
           <td>
-            <span class="badge bg-success">
-              CT <%= student.ct_level || '0' %>
+            <span class="badge badge-white">
+              <%= student.progress_rate ? student.progress_rate + '%' : '-' %>
             </span>
           </td>
-          <td><%= student.last_learning_at ? new Date(student.last_learning_at).toLocaleDateString('ko-KR') : '-' %></td>
-          <td><a href="/teacher/student-progress/<%= student.user_id %>" class="btn btn-sm btn-outline-primary">보기</a></td>
+          <td><%= student.completed_contents %> / <%= student.total_contents %></td>
+          <td>
+            <% 
+              const storageBytes = student.storage_usage || 0;
+              let storageDisplay = '0 B';
+              if (storageBytes >= 1073741824) {
+                storageDisplay = (storageBytes / 1073741824).toFixed(1) + ' GB';
+              } else if (storageBytes >= 1048576) {
+                storageDisplay = (storageBytes / 1048576).toFixed(1) + ' MB';
+              } else if (storageBytes >= 1024) {
+                storageDisplay = (storageBytes / 1024).toFixed(1) + ' KB';
+              } else if (storageBytes > 0) {
+                storageDisplay = storageBytes + ' B';
+              }
+            %>
+            <%= storageDisplay %>
+          </td>
+          <td><%= student.last_learning_at || '-' %></td>
+          <td>
+            <a href="/teacher/student-detail/<%= student.user_id %>" class="btn btn-sm btn-outline-primary">보기</a>
+          </td>
         </tr>
       <% }) %>
     </tbody>
