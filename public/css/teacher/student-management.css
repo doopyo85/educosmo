@@ -1,0 +1,269 @@
+/* Teacher Student Management Premium UI */
+
+/* General Container & Card Style */
+.student-management-page {
+    padding: 2rem;
+    background-color: #f5f7fa;
+    /* Light subtle gray background for the page */
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.page-header .text-muted {
+    font-size: 0.95rem;
+    color: #7f8c8d !important;
+}
+
+/* Tabs Styling */
+.nav-tabs {
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 1.5rem;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #6c757d;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #495057;
+    border-color: transparent;
+    background-color: rgba(233, 236, 239, 0.3);
+}
+
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+    background-color: transparent;
+    border-bottom: 2px solid #0d6efd;
+}
+
+.nav-tabs .nav-link i {
+    margin-right: 0.5rem;
+}
+
+/* Card Container for Content */
+.content-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 0 10px 15px rgba(0, 0, 0, 0.03);
+    padding: 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+/* Search Box Premium Styling */
+.search-wrapper {
+    position: relative;
+    margin-bottom: 1.5rem;
+    max-width: 400px;
+}
+
+.search-wrapper .form-control {
+    padding-left: 2.75rem;
+    border-radius: 50px;
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    transition: all 0.2s;
+    height: 48px;
+    font-size: 0.95rem;
+}
+
+.search-wrapper .form-control:focus {
+    background-color: #fff;
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.search-wrapper .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #adb5bd;
+    font-size: 1.1rem;
+}
+
+/* Premium Table Styling */
+.premium-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.premium-table thead th {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1rem;
+    border-bottom: 1px solid #edf2f7;
+    text-align: center;
+}
+
+.premium-table thead th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.premium-table thead th:last-child {
+    border-top-right-radius: 12px;
+}
+
+.premium-table tbody tr {
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.premium-table tbody tr:hover {
+    background-color: #f8f9fa;
+    /* transform: scale(1.005); */
+    /* Optional: subtle zoom */
+}
+
+.premium-table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf2f7;
+    color: #495057;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.premium-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Profile Image */
+.premium-table .profile-img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 2px solid #fff;
+}
+
+/* Badges - Soft Style */
+.badge-soft-success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    padding: 0.4em 0.8em;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.85em;
+}
+
+.badge-soft-info {
+    background-color: #cff4fc;
+    color: #055160;
+    padding: 0.4em 0.8em;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.85em;
+}
+
+.badge-soft-primary {
+    background-color: #cfe2ff;
+    color: #084298;
+    padding: 0.4em 0.8em;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.85em;
+}
+
+/* Progress Bar */
+.progress-premium {
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    width: 100px;
+    /* Fixed width for consistency */
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.progress-premium .progress-bar {
+    background: linear-gradient(90deg, #0d6efd 0%, #0a58ca 100%);
+    border-radius: 10px;
+}
+
+.progress-text {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #0d6efd;
+    vertical-align: middle;
+}
+
+/* Action Buttons */
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+}
+
+.btn-icon:hover {
+    background-color: #e9ecef;
+    color: #212529;
+}
+
+.btn-icon.edit:hover {
+    background-color: #cfe2ff;
+    color: #0d6efd;
+}
+
+.btn-icon.delete:hover {
+    background-color: #f8d7da;
+    color: #dc3545;
+}
+
+/* Link Styling */
+.student-link {
+    color: #2c3e50;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.student-link:hover {
+    color: #0d6efd;
+}
+
+/* Empty State */
+.empty-state {
+    padding: 4rem 2rem;
+    text-align: center;
+    color: #adb5bd;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+    color: #dee2e6;
+}
