@@ -1,4 +1,4 @@
-/* Teacher Student Management Premium UI - Top Tab Layout */
+/* Teacher Student Management Premium UI */
 
 /* General Container */
 .student-management-page {
@@ -164,6 +164,8 @@
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    table-layout: fixed;
+    /* Fixed layout for precise column widths */
 }
 
 .premium-table thead th {
@@ -216,11 +218,74 @@
     color: #495057;
     font-size: 0.9rem;
     text-align: center;
+    white-space: nowrap;
+    /* Prevent wrapping generally */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .premium-table tbody tr:hover {
     background-color: #f8f9fa;
 }
+
+/* 
+   Progress Table Specific Column Widths 
+   Total 10 Columns
+   1-7 (No ~ Progress Rate): 40%
+   8 (Completion): 50%
+   9-10 (Storage, Recent): 10%
+*/
+
+/* 1. No (Small) */
+#progressTableWrapper col:nth-child(1) {
+    width: 3%;
+}
+
+/* 2. Profile (Small) */
+#progressTableWrapper col:nth-child(2) {
+    width: 4%;
+}
+
+/* 3. CT (Small) */
+#progressTableWrapper col:nth-child(3) {
+    width: 4%;
+}
+
+/* 4. Name */
+#progressTableWrapper col:nth-child(4) {
+    width: 7%;
+}
+
+/* 5. ID */
+#progressTableWrapper col:nth-child(5) {
+    width: 7%;
+}
+
+/* 6. Platform */
+#progressTableWrapper col:nth-child(6) {
+    width: 7%;
+}
+
+/* 7. Progress Rate */
+#progressTableWrapper col:nth-child(7) {
+    width: 8%;
+}
+
+/* 8. Completion Status (Wide - 50%) */
+#progressTableWrapper col:nth-child(8) {
+    width: 50%;
+}
+
+/* 9. Storage */
+#progressTableWrapper col:nth-child(9) {
+    width: 5%;
+}
+
+/* 10. Last Learning */
+#progressTableWrapper col:nth-child(10) {
+    width: 5%;
+}
+
 
 /* Circular Chart */
 .circular-chart {
@@ -259,7 +324,8 @@
     gap: 3px;
     flex-wrap: wrap;
     justify-content: center;
-    max-width: 140px;
+    /* Remove max-width to allow using 50% width effectively */
+    max-width: none;
     margin: 0 auto;
 }
 
