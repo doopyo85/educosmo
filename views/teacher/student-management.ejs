@@ -28,6 +28,15 @@
                 <input type="text" id="progressSearch" class="form-control" placeholder="학생 이름 또는 아이디 검색..." />
             </div>
 
+            <!-- 진도표 테이블 스타일 -->
+            <style>
+                #student-progress table th,
+                #student-progress table td {
+                    text-align: center;
+                    vertical-align: middle;
+                }
+            </style>
+
             <!-- 진도표 테이블 -->
             <table class="table table-bordered table-hover">
                 <thead class="table-light">
@@ -36,9 +45,9 @@
                         <th>CT</th>
                         <th>이름</th>
                         <th>아이디</th>
-                        <th>완료 수 / 전체</th>
-                        <th>진도율</th>
                         <th>현재 플랫폼</th>
+                        <th>진도율</th>
+                        <th>완료 수 / 전체</th>
                         <th>스토리지</th>
                         <th>최근 학습일</th>
                     </tr>

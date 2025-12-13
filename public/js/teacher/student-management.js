@@ -168,7 +168,11 @@ const StudentManagement = {
                             ${student.username}
                         </a>
                     </td>
-                    <td>${student.completed_contents || 0} / ${student.total_contents || 0}</td>
+                    <td>
+                        <span class="badge bg-info text-dark">
+                            ${student.current_platform || '-'}
+                        </span>
+                    </td>
                     <td>
                         <div class="progress" style="height: 20px;">
                             <div class="progress-bar" role="progressbar" style="width: ${progressRate}%;">
@@ -176,11 +180,7 @@ const StudentManagement = {
                             </div>
                         </div>
                     </td>
-                    <td>
-                        <span class="badge bg-info text-dark">
-                            ${student.current_platform || '-'}
-                        </span>
-                    </td>
+                    <td>${student.completed_contents || 0} / ${student.total_contents || 0}</td>
                     <td>
                         <a href="#" onclick="openStudentS3Folder('${student.username}'); return false;" 
                            title="파일 폴더 열기" style="color: #6c757d; margin-right: 6px;">
@@ -308,7 +308,11 @@ const StudentManagement = {
                             ${student.username}
                         </a>
                     </td>
-                    <td>${student.completed_contents || 0} / ${student.total_contents || 0}</td>
+                    <td>
+                        <span class="badge bg-info text-dark">
+                            ${student.current_platform || '-'}
+                        </span>
+                    </td>
                     <td>
                         <div class="progress" style="height: 20px;">
                             <div class="progress-bar" role="progressbar" style="width: ${progressRate}%;">
@@ -316,11 +320,7 @@ const StudentManagement = {
                             </div>
                         </div>
                     </td>
-                    <td>
-                        <span class="badge bg-info text-dark">
-                            ${student.current_platform || '-'}
-                        </span>
-                    </td>
+                    <td>${student.completed_contents || 0} / ${student.total_contents || 0}</td>
                     <td>
                         <a href="#" onclick="openStudentS3Folder('${student.username}'); return false;" 
                            title="파일 폴더 열기" style="color: #6c757d; margin-right: 6px;">
