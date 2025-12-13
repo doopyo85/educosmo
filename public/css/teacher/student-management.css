@@ -143,7 +143,8 @@
 
 .tab-pane {
     height: 100%;
-    display: flex;
+    display: flex !important;
+    /* Override Bootstrap's default display: block */
     flex-direction: column;
     min-height: 0;
     /* Crucial for nested flex scroll */
