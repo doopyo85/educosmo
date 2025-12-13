@@ -4,7 +4,8 @@
 .student-management-page {
     padding: 2rem;
     background-color: #f5f7fa;
-    height: calc(100vh - 60px);
+    height: calc(100vh - 140px);
+    /* Increased offset to ensure bottom is visible */
     /* Limit height to viewport to force internal scroll */
     display: flex;
     flex-direction: column;
