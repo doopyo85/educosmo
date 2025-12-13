@@ -1,7 +1,9 @@
 /**
- * PyodideTerminal.js - Pyodide 기반 Python 터미널
+ * PyodideTerminal.js - Pyodide 기반 Python 터미널 (수정본)
  * 브라우저에서 직접 Python을 실행하여 input() 함수 완벽 지원
  * Terminal.js와 동일한 인터페이스 제공
+ * 
+ * 🔥 핵심: input()을 여러 번 연속 호출 가능하도록 수정
  */
 
 class PyodideTerminal {
@@ -77,17 +79,6 @@ class PyodideTerminal {
       const loadTime = ((Date.now() - startTime) / 1000).toFixed(1);
       console.log(`✅ Pyodide 로드 완료 (${loadTime}초)`);
       
-      // input() 함수 오버라이드 설정
-      await this.setupInputHandler();
-      
-      // 한글 출력 설정
-      await this.pyodide.runPythonAsync(`
-import sys
-import io
-sys.stdout = io.StringIO()
-sys.stderr = io.StringIO()
-      `);
-      
       this.state.isReady = true;
       this.state.isLoading = false;
       
@@ -108,139 +99,6 @@ sys.stderr = io.StringIO()
       
       this.updateRunButton(false);
     }
-  }
-  
-  /**
-   * input() 핸들러 설정
-   */
-  async setupInputHandler() {
-    // JavaScript에서 input 처리하는 함수 등록
-    const self = this;
-    
-    // 전역 함수로 input 핸들러 등록
-    window.pyodideInputHandler = async function(promptText) {
-      return await self.handlePythonInput(promptText);
-    };
-    
-    // Python에서 input() 함수 오버라이드
-    await this.pyodide.runPythonAsync(`
-import builtins
-from js import pyodideInputHandler
-import asyncio
-
-_original_input = builtins.input
-
-async def _custom_input(prompt=""):
-    # 프롬프트 출력
-    if prompt:
-        print(prompt, end="", flush=True)
-    
-    # JavaScript의 input 핸들러 호출
-    result = await pyodideInputHandler(prompt)
-    return str(result)
-
-# 동기 버전의 input (실제로는 비동기로 처리됨)
-def custom_input(prompt=""):
-    import asyncio
-    loop = asyncio.get_event_loop()
-    return loop.run_until_complete(_custom_input(prompt))
-
-builtins.input = custom_input
-    `);
-    
-    console.log('✅ Python input() 핸들러 설정 완료');
-  }
-  
-  /**
-   * Python input() 요청 처리
-   */
-  handlePythonInput(promptText) {
-    return new Promise((resolve) => {
-      this.inputPromptText = promptText || '';
-      this.inputResolver = resolve;
-      
-      // 프롬프트가 있으면 출력 (이미 Python에서 출력했으므로 생략 가능)
-      // 입력 UI 생성
-      this.showInputUI();
-    });
-  }
-  
-  /**
-   * 입력 UI 표시
-   */
-  showInputUI() {
-    const outputElement = document.getElementById(this.options.outputId);
-    if (!outputElement) return;
-    
-    // 기존 입력 UI 제거
-    const existingInput = outputElement.querySelector('.pyodide-input-container');
-    if (existingInput) existingInput.remove();
-    
-    // 입력 컨테이너 생성
-    const inputContainer = document.createElement('div');
-    inputContainer.className = 'pyodide-input-container';
-    inputContainer.style.cssText = `
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 0;
-      width: 100%;
-      background: rgba(30, 30, 30, 0.5);
-      border-radius: 4px;
-      margin: 4px 0;
-    `;
-    
-    inputContainer.innerHTML = `
-      <span class="input-prompt" style="color: #4fc3f7; font-family: 'Consolas', monospace;">>>> </span>
-      <input type="text" class="pyodide-input-field" 
-             style="flex: 1; background: #1e1e1e; border: 1px solid #3c3c3c; 
-                    color: #d4d4d4; padding: 6px 10px; border-radius: 4px;
-                    font-family: 'Consolas', monospace; font-size: 14px;"
-             placeholder="값을 입력하고 Enter를 누르세요"
-             autofocus />
-      <button class="pyodide-input-submit btn btn-sm btn-primary" 
-              style="padding: 6px 12px;">
-        입력
-      </button>
-    `;
-    
-    outputElement.appendChild(inputContainer);
-    
-    const inputField = inputContainer.querySelector('.pyodide-input-field');
-    const submitBtn = inputContainer.querySelector('.pyodide-input-submit');
-    
-    // 입력 제출 함수
-    const submitInput = () => {
-      const value = inputField.value;
-      
-      // 입력값 에코 출력
-      this.appendToOutput(`${value}\n`, 'input');
-      
-      // 입력 UI 제거
-      inputContainer.remove();
-      
-      // Promise resolve
-      if (this.inputResolver) {
-        this.inputResolver(value);
-        this.inputResolver = null;
-      }
-    };
-    
-    // 이벤트 리스너
-    inputField.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        submitInput();
-      }
-    });
-    
-    submitBtn.addEventListener('click', submitInput);
-    
-    // 포커스
-    setTimeout(() => inputField.focus(), 100);
-    
-    // 스크롤
-    outputElement.scrollTop = outputElement.scrollHeight;
   }
   
   /**
@@ -328,7 +186,7 @@ builtins.input = custom_input
   }
   
   /**
-   * 코드 실행
+   * 코드 실행 (메인)
    */
   async runCode() {
     // Pyodide가 아직 로딩 중이면 대기
@@ -336,7 +194,6 @@ builtins.input = custom_input
       if (this.state.isLoading) {
         this.appendToOutput('⏳ Python 환경 로딩 중입니다. 잠시만 기다려주세요...\n', 'warning');
       } else {
-        // 다시 로드 시도
         await this.loadPyodideAsync();
       }
       return;
@@ -361,32 +218,22 @@ builtins.input = custom_input
     this.state.isRunning = true;
     this.updateRunButton(true, '⏳ 실행 중...');
     this.clearOutput();
-    this.appendToOutput('▶️ 실행 중...\n', 'info');
     
     try {
-      // stdout/stderr 초기화
-      await this.pyodide.runPythonAsync(`
-import sys
-from io import StringIO
-sys.stdout = StringIO()
-sys.stderr = StringIO()
-      `);
-      
       // input() 함수가 있는지 확인
-      const hasInput = code.includes('input(');
+      const hasInput = /\binput\s*\(/.test(code);
       
       if (hasInput) {
-        // input()이 있는 코드는 비동기로 실행
-        await this.runCodeWithInput(code);
+        // input()이 있는 코드는 특별 처리
+        await this.executeWithInput(code);
       } else {
-        // input()이 없는 코드는 동기로 실행
-        await this.runCodeSync(code);
+        // input()이 없는 코드는 간단히 실행
+        await this.executeSimple(code);
       }
       
     } catch (error) {
       console.error('❌ Pyodide 실행 오류:', error);
-      this.clearOutput();
-      this.appendToOutput(`❌ 오류: ${this.formatPythonError(error.message)}\n`, 'error');
+      this.appendToOutput(`\n❌ 오류: ${this.formatPythonError(error.message)}\n`, 'error');
     } finally {
       this.state.isRunning = false;
       this.updateRunButton(false);
@@ -394,18 +241,34 @@ sys.stderr = StringIO()
   }
   
   /**
-   * input() 없는 코드 동기 실행
+   * input() 없는 간단한 코드 실행
    */
-  async runCodeSync(code) {
+  async executeSimple(code) {
+    // stdout 캡처 설정
+    await this.pyodide.runPythonAsync(`
+import sys
+from io import StringIO
+_capture_stdout = StringIO()
+_capture_stderr = StringIO()
+_old_stdout = sys.stdout
+_old_stderr = sys.stderr
+sys.stdout = _capture_stdout
+sys.stderr = _capture_stderr
+    `);
+    
     try {
       // 코드 실행
       await this.pyodide.runPythonAsync(code);
       
       // 출력 가져오기
-      const stdout = await this.pyodide.runPythonAsync(`sys.stdout.getvalue()`);
-      const stderr = await this.pyodide.runPythonAsync(`sys.stderr.getvalue()`);
+      const stdout = await this.pyodide.runPythonAsync(`_capture_stdout.getvalue()`);
+      const stderr = await this.pyodide.runPythonAsync(`_capture_stderr.getvalue()`);
       
-      this.clearOutput();
+      // stdout/stderr 복원
+      await this.pyodide.runPythonAsync(`
+sys.stdout = _old_stdout
+sys.stderr = _old_stderr
+      `);
       
       if (stdout && stdout.trim()) {
         this.appendToOutput(stdout, 'output');
@@ -417,162 +280,259 @@ sys.stderr = StringIO()
       
       if (!stdout && !stderr) {
         this.appendToOutput('✅ 실행 완료 (출력 없음)\n', 'success');
+      } else {
+        this.appendToOutput('\n✅ 실행 완료\n', 'success');
       }
       
     } catch (error) {
+      // stdout/stderr 복원
+      await this.pyodide.runPythonAsync(`
+sys.stdout = _old_stdout
+sys.stderr = _old_stderr
+      `);
       throw error;
     }
   }
   
   /**
-   * input()이 있는 코드 실행 (비동기)
+   * 🔥 input()이 있는 코드 실행 (핵심 수정)
+   * 
+   * 전략: 
+   * 1. JavaScript에서 async input 함수를 만들고 Python에 등록
+   * 2. Python 코드 전체를 async 함수로 감싸서 실행
+   * 3. input() 호출마다 JavaScript의 Promise를 await
    */
-  async runCodeWithInput(code) {
-    try {
-      this.clearOutput();
-      
-      // 특수한 방식으로 코드 실행 (input을 await로 처리)
-      // 코드를 async 함수로 감싸서 실행
-      const wrappedCode = `
-import asyncio
-import builtins
-from js import pyodideInputHandler
-
-async def __async_input(prompt=""):
-    if prompt:
-        print(prompt, end="", flush=True)
-    result = await pyodideInputHandler(prompt)
-    return str(result)
-
-async def __run_user_code():
-    # input 함수를 async 버전으로 교체
-    original_input = builtins.input
-    
-    # 사용자 코드의 input을 처리하기 위한 전역 설정
-    __user_inputs = []
-    
-    # 사용자 코드 실행
-${code.split('\n').map(line => '    ' + line).join('\n')}
-
-# 비동기 실행
-asyncio.ensure_future(__run_user_code())
-      `;
-      
-      // 간단한 방식: exec로 실행하고 input은 프롬프트로 처리
-      // input() 호출 시 JavaScript로 제어권 넘김
-      
-      const simpleCode = code;
-      
-      // Python 코드를 줄 단위로 실행하면서 input 처리
-      await this.executePythonWithInput(simpleCode);
-      
-    } catch (error) {
-      throw error;
-    }
-  }
-  
-  /**
-   * input() 지원 Python 실행
-   */
-  async executePythonWithInput(code) {
+  async executeWithInput(code) {
     const self = this;
     
-    // 전역 input 핸들러 설정
-    window.pyodideInputHandler = (prompt) => {
-      return new Promise((resolve) => {
-        // 프롬프트 출력
-        if (prompt) {
-          self.appendToOutput(prompt, 'output');
-        }
-        
-        self.inputResolver = resolve;
-        self.showInputUI();
-      });
-    };
+    // 🔥 JavaScript 입력 핸들러를 Pyodide에 등록
+    this.pyodide.registerJsModule("js_input", {
+      async_input: async function(prompt) {
+        return await self.waitForUserInput(prompt);
+      }
+    });
     
-    try {
-      // Python 코드에서 input을 async input으로 변환
-      const asyncCode = `
+    // Python 설정 코드
+    const setupCode = `
 import sys
 from io import StringIO
-import builtins
-from js import pyodideInputHandler
+import js_input
 
-# 출력 버퍼 설정
-_stdout_buffer = StringIO()
-_original_stdout = sys.stdout
-
-class RealTimePrint:
+# 실시간 출력을 위한 커스텀 stdout
+class LiveOutput:
+    def __init__(self, callback):
+        self.callback = callback
+        self.buffer = ""
+    
     def write(self, text):
-        _stdout_buffer.write(text)
-        # 실시간 출력을 위해 flush마다 JavaScript로 전송
+        self.buffer += text
+        # flush 될 때까지 버퍼링
+    
     def flush(self):
-        pass
+        if self.buffer:
+            # JavaScript로 즉시 전송
+            pass
+        self.buffer = ""
+    
+    def getvalue(self):
+        return self.buffer
 
-sys.stdout = RealTimePrint()
+# 출력 설정
+_live_stdout = StringIO()
+_live_stderr = StringIO()
+_old_stdout = sys.stdout
+_old_stderr = sys.stderr
+sys.stdout = _live_stdout
+sys.stderr = _live_stderr
 
-# async input 함수
+# 🔥 핵심: async input 함수 정의
 async def async_input(prompt=""):
     if prompt:
         print(prompt, end="")
         sys.stdout.flush()
-    result = await pyodideInputHandler(prompt if prompt else "")
+    result = await js_input.async_input(prompt)
     return result
-
-# 원본 input 저장 및 교체
-_original_input = builtins.input
-
-# 동기 input을 async로 처리하기 위한 트릭
-import asyncio
-
-def sync_input(prompt=""):
-    loop = asyncio.get_event_loop()
-    if loop.is_running():
-        # 이미 이벤트 루프가 실행 중이면 직접 처리
-        import concurrent.futures
-        future = asyncio.ensure_future(async_input(prompt))
-        return future
-    else:
-        return loop.run_until_complete(async_input(prompt))
-
-builtins.input = sync_input
 `;
+    
+    // 먼저 설정 코드 실행
+    await this.pyodide.runPythonAsync(setupCode);
+    
+    // 🔥 사용자 코드의 input()을 await async_input()으로 변환
+    const transformedCode = this.transformInputCalls(code);
+    
+    // async 메인 함수로 감싸기
+    const wrappedCode = `
+async def __user_main__():
+${transformedCode.split('\n').map(line => '    ' + line).join('\n')}
 
-      // 먼저 설정 코드 실행
-      await this.pyodide.runPythonAsync(asyncCode);
-      
-      // 사용자 코드를 async 함수로 감싸서 실행
-      const userCodeAsync = `
-async def __user_main():
-${code.split('\n').map(line => '    ' + line).join('\n')}
+# 실행
+await __user_main__()
 
-import asyncio
-await __user_main()
+# 최종 출력 가져오기
+_final_stdout = _live_stdout.getvalue()
+_final_stderr = _live_stderr.getvalue()
 
-# 출력 버퍼 내용 가져오기
-_final_output = _stdout_buffer.getvalue()
+# 복원
+sys.stdout = _old_stdout
+sys.stderr = _old_stderr
 `;
+    
+    console.log('🔄 변환된 코드:', wrappedCode);
+    
+    try {
+      // 코드 실행
+      await this.pyodide.runPythonAsync(wrappedCode);
       
-      this.clearOutput();
+      // 출력 가져오기
+      const stdout = await this.pyodide.runPythonAsync(`_final_stdout`);
+      const stderr = await this.pyodide.runPythonAsync(`_final_stderr`);
       
-      // 사용자 코드 실행
-      await this.pyodide.runPythonAsync(userCodeAsync);
+      if (stdout && stdout.trim()) {
+        this.appendToOutput(stdout, 'output');
+      }
       
-      // 최종 출력 가져오기
-      const finalOutput = await this.pyodide.runPythonAsync(`_final_output`);
-      
-      if (finalOutput && finalOutput.trim()) {
-        // 이미 실시간으로 출력되었으므로 추가 출력 불필요할 수 있음
-        // this.appendToOutput(finalOutput, 'output');
+      if (stderr && stderr.trim()) {
+        this.appendToOutput(stderr, 'error');
       }
       
       this.appendToOutput('\n✅ 실행 완료\n', 'success');
       
     } catch (error) {
-      // Python 에러를 더 읽기 좋게 포맷
-      const errorMsg = this.formatPythonError(error.message);
-      this.appendToOutput(`❌ ${errorMsg}\n`, 'error');
+      // 복원
+      try {
+        await this.pyodide.runPythonAsync(`
+sys.stdout = _old_stdout
+sys.stderr = _old_stderr
+        `);
+      } catch (e) {}
+      throw error;
     }
+  }
+  
+  /**
+   * 🔥 input() 호출을 await async_input()으로 변환
+   */
+  transformInputCalls(code) {
+    // 정규식으로 input() 호출을 await async_input()으로 변환
+    // 주의: 문자열 내의 input은 변환하면 안 됨
+    
+    // 간단한 변환 (대부분의 케이스 커버)
+    // input() → await async_input()
+    // input("프롬프트") → await async_input("프롬프트")
+    
+    // 변수 할당 패턴: name = input(...) → name = await async_input(...)
+    let transformed = code.replace(
+      /(\w+)\s*=\s*input\s*\(/g,
+      '$1 = await async_input('
+    );
+    
+    // 직접 호출 패턴: print(input(...)) → print(await async_input(...))
+    transformed = transformed.replace(
+      /([^=\w])input\s*\(/g,
+      '$1await async_input('
+    );
+    
+    // 라인 시작 input 호출
+    transformed = transformed.replace(
+      /^input\s*\(/gm,
+      'await async_input('
+    );
+    
+    return transformed;
+  }
+  
+  /**
+   * 🔥 사용자 입력 대기 (Promise 기반)
+   */
+  waitForUserInput(prompt) {
+    return new Promise((resolve) => {
+      // 프롬프트가 있으면 출력
+      if (prompt) {
+        this.appendToOutput(prompt, 'output');
+      }
+      
+      this.inputResolver = resolve;
+      this.showInputUI();
+    });
+  }
+  
+  /**
+   * 입력 UI 표시
+   */
+  showInputUI() {
+    const outputElement = document.getElementById(this.options.outputId);
+    if (!outputElement) return;
+    
+    // 기존 입력 UI 제거
+    const existingInput = outputElement.querySelector('.pyodide-input-container');
+    if (existingInput) existingInput.remove();
+    
+    // 입력 컨테이너 생성
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'pyodide-input-container';
+    inputContainer.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      width: 100%;
+      background: rgba(30, 30, 30, 0.5);
+      border-radius: 4px;
+      margin: 4px 0;
+    `;
+    
+    inputContainer.innerHTML = `
+      <span class="input-prompt" style="color: #4fc3f7; font-family: 'Consolas', monospace;">>>> </span>
+      <input type="text" class="pyodide-input-field" 
+             style="flex: 1; background: #1e1e1e; border: 1px solid #3c3c3c; 
+                    color: #d4d4d4; padding: 6px 10px; border-radius: 4px;
+                    font-family: 'Consolas', monospace; font-size: 14px;"
+             placeholder="값을 입력하고 Enter를 누르세요"
+             autofocus />
+      <button class="pyodide-input-submit btn btn-sm btn-primary" 
+              style="padding: 6px 12px;">
+        입력
+      </button>
+    `;
+    
+    outputElement.appendChild(inputContainer);
+    
+    const inputField = inputContainer.querySelector('.pyodide-input-field');
+    const submitBtn = inputContainer.querySelector('.pyodide-input-submit');
+    
+    // 입력 제출 함수
+    const submitInput = () => {
+      const value = inputField.value;
+      
+      // 입력값 에코 출력
+      this.appendToOutput(`${value}\n`, 'input');
+      
+      // 입력 UI 제거
+      inputContainer.remove();
+      
+      // 🔥 Promise resolve로 Python에 값 전달
+      if (this.inputResolver) {
+        const resolver = this.inputResolver;
+        this.inputResolver = null;
+        resolver(value);
+      }
+    };
+    
+    // 이벤트 리스너
+    inputField.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitInput();
+      }
+    });
+    
+    submitBtn.addEventListener('click', submitInput);
+    
+    // 포커스
+    setTimeout(() => inputField.focus(), 100);
+    
+    // 스크롤
+    outputElement.scrollTop = outputElement.scrollHeight;
   }
   
   /**
@@ -581,7 +541,6 @@ _final_output = _stdout_buffer.getvalue()
   formatPythonError(errorMsg) {
     if (!errorMsg) return '알 수 없는 오류';
     
-    // Pyodide 특유의 긴 에러 메시지 정리
     let formatted = errorMsg;
     
     // PythonError: 접두사 제거
@@ -590,11 +549,10 @@ _final_output = _stdout_buffer.getvalue()
     // 트레이스백에서 핵심 부분 추출
     const lines = formatted.split('\n');
     const relevantLines = lines.filter(line => {
-      // pyodide 내부 경로 제외
       if (line.includes('/lib/python')) return false;
       if (line.includes('pyodide')) return false;
+      if (line.includes('__user_main__')) return false;
       if (line.trim().startsWith('File "<exec>"')) return true;
-      if (line.trim().startsWith('File "<string>"')) return true;
       if (line.includes('Error:')) return true;
       if (line.includes('Exception:')) return true;
       return !line.trim().startsWith('File "');
@@ -654,7 +612,7 @@ _final_output = _stdout_buffer.getvalue()
     lineContainer.style.cssText = `
       display: block; 
       width: 100%; 
-      margin: 0 0 2px 0;
+      margin: 0;
     `;
     
     // pre 요소 생성
@@ -674,22 +632,22 @@ _final_output = _stdout_buffer.getvalue()
     // 타입별 색상 적용
     switch (type) {
       case 'error':
-        preElement.style.color = '#f48771';  // 빨간색
+        preElement.style.color = '#f48771';
         break;
       case 'warning':
-        preElement.style.color = '#cca700';  // 노란색
+        preElement.style.color = '#cca700';
         break;
       case 'success':
-        preElement.style.color = '#89d185';  // 녹색
+        preElement.style.color = '#89d185';
         break;
       case 'info':
-        preElement.style.color = '#4fc3f7';  // 파란색
+        preElement.style.color = '#4fc3f7';
         break;
       case 'input':
-        preElement.style.color = '#ce9178';  // 오렌지 (사용자 입력)
+        preElement.style.color = '#ce9178';
         break;
       default:
-        preElement.style.color = '#d4d4d4';  // 기본 흰색
+        preElement.style.color = '#d4d4d4';
     }
     
     lineContainer.appendChild(preElement);
@@ -731,7 +689,6 @@ _final_output = _stdout_buffer.getvalue()
   activate() {
     console.log('✅ PyodideTerminal 활성화됨');
     
-    // Pyodide가 아직 로드되지 않았으면 로드 시작
     if (!this.state.isReady && !this.state.isLoading) {
       this.loadPyodideAsync();
     }
@@ -743,13 +700,11 @@ _final_output = _stdout_buffer.getvalue()
   deactivate() {
     console.log('✅ PyodideTerminal 비활성화됨');
     
-    // 입력 UI가 있으면 제거
     const inputContainer = document.querySelector('.pyodide-input-container');
     if (inputContainer) {
       inputContainer.remove();
     }
     
-    // 입력 대기 중이면 취소
     if (this.inputResolver) {
       this.inputResolver('');
       this.inputResolver = null;
@@ -762,7 +717,6 @@ _final_output = _stdout_buffer.getvalue()
   destroy() {
     console.log('🗑️ PyodideTerminal 정리 시작');
     
-    // 이벤트 리스너 제거
     if (this.boundRunCode) {
       const runButton = document.getElementById(this.options.runButtonId);
       if (runButton) {
@@ -777,13 +731,9 @@ _final_output = _stdout_buffer.getvalue()
       }
     }
     
-    // 상태 초기화
     this.state.isRunning = false;
     this.state.isReady = false;
     this.pyodide = null;
-    
-    // 전역 핸들러 제거
-    delete window.pyodideInputHandler;
     
     console.log('✅ PyodideTerminal 정리 완료');
   }
