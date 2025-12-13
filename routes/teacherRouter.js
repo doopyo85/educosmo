@@ -185,6 +185,14 @@ router.post('/api/students', requireTeacher, async (req, res) => {
         });
 
     } catch (error) {
+        // 이미 존재하는 아이디 (Race Condition 등) 처리
+        if (error.code === 'ER_DUP_ENTRY' || error.errno === 1062) {
+            return res.status(400).json({
+                success: false,
+                message: '이미 존재하는 아이디입니다.'
+            });
+        }
+
         console.error('학생 추가 오류:', error);
         res.status(500).json({
             success: false,

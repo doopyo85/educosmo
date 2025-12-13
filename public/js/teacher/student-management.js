@@ -2,6 +2,7 @@ const StudentManagement = {
     students: [],
     progressData: [],
     editingStudentId: null, // 수정 중인 학생 ID
+    isSaving: false, // 저장 중 플래그 (중복 방지)
 
     // 정렬 상태 관리
     currentSort: {
@@ -38,6 +39,12 @@ const StudentManagement = {
         // 모달 닫힐 때 폼 초기화
         $('#studentModal').on('hidden.bs.modal', () => {
             this.resetForm();
+        });
+
+        // 폼 제출 방지 및 엔터키 처리
+        $('#studentForm').on('submit', (e) => {
+            e.preventDefault();
+            this.saveStudent();
         });
 
         // 테이블 헤더 정렬 클릭 이벤트
@@ -485,6 +492,8 @@ const StudentManagement = {
     },
 
     async saveStudent() {
+        if (this.isSaving) return;
+
         // ... (기존 비즈니스 로직 유지)
         const userID = $('#userID').val().trim();
         const name = $('#name').val().trim();
@@ -499,6 +508,8 @@ const StudentManagement = {
 
         const $saveBtn = $('#saveStudentBtn');
         const originalText = $saveBtn.text();
+
+        this.isSaving = true;
         $saveBtn.prop('disabled', true).text('저장 중...');
 
         try {
@@ -533,6 +544,7 @@ const StudentManagement = {
             console.error('학생 저장 오류:', error);
             this.showAlert('저장 중 오류가 발생했습니다.', 'danger');
         } finally {
+            this.isSaving = false;
             $saveBtn.prop('disabled', false).text(originalText);
         }
     },
