@@ -143,6 +143,8 @@
 
 .tab-pane {
     height: 100%;
+    flex: 1;
+    /* Ensure it fills the flex container */
     display: flex !important;
     /* Override Bootstrap's default display: block */
     flex-direction: column;
