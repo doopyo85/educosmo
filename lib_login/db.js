@@ -132,6 +132,26 @@ async function getStudentLogs(studentId) {
 }
 
 
+async function executeNoFKCheck(query, params = []) {
+    if (!pool) await initializePool();
+    const connection = await pool.getConnection();
+    try {
+        await connection.query('SET FOREIGN_KEY_CHECKS=0');
+        const [results] = await connection.query(query, params);
+        await connection.query('SET FOREIGN_KEY_CHECKS=1');
+        return results;
+    } catch (error) {
+        console.error('Database query (No FK Check) error:', {
+            query,
+            params,
+            error: error.message
+        });
+        throw error;
+    } finally {
+        connection.release();
+    }
+}
+
 // 결제 내역 추가 함수
 async function addPaymentRecord(userID, centerID, productName, amount, expiryDate) {
     const query = `
