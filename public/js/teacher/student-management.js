@@ -228,7 +228,7 @@ const StudentManagement = {
         if (listToRender.length === 0) {
             tbody.append(`
                 <tr>
-                    <td colspan="10" class="empty-state">
+                    <td colspan="12" class="empty-state">
                         <i class="bi bi-clipboard-data"></i>
                         <p>학습 진도 데이터가 없습니다.</p>
                     </td>
@@ -238,36 +238,34 @@ const StudentManagement = {
         }
 
         listToRender.forEach((student, index) => {
-            const progressRate = student.progress_rate || 0;
             const storageUsage = this.formatBytes(student.storage_usage || 0);
 
-            // Circular Chart (Gradient based on percentage)
-            const circleChart = `
-                <div class="circular-chart" data-percent="${progressRate}" 
-                     style="background: conic-gradient(#0d6efd 0% ${progressRate}%, #e9ecef ${progressRate}% 100%);">
-                </div>
-            `;
+            // Platforms Data
+            const platforms = [
+                { key: 'scratch', label: '스크래치', completed: student.scratch_completed || 0, total: student.scratch_total || 0 },
+                { key: 'entry', label: '엔트리', completed: student.entry_completed || 0, total: student.entry_total || 0 },
+                { key: 'appinventor', label: '앱인벤터', completed: student.appinventor_completed || 0, total: student.appinventor_total || 0 },
+                { key: 'python', label: '파이썬', completed: student.python_completed || 0, total: student.python_total || 0 },
+                { key: 'dataanalysis', label: '데이터', completed: student.dataanalysis_completed || 0, total: student.dataanalysis_total || 0 }
+            ];
 
-            // Completion Dots (Visualizing Completed / Total)
-            const totalContents = student.total_contents || 0;
-            const completedContents = student.completed_contents || 0;
+            let platformCells = '';
+            platforms.forEach(p => {
+                const percent = p.total > 0 ? Math.round((p.completed / p.total) * 100) : 0;
+                // Clickable chart triggering collapse
+                platformCells += `
+                    <td class="text-center clickable-cell" onclick="StudentManagement.toggleDetail(${student.user_id}, '${p.key}')">
+                        <div class="circular-chart small" data-percent="${percent}" 
+                             style="background: conic-gradient(#0d6efd 0% ${percent}%, #e9ecef ${percent}% 100%); width: 28px; height: 28px; margin: 0 auto; cursor: pointer;"
+                             title="${p.label}: ${p.completed}/${p.total}">
+                        </div>
+                    </td>
+                `;
+            });
 
-            // Note: Since we don't have per-content status array, we render dots sequentially
-            let dotsHtml = '<div class="completion-dots">';
-            const displayLimit = Math.min(totalContents, 15);
-
-            for (let i = 0; i < displayLimit; i++) {
-                const isCompleted = i < completedContents;
-                const activeClass = isCompleted ? 'completed' : '';
-                dotsHtml += `<div class="dot ${activeClass}" title="콘텐츠 ${i + 1}"></div>`;
-            }
-            if (totalContents > displayLimit) {
-                dotsHtml += `<span class="small text-muted ms-1">+${totalContents - displayLimit}</span>`;
-            }
-            dotsHtml += '</div>';
-
+            // Main Row
             tbody.append(`
-                <tr>
+                <tr id="row-${student.user_id}">
                     <td class="col-number">${index + 1}</td>
                     <td>
                         <img src="${student.profile_image || '/resource/profiles/default.webp'}" 
@@ -285,29 +283,74 @@ const StudentManagement = {
                             ${student.username}
                         </a>
                     </td>
+                    <td><span class="text-muted small">${student.last_learning_at || '-'}</span></td>
+                    
+                    ${platformCells}
+
                     <td>
-                        <span class="badge-soft-info">
-                            ${student.current_platform || '-'}
-                        </span>
-                    </td>
-                    <td>
-                        ${circleChart}
-                    </td>
-                    <td>
-                        ${dotsHtml}
-                        <div class="small text-muted mt-1">${completedContents} / ${totalContents}</div>
+                        <span class="text-muted small">${storageUsage}</span>
                     </td>
                     <td>
                         <a href="#" onclick="openStudentS3Folder('${student.username}'); return false;" 
-                           title="파일 폴더 열기" class="btn-icon me-1">
+                           class="btn-icon">
                             <i class="bi bi-folder2-open"></i>
                         </a>
-                        <span class="text-muted small">${storageUsage}</span>
                     </td>
-                    <td><span class="text-muted small">${student.last_learning_at || '-'}</span></td>
+                </tr>
+            `);
+
+            // Detail Row (Hidden by default)
+            // We create a container for EACH platform's details, but initially all hidden.
+            // When clicked, we show the specific platform's dots in this row.
+            tbody.append(`
+                <tr id="detail-${student.user_id}" class="detail-row" style="display: none; background-color: #f8f9fa;">
+                    <td colspan="12" class="p-3">
+                        <div id="detail-content-${student.user_id}" class="detail-content-wrapper">
+                            <!-- Dynamic Content Loaded Here via JS on click -->
+                        </div>
+                    </td>
                 </tr>
             `);
         });
+    },
+
+    toggleDetail(userId, platformKey) {
+        const $detailRow = $(`#detail-${userId}`);
+        const $content = $(`#detail-content-${userId}`);
+        const isVisible = $detailRow.is(':visible');
+        const currentPlatform = $detailRow.data('platform');
+
+        // IF already open AND same platform click -> Close
+        if (isVisible && currentPlatform === platformKey) {
+            $detailRow.hide();
+            return;
+        }
+
+        // Find student data
+        const student = this.progressData.find(s => s.user_id === userId); // Note: API changed id -> user_id
+        if (!student) return;
+
+        // Map platform key to data fields
+        let completed = 0, total = 0, label = '';
+        if (platformKey === 'scratch') { completed = student.scratch_completed; total = student.scratch_total; label = '스크래치'; }
+        else if (platformKey === 'entry') { completed = student.entry_completed; total = student.entry_total; label = '엔트리'; }
+        else if (platformKey === 'appinventor') { completed = student.appinventor_completed; total = student.appinventor_total; label = '앱인벤터'; }
+        else if (platformKey === 'python') { completed = student.python_completed; total = student.python_total; label = '파이썬'; }
+        else if (platformKey === 'dataanalysis') { completed = student.dataanalysis_completed; total = student.dataanalysis_total; label = '데이터분석'; }
+
+        // Generate Dots
+        let dotsHtml = `<div class="d-flex align-items-center mb-2"><span class="badge bg-primary me-2">${label}</span> <span class="small text-muted">${completed} / ${total} 완료</span></div>`;
+        dotsHtml += '<div class="completion-dots" style="justify-content: flex-start;">';
+
+        for (let i = 0; i < total; i++) {
+            const isCompleted = i < completed;
+            const activeClass = isCompleted ? 'completed' : '';
+            dotsHtml += `<div class="dot ${activeClass}" style="width: 10px; height: 10px; margin: 2px;" title="콘텐츠 ${i + 1}"></div>`;
+        }
+        dotsHtml += '</div>';
+
+        $content.html(dotsHtml);
+        $detailRow.data('platform', platformKey).fadeIn(200);
     },
 
     // ============================================

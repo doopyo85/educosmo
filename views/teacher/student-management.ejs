@@ -53,32 +53,48 @@
                 <div class="table-responsive" id="progressTableWrapper">
                     <table class="premium-table">
                         <colgroup>
-                            <col style="width: 3%;">
-                            <col style="width: 4%;">
-                            <col style="width: 4%;">
-                            <col style="width: 7%;">
-                            <col style="width: 7%;">
-                            <col style="width: 7%;">
-                            <col style="width: 8%;">
-                            <col style="width: 50%;">
-                            <col style="width: 5%;">
-                            <col style="width: 5%;">
+                            <col style="width: 3%;"> <!-- No -->
+                            <col style="width: 4%;"> <!-- Profile -->
+                            <col style="width: 4%;"> <!-- CT -->
+                            <col style="width: 8%;"> <!-- Name -->
+                            <col style="width: 8%;"> <!-- ID -->
+                            <col style="width: 13%;"> <!-- Last Learning (Moved Left based on request 40% area) -->
+
+                            <!-- Platforms (Total 40%) -->
+                            <col style="width: 8%;"> <!-- Scratch -->
+                            <col style="width: 8%;"> <!-- Entry -->
+                            <col style="width: 8%;"> <!-- AppInv -->
+                            <col style="width: 8%;"> <!-- Python -->
+                            <col style="width: 8%;"> <!-- Data -->
+
+                            <!-- Right (Total 20%) -->
+                            <col style="width: 10%;"> <!-- Storage -->
+                            <col style="width: 10%;"> <!-- Recent (Actually use storage + something else?) -->
                         </colgroup>
                         <thead>
                             <tr>
-                                <th width="60px">No.</th>
-                                <th width="80px">프로필</th>
-                                <th data-sort="ct_level">CT <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th data-sort="name">이름 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th data-sort="username">아이디 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th data-sort="current_platform">현재 플랫폼 <i class="bi bi-caret-down-fill sort-icon"></i>
+                                <th rowspan="2">No.</th>
+                                <th rowspan="2">프로필</th>
+                                <th rowspan="2" data-sort="ct_level">CT <i class="bi bi-caret-down-fill sort-icon"></i>
                                 </th>
-                                <th data-sort="progress_rate">진도율 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th data-sort="completed_contents">완료 현황 <i class="bi bi-caret-down-fill sort-icon"></i>
+                                <th rowspan="2" data-sort="name">이름 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th rowspan="2" data-sort="username">아이디 <i class="bi bi-caret-down-fill sort-icon"></i>
                                 </th>
-                                <th data-sort="storage_usage">스토리지 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th data-sort="last_learning_at">최근 학습일 <i class="bi bi-caret-down-fill sort-icon"></i>
-                                </th>
+                                <th rowspan="2" data-sort="last_learning_at">최근학습 <i
+                                        class="bi bi-caret-down-fill sort-icon"></i></th>
+
+                                <th colspan="5" class="text-center border-bottom">플랫폼별 진도율</th>
+
+                                <th rowspan="2" data-sort="storage_usage">스토리지 <i
+                                        class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th rowspan="2">관리</th>
+                            </tr>
+                            <tr>
+                                <th class="text-center small text-muted">스크래치</th>
+                                <th class="text-center small text-muted">엔트리</th>
+                                <th class="text-center small text-muted">앱인벤터</th>
+                                <th class="text-center small text-muted">파이썬</th>
+                                <th class="text-center small text-muted">데이터</th>
                             </tr>
                         </thead>
                         <tbody id="progressTableBody">
