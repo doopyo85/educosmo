@@ -261,7 +261,16 @@ router.delete('/api/students/:id', requireTeacher, checkSameCenter, async (req, 
         await db.queryDatabase('DELETE FROM PortfolioProjects WHERE user_id = ?', [studentId]);
         await db.queryDatabase('DELETE FROM nuguritalk_posts WHERE author_id = ?', [studentId]);
 
-        // 2. 학생 삭제
+        // 3. User의 centerID가 FK로 걸려있는 경우를 대비해 연결 해제
+        // (LearningLogs 등이 Users.centerID를 참조하고 있어, 같은 centerID를 가진 학생 삭제 시 FK 제약 충돌 발생 가능)
+        try {
+            await db.queryDatabase('UPDATE Users SET centerID = NULL WHERE id = ?', [studentId]);
+        } catch (e) {
+            console.log('centerID NULL 처리 실패 (필수가능성):', e.message);
+            // 실패시 무시하고 진행 (NOT NULL 컬럼일 경우 등)
+        }
+
+        // 4. 학생 삭제
         const query = `
             DELETE FROM Users 
             WHERE id = ? AND role = 'student'
