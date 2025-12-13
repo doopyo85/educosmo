@@ -500,24 +500,24 @@ router.get('/api/student-progress', requireTeacher, async (req, res) => {
                 DATE_FORMAT(MAX(l.end_time), '%Y-%m-%d') AS last_learning_at,
                 
                 -- Platform: Scratch
-                COUNT(DISTINCT CASE WHEN cm.platform = 'scratch' THEN l.content_name END) AS scratch_completed,
-                (SELECT COUNT(*) FROM ContentMap WHERE platform = 'scratch' AND is_active = 1) AS scratch_total,
+                COUNT(DISTINCT CASE WHEN LOWER(cm.platform) = 'scratch' THEN l.content_name END) AS scratch_completed,
+                (SELECT COUNT(*) FROM ContentMap WHERE LOWER(platform) = 'scratch' AND is_active = 1) AS scratch_total,
                 
                 -- Platform: Entry
-                COUNT(DISTINCT CASE WHEN cm.platform = 'entry' THEN l.content_name END) AS entry_completed,
-                (SELECT COUNT(*) FROM ContentMap WHERE platform = 'entry' AND is_active = 1) AS entry_total,
+                COUNT(DISTINCT CASE WHEN LOWER(cm.platform) = 'entry' THEN l.content_name END) AS entry_completed,
+                (SELECT COUNT(*) FROM ContentMap WHERE LOWER(platform) = 'entry' AND is_active = 1) AS entry_total,
 
-                -- Platform: App Inventor (stored as 'appinventor' or similar, assuming 'app_inventor' or 'appinventor')
-                COUNT(DISTINCT CASE WHEN cm.platform IN ('appinventor', 'app_inventor') THEN l.content_name END) AS appinventor_completed,
-                (SELECT COUNT(*) FROM ContentMap WHERE platform IN ('appinventor', 'app_inventor') AND is_active = 1) AS appinventor_total,
+                -- Platform: App Inventor
+                COUNT(DISTINCT CASE WHEN LOWER(cm.platform) IN ('appinventor', 'app_inventor', 'app inventor') THEN l.content_name END) AS appinventor_completed,
+                (SELECT COUNT(*) FROM ContentMap WHERE LOWER(platform) IN ('appinventor', 'app_inventor', 'app inventor') AND is_active = 1) AS appinventor_total,
 
                 -- Platform: Python
-                COUNT(DISTINCT CASE WHEN cm.platform = 'python' THEN l.content_name END) AS python_completed,
-                (SELECT COUNT(*) FROM ContentMap WHERE platform = 'python' AND is_active = 1) AS python_total,
+                COUNT(DISTINCT CASE WHEN LOWER(cm.platform) = 'python' THEN l.content_name END) AS python_completed,
+                (SELECT COUNT(*) FROM ContentMap WHERE LOWER(platform) = 'python' AND is_active = 1) AS python_total,
 
                 -- Platform: Data Analysis
-                COUNT(DISTINCT CASE WHEN cm.platform IN ('data_analysis', 'dataanalysis') THEN l.content_name END) AS dataanalysis_completed,
-                (SELECT COUNT(*) FROM ContentMap WHERE platform IN ('data_analysis', 'dataanalysis') AND is_active = 1) AS dataanalysis_total,
+                COUNT(DISTINCT CASE WHEN LOWER(cm.platform) IN ('data_analysis', 'dataanalysis', 'data analysis', 'data') THEN l.content_name END) AS dataanalysis_completed,
+                (SELECT COUNT(*) FROM ContentMap WHERE LOWER(platform) IN ('data_analysis', 'dataanalysis', 'data analysis', 'data') AND is_active = 1) AS dataanalysis_total,
 
                 -- CT Level Logic (Overall)
                 CASE

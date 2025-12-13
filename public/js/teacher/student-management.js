@@ -238,6 +238,7 @@ const StudentManagement = {
         }
 
         listToRender.forEach((student, index) => {
+            console.log(student); // Add console.log(student) to check data structure and ensure zero handling
             const storageUsage = this.formatBytes(student.storage_usage || 0);
 
             // Platforms Data
@@ -252,6 +253,9 @@ const StudentManagement = {
             let platformCells = '';
             platforms.forEach(p => {
                 const percent = p.total > 0 ? Math.round((p.completed / p.total) * 100) : 0;
+                // If total is 0, show - or 0%?
+                const displayPercent = p.total > 0 ? `${percent}%` : '0%';
+
                 // Clickable chart triggering collapse
                 platformCells += `
                     <td class="text-center clickable-cell" onclick="StudentManagement.toggleDetail(${student.user_id}, '${p.key}')">
@@ -259,6 +263,7 @@ const StudentManagement = {
                              style="background: conic-gradient(#0d6efd 0% ${percent}%, #e9ecef ${percent}% 100%); width: 28px; height: 28px; margin: 0 auto; cursor: pointer;"
                              title="${p.label}: ${p.completed}/${p.total}">
                         </div>
+                        <div class="small text-muted mt-1" style="font-size: 0.7rem;">${p.completed}/${p.total}</div>
                     </td>
                 `;
             });
