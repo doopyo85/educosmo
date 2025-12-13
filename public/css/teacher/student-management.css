@@ -200,7 +200,7 @@
 }
 
 .premium-table thead tr:nth-child(2) th {
-    top: 47px;
+    top: 46px;
     /* Adjust based on the actual height of the first row */
     z-index: 9;
 }
