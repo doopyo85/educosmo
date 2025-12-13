@@ -257,9 +257,10 @@ const StudentManagement = {
                 const displayPercent = p.total > 0 ? `${percent}%` : '0%';
 
                 // Clickable chart triggering collapse
+                // Wrap ID in quotes to be safe
                 platformCells += `
                     <td class="text-center clickable-cell">
-                        <div onclick="StudentManagement.toggleDetail(this, ${student.user_id}, '${p.key}', event)" style="cursor: pointer;">
+                        <div onclick="StudentManagement.toggleDetail(this, '${student.user_id}', '${p.key}', event)" style="cursor: pointer;">
                             <div class="circular-chart small" data-percent="${percent}" 
                                 style="background: conic-gradient(#0d6efd 0% ${percent}%, #e9ecef ${percent}% 100%); width: 28px; height: 28px; margin: 0 auto;"
                                 title="${p.label}: ${p.completed}/${p.total}">
@@ -305,14 +306,13 @@ const StudentManagement = {
             `);
         });
 
-        // Click outside to close global popover
+        // Remove existing handler to prevent duplicates
         $(document).off('click.popover').on('click.popover', (e) => {
             if (!$(e.target).closest('.clickable-cell').length && !$(e.target).closest('#global-platform-popover').length) {
                 this.closeAllPopovers();
             }
         });
 
-        // Scroll event to close popover (optional, but good for UX if position is absolute/fixed)
         $(window).off('scroll.popover').on('scroll.popover', () => {
             this.closeAllPopovers();
         });
@@ -331,6 +331,8 @@ const StudentManagement = {
     toggleDetail(element, userId, platformKey, event) {
         if (event) event.stopPropagation();
 
+        console.log('toggleDetail called:', userId, platformKey); // Debug log
+
         const $popover = $('#global-platform-popover');
 
         // Identify if this is a toggle (clicking same element while open)
@@ -343,9 +345,13 @@ const StudentManagement = {
             return;
         }
 
-        // Find student data
-        const student = this.progressData.find(s => s.user_id === userId);
-        if (!student) return;
+        // Loose comparison for ID (string vs number)
+        const student = this.progressData.find(s => s.user_id == userId);
+
+        if (!student) {
+            console.error('Student not found for ID:', userId);
+            return;
+        }
 
         // Map platform key to data fields
         let completed = 0, total = 0, label = '';
@@ -560,3 +566,8 @@ const StudentManagement = {
 };
 
 window.StudentManagement = StudentManagement;
+
+// !! Initialize !!
+$(document).ready(function () {
+    StudentManagement.init();
+});
