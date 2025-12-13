@@ -40,6 +40,7 @@ window.ComponentSystem = {
     // 각 페이지 타입별 메뉴 데이터 API
     menuData: {
       'python': '/api/get-python-data',
+      'pythontest': '/api/get-python-data',  // 🔥 Pyodide 테스트 - python과 동일 데이터 사용
       'algorithm': '/api/get-algorithm-data',
       'aiMath': '/api/get-aimath-data',
       'dataAnalysis': '/api/get-dataanalysis-data',
@@ -107,6 +108,7 @@ window.ComponentSystem = {
       const path = window.location.pathname;
       console.log('현재 URL 경로:', path);
       
+      if (path.includes('/pythontest')) return 'pythontest';  // 🔥 Pyodide 테스트 페이지
       if (path.includes('/python_project')) return 'python';
       if (path.includes('/algorithm')) return 'algorithm';
       if (path.includes('/aiMath')) return 'aiMath';
@@ -567,6 +569,11 @@ handleJupyterComponentFailure: function(config) {
         ["Python 기초", "조건문과 반복문", "python_basic_02", "", "ide"],
         ["Python 고급", "함수와 모듈", "python_advanced_01", "", "ide"]
       ],
+      'pythontest': [
+        ["Pyodide 테스트", "input() 함수 테스트", "pyodide_input_test", "", "ide"],
+        ["Pyodide 테스트", "기본 출력 테스트", "pyodide_print_test", "", "ide"],
+        ["Pyodide 테스트", "반복문 테스트", "pyodide_loop_test", "", "ide"]
+      ],
       'algorithm': [
         ["알고리즘 기초", "정렬 알고리즘", "algorithm_sort_01", "", "ide"],
         ["알고리즘 기초", "탐색 알고리즘", "algorithm_search_01", "", "ide"],
@@ -669,6 +676,34 @@ initializeComponents: async function() {
     if (this.components.ide) {
       console.log('IDE 컴포넌트 초기화 중...');
       await this.components.ide.init();
+      
+      // 🔥 pythontest 페이지에서는 PyodideTerminal 사용
+      if (this.state.pageType === 'pythontest' && window.PyodideTerminal) {
+        console.log('🐍 Pyodide 터미널로 교체 중...');
+        
+        // 기존 Terminal 모듈 비활성화
+        if (this.components.ide.modules && this.components.ide.modules.terminal) {
+          if (this.components.ide.modules.terminal.destroy) {
+            this.components.ide.modules.terminal.destroy();
+          }
+        }
+        
+        // PyodideTerminal로 교체
+        const pyodideTerminal = new window.PyodideTerminal({
+          outputId: 'output-content',
+          runButtonId: 'runCodeBtn',
+          clearButtonId: 'clearOutputBtn'
+        });
+        
+        await pyodideTerminal.init();
+        
+        // IDE 컴포넌트의 terminal 모듈 교체
+        if (this.components.ide.modules) {
+          this.components.ide.modules.terminal = pyodideTerminal;
+        }
+        
+        console.log('✅ Pyodide 터미널 교체 완료');
+      }
     } else {
       console.warn('IDE 컴포넌트가 등록되지 않았습니다.');
     }
@@ -713,6 +748,7 @@ initializeComponents: async function() {
     // 페이지 타입별 기본 레이아웃 설정
     const defaultLayouts = {
       'python': 'ide',
+      'pythontest': 'ide',  // 🔥 Pyodide 테스트 페이지
       'algorithm': 'ide',
       'certification': 'quiz',
       'aiMath': 'html',

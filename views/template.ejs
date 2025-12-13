@@ -30,6 +30,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.8/ace.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.8/ext-language_tools.js"></script>
 
+    <!-- 🔥 Pyodide (pythontest 페이지 전용) -->
+    <% if (typeof pageType !== 'undefined' && pageType === 'pythontest') { %>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <script src="/js/components/ide/PyodideTerminal.js"></script>
+    <% } %>
+
     <!-- 🔥 IDE 관련 스크립트 - 컴포넌트 시스템보다 먼저 로드 -->
     <script src="/js/components/ide/CodeEditor.js"></script>
     <script src="/js/components/ide/Terminal.js"></script>

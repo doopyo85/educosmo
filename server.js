@@ -648,7 +648,22 @@ app.get('/entry_project', authenticateUser, checkPageAccess('/entry_project'), (
     userID: req.session.userID,
     userRole: req.session.role,
     is_logined: req.session.is_logined,
-    centerID: req.session.centerID
+    centerID: req.session.centerID,
+    serviceType: req.serviceType,
+    serviceName: res.locals.serviceName
+  });
+});
+
+// 🔥 Pyodide 테스트 페이지 (/pythontest)
+app.get('/pythontest', authenticateUser, checkPageAccess('/python_project'), (req, res) => {
+  res.render('template', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID,
+    pageType: 'pythontest',
+    serviceType: req.serviceType,
+    serviceName: res.locals.serviceName
   });
 });
 
