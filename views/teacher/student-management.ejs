@@ -1,5 +1,5 @@
 <!-- 학생 관리 페이지 (Button Toggle Layout) -->
-<link rel="stylesheet" href="/css/teacher/student-management.css">
+<link rel="stylesheet" href="/css/teacher/student-management.css?v=3">
 
 <div class="student-management-page">
     <!-- Header Bar -->
@@ -26,7 +26,12 @@
 
         <!-- 3. Right: Controls -->
         <div class="header-controls">
-            <!-- Search Inputs -->
+            <!-- Add Button (First) -->
+            <button class="btn btn-primary rounded-pill btn-sm px-3" id="addStudentBtn" style="display: none;">
+                <i class="bi bi-person-plus me-1"></i> 추가
+            </button>
+
+            <!-- Search Inputs (Second) -->
             <div class="search-wrapper" id="progressSearchWrapper">
                 <i class="bi bi-search search-icon"></i>
                 <input type="text" id="progressSearch" class="form-control" placeholder="학생 이름/아이디 검색..." />
@@ -36,11 +41,6 @@
                 <i class="bi bi-search search-icon"></i>
                 <input type="text" id="studentSearch" class="form-control" placeholder="학생 이름/아이디 검색..." />
             </div>
-
-            <!-- Add Button -->
-            <button class="btn btn-primary rounded-pill btn-sm px-3" id="addStudentBtn" style="display: none;">
-                <i class="bi bi-person-plus me-1"></i> 추가
-            </button>
         </div>
     </div>
 
@@ -186,4 +186,4 @@
 </script>
 
 <!-- 학생 관리 전용 스크립트 -->
-<script src="/js/teacher/student-management.js"></script>
+<script src="/js/teacher/student-management.js?v=3"></script>
