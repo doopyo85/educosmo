@@ -199,6 +199,12 @@
     white-space: nowrap;
 }
 
+.premium-table thead tr:nth-child(2) th {
+    top: 48px;
+    /* Adjust based on the actual height of the first row */
+    z-index: 9;
+}
+
 .premium-table thead th:hover {
     background-color: #eff2f5;
     color: #212529;
