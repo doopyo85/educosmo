@@ -247,7 +247,10 @@ router.delete('/api/students/:id', requireTeacher, checkSameCenter, async (req, 
     try {
         const studentId = req.params.id;
 
-        // 학생만 삭제 가능 (안전장치)
+        // 1. UserActivityLogs (Foreign Key) 먼저 삭제
+        await db.queryDatabase('DELETE FROM UserActivityLogs WHERE user_id = ?', [studentId]);
+
+        // 2. 학생 삭제
         const query = `
             DELETE FROM Users 
             WHERE id = ? AND role = 'student'
