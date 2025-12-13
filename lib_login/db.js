@@ -131,7 +131,6 @@ async function getStudentLogs(studentId) {
     return results;
 }
 
-
 async function executeNoFKCheck(query, params = []) {
     if (!pool) await initializePool();
     const connection = await pool.getConnection();
