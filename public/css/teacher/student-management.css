@@ -1,19 +1,17 @@
-/* Teacher Student Management Premium UI - Compact Layout */
+/* Teacher Student Management Premium UI - Sidebar Layout */
 
 /* General Container */
 .student-management-page {
     padding: 0;
     background-color: #f5f7fa;
     height: 100%;
-    /* Full height of parent */
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    /* Prevent body scroll */
 }
 
-/* Compact Header */
-.compact-header {
+/* Header (Top Bar) */
+.page-header-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -22,11 +20,10 @@
     height: 60px;
     border-bottom: 1px solid #dee2e6;
     flex-shrink: 0;
-    /* Prevent shrinking */
     z-index: 100;
 }
 
-.page-branding {
+.brand-section {
     display: flex;
     align-items: center;
     gap: 1.5rem;
@@ -40,37 +37,14 @@
     white-space: nowrap;
 }
 
-/* Compact Tabs in Header */
-.header-tabs .nav-tabs {
-    border-bottom: none;
-    margin-bottom: 0;
-    display: flex;
-    gap: 0.5rem;
-}
-
-.header-tabs .nav-link {
-    border: none;
-    background: transparent;
-    color: #6c757d;
-    font-weight: 600;
-    padding: 0.5rem 1rem;
+.page-description {
+    color: #7f8c8d;
     font-size: 0.9rem;
-    border-radius: 6px;
-    transition: all 0.2s;
-}
-
-.header-tabs .nav-link:hover {
-    background-color: #f8f9fa;
-    color: #495057;
-}
-
-.header-tabs .nav-link.active {
-    background-color: #e7f1ff;
-    color: #0d6efd;
-}
-
-.header-tabs .nav-link i {
-    margin-right: 0.4rem;
+    margin: 0;
+    padding-left: 1rem;
+    border-left: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
 }
 
 /* Header Controls */
@@ -89,7 +63,6 @@
 .search-wrapper .form-control {
     padding-left: 2.25rem;
     border-radius: 20px;
-    /* More compact pill shape */
     border: 1px solid #dee2e6;
     background-color: #f8f9fa;
     height: 36px;
@@ -111,13 +84,73 @@
     font-size: 0.9rem;
 }
 
-/* Main Content Area */
-.tab-content {
+/* Page Body (Sidebar + Content) */
+.page-body {
+    display: flex;
     flex: 1;
     overflow: hidden;
-    /* Internal scroll */
-    padding: 1rem;
-    position: relative;
+}
+
+/* Sidebar Navigation */
+.side-menu {
+    width: 220px;
+    background: #fff;
+    border-right: 1px solid #dee2e6;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-pills-custom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nav-pills-custom .nav-link {
+    border-radius: 8px;
+    color: #5a6474;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+}
+
+.nav-pills-custom .nav-link i {
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.nav-pills-custom .nav-link:hover {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+}
+
+.nav-pills-custom .nav-link.active {
+    background-color: #e7f1ff;
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: #f5f7fa;
+}
+
+/* Content Container */
+.tab-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%;
 }
 
 .tab-pane {
@@ -126,7 +159,6 @@
     flex-direction: column;
 }
 
-/* Table Card Container */
 .content-card {
     flex: 1;
     background: #ffffff;
@@ -138,12 +170,12 @@
     flex-direction: column;
 }
 
+/* Table Styles */
 .table-responsive {
     flex: 1;
     overflow-y: auto;
 }
 
-/* Premium Table Styles */
 .premium-table {
     width: 100%;
     border-collapse: separate;
@@ -159,15 +191,42 @@
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.75rem;
-    padding: 0.75rem;
+    padding: 0.85rem;
     border-bottom: 1px solid #dee2e6;
     text-align: center;
     box-shadow: 0 1px 0 #dee2e6;
-    /* Fake border for sticky */
+    cursor: pointer;
+    /* Sortable */
+    user-select: none;
+    white-space: nowrap;
 }
 
+.premium-table thead th:hover {
+    background-color: #eff2f5;
+    color: #212529;
+}
+
+.premium-table thead th .sort-icon {
+    margin-left: 4px;
+    font-size: 0.9em;
+    opacity: 0.5;
+}
+
+.premium-table thead th.sorted-asc .sort-icon::before {
+    content: "\F12C";
+    opacity: 1;
+}
+
+/* bi-caret-up-fill */
+.premium-table thead th.sorted-desc .sort-icon::before {
+    content: "\F128";
+    opacity: 1;
+}
+
+/* bi-caret-down-fill */
+
 .premium-table tbody td {
-    padding: 0.75rem;
+    padding: 0.85rem;
     vertical-align: middle;
     border-bottom: 1px solid #edf2f7;
     color: #495057;
@@ -177,6 +236,69 @@
 
 .premium-table tbody tr:hover {
     background-color: #f8f9fa;
+}
+
+/* Circular Chart */
+.circular-chart {
+    display: inline-block;
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e9ecef;
+    /* Fallback */
+    /* background: conic-gradient(var(--color) 0% var(--percent), #e9ecef var(--percent) 100%); */
+    vertical-align: middle;
+}
+
+.circular-chart::after {
+    content: attr(data-percent) "%";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+/* Completion Dots */
+.completion-dots {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 140px;
+    margin: 0 auto;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dot.completed {
+    /* Color will be set inline based on platform usually, but default here */
+    background-color: #0d6efd;
+}
+
+.dot:hover {
+    transform: scale(1.2);
+}
+
+.dot[title]:hover::after {
+    /* Simple tooltip logic if needed, or rely on browser title */
 }
 
 /* Profile Image */
@@ -206,31 +328,6 @@
     border-radius: 50px;
     font-weight: 600;
     font-size: 0.8em;
-}
-
-/* Progress Bar */
-.progress-premium {
-    height: 6px;
-    background-color: #e9ecef;
-    border-radius: 10px;
-    width: 80px;
-    display: inline-block;
-    vertical-align: middle;
-}
-
-.progress-premium .progress-bar {
-    background: linear-gradient(90deg, #0d6efd 0%, #0a58ca 100%);
-    border-radius: 10px;
-    height: 100%;
-}
-
-.progress-text {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #0d6efd;
-    vertical-align: middle;
 }
 
 /* Action Buttons */
@@ -284,4 +381,11 @@
 
 .student-link:hover {
     color: #0d6efd;
+}
+
+/* Number Column */
+.col-number {
+    color: #95a5a6;
+    font-size: 0.85rem;
+    font-weight: 500;
 }

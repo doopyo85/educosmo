@@ -3,30 +3,37 @@ const StudentManagement = {
     progressData: [],
     editingStudentId: null, // 수정 중인 학생 ID
 
+    // 정렬 상태 관리
+    currentSort: {
+        key: null,
+        order: 'asc' // or 'desc'
+    },
+
     init() {
         this.bindEvents();
         this.loadStudents();
         this.loadProgress();
 
-        // 탭 전환 이벤트
-        $('#progress-tab').on('shown.bs.tab', () => {
-            $('#progressSearchWrapper').show();
-            $('#studentSearchWrapper').hide();
-            $('#addStudentBtn').hide();
+        // 탭 전환 이벤트 (사이드바 버전)
+        const triggerTabList = [].slice.call(document.querySelectorAll('#v-pills-tab button'))
+        triggerTabList.forEach((triggerEl) => {
+            const tabTrigger = new bootstrap.Tab(triggerEl)
 
-            if (this.progressData.length === 0) {
-                this.loadProgress();
-            }
-        });
+            triggerEl.addEventListener('shown.bs.tab', (event) => {
+                const targetId = event.target.getAttribute('data-bs-target');
 
-        $('#list-tab').on('shown.bs.tab', () => {
-            $('#progressSearchWrapper').hide();
-            $('#studentSearchWrapper').show();
-            $('#addStudentBtn').show();
-
-            if (this.students.length === 0) {
-                this.loadStudents();
-            }
+                if (targetId === '#student-progress') {
+                    $('#progressSearchWrapper').show();
+                    $('#studentSearchWrapper').hide();
+                    $('#addStudentBtn').hide();
+                    if (this.progressData.length === 0) this.loadProgress();
+                } else if (targetId === '#student-list') {
+                    $('#progressSearchWrapper').hide();
+                    $('#studentSearchWrapper').show();
+                    $('#addStudentBtn').show();
+                    if (this.students.length === 0) this.loadStudents();
+                }
+            })
         });
     },
 
@@ -51,8 +58,18 @@ const StudentManagement = {
         $('#studentModal').on('hidden.bs.modal', () => {
             this.resetForm();
         });
+
+        // 테이블 헤더 정렬 클릭 이벤트
+        $('.premium-table th[data-sort]').on('click', (e) => {
+            const $th = $(e.currentTarget);
+            const sortKey = $th.data('sort');
+            this.handleSort(sortKey, $th);
+        });
     },
 
+    // ============================================
+    // 데이터 로드
+    // ============================================
     async loadStudents() {
         try {
             const response = await fetch('/teacher/api/students');
@@ -84,14 +101,72 @@ const StudentManagement = {
         }
     },
 
-    renderStudents() {
+    // ============================================
+    // 정렬 로직
+    // ============================================
+    handleSort(key, $clickedTh) {
+        // 정렬 순서 토글
+        if (this.currentSort.key === key) {
+            this.currentSort.order = this.currentSort.order === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.currentSort.key = key;
+            this.currentSort.order = 'asc';
+        }
+
+        // UI 업데이트 (헤더 아이콘)
+        $('.premium-table th').removeClass('sorted-asc sorted-desc');
+        if (this.currentSort.order === 'asc') {
+            $clickedTh.addClass('sorted-asc');
+        } else {
+            $clickedTh.addClass('sorted-desc');
+        }
+
+        // 활성화된 탭에 따라 데이터 정렬 및 렌더링
+        const activeTab = $('#v-pills-tab .nav-link.active').attr('data-bs-target');
+
+        if (activeTab === '#student-progress') {
+            this.sortData(this.progressData);
+            this.renderProgress();
+        } else {
+            this.sortData(this.students);
+            this.renderStudents();
+        }
+    },
+
+    sortData(dataList) {
+        const { key, order } = this.currentSort;
+        if (!key) return;
+
+        dataList.sort((a, b) => {
+            let valA = a[key] || '';
+            let valB = b[key] || '';
+
+            // 숫자형 데이터 처리
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                return order === 'asc' ? valA - valB : valB - valA;
+            }
+
+            // 날짜/문자열 처리
+            valA = String(valA).toLowerCase();
+            valB = String(valB).toLowerCase();
+
+            if (valA < valB) return order === 'asc' ? -1 : 1;
+            if (valA > valB) return order === 'asc' ? 1 : -1;
+            return 0;
+        });
+    },
+
+    // ============================================
+    // 렌더링 (학생 목록)
+    // ============================================
+    renderStudents(listToRender = this.students) {
         const tbody = $('#studentTableBody');
         tbody.empty();
 
-        if (this.students.length === 0) {
+        if (listToRender.length === 0) {
             tbody.append(`
                 <tr>
-                    <td colspan="7" class="empty-state">
+                    <td colspan="8" class="empty-state">
                         <i class="bi bi-people"></i>
                         <p>등록된 학생이 없습니다.</p>
                     </td>
@@ -100,12 +175,13 @@ const StudentManagement = {
             return;
         }
 
-        this.students.forEach(student => {
+        listToRender.forEach((student, index) => {
             tbody.append(`
                 <tr>
+                    <td class="col-number">${index + 1}</td>
                     <td>
                         <img src="${student.profile_image || '/resource/profiles/default.webp'}" 
-                             class="profile-img" width="42" height="42">
+                             class="profile-img" width="36" height="36">
                     </td>
                     <td>
                         <span class="fw-bold">${student.name || '-'}</span>
@@ -134,23 +210,17 @@ const StudentManagement = {
         });
     },
 
-    // 파일 용량 포맷팅 함수
-    formatBytes(bytes) {
-        if (bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-    },
-
-    renderProgress() {
+    // ============================================
+    // 렌더링 (학습 진도)
+    // ============================================
+    renderProgress(listToRender = this.progressData) {
         const tbody = $('#progressTableBody');
         tbody.empty();
 
-        if (this.progressData.length === 0) {
+        if (listToRender.length === 0) {
             tbody.append(`
                 <tr>
-                    <td colspan="9" class="empty-state">
+                    <td colspan="10" class="empty-state">
                         <i class="bi bi-clipboard-data"></i>
                         <p>학습 진도 데이터가 없습니다.</p>
                     </td>
@@ -159,14 +229,48 @@ const StudentManagement = {
             return;
         }
 
-        this.progressData.forEach(student => {
+        listToRender.forEach((student, index) => {
             const progressRate = student.progress_rate || 0;
             const storageUsage = this.formatBytes(student.storage_usage || 0);
+
+            // Circular Chart (Gradient based on percentage)
+            const circleChart = `
+                <div class="circular-chart" data-percent="${progressRate}" 
+                     style="background: conic-gradient(#0d6efd 0% ${progressRate}%, #e9ecef ${progressRate}% 100%);">
+                </div>
+            `;
+
+            // Completion Dots (Visualizing Completed / Total)
+            const totalContents = student.total_contents || 0;
+            const completedContents = student.completed_contents || 0;
+            // Max dots to prevent UI overflow (e.g. limit to 20 or adjust size)
+            // For now, let's limit dots display or just use 'completed' count to safeguard
+
+            // NOTE: Since we don't have per-content status array, we render dots sequentially
+            let dotsHtml = '<div class="completion-dots">';
+            const activePlatform = student.current_platform || 'all';
+
+            // Limit render to avoid performance hit on huge numbers, maybe show up to 15-20 dots
+            const displayLimit = Math.min(totalContents, 15);
+
+            for (let i = 0; i < displayLimit; i++) {
+                const isCompleted = i < completedContents;
+                const activeClass = isCompleted ? 'completed' : '';
+                // Color based on platform if desired, using default blue for now
+                dotsHtml += `<div class="dot ${activeClass}" title="콘텐츠 ${i + 1}"></div>`;
+            }
+            if (totalContents > displayLimit) {
+                dotsHtml += `<span class="small text-muted ms-1">+${totalContents - displayLimit}</span>`;
+            }
+            dotsHtml += '</div>';
+
+
             tbody.append(`
                 <tr>
+                    <td class="col-number">${index + 1}</td>
                     <td>
                         <img src="${student.profile_image || '/resource/profiles/default.webp'}" 
-                            class="profile-img" width="42" height="42">
+                            class="profile-img" width="36" height="36">
                     </td>
                     <td>
                         <span class="badge-soft-success">
@@ -186,12 +290,12 @@ const StudentManagement = {
                         </span>
                     </td>
                     <td>
-                        <div class="progress-premium">
-                            <div class="progress-bar" role="progressbar" style="width: ${progressRate}%;"></div>
-                        </div>
-                        <span class="progress-text">${progressRate}%</span>
+                        ${circleChart}
                     </td>
-                    <td><span class="fw-bold text-dark">${student.completed_contents || 0}</span> <span class="text-muted">/ ${student.total_contents || 0}</span></td>
+                    <td>
+                        ${dotsHtml}
+                        <div class="small text-muted mt-1">${completedContents} / ${totalContents}</div>
+                    </td>
                     <td>
                         <a href="#" onclick="openStudentS3Folder('${student.username}'); return false;" 
                            title="파일 폴더 열기" class="btn-icon me-1">
@@ -205,76 +309,16 @@ const StudentManagement = {
         });
     },
 
-    openStudentDetail(userId) {
-        const width = 900;
-        const height = 700;
-        const left = (screen.width - width) / 2;
-        const top = (screen.height - height) / 2;
-
-        window.open(
-            `/teacher/student-detail/${userId}`,
-            'studentDetail',
-            `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
-        );
-    },
-
+    // ============================================
+    // 검색 필터
+    // ============================================
     filterStudents(searchText) {
         const searchLower = searchText.toLowerCase();
         const filtered = this.students.filter(s =>
             (s.name && s.name.toLowerCase().includes(searchLower)) ||
             (s.userID && s.userID.toLowerCase().includes(searchLower))
         );
-        this.renderFilteredStudents(filtered);
-    },
-
-    renderFilteredStudents(filteredList) {
-        const tbody = $('#studentTableBody');
-        tbody.empty();
-
-        if (filteredList.length === 0) {
-            tbody.append(`
-                <tr>
-                    <td colspan="7" class="empty-state">
-                        <i class="bi bi-search"></i>
-                        <p>검색 결과가 없습니다.</p>
-                    </td>
-                </tr>
-            `);
-            return;
-        }
-
-        filteredList.forEach(student => {
-            tbody.append(`
-                <tr>
-                    <td>
-                        <img src="${student.profile_image || '/resource/profiles/default.webp'}" 
-                             class="profile-img" width="42" height="42">
-                    </td>
-                    <td>
-                        <span class="fw-bold">${student.name || '-'}</span>
-                    </td>
-                    <td>
-                        <a href="#" onclick="StudentManagement.openStudentDetail(${student.id}); return false;" 
-                           class="student-link">
-                            ${student.userID}
-                        </a>
-                    </td>
-                    <td><span class="text-muted">${student.email || '-'}</span></td>
-                    <td><span class="text-muted">${student.created_at ? new Date(student.created_at).toLocaleDateString('ko-KR') : '-'}</span></td>
-                    <td><span class="text-muted">${student.last_access ? new Date(student.last_access).toLocaleDateString('ko-KR') : '-'}</span></td>
-                    <td>
-                        <button class="btn-icon edit me-1" 
-                                onclick="StudentManagement.editStudent(${student.id})" title="수정">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn-icon delete" 
-                                onclick="StudentManagement.deleteStudent(${student.id}, '${student.name}')" title="삭제">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `);
-        });
+        this.renderStudents(filtered);
     },
 
     filterProgress(searchText) {
@@ -283,87 +327,41 @@ const StudentManagement = {
             (s.name && s.name.toLowerCase().includes(searchLower)) ||
             (s.username && s.username.toLowerCase().includes(searchLower))
         );
-        this.renderFilteredProgress(filtered);
-    },
-
-    renderFilteredProgress(filteredList) {
-        const tbody = $('#progressTableBody');
-        tbody.empty();
-
-        if (filteredList.length === 0) {
-            tbody.append(`
-                <tr>
-                    <td colspan="9" class="empty-state">
-                        <i class="bi bi-search"></i>
-                        <p>검색 결과가 없습니다.</p>
-                    </td>
-                </tr>
-            `);
-            return;
-        }
-
-        filteredList.forEach(student => {
-            const progressRate = student.progress_rate || 0;
-            const storageUsage = this.formatBytes(student.storage_usage || 0);
-            tbody.append(`
-                <tr>
-                    <td>
-                        <img src="${student.profile_image || '/resource/profiles/default.webp'}" 
-                            class="profile-img" width="42" height="42">
-                    </td>
-                    <td>
-                        <span class="badge-soft-success">
-                            Lv. ${student.ct_level || 0}
-                        </span>
-                    </td>
-                    <td><span class="fw-bold text-dark">${student.name || '-'}</span></td>
-                    <td>
-                        <a href="#" onclick="StudentManagement.openStudentDetail(${student.user_id}); return false;" 
-                           class="student-link">
-                            ${student.username}
-                        </a>
-                    </td>
-                    <td>
-                        <span class="badge-soft-info">
-                            ${student.current_platform || '-'}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="progress-premium">
-                            <div class="progress-bar" role="progressbar" style="width: ${progressRate}%;"></div>
-                        </div>
-                        <span class="progress-text">${progressRate}%</span>
-                    </td>
-                    <td><span class="fw-bold text-dark">${student.completed_contents || 0}</span> <span class="text-muted">/ ${student.total_contents || 0}</span></td>
-                    <td>
-                        <a href="#" onclick="openStudentS3Folder('${student.username}'); return false;" 
-                           title="파일 폴더 열기" class="btn-icon me-1">
-                            <i class="bi bi-folder2-open"></i>
-                        </a>
-                        <span class="text-muted small">${storageUsage}</span>
-                    </td>
-                    <td><span class="text-muted small">${student.last_learning_at || '-'}</span></td>
-                </tr>
-            `);
-        });
+        this.renderProgress(filtered);
     },
 
     // ============================================
-    // 학생 추가 모달 표시
+    // 유틸리티
+    // ============================================
+    formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    },
+
+    openStudentDetail(userId) {
+        const width = 900;
+        const height = 700;
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+        window.open(`/teacher/student-detail/${userId}`, 'studentDetail', `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`);
+    },
+
+    // ============================================
+    // 학생 추가/수정/삭제 (기존 유지)
     // ============================================
     showAddModal() {
         this.editingStudentId = null;
         $('#modalTitle').text('학생 추가');
         $('#studentForm')[0].reset();
         $('#studentId').val('');
-        $('#userID').prop('disabled', false); // 아이디 입력 활성화
+        $('#userID').prop('disabled', false);
         $('#password').attr('placeholder', '비밀번호');
         $('#studentModal').modal('show');
     },
 
-    // ============================================
-    // 학생 수정 모달 표시
-    // ============================================
     editStudent(id) {
         const student = this.students.find(s => s.id === id);
         if (!student) {
@@ -374,19 +372,15 @@ const StudentManagement = {
         this.editingStudentId = id;
         $('#modalTitle').text('학생 정보 수정');
         $('#studentId').val(id);
-        $('#userID').val(student.userID).prop('disabled', true); // 아이디 수정 불가
+        $('#userID').val(student.userID).prop('disabled', true);
         $('#name').val(student.name || '');
         $('#email').val(student.email || '');
         $('#password').val('').attr('placeholder', '변경 시에만 입력');
         $('#phone').val(student.phone || '');
         $('#birthdate').val(student.birthdate ? student.birthdate.split('T')[0] : '');
-
         $('#studentModal').modal('show');
     },
 
-    // ============================================
-    // 폼 초기화
-    // ============================================
     resetForm() {
         this.editingStudentId = null;
         $('#studentForm')[0].reset();
@@ -395,10 +389,8 @@ const StudentManagement = {
         $('#password').attr('placeholder', '비밀번호');
     },
 
-    // ============================================
-    // 학생 저장 (추가/수정)
-    // ============================================
     async saveStudent() {
+        // ... (기존 비즈니스 로직 유지)
         const userID = $('#userID').val().trim();
         const name = $('#name').val().trim();
         const email = $('#email').val().trim();
@@ -406,46 +398,22 @@ const StudentManagement = {
         const phone = $('#phone').val().trim();
         const birthdate = $('#birthdate').val();
 
-        // 필수 입력 검증
-        if (!userID) {
-            this.showAlert('아이디를 입력해주세요.', 'warning');
-            $('#userID').focus();
-            return;
-        }
+        if (!userID) { this.showAlert('아이디를 입력해주세요.', 'warning'); $('#userID').focus(); return; }
+        if (!name) { this.showAlert('이름을 입력해주세요.', 'warning'); $('#name').focus(); return; }
+        if (!this.editingStudentId && !password) { this.showAlert('비밀번호를 입력해주세요.', 'warning'); $('#password').focus(); return; }
 
-        if (!name) {
-            this.showAlert('이름을 입력해주세요.', 'warning');
-            $('#name').focus();
-            return;
-        }
-
-        // 신규 추가 시 비밀번호 필수
-        if (!this.editingStudentId && !password) {
-            this.showAlert('비밀번호를 입력해주세요.', 'warning');
-            $('#password').focus();
-            return;
-        }
-
-        // 저장 버튼 비활성화 (중복 클릭 방지)
         const $saveBtn = $('#saveStudentBtn');
         const originalText = $saveBtn.text();
         $saveBtn.prop('disabled', true).text('저장 중...');
 
         try {
             let url, method, body;
-
             if (this.editingStudentId) {
-                // 수정 모드
                 url = `/teacher/api/students/${this.editingStudentId}`;
                 method = 'PUT';
                 body = { name, email, phone, birthdate };
-
-                // 비밀번호가 입력된 경우에만 포함
-                if (password) {
-                    body.password = password;
-                }
+                if (password) body.password = password;
             } else {
-                // 추가 모드
                 url = '/teacher/api/students';
                 method = 'POST';
                 body = { userID, name, email, password, phone, birthdate };
@@ -453,19 +421,16 @@ const StudentManagement = {
 
             const response = await fetch(url, {
                 method: method,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
 
             const data = await response.json();
-
             if (data.success) {
                 this.showAlert(data.message || '저장되었습니다.', 'success');
                 $('#studentModal').modal('hide');
-                this.loadStudents(); // 목록 새로고침
-                this.loadProgress(); // 진도 목록도 새로고침
+                this.loadStudents();
+                this.loadProgress();
             } else {
                 this.showAlert(data.message || '저장에 실패했습니다.', 'danger');
             }
@@ -473,33 +438,19 @@ const StudentManagement = {
             console.error('학생 저장 오류:', error);
             this.showAlert('저장 중 오류가 발생했습니다.', 'danger');
         } finally {
-            // 버튼 복원
             $saveBtn.prop('disabled', false).text(originalText);
         }
     },
 
-    // ============================================
-    // 학생 삭제
-    // ============================================
     async deleteStudent(id, name) {
-        if (!confirm(`정말 "${name || '이 학생'}"을(를) 삭제하시겠습니까?\n\n삭제된 학생 정보는 복구할 수 없습니다.`)) {
-            return;
-        }
-
+        if (!confirm(`정말 "${name || '이 학생'}"을(를) 삭제하시겠습니까?\n\n삭제된 학생 정보는 복구할 수 없습니다.`)) return;
         try {
-            const response = await fetch(`/teacher/api/students/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
+            const response = await fetch(`/teacher/api/students/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
             const data = await response.json();
-
             if (data.success) {
                 this.showAlert(data.message || '학생이 삭제되었습니다.', 'success');
-                this.loadStudents(); // 목록 새로고침
-                this.loadProgress(); // 진도 목록도 새로고침
+                this.loadStudents();
+                this.loadProgress();
             } else {
                 this.showAlert(data.message || '삭제에 실패했습니다.', 'danger');
             }
@@ -509,13 +460,8 @@ const StudentManagement = {
         }
     },
 
-    // ============================================
-    // 알림 메시지 표시
-    // ============================================
     showAlert(message, type = 'info') {
-        // 기존 알림 제거
         $('.student-management-alert').remove();
-
         const alertHtml = `
             <div class="alert alert-${type} alert-dismissible fade show student-management-alert" 
                  role="alert" style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
@@ -523,14 +469,9 @@ const StudentManagement = {
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
-
         $('body').append(alertHtml);
-
-        // 3초 후 자동 제거
         setTimeout(() => {
-            $('.student-management-alert').fadeOut(300, function () {
-                $(this).remove();
-            });
+            $('.student-management-alert').fadeOut(300, function () { $(this).remove(); });
         }, 3000);
     }
 };
