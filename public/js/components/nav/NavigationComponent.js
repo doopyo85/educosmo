@@ -552,7 +552,7 @@ class NavigationComponent extends Component {
 
     var toggleBtn = document.createElement('button');
     toggleBtn.className = 'nav-toggle-btn';
-    toggleBtn.innerHTML = '<i class="bi bi-list"></i>';
+    toggleBtn.innerHTML = '<i class="bi bi-layout-sidebar"></i>';
     toggleBtn.title = '사이드바 접기/펼치기';
 
     toggleBtn.addEventListener('click', this.toggleSidebar.bind(this));

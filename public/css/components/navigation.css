@@ -58,7 +58,8 @@
   /* 토글 버튼과 정렬 */
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 12px;
+  /* Reduced padding for alignment */
   border-bottom: 2px solid #e5e7eb;
   /* 회색 줄 추가 */
   margin-bottom: 8px;
@@ -87,8 +88,8 @@
 
 #navList {
   list-style-type: none;
-  padding: 10px 10px 16px 10px;
-  /* Top padding reduced */
+  padding: 10px 0 16px 0;
+  /* Removing side padding from UL */
   margin: 0;
   width: 100%;
   box-sizing: border-box;
@@ -112,8 +113,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
-  /* Compact padding */
+  padding: 8px 12px;
+  /* Consistent with header */
   color: #374151;
   /* Gray-700 */
   text-decoration: none;
