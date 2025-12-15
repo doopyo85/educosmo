@@ -692,11 +692,11 @@ app.get('/scratch', authenticateUser, (req, res) => {
 // 🔥 COS 자격증 문제풀이 에디터 (문제 이미지 + 에디터 분할 화면)
 app.get('/cos-editor', authenticateUser, (req, res) => {
   const { platform, grade, sample, problem, buttonType, problems, projectUrl, imgUrl } = req.query;
-  
+
   if (!platform || !projectUrl) {
     return res.status(400).send('필수 파라미터가 없습니다. (platform, projectUrl)');
   }
-  
+
   // problems JSON 파싱
   let problemsData = {};
   try {
@@ -706,11 +706,11 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
   } catch (e) {
     console.error('COS problems JSON 파싱 오류:', e);
   }
-  
+
   // 사용자 정보
   const userID = req.session.userID || 'guest';
   const userRole = req.session.role || 'guest';
-  
+
   // 플랫폼별 에디터 URL 생성
   let editorUrl = '';
   if (platform === 'scratch') {
@@ -720,7 +720,7 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
   } else {
     return res.status(400).send('지원하지 않는 플랫폼입니다.');
   }
-  
+
   res.render('cos_editor', {
     platform: platform,
     grade: grade || '3',
@@ -1142,20 +1142,48 @@ cron.schedule('0 2 * * *', async () => {
 });
 
 // 서버 시작
+// 서버 시작
 function startServer(port) {
   const server = app.listen(port)
     .on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
-        console.log(`Port ${port} is in use, trying ${port + 1}...`);
+        console.warn(`⚠️ 포트 ${port}가 사용 중입니다. ${port + 1}번 포트로 다시 시도합니다...`);
         startServer(port + 1);
       } else {
-        console.error('Error starting server:', err);
+        console.error('❌ 서버 시작 중 치명적 오류 발생:', err);
+        process.exit(1);
       }
     })
     .on('listening', () => {
-      console.log(`Server is running on ${config.SERVER.PRODUCTION ? 'https' : 'http'}://localhost:${port}`);
-      console.log(`Environment: ${config.SERVER.ENV}`);
+      console.log(`✅ 서버가 정상적으로 실행되었습니다.`);
+      console.log(`   - 주소: ${config.SERVER.PRODUCTION ? 'https' : 'http'}://localhost:${port}`);
+      console.log(`   - 환경: ${config.SERVER.ENV}`);
     });
+
+  // 🔥 우아한 종료 (Graceful Shutdown) - PM2 재시작 시 포트 점유 문제 예방
+  const shutdown = (signal) => {
+    console.log(`${signal} 시그널 수신: 서버를 안전하게 종료합니다...`);
+    server.close(() => {
+      console.log('⚡ 모든 HTTP 연결이 닫혔습니다.');
+
+      // DB 등 다른 리소스 정리 로직이 있다면 여기서 수행
+      if (redisClient && redisClient.isOpen) {
+        redisClient.quit();
+        console.log('⚡ Redis 연결 해제됨');
+      }
+
+      process.exit(0);
+    });
+
+    // 10초 후에도 안 닫히면 강제 종료
+    setTimeout(() => {
+      console.error('⚠️ 강제 종료: 연결 종료 시간 초과');
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 startServer(config.SERVER.PORT);
