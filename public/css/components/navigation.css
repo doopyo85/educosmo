@@ -1,6 +1,6 @@
 /**
  * navigation.css
- * 네비게이션 컴포넌트의 스타일 - Apple Style Glassmorphism & Soft UI
+ * 네비게이션 컴포넌트의 스타일 - Apple Style Glassmorphism & Soft UI (Refined)
  */
 
 /* ===================================
@@ -64,8 +64,8 @@
 
 #navList {
   list-style-type: none;
-  padding: 16px 12px;
-  /* More breathing room */
+  padding: 50px 8px 16px 8px;
+  /* Top padding increased for toggle button space */
   margin: 0;
   width: 100%;
   box-sizing: border-box;
@@ -77,9 +77,10 @@
    =================================== */
 
 .menu-item {
-  margin-bottom: 4px;
-  border-radius: 12px;
-  /* iOS style rounded corners */
+  margin-bottom: 2px;
+  /* Tighter spacing */
+  border-radius: 10px;
+  /* Slightly smaller radius for thinner rows */
   overflow: hidden;
   transition: all 0.2s ease;
   position: relative;
@@ -90,34 +91,33 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
-  /* Larger touch target */
+  padding: 8px 12px;
+  /* 🔥 Refined: Thinner padding */
   color: #1f2937;
   /* Gray-800 */
   text-decoration: none;
   font-weight: 600;
-  /* Bolder for headers */
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  /* Slightly smaller */
   letter-spacing: -0.01em;
-  /* Tighter letter spacing (San Francisco style) */
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 /* Hover Effect: Soft Cloud */
 .menu-item>a:hover {
   background-color: rgba(0, 0, 0, 0.04);
   color: #000;
-  transform: scale(1.01);
-  /* Subtle scale */
+  transform: none;
+  /* Removed scale for cleaner list feel */
 }
 
 /* 메뉴 화살표 - 작게 */
 .menu-item>a>i.bi-chevron-down {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #9ca3af;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  /* Bouncy transition */
+  transition: transform 0.2s ease;
+  /* Faster transition */
   opacity: 0.7;
 }
 
@@ -132,13 +132,13 @@
    하위 메뉴 스타일
    =================================== */
 
+/* 🔥 Refined: No sliding animation, just height transition */
 .collapse {
-  transition: all 0.3s ease;
-  /* Ensure smooth collapse */
+  transition: height 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .collapse ul {
-  padding: 2px 0 8px 0;
+  padding: 2px 0 6px 0;
   margin: 0;
 }
 
@@ -146,16 +146,17 @@
 .collapse .menu-item {
   display: flex;
   align-items: center;
-  padding: 10px 12px 10px 38px;
-  /* Indentation */
+  padding: 6px 12px 6px 36px;
+  /* 🔥 Refined: Thinner padding */
   color: #4b5563;
   /* Gray-600 */
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  /* No transforms */
   cursor: pointer;
-  border-radius: 10px;
-  margin: 0 4px 2px 4px;
+  border-radius: 8px;
+  margin: 0 4px 1px 4px;
   /* Inner margin */
   background: transparent;
 }
@@ -170,9 +171,9 @@
 /* 하위 메뉴 아이콘 */
 .collapse .menu-item i.bi {
   margin-right: 10px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #9ca3af;
-  min-width: 24px;
+  min-width: 20px;
   text-align: center;
   transition: color 0.2s ease;
 }
@@ -191,8 +192,8 @@
   background: linear-gradient(135deg, #007aff 0%, #0056b3 100%);
   /* Apple Blue Gradient */
   color: white !important;
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
-  /* Glowing shadow */
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
+  /* Subtle shadow */
 }
 
 /* 활성 상태 텍스트 & 아이콘 강제 흰색 */
@@ -213,21 +214,21 @@
    =================================== */
 
 .nav-container.collapsed {
-  width: 72px;
-  /* Slightly wider for comfortable touch targets */
-  min-width: 72px;
+  width: 64px;
+  /* Slightly narrower */
+  min-width: 64px;
 }
 
 .nav-container.collapsed #navList {
-  padding: 16px 8px;
-  /* Tighter padding */
+  padding: 60px 4px 16px 4px;
+  /* Top padding for toggle button */
 }
 
 /* 접힌 상태의 아이템 */
 .nav-container.collapsed .menu-item>a {
   justify-content: center;
-  padding: 12px 0;
-  margin-bottom: 8px;
+  padding: 10px 0;
+  margin-bottom: 6px;
 }
 
 /* Hide text elements */
@@ -237,20 +238,19 @@
   display: none !important;
 }
 
-/* 접힌 상태: 폴더 아이콘 -> Rounded Icon Box */
+/* 접힌 상태: 폴더 아이콘 */
 .nav-container.collapsed .menu-item>a::before {
   content: '\f3e2';
   /* Bootstrap Icons Folder */
   font-family: 'bootstrap-icons';
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   color: #6b7280;
   transition: all 0.2s ease;
 }
 
 .nav-container.collapsed .menu-item>a:hover {
   background-color: rgba(0, 0, 0, 0.05);
-  border-radius: 16px;
-  /* Squircle */
+  border-radius: 10px;
 }
 
 .nav-container.collapsed .menu-item>a:hover::before {
@@ -258,46 +258,46 @@
   transform: scale(1.1);
 }
 
-/* 접힌 상태에서 아이템 호버 시 툴팁처럼 내용 표시 (CSS Only Tooltip - Optional) */
-/* This requires ::after content which we don't have text for in CSS easily without attributes */
 
 
 /* ===================================
    토글 버튼 스타일 (Floating Glass Button)
+   🔥 Refined: Top Position
    =================================== */
 
 .nav-toggle-btn {
   position: absolute;
-  bottom: 20px;
-  right: -16px;
-  /* Float partly outside */
-  width: 32px;
-  height: 32px;
+  top: 12px;
+  /* 🔥 Moved to Top */
+  right: 12px;
+  /* 🔥 Aligned to Right */
+  bottom: auto;
+
+  width: 28px;
+  /* Slightly smaller */
+  height: 28px;
   border-radius: 50%;
 
   /* Glass Effect */
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 
   color: #4b5563;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   z-index: 50;
   /* High z-index */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  /* Bouncy pop */
+  transition: all 0.2s ease;
 }
 
 .nav-toggle-btn:hover {
   background: white;
   color: #007aff;
-  transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .nav-toggle-btn:focus {
@@ -306,7 +306,7 @@
 }
 
 .nav-toggle-btn i {
-  font-size: 1rem;
+  font-size: 0.9rem;
   transition: transform 0.3s ease;
 }
 
@@ -314,19 +314,14 @@
   transform: rotate(180deg);
 }
 
-
 /* Collapsed Toggle Button Position */
 .nav-container.collapsed .nav-toggle-btn {
   left: 50%;
   transform: translateX(-50%);
   right: auto;
-  bottom: 20px;
+  top: 12px;
+  /* Keep at top */
   background: white;
-  /* More visible on collapsed */
-}
-
-.nav-container.collapsed .nav-toggle-btn:hover {
-  transform: translateX(-50%) scale(1.1);
 }
 
 
@@ -347,34 +342,11 @@
     display: none;
   }
 
+  #navList {
+    padding: 10px;
+  }
+
   .menu-item>a {
     padding: 10px 14px;
   }
-}
-
-
-/* ===================================
-   Dark Mode Support (Optional but Good)
-   =================================== */
-
-.nav-theme-dark {
-  background: rgba(31, 41, 55, 0.85);
-  border-right-color: rgba(255, 255, 255, 0.05);
-}
-
-.nav-theme-dark .menu-item>a {
-  color: #e5e7eb;
-}
-
-.nav-theme-dark .menu-item>a:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: white;
-}
-
-.nav-theme-dark .collapse .menu-item {
-  color: #9ca3af;
-}
-
-.nav-theme-dark .collapse .menu-item:hover {
-  color: white;
 }
