@@ -171,7 +171,8 @@
    하위 메뉴 스타일 (Tree Structure)
    =================================== */
 
-.collapse {
+.collapse,
+.collapsing {
   /* No animation on the container itself to prevent wobble */
   position: relative;
   margin-left: 20px;
@@ -181,7 +182,8 @@
   /* Space for tree lines */
 }
 
-.collapse ul {
+.collapse ul,
+.collapsing ul {
   padding: 2px 0 2px 0;
   /* Reduced bottom padding */
   margin: 0;
@@ -189,12 +191,14 @@
 }
 
 /* 🔥 Tree Vertical Line (The Trunk) - REMOVED global trunk */
-.collapse ul::before {
+.collapse ul::before,
+.collapsing ul::before {
   display: none;
 }
 
 /* 하위 메뉴 항목 */
-.collapse .menu-item {
+.collapse .menu-item,
+.collapsing .menu-item {
   display: flex;
   align-items: center;
   padding: 6px 8px 6px 12px;
@@ -212,7 +216,8 @@
 }
 
 /* 🔥 Tree Vertical Line (Segment per item) */
-.collapse .menu-item::before {
+.collapse .menu-item::before,
+.collapsing .menu-item::before {
   content: '';
   position: absolute;
   left: 0;
@@ -224,7 +229,8 @@
 }
 
 /* 🔥 Tree Horizontal Branch (Standard) */
-.collapse .menu-item::after {
+.collapse .menu-item::after,
+.collapsing .menu-item::after {
   content: '';
   position: absolute;
   left: 0;
@@ -236,7 +242,8 @@
 }
 
 /* 🔥 Last Child L-Shape Logic */
-.collapse .menu-item:last-child::before {
+.collapse .menu-item:last-child::before,
+.collapsing .menu-item:last-child::before {
   height: 50%;
   /* Stop at half height */
   bottom: auto;
@@ -248,14 +255,16 @@
    For now, the clean orthogonal line is the standard "Code/File Tree" look.
 */
 
-.collapse .menu-item:hover {
+.collapse .menu-item:hover,
+.collapsing .menu-item:hover {
   background-color: rgba(0, 122, 255, 0.08);
   /* Apple Blue Tint */
   color: #007aff;
 }
 
 /* 하위 메뉴 아이콘 */
-.collapse .menu-item i.bi {
+.collapse .menu-item i.bi,
+.collapsing .menu-item i.bi {
   margin-right: 8px;
   font-size: 0.95rem;
   /* Consistent size */
@@ -264,7 +273,8 @@
   text-align: center;
 }
 
-.collapse .menu-item:hover i.bi {
+.collapse .menu-item:hover i.bi,
+.collapsing .menu-item:hover i.bi {
   color: #007aff;
 }
 
@@ -283,13 +293,16 @@
 
 /* 활성 상태에서 텍스트는 파란색 유지 (애플 스타일 파일 트리) */
 .collapse .menu-item.active,
-.collapse .menu-item.active:hover {
+.collapsing .menu-item.active,
+.collapse .menu-item.active:hover,
+.collapsing .menu-item.active:hover {
   color: #007aff !important;
   background-color: #eef6ff !important;
 }
 
 .menu-item.active i.bi,
-.collapse .menu-item.active:hover i.bi {
+.collapse .menu-item.active:hover i.bi,
+.collapsing .menu-item.active:hover i.bi {
   color: #007aff !important;
 }
 
