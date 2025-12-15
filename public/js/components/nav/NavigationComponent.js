@@ -104,6 +104,9 @@ class NavigationComponent extends Component {
 
           self.setupEventListeners();
 
+          // 🔥 추가: 사이드바 헤드 생성
+          self.createSidebarHeader();
+
           // 🔥 추가: 사이드바 토글 버튼 생성
           self.createSidebarToggleButton();
 
@@ -549,7 +552,7 @@ class NavigationComponent extends Component {
 
     var toggleBtn = document.createElement('button');
     toggleBtn.className = 'nav-toggle-btn';
-    toggleBtn.innerHTML = '<i class="bi bi-chevron-left"></i>';
+    toggleBtn.innerHTML = '<i class="bi bi-list"></i>';
     toggleBtn.title = '사이드바 접기/펼치기';
 
     toggleBtn.addEventListener('click', this.toggleSidebar.bind(this));
@@ -557,6 +560,41 @@ class NavigationComponent extends Component {
     // navList가 아니라 navContainer에 추가해야 함
     if (this.navList && this.navList.parentElement) {
       this.navList.parentElement.appendChild(toggleBtn);
+    }
+  }
+
+  /**
+   * 사이드바 헤드 생성
+   */
+  createSidebarHeader() {
+    if (document.querySelector('.sidebar-header')) return;
+
+    var header = document.createElement('div');
+    header.className = 'sidebar-header';
+
+    // 페이지 타입에 따른 타이틀 설정
+    var pageTitle = 'Project';
+    if (this.pageType) {
+      if (this.pageType === 'python') pageTitle = 'Python';
+      else if (this.pageType === 'algorithm') pageTitle = 'Algorithm';
+      else if (this.pageType === 'aiMath') pageTitle = 'AI Math';
+      else if (this.pageType === 'certification') pageTitle = 'Certification';
+      else if (this.pageType === 'dataAnalysis') pageTitle = 'Data Analysis';
+      else if (this.pageType === 'entry') pageTitle = 'Entry';
+      else if (this.pageType === 'scratch') pageTitle = 'Scratch';
+      else if (this.pageType === 'appinventor') pageTitle = 'App Inventor';
+      else pageTitle = this.pageType.charAt(0).toUpperCase() + this.pageType.slice(1);
+    }
+
+    var titleSpan = document.createElement('span');
+    titleSpan.className = 'sidebar-title';
+    titleSpan.textContent = pageTitle;
+
+    header.appendChild(titleSpan);
+
+    // navList 이전에 추가
+    if (this.navList && this.navList.parentElement) {
+      this.navList.parentElement.insertBefore(header, this.navList);
     }
   }
 
@@ -576,7 +614,8 @@ class NavigationComponent extends Component {
         mainContainer.classList.toggle('sidebar-collapsed');
       }
 
-      // 아이콘 방향 변경
+      // 아이콘 방향 변경 (햄버거 메뉴로 변경되어 회전 로직 제거)
+      /*
       if (navContainer.classList.contains('collapsed')) {
         if (toggleBtnIcon) {
           toggleBtnIcon.classList.remove('bi-chevron-left');
@@ -593,6 +632,16 @@ class NavigationComponent extends Component {
           toggleBtnIcon.classList.remove('bi-chevron-right');
           toggleBtnIcon.classList.add('bi-chevron-left');
         }
+      }
+      */
+
+      // 접혔을 때 열려있던 메뉴들 닫기 기능만 유지
+      if (navContainer.classList.contains('collapsed')) {
+        var openMenus = document.querySelectorAll('.collapse.show');
+        openMenus.forEach(function (el) {
+          var bsCollapse = bootstrap.Collapse.getInstance(el);
+          if (bsCollapse) bsCollapse.hide();
+        });
       }
 
       // 리사이즈 이벤트 발생 (에디터 등 크기 조정을 위해)
