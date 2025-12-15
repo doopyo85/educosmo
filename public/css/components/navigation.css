@@ -58,7 +58,8 @@
    사이드바 헤더 스타일
    =================================== */
 .sidebar-header {
-  height: 54px;
+  height: 60px;
+  /* Matched with .problem-top-nav (60px) */
   /* 토글 버튼과 정렬 */
   display: flex;
   align-items: center;
@@ -78,6 +79,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 40px;
+  padding-left: 4px;
+  /* Added left spacing */
   /* 토글 버튼 공간 확보 */
 }
 
@@ -110,6 +113,13 @@
   border-radius: 8px;
   /* overflow: hidden; <- Removed to allow tree lines if needed, but keeping for safe hover */
   position: relative;
+}
+
+/* Double highlight fix: Ensure li has no background/border, only a */
+.menu-item {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* 상위 메뉴 링크 */
@@ -166,7 +176,8 @@
   position: relative;
   margin-left: 20px;
   /* Indent the whole block */
-  padding-left: 10px;
+  padding-left: 0px;
+  /* Removed padding, space handled by item padding/lines */
   /* Space for tree lines */
 }
 
@@ -177,17 +188,9 @@
   position: relative;
 }
 
-/* 🔥 Tree Vertical Line (The Trunk) */
+/* 🔥 Tree Vertical Line (The Trunk) - REMOVED global trunk */
 .collapse ul::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 10px;
-  /* Stop before the very bottom to avoid hanging */
-  left: 0;
-  width: 1px;
-  background-color: #e5e7eb;
-  /* Light Gray Line */
+  display: none;
 }
 
 /* 하위 메뉴 항목 */
@@ -208,17 +211,35 @@
   position: relative;
 }
 
-/* 🔥 Tree Horizontal Line (The Branch └) */
+/* 🔥 Tree Vertical Line (Segment per item) */
 .collapse .menu-item::before {
   content: '';
   position: absolute;
   left: 0;
-  /* Start exactly at the trunk (0) */
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #9ca3af;
+  /* Darker Gray */
+}
+
+/* 🔥 Tree Horizontal Branch (Standard) */
+.collapse .menu-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
   top: 50%;
   width: 12px;
-  /* Length matches padding to content */
   height: 1px;
-  background-color: #e5e7eb;
+  background-color: #9ca3af;
+  /* Darker Gray */
+}
+
+/* 🔥 Last Child L-Shape Logic */
+.collapse .menu-item:last-child::before {
+  height: 50%;
+  /* Stop at half height */
+  bottom: auto;
 }
 
 /* The curved connector removal/masking is tricky in pure CSS without strict height control.
