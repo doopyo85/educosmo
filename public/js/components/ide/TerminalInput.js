@@ -188,7 +188,7 @@ class TerminalInput {
     if (window.EventBus) {
       window.EventBus.publish('terminal:output', {
         text: `${this.state.currentPrompt}${inputValue}`, // >>> 제거하고 프롬프트 + 입력값 기록
-        type: 'input'
+        type: 'normal' // 🔥 파란색 대신 일반 텍스트 색상 사용 (IDLE 스타일)
       });
 
       this.state.currentPrompt = ''; // 프롬프트 초기화
