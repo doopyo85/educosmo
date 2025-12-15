@@ -195,10 +195,16 @@ async function startInteractivePython(code, sessionId, res) {
                 const prompt = promptMatch ? promptMatch[1].trim() : '';
 
                 // 깨끗한 출력 생성 (신호 제거)
-                const cleanOutput = processInfo.outputBuffer
+                let cleanOutput = processInfo.outputBuffer
                     .replace(/WAIT_FOR_INPUT[\s\S]*$/, '')
-                    .replace(/PROMPT:.*\n/g, '')
-                    .trim();
+                    .replace(/PROMPT:.*\n/g, '');
+
+                // 🔥 프롬프트가 있다면 출력 버퍼의 끝에서 제거 (프론트엔드에서 input과 함께 인라인으로 표시하기 위함)
+                if (prompt && cleanOutput.endsWith(prompt)) {
+                    cleanOutput = cleanOutput.slice(0, -prompt.length);
+                }
+
+                cleanOutput = cleanOutput.trim();
 
                 // 응답 전송
                 const responseTarget = processInfo.resumeRes || processInfo.initialRes;

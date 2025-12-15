@@ -9,20 +9,20 @@ class TerminalInput {
       outputId: 'output-content',
       ...options
     };
-    
+
     this.state = {
       waitingForInput: false,
       inputQueue: [],
       executionContext: null
     };
-    
+
     this.history = {
       commands: [],
       currentIndex: -1,
       currentInputField: null
     };
   }
-  
+
   /**
    * input() 함수 감지
    */
@@ -44,45 +44,53 @@ class TerminalInput {
     }
     return false;
   }
-  
+
   /**
    * 입력 대기 시작
    */
   waitForInput(prompt = '') {
     this.state.waitingForInput = true;
-    
+
     const outputElement = document.getElementById(this.options.outputId);
     if (!outputElement) return;
-    
-    const { inputContainer, inputField } = this.createInputField();
+
+    const { inputContainer, inputField } = this.createInputField(prompt);
     outputElement.appendChild(inputContainer);
-    
+
     setTimeout(() => inputField.focus(), 100);
     outputElement.scrollTop = outputElement.scrollHeight;
   }
-  
+
   /**
    * 입력 필드 생성
    */
-  createInputField() {
+  createInputField(promptText = '') {
     const inputContainer = document.createElement('div');
     inputContainer.className = 'terminal-input-container';
-    
-    const promptLine = document.createElement('div');
-    promptLine.className = 'prompt-line';
-    promptLine.textContent = '>>> ';
-    promptLine.style.cssText = `
-      display: block; width: 100%; margin: 0; padding: 0;
-      color: #6c757d; font-family: 'Consolas', monospace;
-      font-size: 14px; line-height: 1.4;
+
+    // Flexbox를 사용하여 프롬프트와 입력을 한 줄에 배치
+    inputContainer.style.cssText = `
+      display: flex; width: 100%; margin: 2px 0; padding: 0;
+      clear: both; align-items: baseline;
     `;
-    
+
+    // 프롬프트 (동적 텍스트 사용)
+    const promptLine = document.createElement('div');
+    promptLine.className = 'input-prompt'; // 클래스명 변경
+    promptLine.textContent = promptText; // 하드코딩된 '>>> ' 제거 및 동적 텍스트 사용
+    promptLine.style.cssText = `
+      margin: 0; padding: 0; white-space: pre;
+      color: #d4d4d4; font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 14px; line-height: 1.4; flex-shrink: 0;
+    `;
+
+    // 입력 필드 래퍼
     const inputLine = document.createElement('div');
     inputLine.className = 'input-line';
     inputLine.style.cssText = `
-      display: block; width: 100%; margin: 0; padding: 0; margin-top: 2px;
+      flex-grow: 1; margin: 0; padding: 0;
     `;
-    
+
     const inputField = document.createElement('input');
     inputField.type = 'text';
     inputField.className = 'terminal-input-field';
@@ -90,26 +98,21 @@ class TerminalInput {
     inputField.spellcheck = false;
     inputField.style.cssText = `
       background: transparent; border: none; outline: none;
-      color: #d4d4d4; font-family: 'Consolas', monospace;
+      color: #d4d4d4; font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
       font-size: 14px; width: 100%; display: block;
-      padding: 0 0 0 20px; line-height: 1.4;
+      padding: 0; line-height: 1.4; margin-left: 0;
     `;
-    
-    inputContainer.style.cssText = `
-      display: block; width: 100%; margin: 2px 0; padding: 0;
-      clear: both; float: none;
-    `;
-    
+
     inputLine.appendChild(inputField);
     inputContainer.appendChild(promptLine);
     inputContainer.appendChild(inputLine);
-    
+
     this.history.currentInputField = inputField;
     this.setupInputEvents(inputField, inputContainer);
-    
+
     return { inputContainer, inputField };
   }
-  
+
   /**
    * 입력 이벤트 설정
    */
@@ -136,7 +139,7 @@ class TerminalInput {
       }
     });
   }
-  
+
   /**
    * 히스토리 위로
    */
@@ -149,7 +152,7 @@ class TerminalInput {
       inputField.value = this.history.commands[this.history.currentIndex];
     }
   }
-  
+
   /**
    * 히스토리 아래로
    */
@@ -162,7 +165,7 @@ class TerminalInput {
       inputField.value = '';
     }
   }
-  
+
   /**
    * 입력 완료 처리
    */
@@ -173,26 +176,28 @@ class TerminalInput {
         this.history.commands.shift();
       }
     }
-    
+
     this.history.currentIndex = -1;
     this.state.inputQueue.push(inputValue);
     this.state.waitingForInput = false;
     this.history.currentInputField = null;
-    
-    // 이벤트 발생
+
+    // 이벤트 발생 - 프롬프트와 입력을 함께 기록하여 히스토리 보존
     if (window.EventBus) {
       window.EventBus.publish('terminal:output', {
-        text: `>>> ${inputValue}`,
+        text: `${this.state.currentPrompt}${inputValue}`, // >>> 제거하고 프롬프트 + 입력값 기록
         type: 'input'
       });
-      
+
+      this.state.currentPrompt = ''; // 프롬프트 초기화
+
       window.EventBus.publish('terminal:resumeExecution', {
         input: inputValue,
         context: this.state.executionContext
       });
     }
   }
-  
+
   /**
    * 입력 취소
    */
@@ -200,35 +205,35 @@ class TerminalInput {
     this.state.waitingForInput = false;
     this.history.currentInputField = null;
     inputContainer.remove();
-    
+
     if (window.EventBus) {
       window.EventBus.publish('terminal:cancelExecution', {});
     }
   }
-  
+
   /**
    * 실행 컨텍스트 설정
    */
   setExecutionContext(context) {
     this.state.executionContext = context;
   }
-  
+
   /**
    * 입력 큐 지우기
    */
   clearInputQueue() {
     this.state.inputQueue = [];
   }
-  
+
   /**
    * 마지막 입력값
    */
   getLastInput() {
-    return this.state.inputQueue.length > 0 
-      ? this.state.inputQueue[this.state.inputQueue.length - 1] 
+    return this.state.inputQueue.length > 0
+      ? this.state.inputQueue[this.state.inputQueue.length - 1]
       : null;
   }
-  
+
   /**
    * 대기 상태 확인
    */
