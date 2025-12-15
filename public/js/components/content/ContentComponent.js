@@ -12,9 +12,9 @@ class ContentComponent extends Component {
       type: 'CONTENT',
       visible: true
     };
-    
+
     super(mergedConfig);
-    
+
     this.state = {
       currentExamName: '',
       currentProblemNumber: 1,
@@ -22,17 +22,17 @@ class ContentComponent extends Component {
       problemData: options.problemData || [],
       initialized: false
     };
-    
+
     this.isLoading = false;
     this.lastLoadedKey = '';
-    
+
     this.containerId = options.containerId || 'problem-container';
     this.iframeId = options.iframeId || 'iframeContent';
     this.problemTitleId = options.problemTitleId || 'problem-title';
     this.problemNavigationId = options.problemNavigationId || 'problem-navigation';
     this.prevButtonId = options.prevButtonId || 'prev-problem';
     this.nextButtonId = options.nextButtonId || 'next-problem';
-    
+
     this.elements = {
       container: null,
       iframe: null,
@@ -42,25 +42,25 @@ class ContentComponent extends Component {
       nextButton: null,
       explanationBtn: null // 🔥 수정: 네비게이션 해설 버튼
     };
-    
+
     this.explanationState = {
       hasExplanation: false,
       currentProblemData: null
     };
-    
+
     this.eventBus = window.EventBus;
     this.setupEventBindings();
   }
-  
+
   async init() {
     console.log('콘텐츠 컴포넌트 초기화');
-    
+
     this.initElements();
     this.setupEventListeners();
-    
+
     this.state.initialized = true;
     console.log('콘텐츠 컴포넌트 초기화 완료');
-    
+
     if (window.EventBus) {
       window.EventBus.publish('contentComponentInitialized', {
         component: this,
@@ -68,7 +68,7 @@ class ContentComponent extends Component {
       });
     }
   }
-  
+
   initElements() {
     this.elements.container = document.getElementById(this.containerId);
     this.elements.iframe = document.getElementById(this.iframeId);
@@ -77,37 +77,37 @@ class ContentComponent extends Component {
     this.elements.prevButton = document.getElementById(this.prevButtonId);
     this.elements.nextButton = document.getElementById(this.nextButtonId);
     this.elements.explanationBtn = document.getElementById('explanation-btn'); // 🔥 추가: 해설 버튼
-    
+
     if (!this.elements.container) {
       console.error(`콘텐츠 컨테이너(${this.containerId})를 찾을 수 없습니다`);
     }
-    
+
     if (!this.elements.iframe) {
       console.error(`iframe(${this.iframeId})을 찾을 수 없습니다`);
     }
-    
+
     this.setupExplanationButton();
   }
-  
+
   setupEventBindings() {
     if (window.EventBus) {
       window.EventBus.subscribe('menuSelected', (data) => {
         console.log('콘텐츠 컴포넌트: 메뉴 선택 이벤트 받음', data);
-        
+
         if (data.layoutType === 'quiz') {
           this.handleQuizMenuSelected(data);
         } else if (data.layoutType !== 'ppt') {
           if (data.examName) {
             // ✅ 로딩 화면 먼저 표시
             this.showLoadingScreen();
-            
+
             this.state.currentExamName = data.examName;
             this.state.currentProblemNumber = 1;
-            
+
             // ✅ 150ms 후 데이터 확인하고 로드
             setTimeout(() => {
               this.updateProblemCount();
-              
+
               if (this.state.totalProblems > 0) {
                 console.log(`문제 데이터 준비 완료: ${this.state.totalProblems}개 문제`);
                 this.loadProblem(1);
@@ -127,20 +127,20 @@ class ContentComponent extends Component {
           }
         }
       });
-      
+
       window.EventBus.subscribe('layoutTypeChanged', (data) => {
         if (data.type !== 'ppt') {
           if (data.data && data.data.examName) {
             // ✅ 로딩 화면 먼저 표시
             this.showLoadingScreen();
-            
+
             this.state.currentExamName = data.data.examName;
             this.state.currentProblemNumber = 1;
-            
+
             // ✅ 150ms 후 데이터 확인하고 로드
             setTimeout(() => {
               this.updateProblemCount();
-              
+
               if (this.state.totalProblems > 0) {
                 console.log(`문제 데이터 준비 완료: ${this.state.totalProblems}개 문제`);
                 this.loadProblem(1);
@@ -160,7 +160,7 @@ class ContentComponent extends Component {
           }
         }
       });
-      
+
       window.EventBus.subscribe('problemChanged', (data) => {
         if (data.examName === this.state.currentExamName) {
           this.loadProblem(data.problemNumber);
@@ -168,16 +168,16 @@ class ContentComponent extends Component {
       });
     }
   }
-  
+
   async handleQuizMenuSelected(data) {
     this.state.currentExamName = data.examName;
     this.state.currentProblemNumber = 1;
-    
+
     if (window.ComponentSystem && window.ComponentSystem.state && window.ComponentSystem.state.problemData) {
       const allProblemData = window.ComponentSystem.state.problemData;
       this.state.problemData = allProblemData;
       this.updateProblemCount();
-      
+
       if (this.state.totalProblems > 0) {
         setTimeout(() => {
           this.loadProblem(1);
@@ -185,7 +185,7 @@ class ContentComponent extends Component {
       }
     }
   }
-  
+
   setupEventListeners() {
     if (this.elements.prevButton) {
       this.elements.prevButton.addEventListener('click', () => {
@@ -194,7 +194,7 @@ class ContentComponent extends Component {
         }
       });
     }
-    
+
     if (this.elements.nextButton) {
       this.elements.nextButton.addEventListener('click', () => {
         if (this.state.currentProblemNumber < this.state.totalProblems) {
@@ -203,70 +203,70 @@ class ContentComponent extends Component {
       });
     }
   }
-  
+
   setupExplanationButton() {
     // 🔥 수정: IDE 헤더 영역의 해설 버튼 연결
     this.connectIDEExplanationButton();
   }
-  
+
   connectIDEExplanationButton() {
     // 🔥 수정: IDE 헤더의 해설 버튼에 연결
     const ideExplanationBtn = document.getElementById('ide-explanation-btn');
-    
+
     if (ideExplanationBtn) {
       this.elements.explanationBtn = ideExplanationBtn;
-      
+
       // 클릭 이벤트 설정
       ideExplanationBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.showExplanationPopup();
       });
-      
+
       console.log('ContentComponent: IDE 헤더 해설 버튼 연결 완료');
     } else {
       console.warn('ContentComponent: IDE 헤더 해설 버튼을 찾을 수 없습니다.');
     }
   }
-  
+
   showExplanationPopup() {
     if (!this.explanationState.currentProblemData) {
       console.warn('ContentComponent: 현재 문제 데이터가 없어 해설을 표시할 수 없습니다.');
       return;
     }
-    
+
     console.log('ContentComponent: 해설 팝업 요청:', this.explanationState.currentProblemData);
-    
+
     if (window.EventBus && window.EventBus.publish) {
       window.EventBus.publish('explanation-request', this.explanationState.currentProblemData);
     }
   }
-  
+
   checkExplanationExists(problemInfo) {
     if (!Array.isArray(problemInfo) || problemInfo.length < 1) {
       return false;
     }
-    
+
     const problemFileName = problemInfo[0];
     if (!problemFileName || typeof problemFileName !== 'string') {
       return false;
     }
-    
+
     // 🔥 임시: 항상 true 반환 (S3에 해설 파일이 있다고 가정)
     return true;
   }
-  
+
   toggleExplanationButton(show) {
     if (!this.elements.explanationBtn) {
       return;
     }
-    
+
     if (show) {
       // 활성화 상태
       this.elements.explanationBtn.style.display = 'inline-flex';
       this.elements.explanationBtn.classList.remove('disabled', 'no-explanation');
       this.elements.explanationBtn.classList.add('active');
       this.elements.explanationBtn.removeAttribute('data-tooltip');
-      
+
       setTimeout(() => {
         this.elements.explanationBtn.style.opacity = '1';
         this.elements.explanationBtn.style.transform = 'scale(1)';
@@ -277,113 +277,120 @@ class ContentComponent extends Component {
       this.elements.explanationBtn.classList.remove('active');
       this.elements.explanationBtn.classList.add('disabled', 'no-explanation');
       this.elements.explanationBtn.setAttribute('data-tooltip', '해설이 제공되지 않습니다');
-      
+
       this.elements.explanationBtn.style.opacity = '1';
       this.elements.explanationBtn.style.transform = 'scale(1)';
     }
-    
+
     this.explanationState.hasExplanation = show;
     console.log('ContentComponent: 해설 버튼', show ? '활성화' : '비활성화');
   }
-  
+
   updateProblemCount() {
+    // 🔥 Fallback: 로컬 데이터가 없으면 전역 ComponentSystem에서 가져오기
+    if ((!this.state.problemData || this.state.problemData.length === 0) &&
+      window.ComponentSystem && window.ComponentSystem.state && window.ComponentSystem.state.problemData) {
+      console.log('ContentComponent: 전역 ComponentSystem에서 문제 데이터 가져옴');
+      this.state.problemData = window.ComponentSystem.state.problemData;
+    }
+
     if (!this.state.problemData || !Array.isArray(this.state.problemData)) {
       this.state.totalProblems = 0;
       return;
     }
-    
+
     if (!this.state.currentExamName) {
       this.state.totalProblems = 0;
       return;
     }
-    
+
     this.state.totalProblems = this.state.problemData.filter(problem => {
       if (!Array.isArray(problem) || problem.length < 2) {
         return false;
       }
-      
+
       if (!problem[1] || typeof problem[1] !== 'string') {
         return false;
       }
-      
+
       return problem[1].toLowerCase() === this.state.currentExamName.toLowerCase();
     }).length;
-    
+
     console.log(`콘텐츠 컴포넌트: ${this.state.currentExamName}의 총 문제 수: ${this.state.totalProblems}`);
     this.renderProblemNavigation();
   }
-  
+
   renderProblemNavigation() {
     if (!this.elements.problemNavigation) return;
-    
+
     // 🔥 수정: 해설 버튼은 problem-navigation과 별개로 관리되므로 건드리지 않음
     this.elements.problemNavigation.innerHTML = '';
-    
+
     for (let i = 1; i <= this.state.totalProblems; i++) {
       const problemBtn = document.createElement('i');
       problemBtn.classList.add('bi', 'problem-icon');
-      
+
       if (i === this.state.currentProblemNumber) {
         problemBtn.classList.add(i === 10 ? 'bi-0-circle-fill' : `bi-${i}-circle-fill`);
       } else {
         problemBtn.classList.add(i === 10 ? 'bi-0-circle' : `bi-${i}-circle`);
       }
-      
+
       const problemIndex = i;
       problemBtn.addEventListener('click', () => {
         this.navigateToProblem(problemIndex);
       });
-      
+
       this.elements.problemNavigation.appendChild(problemBtn);
     }
-    
+
     // 🔥 수정: 해설 버튼이 없으면 연결 (IDE 헤더 레벨에서)
     if (!this.elements.explanationBtn) {
       this.connectIDEExplanationButton();
     }
-    
+
     this.updateNavigationButtons();
   }
-  
+
   updateNavigationButtons() {
     if (this.elements.prevButton) {
       this.elements.prevButton.disabled = this.state.currentProblemNumber <= 1;
     }
-    
+
     if (this.elements.nextButton) {
       this.elements.nextButton.disabled = this.state.currentProblemNumber >= this.state.totalProblems;
     }
   }
-  
+
   updateProblemNavigation() {
     const icons = document.querySelectorAll('#problem-navigation .problem-icon');
-    
+
     icons.forEach((icon, index) => {
       const problemNumber = index + 1;
       const isCurrentProblem = problemNumber === this.state.currentProblemNumber;
       const isTenth = problemNumber === 10;
-      
+
       icon.className = 'bi problem-icon';
-      
+
       if (isCurrentProblem) {
         icon.classList.add(isTenth ? 'bi-0-circle-fill' : `bi-${problemNumber}-circle-fill`);
       } else {
         icon.classList.add(isTenth ? 'bi-0-circle' : `bi-${problemNumber}-circle`);
       }
     });
-    
+
     this.updateNavigationButtons();
   }
-  
+
   navigateToProblem(problemNumber) {
     if (problemNumber < 1 || problemNumber > this.state.totalProblems) {
       return;
     }
-    
+
     this.state.currentProblemNumber = problemNumber;
     this.loadProblem(problemNumber);
     this.updateProblemNavigation();
-    
+
     if (this.eventBus && this.eventBus.publish) {
       this.eventBus.publish('problemChanged', {
         examName: this.state.currentExamName,
@@ -391,53 +398,53 @@ class ContentComponent extends Component {
       });
     }
   }
-  
+
   loadProblem(problemNumber) {
     console.log('콘텐츠 컴포넌트: 문제 로드', this.state.currentExamName, problemNumber);
-    
+
     const currentKey = `${this.state.currentExamName}_${problemNumber}`;
     if (this.lastLoadedKey === currentKey) {
       console.log('중복 문제 로드 방지:', currentKey);
       return;
     }
-    
+
     if (this.isLoading) {
       console.log('이미 로딩 중 - 건너뜀');
       return;
     }
-    
+
     this.isLoading = true;
     this.lastLoadedKey = currentKey;
-    
+
     if (!this.state.problemData || !Array.isArray(this.state.problemData) || this.state.problemData.length === 0) {
       console.error('문제 데이터가 로드되지 않았습니다');
       this.showErrorInIframe('문제 데이터가 로드되지 않았습니다.');
       this.isLoading = false;
       return;
     }
-    
+
     if (!this.state.currentExamName) {
       console.error('시험지명이 설정되지 않았습니다');
       this.showErrorInIframe('시험지명이 설정되지 않았습니다.');
       this.isLoading = false;
       return;
     }
-    
+
     const problemCode = `p${problemNumber.toString().padStart(2, '0')}`;
-    
+
     const problemInfo = this.state.problemData.find(problem => {
       if (!Array.isArray(problem) || problem.length < 3) {
         return false;
       }
-      
+
       if (!problem[1] || !problem[2] || typeof problem[1] !== 'string' || typeof problem[2] !== 'string') {
         return false;
       }
-      
-      return problem[1].toLowerCase() === this.state.currentExamName.toLowerCase() && 
-             problem[2].toLowerCase() === problemCode.toLowerCase();
+
+      return problem[1].toLowerCase() === this.state.currentExamName.toLowerCase() &&
+        problem[2].toLowerCase() === problemCode.toLowerCase();
     });
-    
+
     if (!problemInfo) {
       console.error('문제를 찾을 수 없습니다:', this.state.currentExamName, problemCode);
       this.showErrorInIframe(`
@@ -449,18 +456,18 @@ class ContentComponent extends Component {
       this.isLoading = false;
       return;
     }
-    
+
     const [problemFileName, , , pythonFileUrl] = problemInfo;
-    
+
     if (!problemFileName) {
       console.error('문제 파일명이 없습니다');
       this.showErrorInIframe('문제 파일 정보가 없습니다.');
       this.isLoading = false;
       return;
     }
-    
-     let problemUrl;
-    
+
+    let problemUrl;
+
     // 현재 레이아웃 타입 확인 (메뉴 데이터에서 전달된 pptUrl 활용)
     if (window.ComponentSystem && window.ComponentSystem.state && window.ComponentSystem.state.currentMenuData && window.ComponentSystem.state.currentMenuData.pptUrl) {
       const currentMenuData = window.ComponentSystem.state.currentMenuData;
@@ -482,24 +489,24 @@ class ContentComponent extends Component {
       console.log('ContentComponent: 기본 파일 URL:', problemUrl);
     }
 
-    
+
     if (!this.elements.iframe) {
       console.error('iframe 요소를 찾을 수 없습니다');
       this.isLoading = false;
       return;
     }
-    
+
     this.elements.iframe.srcdoc = this.getLoadingHtml();
-    
+
     // 🔥 NEW: 파일 확장자 확인하여 MD 또는 HTML 처리
     this.loadContentByFileType(problemUrl, problemFileName, problemInfo, problemNumber, pythonFileUrl);
   }
 
   updateExplanationButton(problemInfo, problemNumber) {
     const hasExplanation = this.checkExplanationExists(problemInfo);
-    
+
     console.log('ContentComponent: 해설 존재 여부:', hasExplanation, '문제:', problemNumber);
-    
+
     if (hasExplanation) {
       this.explanationState.currentProblemData = {
         examName: this.state.currentExamName,
@@ -508,71 +515,71 @@ class ContentComponent extends Component {
     } else {
       this.explanationState.currentProblemData = null;
     }
-    
+
     this.toggleExplanationButton(hasExplanation);
   }
-  
+
   updateProblemTitle(problemNumber) {
     if (!this.elements.problemTitle) return;
-    
-    const examNameModified = this.state.currentExamName.substring(0, 3).toUpperCase() + 
-                             this.state.currentExamName.substring(3);
-    
+
+    const examNameModified = this.state.currentExamName.substring(0, 3).toUpperCase() +
+      this.state.currentExamName.substring(3);
+
     const problemTitle = `${examNameModified} - 문제 ${problemNumber}`;
     this.elements.problemTitle.textContent = problemTitle;
   }
-  
+
   // 🔥 NEW: 파일 타입에 따른 콘텐츠 로드 처리
   loadContentByFileType(fileUrl, fileName, problemInfo, problemNumber, pythonFileUrl) {
     console.log('ContentComponent: 파일 타입 확인 및 로드', fileName);
-    
+
     // 파일 확장자 추출
     const fileExtension = fileName.split('.').pop()?.toLowerCase();
     console.log('ContentComponent: 파일 확장자:', fileExtension);
-    
+
     // 🔥 NEW: 현재 레이아웃 타입 확인
     const currentLayoutType = this.getCurrentLayoutType();
     console.log('ContentComponent: 현재 레이아웃 타입:', currentLayoutType);
-    
+
     if (fileExtension === 'md') {
-    // 🔥 NEW: jupyter 레이아웃에서도 마크다운으로 처리 (왼쪽에 표시용)
-    console.log('ContentComponent: 마크다운 모드로 처리 (레이아웃:', currentLayoutType, ')');
+      // 🔥 NEW: jupyter 레이아웃에서도 마크다운으로 처리 (왼쪽에 표시용)
+      console.log('ContentComponent: 마크다운 모드로 처리 (레이아웃:', currentLayoutType, ')');
 
-    // ✅ 타이밍 보정 + 재시도 로직
-    setTimeout(() => {
-      this.loadMarkdownContent(fileUrl, problemInfo, problemNumber, pythonFileUrl)
-        .catch((err) => {
-          console.warn('첫 시도 실패, 300ms 후 재시도');
-          setTimeout(() => {
-            this.loadMarkdownContent(fileUrl, problemInfo, problemNumber, pythonFileUrl)
-              .catch(err2 => {
-                console.error('재시도 실패:', err2);
-              });
-          }, 300);
-        });
-    }, 100); // 초기 지연은 렌더 직후 타이밍 확보용
+      // ✅ 타이밍 보정 + 재시도 로직
+      setTimeout(() => {
+        this.loadMarkdownContent(fileUrl, problemInfo, problemNumber, pythonFileUrl)
+          .catch((err) => {
+            console.warn('첫 시도 실패, 300ms 후 재시도');
+            setTimeout(() => {
+              this.loadMarkdownContent(fileUrl, problemInfo, problemNumber, pythonFileUrl)
+                .catch(err2 => {
+                  console.error('재시도 실패:', err2);
+                });
+            }, 300);
+          });
+      }, 100); // 초기 지연은 렌더 직후 타이밍 확보용
 
-    // 🔥 NEW: jupyter 레이아웃인 경우 Jupyter UI 활성화 신호만 발송
-    if (currentLayoutType === 'jupyter') {
-      console.log('ContentComponent: Jupyter UI 활성화 신호 발송');
-      this.activateJupyterUI(problemInfo, problemNumber);
+      // 🔥 NEW: jupyter 레이아웃인 경우 Jupyter UI 활성화 신호만 발송
+      if (currentLayoutType === 'jupyter') {
+        console.log('ContentComponent: Jupyter UI 활성화 신호 발송');
+        this.activateJupyterUI(problemInfo, problemNumber);
+      }
+    } else {
+      // HTML 파일 처리 (기존 로직)
+      console.log('ContentComponent: HTML 파일 로드 시작:', fileUrl);
+      this.loadHtmlContent(fileUrl, problemInfo, problemNumber, pythonFileUrl);
     }
-  } else {
-    // HTML 파일 처리 (기존 로직)
-    console.log('ContentComponent: HTML 파일 로드 시작:', fileUrl);
-    this.loadHtmlContent(fileUrl, problemInfo, problemNumber, pythonFileUrl);
-  }
 
 
   }
-  
+
   // 🔥 NEW: 현재 레이아웃 타입 확인 함수
   getCurrentLayoutType() {
     // ComponentSystem에서 현재 레이아웃 타입 확인
     if (window.ComponentSystem && window.ComponentSystem.state && window.ComponentSystem.state.layoutType) {
       return window.ComponentSystem.state.layoutType;
     }
-    
+
     // body 클래스에서 레이아웃 타입 확인 (fallback)
     const bodyClasses = document.body.classList;
     for (const className of bodyClasses) {
@@ -580,18 +587,18 @@ class ContentComponent extends Component {
         return className.replace('layout-', '');
       }
     }
-    
+
     // 기본값
     return 'html';
   }
-  
+
   // 🔥 NEW: Jupyter UI 활성화 신호 발송 (오른쪽 편집기 활성화용)
   activateJupyterUI(problemInfo, problemNumber) {
     console.log('ContentComponent: Jupyter UI 활성화 요청:', {
       examName: this.state.currentExamName,
       problemNumber: problemNumber
     });
-    
+
     // EventBus를 통해 Jupyter 컴포넌트에 활성화 신호 발송
     if (window.EventBus && window.EventBus.publish) {
       window.EventBus.publish('jupyter-activate', {
@@ -599,43 +606,43 @@ class ContentComponent extends Component {
         problemNumber: problemNumber,
         mode: 'editor-only' // 서버 연결 없이 편집기만 활성화
       });
-      
+
       console.log('ContentComponent: jupyter-activate 이벤트 발송 완료');
     } else {
       console.warn('ContentComponent: EventBus를 찾을 수 없음');
     }
   }
-  
+
   // 🔥 NEW: 마크다운 파일 로드 및 렌더링
   async loadMarkdownContent(markdownUrl, problemInfo, problemNumber, pythonFileUrl) {
     console.log('ContentComponent: 마크다운 파일 로드 시작:', markdownUrl);
-    
+
     try {
       // 마크다운 파일 다운로드
       const response = await fetch(markdownUrl);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
       }
-      
+
       const markdownText = await response.text();
       console.log('ContentComponent: 마크다운 텍스트 로드 완료, 길이:', markdownText.length);
-      
+
       // 마크다운을 HTML로 변환
       const htmlContent = this.convertMarkdownToHtml(markdownText);
       console.log('ContentComponent: 마크다운 → HTML 변환 완료');
-      
+
       // iframe에 렌더링
       this.elements.iframe.srcdoc = this.getEnhancedMarkdownHtml(htmlContent);
-      
+
       // 이벤트 발행 및 상태 업데이트
       this.publishProblemChangedEvent(problemNumber, pythonFileUrl);
       this.updateExplanationButton(problemInfo, problemNumber);
       this.updateProblemTitle(problemNumber);
-      
+
       window.currentExamName = this.state.currentExamName;
       window.currentProblemNumber = problemNumber;
-      
+
     } catch (error) {
       console.error('ContentComponent: 마크다운 로드 오류:', error);
       this.elements.iframe.srcdoc = this.getErrorHtml(error.message, markdownUrl);
@@ -643,14 +650,14 @@ class ContentComponent extends Component {
       this.isLoading = false;
     }
   }
-  
+
   // 🔥 NEW: Markdown → HTML 변환 메서드
   convertMarkdownToHtml(markdownText) {
     // marked.js 라이브러리 사용 (이미 로드됨)
     if (typeof marked !== 'undefined') {
       // 코드 하이라이팅 설정
       marked.setOptions({
-        highlight: function(code, lang) {
+        highlight: function (code, lang) {
           if (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) {
             try {
               return hljs.highlight(code, { language: lang }).value;
@@ -663,7 +670,7 @@ class ContentComponent extends Component {
         breaks: true,
         gfm: true
       });
-      
+
       return marked.parse(markdownText);
     } else {
       console.warn('marked.js 라이브러리가 로드되지 않음. 기본 텍스트로 표시');
@@ -671,7 +678,7 @@ class ContentComponent extends Component {
       return this.simpleMarkdownToHtml(markdownText);
     }
   }
-  
+
   // 🔥 NEW: 간단한 Markdown 파서 (fallback)
   simpleMarkdownToHtml(markdownText) {
     return markdownText
@@ -688,35 +695,35 @@ class ContentComponent extends Component {
       .replace(/\n/gim, '<br>')
       .replace(/^(.*)$/gim, '<p>$1</p>');
   }
-  
+
   // 🔥 NEW: Jupyter 노트북 모드 로드 및 렌더링
   async loadJupyterNotebook(markdownUrl, problemInfo, problemNumber, pythonFileUrl) {
     console.log('ContentComponent: Jupyter 노트북 로드 시작:', markdownUrl);
-    
+
     // Jupyter UI 요소들 참조
     const jupyterLoading = document.getElementById('jupyter-loading');
     const jupyterIframe = document.getElementById('jupyter-iframe');
     const jupyterError = document.getElementById('jupyter-error');
     const jupyterToolbar = document.getElementById('jupyter-toolbar');
-    
+
     try {
       // 1. 로딩 상태 표시
       if (jupyterLoading) jupyterLoading.style.display = 'flex';
       if (jupyterError) jupyterError.style.display = 'none';
       if (jupyterIframe) jupyterIframe.style.display = 'none';
       if (jupyterToolbar) jupyterToolbar.style.display = 'none';
-      
+
       // 2. 마크다운 파일 다운로드
       console.log('ContentComponent: 마크다운 파일 다운로드 시작:', markdownUrl);
       const response = await fetch(markdownUrl);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
       }
-      
+
       const markdownContent = await response.text();
       console.log('ContentComponent: 마크다운 텍스트 로드 완료, 길이:', markdownContent.length);
-      
+
       // 3. 3000번 서버에 Jupyter 세션 요청
       console.log('ContentComponent: Jupyter 세션 생성 요청 시작');
       const jupyterResponse = await fetch('/api/jupyter/create-session', {
@@ -734,34 +741,34 @@ class ContentComponent extends Component {
           pythonFileUrl: pythonFileUrl || null
         })
       });
-      
+
       if (!jupyterResponse.ok) {
         const errorText = await jupyterResponse.text();
         console.error('Jupyter 세션 생성 실패:', jupyterResponse.status, errorText);
         throw new Error(`Jupyter 세션 생성 실패: ${jupyterResponse.status}`);
       }
-      
+
       const jupyterData = await jupyterResponse.json();
       console.log('ContentComponent: Jupyter 세션 생성 성공:', jupyterData);
-      
+
       if (!jupyterData.success || !jupyterData.jupyterUrl) {
         throw new Error('Jupyter URL을 받지 못했습니다.');
       }
-      
+
       // 4. iframe에 Jupyter 노트북 로드
       console.log('ContentComponent: iframe에 Jupyter URL 설정:', jupyterData.jupyterUrl);
       if (jupyterIframe) {
         jupyterIframe.src = jupyterData.jupyterUrl;
-        
+
         // iframe 로드 완료 이벤트 설정
         jupyterIframe.onload = () => {
           console.log('ContentComponent: Jupyter iframe 로드 완료');
-          
+
           // 로딩 숨기고 iframe 표시
           if (jupyterLoading) jupyterLoading.style.display = 'none';
           if (jupyterIframe) jupyterIframe.style.display = 'block';
           if (jupyterToolbar) jupyterToolbar.style.display = 'block';
-          
+
           // 상태 저장 (다운로드용)
           this.currentNotebookData = {
             examName: this.state.currentExamName,
@@ -770,23 +777,23 @@ class ContentComponent extends Component {
             jupyterUrl: jupyterData.jupyterUrl
           };
         };
-        
+
         // iframe 로드 오류 이벤트 설정
         jupyterIframe.onerror = () => {
           console.error('ContentComponent: Jupyter iframe 로드 오류');
           this.showJupyterError('노트북 로드에 실패했습니다.');
         };
       }
-      
+
       // 5. 이벤트 발행 및 상태 업데이트
       this.publishProblemChangedEvent(problemNumber, pythonFileUrl);
       this.updateExplanationButton(problemInfo, problemNumber);
       this.updateProblemTitle(problemNumber);
-      
+
       // 전역 변수 업데이트
       window.currentExamName = this.state.currentExamName;
       window.currentProblemNumber = problemNumber;
-      
+
     } catch (error) {
       console.error('ContentComponent: Jupyter 로드 오류:', error);
       this.showJupyterError(error.message);
@@ -794,31 +801,31 @@ class ContentComponent extends Component {
       this.isLoading = false;
     }
   }
-  
+
   async loadHtmlContent(htmlUrl, problemInfo, problemNumber, pythonFileUrl) {
     console.log('ContentComponent: HTML 파일 로드 시작:', htmlUrl);
-    
+
     try {
       const response = await fetch(htmlUrl);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
       }
-      
+
       const htmlContent = await response.text();
       console.log('ContentComponent: HTML 텍스트 로드 완료');
-      
+
       // iframe에 렌더링
       this.elements.iframe.srcdoc = this.getEnhancedHtml(htmlContent);
-      
+
       // 이벤트 발행 및 상태 업데이트
       this.publishProblemChangedEvent(problemNumber, pythonFileUrl);
       this.updateExplanationButton(problemInfo, problemNumber);
       this.updateProblemTitle(problemNumber);
-      
+
       window.currentExamName = this.state.currentExamName;
       window.currentProblemNumber = problemNumber;
-      
+
     } catch (error) {
       console.error('ContentComponent: HTML 로드 오류:', error);
       this.elements.iframe.srcdoc = this.getErrorHtml(error.message, htmlUrl);
@@ -826,7 +833,7 @@ class ContentComponent extends Component {
       this.isLoading = false;
     }
   }
-  
+
   // 🔥 NEW: 공통 이벤트 발행 로직
   publishProblemChangedEvent(problemNumber, pythonFileUrl) {
     if (window.EventBus && window.EventBus.publish) {
@@ -835,18 +842,18 @@ class ContentComponent extends Component {
         problemNumber: problemNumber,
         pythonFileUrl: pythonFileUrl || null
       };
-      
+
       console.log('problemChanged 이벤트 발행:', eventData);
       window.EventBus.publish('problemChanged', eventData);
     }
   }
-  
-// 🔥 NEW: 고급 스타일 마크다운용 HTML 템플릿
-getEnhancedMarkdownHtml(markdownHtml) {
-  const h1Match = markdownHtml.match(/<h1[^>]*>(.*?)<\/h1>/);
-  const headerTitle = h1Match ? h1Match[1].replace(/<[^>]*>/g, '').trim() : '데이터 분석 학습';
 
-  return `
+  // 🔥 NEW: 고급 스타일 마크다운용 HTML 템플릿
+  getEnhancedMarkdownHtml(markdownHtml) {
+    const h1Match = markdownHtml.match(/<h1[^>]*>(.*?)<\/h1>/);
+    const headerTitle = h1Match ? h1Match[1].replace(/<[^>]*>/g, '').trim() : '데이터 분석 학습';
+
+    return `
     <!DOCTYPE html>
     <html lang="ko">
     <head>
@@ -1019,12 +1026,12 @@ getEnhancedMarkdownHtml(markdownHtml) {
     </body>
     </html>
   `;
-}
+  }
 
-  
+
   showErrorInIframe(message) {
     if (!this.elements.iframe) return;
-    
+
     this.elements.iframe.srcdoc = `
       <html>
         <head>
@@ -1060,7 +1067,7 @@ getEnhancedMarkdownHtml(markdownHtml) {
       </html>
     `;
   }
-  
+
   getLoadingHtml() {
     return `
       <html>
@@ -1101,7 +1108,7 @@ getEnhancedMarkdownHtml(markdownHtml) {
       </html>
     `;
   }
-  
+
   getEnhancedHtml(originalHtml) {
     return `
       <html>
@@ -1144,7 +1151,7 @@ getEnhancedMarkdownHtml(markdownHtml) {
       </html>
     `;
   }
-  
+
   getErrorHtml(errorMessage, url) {
     return `
       <html>
@@ -1193,39 +1200,39 @@ getEnhancedMarkdownHtml(markdownHtml) {
       </html>
     `;
   }
-  
+
   // 🔥 NEW: Jupyter 오류 표시 함수
   showJupyterError(errorMessage) {
     console.log('ContentComponent: Jupyter 오류 표시:', errorMessage);
-    
+
     const jupyterLoading = document.getElementById('jupyter-loading');
     const jupyterIframe = document.getElementById('jupyter-iframe');
     const jupyterError = document.getElementById('jupyter-error');
     const jupyterToolbar = document.getElementById('jupyter-toolbar');
-    
+
     // 로딩 및 다른 UI 숨기기
     if (jupyterLoading) jupyterLoading.style.display = 'none';
     if (jupyterIframe) jupyterIframe.style.display = 'none';
     if (jupyterToolbar) jupyterToolbar.style.display = 'none';
-    
+
     // 오류 메시지 표시
     if (jupyterError) {
       jupyterError.style.display = 'flex';
-      
+
       // 오류 메시지 업데이트
       const errorContent = jupyterError.querySelector('.error-content p');
       if (errorContent) {
         errorContent.textContent = errorMessage || 'Jupyter 노트북 환경을 불러올 수 없습니다.';
       }
     }
-    
+
     this.isLoading = false;
   }
-  
+
   // 🔥 NEW: Jupyter 로드 재시도 함수
   retryJupyterLoad() {
     console.log('ContentComponent: Jupyter 로드 재시도');
-    
+
     if (this.state.currentExamName && this.state.currentProblemNumber) {
       // 현재 문제 다시 로드
       this.loadProblem(this.state.currentProblemNumber);
@@ -1234,16 +1241,16 @@ getEnhancedMarkdownHtml(markdownHtml) {
       this.showJupyterError('재시도할 문제 정보가 없습니다.');
     }
   }
-  
+
   // 🔥 NEW: 현재 노트북 다운로드 함수
   downloadCurrentNotebook() {
     console.log('ContentComponent: 노트북 다운로드 시도');
-    
+
     if (!this.currentNotebookData) {
       console.warn('ContentComponent: 다운로드할 노트북 데이터가 없습니다.');
       return false;
     }
-    
+
     try {
       // 다운로드 URL 생성
       const downloadUrl = `/api/jupyter/download-notebook?` + new URLSearchParams({
@@ -1251,26 +1258,26 @@ getEnhancedMarkdownHtml(markdownHtml) {
         problemNumber: this.currentNotebookData.problemNumber,
         notebookPath: this.currentNotebookData.notebookPath
       }).toString();
-      
+
       // 다운로드 트리거
       const downloadLink = document.createElement('a');
       downloadLink.href = downloadUrl;
       downloadLink.download = `${this.currentNotebookData.examName}_p${this.currentNotebookData.problemNumber.toString().padStart(2, '0')}.ipynb`;
       downloadLink.style.display = 'none';
-      
+
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
-      
+
       console.log('ContentComponent: 노트북 다운로드 완료');
       return true;
-      
+
     } catch (error) {
       console.error('ContentComponent: 노트북 다운로드 오류:', error);
       return false;
     }
   }
-  
+
   /**
    * 로딩 화면 표시
    */
@@ -1279,12 +1286,12 @@ getEnhancedMarkdownHtml(markdownHtml) {
       console.warn('ContentComponent: iframe을 찾을 수 없어 로딩 화면을 표시할 수 없습니다.');
       return;
     }
-    
+
     console.log('ContentComponent: 로딩 화면 표시');
     this.elements.iframe.srcdoc = this.getLoadingHtml();
 
   }
-  
+
   /**
    * 오류 화면 표시
    */
@@ -1293,7 +1300,7 @@ getEnhancedMarkdownHtml(markdownHtml) {
       console.warn('ContentComponent: iframe을 찾을 수 없어 오류 화면을 표시할 수 없습니다.');
       return;
     }
-    
+
     console.error('ContentComponent: 오류 화면 표시:', message);
     this.elements.iframe.srcdoc = this.getNotFoundHtml(message);
     this.isLoading = false;
@@ -1307,7 +1314,7 @@ getEnhancedMarkdownHtml(markdownHtml) {
       this.visible = true;
     }
   }
-  
+
   hide() {
     if (this.elements.container) {
       this.elements.container.style.display = 'none';
@@ -1316,7 +1323,7 @@ getEnhancedMarkdownHtml(markdownHtml) {
       this.visible = false;
     }
   }
-  
+
   onProblemChanged(examName, problemNumber) {
     if (this.state.currentExamName !== examName || this.state.currentProblemNumber !== problemNumber) {
       this.state.currentExamName = examName;
