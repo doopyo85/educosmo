@@ -14,6 +14,10 @@
   overflow-y: auto;
   overflow-x: hidden;
 
+  /* Flex Column to ensure Header and List stack vertically */
+  display: flex;
+  flex-direction: column;
+
   /* Glassmorphism Background */
   background: rgba(249, 250, 251, 0.9);
   /* Slightly more opaque for better contrast */
@@ -322,10 +326,14 @@
 
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  /* border-radius: 50%; Removed circle */
 
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  /* Slight radius for hover effect */
   color: #6b7280;
 
   display: flex;
@@ -333,7 +341,9 @@
   align-items: center;
   cursor: pointer;
   z-index: 50;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  z-index: 50;
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); Removed shadow */
   transition: all 0.2s ease;
 }
 
