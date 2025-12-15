@@ -1,0 +1,841 @@
+project: educodingnplay
+db: rds db
+hosting: aws ec2, apache, ubuntu
+저장소: s3
+alb(로드밸런서)로 https를 적용중으로, 서버내부에서는 http로 소통
+
+[port 설정 및 인바운드 규칙]
+포트	역할	비고
+22	SSH 접속	전체 오픈 상태, 보안상 위험 ⚠️
+80	HTTP 웹서버 (Apache)	ALB에서 리디렉션 용도, 외부 오픈
+443	HTTPS (Docker-Portfolio)	SSL 인증서 적용됨 ✅
+3306	RDS MySQL DB	외부 오픈 상태, 접근 IP 제한 필요 ⚠️
+8601	Scratch GUI 서버	HTTPS 적용됨 ✅
+8000	Jupyternotebook	내부용, 현재 인증서 없음
+8080	Entry 서버	외부 오픈 상태 ⚠️
+3000	main.js (React 등)	개발/테스트용 포트, 외부 오픈 상태
+
+목록확인 명렁어: 
+project-root/.
+
+ubuntu@ip-172-31-0-184:/var/www/html$ tree -L 5 -I "node_modules|myenv|sessions|scratch|entryjs|entry|resource|appinventor-sources"
+.
+├── ##deploy.bat
+├── ##roleback.bat
+├── browser
+│   └── css
+│       ├── simple-code-editor.css
+│       └── themes
+│           ├── brown-papersq.png
+│           ├── pojoaque.jpg
+│           ├── themes-base16.css
+│           └── themes.css
+├── config.js
+├── docs
+│   ├── user-session-isolation-update.md
+│   └── user-session-isolation-update.md.backup
+├── ecosystem.config.js
+├── ecosystem.config.js.backup
+├── elbv2 describe-listeners --load-balancer-arn
+├── entry-base
+├── entry-temp-link -> /var/www/html/temp/ent_files/parse_1754062887813_ih8uwe5nx:/temp
+├── installed-packages.json
+├── jupyter.log
+├── jupyter_notebooks
+│   ├── DataAnalysis.ipynb
+│   ├── Untitled.ipynb
+│   ├── Untitled1.ipynb
+│   ├── Untitled2.ipynb
+│   ├── Untitled3.ipynb
+│   ├── Untitled4.ipynb
+│   ├── Untitled5.ipynb
+│   ├── Untitled6.ipynb
+│   ├── datatest.ipynb
+│   ├── test.ipynb
+│   └── welcome.ipynb
+├── jupyter_script.log
+├── jupyter_start_new.sh
+├── jupyter_templates
+│   ├── BasicPython_template.ipynb
+│   ├── DataAnalysis_template.ipynb
+│   ├── MachineLearning_template.ipynb
+│   └── Visualization_template.ipynb
+├── jupyterhub-docker
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   ├── generate_ssl.sh
+│   ├── jupyterhub_config.py
+│   ├── jupyterhub_secure_config.py
+│   ├── problem_bank
+│   │   ├── enhanced_problem_bank.py
+│   │   ├── problem_bank.py
+│   │   ├── problem_bank_example.ipynb
+│   │   └── sample_problems.yaml
+│   ├── secure-docker-compose.yml
+│   ├── setup.sh
+│   └── ssl
+│       ├── jupyterhub.crt
+│       └── jupyterhub.key
+├── lib
+│   ├── entFileLoader.js
+│   ├── entFileManager.js
+│   ├── entryAssetManager.js
+│   └── s3EntryAssetManager.js
+├── lib_board
+│   ├── attachmentService.js
+│   ├── databaseValidator.js
+│   ├── fileUpload.js
+│   ├── fileValidation.js
+│   ├── localFileUpload.js
+│   ├── s3Utils.js
+│   ├── schedulers
+│   │   └── tempFileCleanup.js
+│   ├── securityPolicies.js
+│   └── securityValidator.js
+├── lib_jupyter
+│   ├── notebookManager.js
+│   └── templateManager.js
+├── lib_login
+│   ├── auth.js
+│   ├── authCheck.js
+│   ├── authMiddleware.js
+│   ├── db.js
+│   ├── logging.js
+│   ├── payment.js
+│   ├── permissions.js
+│   ├── permissions.json
+│   ├── permissions_new.json
+│   ├── serviceMiddleware.js
+│   └── template.js
+├── lib_portfolio
+│   └── port-manager.js
+├── logs
+│   ├── jupyter-combined-24.log
+│   ├── jupyter-combined-29.log
+│   ├── jupyter-combined-31.log
+│   ├── jupyter-combined-32.log
+│   ├── jupyter-combined-33.log
+│   ├── jupyter-combined-34.log
+│   ├── jupyter-combined-35.log
+│   ├── jupyter-combined-36.log
+│   ├── jupyter-err-24.log
+│   ├── jupyter-err-29.log
+│   ├── jupyter-err-31.log
+│   ├── jupyter-err-32.log
+│   ├── jupyter-err-33.log
+│   ├── jupyter-err-34.log
+│   ├── jupyter-err-35.log
+│   ├── jupyter-err-36.log
+│   ├── jupyter-out-24.log
+│   ├── jupyter-out-29.log
+│   ├── jupyter-out-31.log
+│   ├── jupyter-out-32.log
+│   ├── jupyter-out-33.log
+│   ├── jupyter-out-34.log
+│   ├── jupyter-out-35.log
+│   ├── jupyter-out-36.log
+│   ├── main-combined-23.log
+│   ├── main-err-23.log
+│   └── main-out-23.log
+├── metadata.json
+├── myenv_backup
+│   ├── bin
+│   │   ├── Activate.ps1
+│   │   ├── activate
+│   │   ├── activate.csh
+│   │   ├── activate.fish
+│   │   ├── debugpy
+│   │   ├── debugpy-adapter
+│   │   ├── git-filter-repo
+│   │   ├── httpx
+│   │   ├── ipython
+│   │   ├── ipython3
+│   │   ├── jlpm
+│   │   ├── jsonpointer
+│   │   ├── jsonschema
+│   │   ├── jupyter
+│   │   ├── jupyter-console
+│   │   ├── jupyter-dejavu
+│   │   ├── jupyter-events
+│   │   ├── jupyter-execute
+│   │   ├── jupyter-kernel
+│   │   ├── jupyter-kernelspec
+│   │   ├── jupyter-lab
+│   │   ├── jupyter-labextension
+│   │   ├── jupyter-labhub
+│   │   ├── jupyter-migrate
+│   │   ├── jupyter-nbconvert
+│   │   ├── jupyter-notebook
+│   │   ├── jupyter-run
+│   │   ├── jupyter-server
+│   │   ├── jupyter-troubleshoot
+│   │   ├── jupyter-trust
+│   │   ├── normalizer
+│   │   ├── pip
+│   │   ├── pip3
+│   │   ├── pip3.12
+│   │   ├── pybabel
+│   │   ├── pygmentize
+│   │   ├── pyjson5
+│   │   ├── python
+│   │   ├── python3
+│   │   ├── python3.12
+│   │   ├── send2trash
+│   │   └── wsdump
+│   ├── etc
+│   │   └── jupyter
+│   │       ├── jupyter_notebook_config.d
+│   │       │   └── jupyterlab.json
+│   │       ├── jupyter_server_config.d
+│   │       │   ├── jupyter-lsp-jupyter-server.json
+│   │       │   ├── jupyter_server_terminals.json
+│   │       │   ├── jupyterlab.json
+│   │       │   ├── notebook.json
+│   │       │   └── notebook_shim.json
+│   │       ├── labconfig
+│   │       │   └── page_config.json
+│   │       └── nbconfig
+│   │           └── notebook.d
+│   ├── include
+│   │   └── python3.12
+│   ├── lib
+│   │   └── python3.12
+│   │       └── site-packages
+│   │           ├── IPython
+│   │           ├── MarkupSafe-3.0.2.dist-info
+│   │           ├── PyYAML-6.0.2.dist-info
+│   │           ├── Send2Trash-1.8.3.dist-info
+│   │           ├── __pycache__
+│   │           ├── _argon2_cffi_bindings
+│   │           ├── _cffi_backend.cpython-312-x86_64-linux-gnu.so
+│   │           ├── _distutils_hack
+│   │           ├── _yaml
+│   │           ├── anyio
+│   │           ├── anyio-4.10.0.dist-info
+│   │           ├── argon2
+│   │           ├── argon2_cffi-25.1.0.dist-info
+│   │           ├── argon2_cffi_bindings-25.1.0.dist-info
+│   │           ├── arrow
+│   │           ├── arrow-1.3.0.dist-info
+│   │           ├── asttokens
+│   │           ├── asttokens-3.0.0.dist-info
+│   │           ├── async_lru
+│   │           ├── async_lru-2.0.5.dist-info
+│   │           ├── attr
+│   │           ├── attrs
+│   │           ├── attrs-25.3.0.dist-info
+│   │           ├── babel
+│   │           ├── babel-2.17.0.dist-info
+│   │           ├── beautifulsoup4-4.13.4.dist-info
+│   │           ├── bleach
+│   │           ├── bleach-6.2.0.dist-info
+│   │           ├── bs4
+│   │           ├── certifi
+│   │           ├── certifi-2025.8.3.dist-info
+│   │           ├── cffi
+│   │           ├── cffi-1.17.1.dist-info
+│   │           ├── charset_normalizer
+│   │           ├── charset_normalizer-3.4.3.dist-info
+│   │           ├── comm
+│   │           ├── comm-0.2.3.dist-info
+│   │           ├── dateutil
+│   │           ├── dateutil-stubs
+│   │           ├── debugpy
+│   │           ├── debugpy-1.8.16.dist-info
+│   │           ├── decorator-5.2.1.dist-info
+│   │           ├── decorator.py
+│   │           ├── defusedxml
+│   │           ├── defusedxml-0.7.1.dist-info
+│   │           ├── distutils-precedence.pth
+│   │           ├── executing
+│   │           ├── executing-2.2.0.dist-info
+│   │           ├── fastjsonschema
+│   │           ├── fastjsonschema-2.21.2.dist-info
+│   │           ├── fqdn
+│   │           ├── fqdn-1.5.1.dist-info
+│   │           ├── git_filter_repo-2.45.0.dist-info
+│   │           ├── git_filter_repo.py
+│   │           ├── h11
+│   │           ├── h11-0.16.0.dist-info
+│   │           ├── httpcore
+│   │           ├── httpcore-1.0.9.dist-info
+│   │           ├── httpx
+│   │           ├── httpx-0.28.1.dist-info
+│   │           ├── idna
+│   │           ├── idna-3.10.dist-info
+│   │           ├── ipykernel
+│   │           ├── ipykernel-6.30.1.dist-info
+│   │           ├── ipykernel_launcher.py
+│   │           ├── ipython-9.4.0.dist-info
+│   │           ├── ipython_pygments_lexers-1.1.1.dist-info
+│   │           ├── ipython_pygments_lexers.py
+│   │           ├── ipywidgets
+│   │           ├── ipywidgets-8.1.7.dist-info
+│   │           ├── isoduration
+│   │           ├── isoduration-20.11.0.dist-info
+│   │           ├── jedi
+│   │           ├── jedi-0.19.2.dist-info
+│   │           ├── jinja2
+│   │           ├── jinja2-3.1.6.dist-info
+│   │           ├── json5
+│   │           ├── json5-0.12.1.dist-info
+│   │           ├── jsonpointer-3.0.0.dist-info
+│   │           ├── jsonpointer.py
+│   │           ├── jsonschema
+│   │           ├── jsonschema-4.25.0.dist-info
+│   │           ├── jsonschema_specifications
+│   │           ├── jsonschema_specifications-2025.4.1.dist-info
+│   │           ├── jupyter-1.1.1.dist-info
+│   │           ├── jupyter.py
+│   │           ├── jupyter_client
+│   │           ├── jupyter_client-8.6.3.dist-info
+│   │           ├── jupyter_console
+│   │           ├── jupyter_console-6.6.3.dist-info
+│   │           ├── jupyter_core
+│   │           ├── jupyter_core-5.8.1.dist-info
+│   │           ├── jupyter_events
+│   │           ├── jupyter_events-0.12.0.dist-info
+│   │           ├── jupyter_lsp
+│   │           ├── jupyter_lsp-2.2.6.dist-info
+│   │           ├── jupyter_server
+│   │           ├── jupyter_server-2.16.0.dist-info
+│   │           ├── jupyter_server_terminals
+│   │           ├── jupyter_server_terminals-0.5.3.dist-info
+│   │           ├── jupyterlab
+│   │           ├── jupyterlab-4.4.6.dist-info
+│   │           ├── jupyterlab_pygments
+│   │           ├── jupyterlab_pygments-0.3.0.dist-info
+│   │           ├── jupyterlab_server
+│   │           ├── jupyterlab_server-2.27.3.dist-info
+│   │           ├── jupyterlab_widgets
+│   │           ├── jupyterlab_widgets-3.0.15.dist-info
+│   │           ├── lark
+│   │           ├── lark-1.2.2.dist-info
+│   │           ├── markupsafe
+│   │           ├── matplotlib_inline
+│   │           ├── matplotlib_inline-0.1.7.dist-info
+│   │           ├── mistune
+│   │           ├── mistune-3.1.3.dist-info
+│   │           ├── nbclient
+│   │           ├── nbclient-0.10.2.dist-info
+│   │           ├── nbconvert
+│   │           ├── nbconvert-7.16.6.dist-info
+│   │           ├── nbformat
+│   │           ├── nbformat-5.10.4.dist-info
+│   │           ├── nest_asyncio-1.6.0.dist-info
+│   │           ├── nest_asyncio.py
+│   │           ├── notebook
+│   │           ├── notebook-7.4.5.dist-info
+│   │           ├── notebook_shim
+│   │           ├── notebook_shim-0.2.4.dist-info
+│   │           ├── overrides
+│   │           ├── overrides-7.7.0.dist-info
+│   │           ├── packaging
+│   │           ├── packaging-25.0.dist-info
+│   │           ├── pandocfilters-1.5.1.dist-info
+│   │           ├── pandocfilters.py
+│   │           ├── parso
+│   │           ├── parso-0.8.4.dist-info
+│   │           ├── pexpect
+│   │           ├── pexpect-4.9.0.dist-info
+│   │           ├── pip
+│   │           ├── pip-24.0.dist-info
+│   │           ├── pip-25.2.dist-info
+│   │           ├── pkg_resources
+│   │           ├── platformdirs
+│   │           ├── platformdirs-4.3.8.dist-info
+│   │           ├── prometheus_client
+│   │           ├── prometheus_client-0.22.1.dist-info
+│   │           ├── prompt_toolkit
+│   │           ├── prompt_toolkit-3.0.51.dist-info
+│   │           ├── psutil
+│   │           ├── psutil-7.0.0.dist-info
+│   │           ├── ptyprocess
+│   │           ├── ptyprocess-0.7.0.dist-info
+│   │           ├── pure_eval
+│   │           ├── pure_eval-0.2.3.dist-info
+│   │           ├── pycparser
+│   │           ├── pycparser-2.22.dist-info
+│   │           ├── pygments
+│   │           ├── pygments-2.19.2.dist-info
+│   │           ├── python_dateutil-2.9.0.post0.dist-info
+│   │           ├── python_json_logger-3.3.0.dist-info
+│   │           ├── pythonjsonlogger
+│   │           ├── pyzmq-27.0.1.dist-info
+│   │           ├── pyzmq.libs
+│   │           ├── referencing
+│   │           ├── referencing-0.36.2.dist-info
+│   │           ├── requests
+│   │           ├── requests-2.32.4.dist-info
+│   │           ├── rfc3339_validator-0.1.4.dist-info
+│   │           ├── rfc3339_validator.py
+│   │           ├── rfc3986_validator-0.1.1.dist-info
+│   │           ├── rfc3986_validator.py
+│   │           ├── rfc3987_syntax
+│   │           ├── rfc3987_syntax-1.1.0.dist-info
+│   │           ├── rpds
+│   │           ├── rpds_py-0.27.0.dist-info
+│   │           ├── send2trash
+│   │           ├── setuptools
+│   │           ├── setuptools-80.9.0.dist-info
+│   │           ├── six-1.17.0.dist-info
+│   │           ├── six.py
+│   │           ├── sniffio
+│   │           ├── sniffio-1.3.1.dist-info
+│   │           ├── soupsieve
+│   │           ├── soupsieve-2.7.dist-info
+│   │           ├── stack_data
+│   │           ├── stack_data-0.6.3.dist-info
+│   │           ├── terminado
+│   │           ├── terminado-0.18.1.dist-info
+│   │           ├── tinycss2
+│   │           ├── tinycss2-1.4.0.dist-info
+│   │           ├── tornado
+│   │           ├── tornado-6.5.2.dist-info
+│   │           ├── traitlets
+│   │           ├── traitlets-5.14.3.dist-info
+│   │           ├── types_python_dateutil-2.9.0.20250809.dist-info
+│   │           ├── typing_extensions-4.14.1.dist-info
+│   │           ├── typing_extensions.py
+│   │           ├── uri_template
+│   │           ├── uri_template-1.3.0.dist-info
+│   │           ├── urllib3
+│   │           ├── urllib3-2.5.0.dist-info
+│   │           ├── wcwidth
+│   │           ├── wcwidth-0.2.13.dist-info
+│   │           ├── webcolors
+│   │           ├── webcolors-24.11.1.dist-info
+│   │           ├── webencodings
+│   │           ├── webencodings-0.5.1.dist-info
+│   │           ├── websocket
+│   │           ├── websocket_client-1.8.0.dist-info
+│   │           ├── widgetsnbextension
+│   │           ├── widgetsnbextension-4.0.14.dist-info
+│   │           ├── yaml
+│   │           └── zmq
+│   ├── lib64
+│   ├── pyvenv.cfg
+│   └── share
+│       ├── applications
+│       │   ├── jupyter-notebook.desktop
+│       │   └── jupyterlab.desktop
+│       ├── icons
+│       │   └── hicolor
+│       │       └── scalable
+│       ├── jupyter
+│       │   ├── kernels
+│       │   │   └── python3
+│       │   ├── lab
+│       │   │   ├── schemas
+│       │   │   ├── static
+│       │   │   └── themes
+│       │   ├── labextensions
+│       │   │   ├── @jupyter-notebook
+│       │   │   ├── @jupyter-widgets
+│       │   │   └── jupyterlab_pygments
+│       │   ├── nbconvert
+│       │   │   └── templates
+│       │   └── nbextensions
+│       │       └── jupyter-js-widgets
+│       └── man
+│           └── man1
+│               └── ipython.1
+├── myenv_backup_20250816
+│   ├── bin
+│   │   ├── Activate.ps1
+│   │   ├── activate
+│   │   ├── activate.csh
+│   │   ├── activate.fish
+│   │   ├── git-filter-repo
+│   │   ├── pip
+│   │   ├── pip3
+│   │   ├── pip3.12
+│   │   ├── python
+│   │   ├── python3
+│   │   └── python3.12
+│   ├── lib
+│   │   └── python3.12
+│   │       └── site-packages
+│   │           ├── __pycache__
+│   │           ├── git_filter_repo-2.45.0.dist-info
+│   │           ├── git_filter_repo.py
+│   │           ├── pip
+│   │           └── pip-24.0.dist-info
+│   ├── lib64
+│   └── pyvenv.cfg
+├── package-lock.json
+├── package.json
+├── portfolio-project
+│   ├── docker
+│   │   ├── Dockerfile
+│   │   └── supervisord.conf
+│   └── games
+│       ├── CatchTheMole
+│       │   └── mole_game.html
+│       └── qwerfighter
+│           ├── image
+│           │   ├── Boom.png
+│           │   ├── Bullets.png
+│           │   ├── Enemies.png
+│           │   ├── Explosion.png
+│           │   ├── Fade Black.png
+│           │   ├── Items.png
+│           │   ├── Player.png
+│           │   ├── background.png
+│           │   ├── badguy.png
+│           │   ├── boss.png
+│           │   ├── comet.jpg
+│           │   ├── fighter.png
+│           │   ├── fireball.png
+│           │   ├── heal.png
+│           │   ├── missile.png
+│           │   ├── missile2.png
+│           │   ├── moon.png
+│           │   ├── shield.png
+│           │   ├── super.png
+│           │   └── user-interface.png
+│           ├── index.ejs
+│           ├── index.html
+│           └── main.py
+├── public
+│   ├── admin
+│   │   └── dashboard.js
+│   ├── center.js
+│   ├── css
+│   │   ├── board-layout.css
+│   │   ├── board-notification.css
+│   │   ├── board.css
+│   │   ├── card_project.css
+│   │   ├── common-content.css
+│   │   ├── common-ide.css
+│   │   ├── common-layout.css
+│   │   ├── common-quiz.css
+│   │   ├── components
+│   │   │   ├── base.css
+│   │   │   ├── content.css
+│   │   │   ├── explanation.css
+│   │   │   ├── jupyter.css
+│   │   │   ├── layout-toggle.css
+│   │   │   ├── navigation.css
+│   │   │   ├── ppt-viewer.css
+│   │   │   └── quiz.css
+│   │   ├── dashboard.css
+│   │   ├── header.css
+│   │   ├── ide
+│   │   │   ├── ide-core.css
+│   │   │   ├── ide-editor.css
+│   │   │   └── ide-terminal.css
+│   │   ├── jupyter-user-management.css
+│   │   ├── machu-game.css
+│   │   ├── ppt-viewer.css
+│   │   ├── report.css
+│   │   ├── report_bookslist.css
+│   │   ├── scratch.css
+│   │   ├── styles.css
+│   │   └── teacher.css
+│   ├── entry-assets
+│   ├── header.js
+│   ├── images
+│   │   └── jupyter_example.png
+│   ├── js
+│   │   ├── board-notification.js
+│   │   ├── board.js
+│   │   ├── card_link.js
+│   │   ├── card_project.js
+│   │   ├── component-system.js
+│   │   ├── components
+│   │   │   ├── base
+│   │   │   │   ├── Component.js
+│   │   │   │   ├── ComponentFactory.js
+│   │   │   │   ├── ComponentRegistry.js
+│   │   │   │   ├── EventBus.js
+│   │   │   │   └── layout-system-core.js
+│   │   │   ├── content
+│   │   │   │   └── ContentComponent.js
+│   │   │   ├── ide
+│   │   │   │   ├── CodeEditor.js
+│   │   │   │   ├── IDEComponent.js
+│   │   │   │   ├── PythonAutoCompleter.js
+│   │   │   │   ├── Terminal.js
+│   │   │   │   ├── TerminalInput.js
+│   │   │   │   └── TerminalResize.js
+│   │   │   ├── jupyter
+│   │   │   │   └── JupyterComponent.js
+│   │   │   ├── nav
+│   │   │   │   └── NavigationComponent.js
+│   │   │   ├── popup
+│   │   │   │   └── ExplanationPopup.js
+│   │   │   ├── ppt
+│   │   │   │   └── PPTViewerComponent.js
+│   │   │   └── quiz
+│   │   │       └── QuizComponent.js
+│   │   ├── entry-minimal-dataapi.js
+│   │   ├── iframe-python-syntax-highlighter.js
+│   │   ├── iframe-style-injector.js
+│   │   ├── learning-tracker.js
+│   │   ├── machu-game.js
+│   │   ├── machu-play.js
+│   │   ├── onlineclass.js
+│   │   ├── preschool.js
+│   │   ├── report_bookslist.js
+│   │   ├── tasks.js
+│   │   ├── teacher.js
+│   │   └── test-dataapi.js
+│   ├── offline
+│   │   ├── images
+│   │   │   ├── ani_2.png
+│   │   │   ├── block_pattern_1_26.png
+│   │   │   ├── cloud_list_icon_27.png
+│   │   │   ├── cloud_question_icon_28.png
+│   │   │   ├── confirm_button_29.png
+│   │   │   ├── coordinates_edit_30.png
+│   │   │   ├── coordinates_edit_on_31.png
+│   │   │   ├── coordinates_play_32.png
+│   │   │   ├── delete_body_33.png
+│   │   │   ├── delete_cover_34.png
+│   │   │   ├── entry_bg_1_36.png
+│   │   │   ├── entry_bg_35.png
+│   │   │   ├── entry_icon_arduino_6.png
+│   │   │   ├── entry_icon_brush_7.png
+│   │   │   ├── entry_icon_calc_8.png
+│   │   │   ├── entry_icon_decision_9.png
+│   │   │   ├── entry_icon_flow_10.png
+│   │   │   ├── entry_icon_function_11.png
+│   │   │   ├── entry_icon_looks_12.png
+│   │   │   ├── entry_icon_moving_13.png
+│   │   │   ├── entry_icon_scene_14.png
+│   │   │   ├── entry_icon_sound_15.png
+│   │   │   ├── entry_icon_start_16.png
+│   │   │   ├── entry_icon_variable_17.png
+│   │   │   ├── entry_scroll_02_38.png
+│   │   │   ├── entry_scroll_37.png
+│   │   │   ├── entrybot1_69.png
+│   │   │   ├── entrybot2_70.png
+│   │   │   ├── fullscreen_edit_39.png
+│   │   │   ├── fullscreen_play_40.png
+│   │   │   ├── glyphicons-halflings-regular_0.svg
+│   │   │   ├── glyphicons-halflings-regular_1.svg
+│   │   │   ├── glyphicons_150_edit_41.png
+│   │   │   ├── icon_code_42.png
+│   │   │   ├── icon_picture_43.png
+│   │   │   ├── icon_sound_44.png
+│   │   │   ├── keyboard_workspace_71.png
+│   │   │   ├── layers_arrow_down_nor_1_46.png
+│   │   │   ├── layers_arrow_down_nor_45.png
+│   │   │   ├── layers_arrow_up_nor_47.png
+│   │   │   ├── layers_icon_button_stop_nor_1_49.png
+│   │   │   ├── layers_icon_button_stop_nor_48.png
+│   │   │   ├── layers_icon_close_nor_50.png
+│   │   │   ├── layers_icon_fullmode01_nor_1_52.png
+│   │   │   ├── layers_icon_fullmode01_nor_51.png
+│   │   │   ├── layers_icon_fullmode02_nor_53.png
+│   │   │   ├── layers_icon_grid_nor_1_55.png
+│   │   │   ├── layers_icon_grid_nor_54.png
+│   │   │   ├── layers_icon_rotate01_nor_56.png
+│   │   │   ├── layers_icon_rotate01_sel_57.png
+│   │   │   ├── layers_icon_rotate02_nor_58.png
+│   │   │   ├── layers_icon_rotate02_sel_59.png
+│   │   │   ├── layers_icon_rotate03_nor_60.png
+│   │   │   ├── layers_icon_rotate03_sel_61.png
+│   │   │   ├── list_icon_list_1_63.png
+│   │   │   ├── list_icon_list_62.png
+│   │   │   ├── list_icon_question_1_65.png
+│   │   │   ├── list_icon_question_64.png
+│   │   │   ├── list_icon_signal_66.png
+│   │   │   ├── local_list_icon_67.png
+│   │   │   ├── local_question_icon_68.png
+│   │   │   ├── pausebutton_edit_74.png
+│   │   │   ├── pausebutton_play_75.png
+│   │   │   ├── playbutton_edit_76.png
+│   │   │   ├── playbutton_play_77.png
+│   │   │   ├── quote1_3.png
+│   │   │   ├── screen_btn_play_nor_78.png
+│   │   │   ├── screen_btn_stop_nor_79.png
+│   │   │   ├── start_icon_clone_18.png
+│   │   │   ├── start_icon_keyboard_19.png
+│   │   │   ├── start_icon_mouse_20.png
+│   │   │   ├── start_icon_object_21.png
+│   │   │   ├── start_icon_play_22.png
+│   │   │   ├── start_icon_scene_1_23.png
+│   │   │   ├── start_icon_scene_1_2_24.png
+│   │   │   ├── start_icon_signal_25.png
+│   │   │   ├── stopbutton_pause_80.png
+│   │   │   ├── stopbutton_play_81.png
+│   │   │   ├── text_button_strike_false_82.png
+│   │   │   ├── text_button_strike_true_83.png
+│   │   │   ├── text_icon_white_84.png
+│   │   │   ├── top_tab_b_nor_left_blue_85.png
+│   │   │   ├── top_tab_b_nor_right_blue_86.png
+│   │   │   ├── top_tab_b_sel_left_87.png
+│   │   │   ├── top_tab_b_sel_right_88.png
+│   │   │   ├── trashbody_4.png
+│   │   │   ├── trashbody_72.png
+│   │   │   ├── trashlid_5.png
+│   │   │   ├── trashlid_73.png
+│   │   │   ├── ui-icons_222222_256x240_93.png
+│   │   │   ├── ui-icons_2e83ff_256x240_94.png
+│   │   │   ├── ui-icons_444444_256x240_95.png
+│   │   │   ├── ui-icons_454545_256x240_96.png
+│   │   │   ├── ui-icons_555555_256x240_97.png
+│   │   │   ├── ui-icons_777620_256x240_98.png
+│   │   │   ├── ui-icons_777777_256x240_99.png
+│   │   │   ├── workspace_coordinate_89.png
+│   │   │   ├── workspace_coordinate_v1_90.png
+│   │   │   ├── workspace_sound_play_91.png
+│   │   │   └── workspace_sound_stop_92.png
+│   │   ├── metadata
+│   │   │   ├── pictures_0.json
+│   │   │   ├── sounds_1.json
+│   │   │   └── sprites_2.json
+│   │   ├── metadata.json
+│   │   ├── metadata_test.json
+│   │   └── sounds
+│   │       ├── 0198d03532efe10d95ee24db8f104500_43.mp3
+│   │       ├── 03da1e90f29198b956d36bcc4910aab6_44.mp3
+│   │       ├── 05-Binrpilot-Underground_16.mp3
+│   │       ├── 06cf00c066c71f60527980e92035cd92_45.mp3
+│   │       ├── 08553422161e66f3af518a1cad882f62_46.mp3
+│   │       ├── 0ece444f2b0240b51daeb54e8350bcca_47.mp3
+│   │       ├── 1120c09771a49f821fdbf7e12cbf537a_48.mp3
+│   │       ├── 11856215fedb9e4f7ccd40afcd7a158d_49.mp3
+│   │       ├── CabinBoy_15.mp3
+│   │       ├── GU-StealDaisy_27.mp3
+│   │       ├── GU-StealDaisy_28.ogg
+│   │       ├── Game-AudioSprite_17.mp3
+│   │       ├── Game-AudioSprite_18.ogg
+│   │       ├── Game-Break_19.mp3
+│   │       ├── Game-Break_20.ogg
+│   │       ├── Game-Death_21.mp3
+│   │       ├── Game-Death_22.ogg
+│   │       ├── Game-Shot_23.mp3
+│   │       ├── Game-Shot_24.ogg
+│   │       ├── Game-Spawn_25.mp3
+│   │       ├── Game-Spawn_26.ogg
+│   │       ├── Humm_29.mp3
+│   │       ├── Humm_30.ogg
+│   │       ├── M-GameBG_31.mp3
+│   │       ├── M-GameBG_32.ogg
+│   │       ├── R-Damage_33.mp3
+│   │       ├── R-Damage_34.ogg
+│   │       ├── S-Damage_35.mp3
+│   │       ├── S-Damage_36.ogg
+│   │       ├── Thunder1_37.mp3
+│   │       ├── Thunder1_38.ogg
+│   │       ├── Thunder_13.mp3
+│   │       ├── Thunder_14.ogg
+│   │       ├── ToneWobble_39.mp3
+│   │       ├── ToneWobble_40.ogg
+│   │       ├── U-CabinBoy3_41.mp3
+│   │       ├── U-CabinBoy3_42.ogg
+│   │       ├── bark_6.mp3
+│   │       ├── click_0.mp3
+│   │       ├── click_1.ogg
+│   │       ├── click_2.wav
+│   │       ├── click_7.mp3
+│   │       ├── click_8.ogg
+│   │       ├── click_9.wav
+│   │       ├── delete_10.mp3
+│   │       ├── delete_11.ogg
+│   │       ├── delete_12.wav
+│   │       ├── delete_3.mp3
+│   │       ├── delete_4.ogg
+│   │       └── delete_5.wav
+│   └── uploads
+│       └── portfolio
+├── routes
+│   ├── adminRouter.js
+│   ├── api
+│   │   ├── attachmentRouter.js
+│   │   ├── boardApiRouter.js
+│   │   ├── cardRouter.js
+│   │   ├── clipboardRouter.js
+│   │   ├── debug
+│   │   │   └── entDebugRouter.js
+│   │   ├── entryApiRouter.js
+│   │   ├── entryAssetRouter.js
+│   │   ├── entryDataApiRouter.js
+│   │   ├── entryDataRouter.js
+│   │   ├── entryFileRouter.js
+│   │   ├── entrySpritesRouter.js
+│   │   ├── gameScoreRouter.js
+│   │   ├── googleSheetRouter.js
+│   │   ├── imageRouter.js
+│   │   ├── jupyterRouter.js
+│   │   ├── localImageRouter.js
+│   │   ├── problemRouter.js
+│   │   ├── quizRouter.js
+│   │   └── ttsRouter.js
+│   ├── apiRouter.js
+│   ├── appinventorRouter.js
+│   ├── boardRouter.js
+│   ├── entryRouter.js
+│   ├── kinderRouter.js
+│   ├── learningRouter.js
+│   ├── machinelearningRouter.js
+│   ├── machugameRouter.js
+│   ├── nuguritalkRouter.js
+│   ├── onlineclassRouter.js
+│   ├── portfolioRouter.js
+│   ├── preschoolRouter.js
+│   ├── pythonRouter.js
+│   ├── reportRouter.js
+│   └── templateRouter.js
+├── scripts
+│   ├── cleanup-ent-files.js
+│   ├── convert-metadata.js
+│   ├── extract-assets-windows.js
+│   ├── extract-entry-assets.js
+│   ├── extract-entry-offline-assets.js
+│   ├── generate-metadata.js
+│   ├── generate-s3-metadata.js
+│   ├── metadata-api.js
+│   ├── setup-ent-static-serving.sh
+│   └── simple-metadata-generator.js
+├── server.js
+├── start-appinventor.sh
+├── temp
+│   ├── cleanup.log
+│   └── ent_files
+│       ├── current -> /var/www/html/temp/ent_files/users/forena_madDZ_ueFJDdFdSlf-311eb0fjyMR7PZ
+│       └── users
+├── temp_interactive_1753170565618_wc3zh2kcg_1753170564885.py
+├── temp_interactive_1753259805107_gd200k4as_1753259797750.py
+├── views
+│   ├── 403.ejs
+│   ├── 404.ejs
+│   ├── admin
+│   │   └── dashboard.ejs
+│   ├── appinventor_project.ejs
+│   ├── board
+│   │   ├── board_index.ejs
+│   │   ├── list.ejs
+│   │   ├── view.ejs
+│   │   └── write.ejs
+│   ├── board.ejs
+│   ├── computer.ejs
+│   ├── entry_project.ejs
+│   ├── game-viewer.ejs
+│   ├── index.ejs
+│   ├── kinder.ejs
+│   ├── machinelearning.ejs
+│   ├── machu_game.ejs
+│   ├── machu_play.ejs
+│   ├── nuguritalk.ejs
+│   ├── onlineclass.ejs
+│   ├── partials
+│   │   ├── footer.ejs
+│   │   └── header.ejs
+│   ├── portfolio
+│   │   ├── mole_game.ejs
+│   │   └── qwerfighter.ejs
+│   ├── portfolio.ejs
+│   ├── report
+│   │   ├── report_bookslist.ejs
+│   │   └── report_generate.ejs
+│   ├── scratch_project.ejs
+│   ├── teacher.ejs
+│   ├── template.ejs
+│   └── under-construction.ejs
+└── yarn.lock
+
+303 directories, 515 files

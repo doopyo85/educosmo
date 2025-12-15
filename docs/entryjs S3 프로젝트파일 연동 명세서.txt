@@ -1,0 +1,365 @@
+EntryJS S3 프로젝트 파일 연동 명세서
+📋 시스템 개요
+프로젝트: educodingnplay EntryJS S3 ENT 파일 연동 시스템
+아키텍처: 3000번(메인) + 8070번(EntryJS) 분리형 하이브리드 시스템
+데이터 소스: Google Sheets + AWS S3 + MySQL
+작성일: 2025년 8월 2일
+상태: 🟢 운영 중 (이미지 로드 이슈 해결 중)
+
+🏗️ 시스템 아키텍처
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   사용자 브라우저   │    │   3000번 메인서버   │    │   8070번 EntryJS  │
+│                │    │   (인증/S3/API)    │    │     (워크스페이스)   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │ 1. 카드 클릭            │                       │
+         ├──────────────────────►│                       │
+         │                       │ 2. S3 ENT 다운로드     │
+         │                       ├──────────────────────┐│
+         │                       │                      ││
+         │                       │ 3. ENT 파싱          ││
+         │                       │ 4. 프로젝트 데이터 추출 ││
+         │                       │◄─────────────────────┘│
+         │                       │                       │
+         │ 5. 8070번 리다이렉트    │                       │
+         │ (프로젝트 데이터 포함)   │                       │
+         │◄──────────────────────┤                       │
+         │                                               │
+         │ 6. EntryJS 워크스페이스 로드                     │
+         ├──────────────────────────────────────────────►│
+         │                                               │
+         │ 7. 이미지 요청 (/entry/temp/...)                │
+         ├──────────────────────────────────────────────►│
+         │ 8. 이미지 응답                                   │
+         │◄──────────────────────────────────────────────┤
+
+🗂️ 데이터 소스 구조
+Google Sheets 구조 (problems 시트)
+열필드명예시값설명A문제파일명cpe1-1a.entS3 ENT 파일명B시험지명python카테고리/과목명C문제번호p01문제 순서D개념파일URLconcept1.md추가 학습자료E정답파일URLanswer1.py정답 코드F해설파일URLexplanation1.md해설 파일GanswerTypecode답안 형식H정답{"type":"code","answer":"print()"}JSON 정답I인풋/아웃풋input: none, output: Hello테스트 케이스J난이도11-5 단계K객관식/주관식주관식문제 유형LTags기초,출력태그 정보
+AWS S3 구조
+s3://educodingnplaycontents/
+├── ent/                          # ENT 파일 저장소
+│   ├── cpe1-1a.ent              # 압축된 프로젝트 파일
+│   ├── cpe1-1b.ent
+│   └── uploads/                  # ENT 내부 에셋 (현재 미사용)
+│       └── temp/
+└── other-assets/                 # 기타 에셋
+ENT 파일 내부 구조 (TAR 압축)
+cpe1-1a.ent (TAR.GZ)
+└── temp/
+    ├── project.json             # EntryJS 프로젝트 데이터
+    ├── 60/62/image/             # 이미지 파일들
+    │   └── 6062p3x0...png
+    ├── yk/c6/image/
+    │   └── ykc640e3...png
+    └── [기타 에셋 디렉토리들]
+
+🔄 데이터 흐름 상세
+1. 프로젝트 로드 플로우
+1. 사용자가 entry_project.ejs에서 카드 클릭
+   ↓
+2. 3000번: /entry/entry_editor?s3Url=https://...cpe1-1a.ent
+   ↓
+3. 3000번: entryRouter.js → S3 URL 파라미터 확인
+   ↓
+4. 3000번: entFileManager.loadProjectFromS3() 실행
+   ├─ downloadFromS3() → ENT 파일 다운로드
+   ├─ parseEntFile() → TAR 압축 해제
+   ├─ copyAssetsToFixedPath() → 이미지를 current/에 복사
+   └─ project.json 파싱
+   ↓
+5. 3000번: 프로젝트 데이터 Base64 인코딩
+   ↓
+6. 3000번: 8070번으로 리다이렉트
+   URL: https://app.codingnplay.co.kr:8070/?userID=xxx&project=base64data
+   ↓
+7. 8070번: app.mjs에서 URL 파라미터 디코딩
+   ↓
+8. 8070번: Entry.loadProject(projectData) 실행
+   ↓
+9. EntryJS: 이미지 로드 시도 (/entry/temp/...)
+   ↓
+10. Apache: Alias 설정으로 로컬 파일 서빙
+2. 이미지 로드 플로우
+EntryJS → /entry/temp/60/62/image/6062p3x0...png 요청
+         ↓
+Apache Alias 설정 확인
+         ↓
+/var/www/html/temp/ent_files/current/60/62/image/6062p3x0...png 서빙
+
+
+========================
+8|server  | 🚀 S3 ENT 파일 로드 시작: https://educodingnplaycontents.s3.amazonaws.com/ent/cpe1-1a.ent
+8|server  | 🌐 S3 다운로드 시작: https://educodingnplaycontents.s3.amazonaws.com/ent/cpe1-1a.ent
+8|server  | ✅ S3 다운로드 완료: 287699 bytes (281.0 KB)
+8|server  | 🔧 ENT 파일 파싱 시작: /var/www/html/temp/ent_files/parse_1754372027862_eeot6jr0a/downloaded.ent
+8|server  | 📦 ENT 버퍼 크기: 287699 bytes
+8|server  | 📁 임시 디렉토리 생성: /var/www/html/temp/ent_files/parse_1754372027862_eeot6jr0a
+8|server  | 💾 ENT 파일 저장 완료: /var/www/html/temp/ent_files/parse_1754372027862_eeot6jr0a/downloaded.ent
+8|server  | 🗜️ TAR 압축 해제 시작...
+8|server  | 📄 압축 해제 중: temp/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/60/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/f1/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/ga/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/i0/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/p6/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/project.json (File, 11356 bytes)
+8|server  | 📄 압축 해제 중: temp/yk/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/60/62/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/f1/85/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/ga/u5/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/i0/ei/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/p6/bw/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/yk/c6/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/60/62/image/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/60/62/thumb/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/f1/85/image/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/f1/85/thumb/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/ga/u5/image/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/ga/u5/thumb/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/i0/ei/image/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/i0/ei/thumb/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/p6/bw/image/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/p6/bw/thumb/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/yk/c6/image/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/yk/c6/thumb/ (Directory, 0 bytes)
+8|server  | 📄 압축 해제 중: temp/60/62/image/6062p3x0lntpspgt1e105cc911bcbgdc.png (File, 13071 bytes)
+8|server  | 📄 압축 해제 중: temp/60/62/thumb/6062p3x0lntpspgt1e105cc911bcbgdc.png (File, 3446 bytes)
+8|server  | 📄 압축 해제 중: temp/f1/85/image/f185o7qblntpspgt1e105cc911bcalg9.png (File, 35616 bytes)
+8|server  | 📄 압축 해제 중: temp/f1/85/thumb/f185o7qblntpspgt1e105cc911bcalg9.png (File, 6817 bytes)
+8|server  | 📄 압축 해제 중: temp/ga/u5/image/gau5590mlntpspgt1e105cc911bc9xs8.png (File, 33598 bytes)
+8|server  | 📄 압축 해제 중: temp/ga/u5/thumb/gau5590mlntpspgt1e105cc911bc9xs8.png (File, 6530 bytes)
+8|server  | 📄 압축 해제 중: temp/i0/ei/image/i0eioq0jlntpspgt1e105cc911bc9agb.png (File, 35199 bytes)
+8|server  | 📄 압축 해제 중: temp/i0/ei/thumb/i0eioq0jlntpspgt1e105cc911bc9agb.png (File, 6778 bytes)
+8|server  | 📄 압축 해제 중: temp/p6/bw/image/p6bwclgllntpspgt1e105cc911bcc457.png (File, 68158 bytes)
+8|server  | 📄 압축 해제 중: temp/p6/bw/image/p6bwclgllntpspgt1e105cc911bcc457.svg (File, 86675 bytes)
+8|server  | 📄 압축 해제 중: temp/p6/bw/thumb/p6bwclgllntpspgt1e105cc911bcc457.png (File, 8879 bytes)
+8|server  | 📄 압축 해제 중: temp/yk/c6/image/ykc640e3lntpspgt1e105cc911bc8cc6.png (File, 35781 bytes)
+8|server  | 📄 압축 해제 중: temp/yk/c6/thumb/ykc640e3lntpspgt1e105cc911bc8cc6.png (File, 6831 bytes)
+8|server  | ✅ TAR 압축 해제 완료
+8|server  | 📂 압축 해제된 파일들: [ 'downloaded.ent', 'temp' ]
+8|server  | 📄 project.json 발견: /var/www/html/temp/ent_files/parse_1754372027862_eeot6jr0a/temp/project.json
+8|server  | 📖 project.json 크기: 11172 문자
+8|server  | ✅ project.json 파싱 완료: { objects: 3, scenes: 1, variables: 2 }
+8|server  | ✅ 이미지 파일들을 고정 경로에 복사 완료: /var/www/html/temp/ent_files/current
+8|server  | 임시 디렉토리 보존 (테스트용): /var/www/html/temp/ent_files/parse_1754372027862_eeot6jr0a
+8|server  | 🎉 S3 ENT 파일 로드 성공! {
+8|server  |   fileName: 'cpe1-1a.ent',
+8|server  |   fileSize: '281.0 KB',
+8|server  |   objects: 3,
+8|server  |   scenes: 1
+8|server  | }
+8|server  | [Service Detection] Host: 172.31.0.184, Service: codingnplay
+8|server  | 요청 프로토콜: http
+8|server  | 요청 도메인: 172.31.0.184
+8|server  | 세션 상태: Session {
+8|server  |   cookie: {
+8|server  |     path: '/',
+8|server  |     _expires: 2025-08-05T06:33:51.684Z,
+8|server  |     originalMaxAge: 3600000,
+8|server  |     httpOnly: true,
+8|server  |     secure: false,
+8|server  |     sameSite: 'lax',
+8|server  |     domain: '.codingnplay.co.kr'
+8|server  |   }
+8|server  | }
+
+📁 관련 파일 및 의존성
+🎯 핵심 파일
+3000번 서버 (메인)
+라우터 파일
+
+routes/entryRouter.js - Entry 메인 라우터
+routes/api/entryFileRouter.js - ENT 파일 처리 API
+
+핵심 라이브러리
+
+lib/entFileManager.js - ENT 파일 관리 (S3 다운로드/파싱)
+lib/s3Manager.js - S3 연동 유틸리티
+lib/googleSheetsManager.js - Google Sheets 연동
+
+템플릿 파일
+
+views/entry_project.ejs - 프로젝트 카드 목록 페이지
+views/partials/header.ejs - 공통 헤더
+
+8070번 서버 (EntryJS)
+메인 파일
+
+server.js - Express 서버 설정
+index.html - EntryJS Base 예제 템플릿
+
+JavaScript 모듈
+
+js/app.mjs - 메인 앱 모듈
+js/projectLoader.mjs - 프로젝트 로더 (구현 예정)
+js/entry-minimal-dataapi.js - DataAPI 설정
+
+설정 파일
+
+/etc/apache2/sites-available/000-default.conf - Apache 프록시/Alias 설정
+ecosystem.config.js - PM2 설정 (8070번)
+
+🔗 의존성 매트릭스
+구성요소의존성버전역할3000번 서버└─ entFileManagertar, node-fetch, fs/promiseslatestENT 파일 처리└─ Google Sheetsgoogleapis^108.0.0메타데이터 조회└─ AWS SDK@aws-sdk/client-s3^3.xS3 파일 다운로드8070번 서버└─ EntryJS@entrylabs/entry4.0.20워크스페이스 엔진└─ Entry-tool@entrylabs/tool2.0.8팝업 시스템└─ Legacy Video@entrylabs/legacy-video1.0.1비디오 지원클라이언트└─ marked.js-4.3.0마크다운 렌더링└─ highlight.js-11.9.0코드 하이라이팅
+
+🔧 핵심 메서드 명세
+3000번 서버 메서드
+EntFileManager.loadProjectFromS3(s3Url)
+javascript/**
+ * S3에서 ENT 파일 다운로드 및 파싱
+ * @param {string} s3Url - S3 ENT 파일 URL
+ * @returns {Object} - {success, projectData, fileName, metadata}
+ */
+실행 과정:
+
+URL 유효성 검사
+downloadFromS3() - fetch로 S3 파일 다운로드
+parseEntFile() - tar 모듈로 압축 해제
+copyAssetsToFixedPath() - 이미지를 current 디렉토리에 복사
+project.json 파싱 및 반환
+
+entryRouter.js 주요 라우트
+javascript// 메인 워크스페이스 라우트
+GET /entry/entry_editor?s3Url=...
+
+// ENT 파일 로드 API
+GET /entry/api/load-project?file=cpe1-1a.ent
+
+// 인증 검증 API  
+GET /entry/api/verify-auth
+8070번 서버 메서드
+app.mjs 주요 함수
+javascript/**
+ * URL 파라미터에서 프로젝트 데이터 추출 및 로드
+ */
+async function loadProjectFromParams() {
+    const params = new URLSearchParams(window.location.search);
+    const projectParam = params.get('project');
+    
+    if (projectParam) {
+        const projectData = JSON.parse(atob(projectParam));
+        Entry.loadProject(projectData);
+    }
+}
+Google Sheets 연동
+getSheetData(range)
+javascript/**
+ * Google Sheets에서 데이터 조회
+ * @param {string} range - 예: "problems!A1:L1000"
+ * @returns {Array} - 시트 데이터 배열
+ */
+
+🌐 API 엔드포인트 현황
+3000번 서버 API
+메서드엔드포인트설명상태GET/entry/entry_editorEntryJS 워크스페이스 접근✅ 작동GET/entry/api/load-projectENT 파일 로드✅ 작동GET/entry/api/verify-auth인증 검증✅ 작동POST/entry/api/save-project프로젝트 저장🔄 구현 예정GET/entry/api/projects프로젝트 목록🔄 구현 예정
+8070번 서버 API
+메서드엔드포인트설명상태GET/EntryJS 워크스페이스✅ 작동GET/health헬스 체크✅ 작동GET/temp/*ENT 이미지 정적 서빙🔧 설정 중
+Google Sheets API
+메서드엔드포인트설명상태GET/api/problems/:examName문제 목록 조회✅ 작동GET/api/problem/:examName/:num특정 문제 조회✅ 작동
+
+🔧 설정 파일 현황
+Apache 설정 (핵심 부분)
+apache# ENT 이미지 정적 파일 서빙
+Alias /entry/temp /var/www/html/temp/ent_files/current
+<Directory "/var/www/html/temp/ent_files/current">
+    Options FollowSymLinks
+    AllowOverride None
+    Require all granted
+    Header always set Access-Control-Allow-Origin "*"
+</Directory>
+
+# EntryJS 프록시 (예외 설정 필요)
+ProxyPass /entry/temp !  # 🔧 추가 필요
+ProxyPass /entry/api/load-project http://localhost:3000/entry/api/load-project
+ProxyPass /entry/ http://localhost:8070/
+PM2 설정
+javascript// 3000번 서버
+{
+  name: 'server',
+  script: './server.js',
+  instances: 1,
+  port: 3000
+}
+
+// 8070번 서버  
+{
+  name: 'entry-server',
+  script: './server.js',
+  cwd: '/var/www/html/entry',
+  port: 8070
+}
+
+🚨 현재 이슈 및 해결 과정
+🔧 진행 중 이슈
+이미지 로드 404 오류
+
+문제: /entry/temp/ 경로 이미지 파일 404 오류
+원인: Apache ProxyPass가 Alias보다 우선 처리됨
+해결책: ProxyPass /entry/temp ! 예외 설정 필요
+
+✅ 해결된 이슈
+
+ENT 파일 파싱 성공 - entFileManager.js 구현 완료
+프로젝트 데이터 로드 성공 - Entry.loadProject() 정상 작동
+이미지 파일 복사 성공 - copyAssetsToFixedPath() 구현 완료
+
+
+📋 향후 구현 계획
+Phase 2: ENT 파일 저장 기능
+javascript// 8070번 → 3000번 저장 요청
+POST /entry/api/save-project
+{
+  projectData: Entry.exportProject(),
+  fileName: "내프로젝트",
+  metadata: {...}
+}
+
+// 3000번에서 ENT 파일 생성 → S3 업로드
+entFileManager.createEntFile(projectData, fileName, userID)
+Phase 3: 사용자 프로젝트 관리
+
+내 작품 목록 페이지
+프로젝트 공유 기능
+버전 관리 시스템
+
+
+🔍 디버깅 도구
+브라우저 콘솔 명령어
+javascript// EntryJS 상태 확인
+console.log('Entry 객체:', window.Entry);
+console.log('현재 프로젝트:', Entry.exportProject());
+
+// 이미지 로드 상태 확인
+document.querySelectorAll('img').forEach(img => {
+    if (!img.complete) console.log('로드 실패:', img.src);
+});
+서버 로그 확인
+bash# 3000번 서버 로그
+sudo pm2 logs 0 | grep -E "(ENT|S3|entFileManager)"
+
+# 8070번 서버 로그  
+sudo pm2 logs entry-server
+
+# Apache 오류 로그
+sudo tail -f /var/log/apache2/error.log
+
+📊 성능 지표
+현재 성능
+
+ENT 파일 다운로드: ~2-3초 (파일 크기에 따라)
+프로젝트 파싱: ~1초
+워크스페이스 로드: ~3-5초
+메모리 사용량: 3000번(150MB), 8070번(60MB)
+
+최적화 목표
+
+ENT 파일 캐싱으로 로드 시간 50% 단축
+이미지 압축으로 전송량 30% 감소
+메모리 사용량 20% 최적화
+
+
+📝 작성자: AI Assistant
+📅 최종 업데이트: 2025년 8월 2일
+🔄 문서 버전: 1.0
+📊 시스템 상태: 🟡 운영 중 (이미지 로드 이슈 해결 중)

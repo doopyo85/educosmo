@@ -1,0 +1,143 @@
+🔍 educodingnplay EntryJS 이미지 파일 호출 시스템 명세서
+📋 시스템 개요
+시스템 아키텍처: 3000번(메인) + 8070번(EntryJS) 분리형 하이브리드
+이미지 서빙 방식: Apache Alias + 로컬 파일 시스템
+데이터 소스: AWS S3 ENT 파일 → 로컬 임시 디렉토리 추출
+작성일: 2025년 8월 5일
+상태: 🟡 운영 중 (이미지 로드 경로 최적화 필요)
+
+🏗️ 전체 아키텍처 흐름
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   사용자 브라우저   │    │   3000번 메인서버   │    │   8070번 EntryJS  │
+│                │    │   (ENT 파싱)      │    │   (워크스페이스)    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │ 1. 카드 클릭            │                       │
+         ├──────────────────────►│                       │
+         │                       │ 2. S3 ENT 다운로드     │
+         │                       ├──────────────────────┐│
+         │                       │ 3. TAR 압축 해제      ││
+         │                       │ 4. 이미지 파일 추출    ││
+         │                       │ 5. /temp/current/ 복사││
+         │                       │◄─────────────────────┘│
+         │                       │                       │
+         │ 6. 8070번 리다이렉트    │                       │
+         │ (Base64 프로젝트 데이터) │                       │
+         │◄──────────────────────┤                       │
+         │                                               │
+         │ 7. EntryJS 워크스페이스 로드                     │
+         ├──────────────────────────────────────────────►│
+         │                                               │
+         │ 8. 이미지 요청 (/temp/xx/xx/image/...)          │
+         ├──────────────────────────────────────────────►│
+         │                                               │
+         │ 9. Apache Alias 경로로 이미지 서빙               │
+         │◄──────────────────────────────────────────────┤
+
+📂 이미지 파일 경로 구조
+🔹 S3 ENT 파일 내부 구조
+cpe1-1a.ent (TAR.GZ 압축)
+└── temp/
+    ├── project.json             # EntryJS 프로젝트 데이터
+    ├── 60/62/image/             # 이미지 디렉토리 (filename 기반)
+    │   └── 6062p3x0ly...png     # 실제 이미지 파일
+    ├── yk/c6/image/
+    │   └── ykc640e3ly...png
+    └── [기타 사운드/썸네일 디렉토리들]
+🔹 3000번 서버 로컬 저장 구조
+/var/www/html/temp/ent_files/
+├── current/                     # 고정 경로 (Apache Alias 대상)
+│   ├── 60/62/image/
+│   │   └── 6062p3x0ly...png    # S3에서 추출된 이미지
+│   ├── yk/c6/image/
+│   │   └── ykc640e3ly...png
+│   └── project.json
+├── parse_123456789_abc123/      # 임시 파싱 디렉토리 (자동삭제)
+└── [기타 임시 디렉토리들]
+🔹 EntryJS에서 요청하는 이미지 경로
+브라우저 요청: /temp/60/62/image/6062p3x0ly...png
+실제 파일:   /var/www/html/temp/ent_files/current/60/62/image/6062p3x0ly...png
+
+🔧 핵심 처리 과정
+Phase 1: ENT 파일 다운로드 및 파싱 (3000번 서버)
+1.1 파일 다운로드
+위치: lib/entFileManager.js → downloadFromS3()
+javascript// S3에서 ENT 파일 다운로드
+const response = await fetch(s3Url, {
+    method: 'GET',
+    timeout: 30000,
+    headers: { 'User-Agent': 'educodingnplay-server/1.0' }
+});
+const entBuffer = await response.buffer();
+1.2 TAR 압축 해제
+위치: lib/entFileManager.js → parseEntFile()
+javascript// EntryJS 표준 TAR 압축 해제
+await tar.x({
+    file: entFilePath,
+    cwd: tempParseDir,
+    filter: (path, entry) => {
+        return entry.type !== 'SymbolicLink' && entry.size < maxFileSize;
+    }
+});
+1.3 이미지 파일 고정 경로 복사
+위치: lib/entFileManager.js → copyAssetsToFixedPath()
+javascript// 임시 디렉토리에서 고정 경로로 복사
+const fixedAssetsPath = '/var/www/html/temp/ent_files/current';
+await this.copyDirectory(tempDir, fixedAssetsPath);
+await this.chmodRecursive(fixedAssetsPath, 0o755); // Apache 접근 권한
+Phase 2: 프로젝트 데이터 처리 (3000번 서버)
+2.1 이미지 경로 수정
+위치: lib/entFileManager.js → parseEntFile() 하단
+javascript// EntryJS 호환 경로로 수정
+projectData.objects.forEach((obj) => {
+    if (obj.sprite && obj.sprite.pictures) {
+        obj.sprite.pictures.forEach((picture) => {
+            if (picture.filename && !picture.fileurl) {
+                const filename = picture.filename;
+                const imageType = picture.imageType || 'png';
+                const folderPath = `${filename.substring(0, 2)}/${filename.substring(2, 4)}/image`;
+                picture.fileurl = `/temp/${folderPath}/${filename}.${imageType}`;
+            }
+        });
+    }
+});
+2.2 Base64 인코딩 및 리다이렉트
+위치: routes/entryRouter.js
+javascriptconst projectDataEncoded = Buffer.from(JSON.stringify(result.projectData)).toString('base64');
+const entryServerUrl = `https://app.codingnplay.co.kr/entry_editor/?userID=${userID}&role=${role}&project=${projectDataEncoded}`;
+return res.redirect(entryServerUrl);
+Phase 3: EntryJS 워크스페이스 로드 (8070번 서버)
+3.1 프로젝트 데이터 디코딩
+위치: entry/js/app.mjs → loadProjectFromBase64()
+javascriptconst decodedJson = atob(base64ProjectData);
+const projectData = JSON.parse(decodedJson);
+Entry.loadProject(projectData);
+3.2 이미지 로드 요청
+EntryJS 내부에서 자동으로 picture.fileurl 경로로 이미지 요청:
+GET /temp/60/62/image/6062p3x0ly...png
+Phase 4: Apache 이미지 서빙
+4.1 Apache Alias 설정
+파일: /etc/apache2/sites-available/000-default.conf
+apache# ENT 이미지 고정 경로 서빙
+Alias /temp /var/www/html/temp/ent_files/current
+<Directory "/var/www/html/temp/ent_files/current">
+    Options FollowSymLinks
+    AllowOverride None
+    Require all granted
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cache-Control "public, max-age=3600"
+</Directory>
+
+# 프록시 예외 설정 (중요!)
+ProxyPass /temp !
+
+🔍 관련 파일 및 의존성
+3000번 메인 서버
+파일역할핵심 함수lib/entFileManager.jsENT 파일 관리loadProjectFromS3(), parseEntFile(), copyAssetsToFixedPath()routes/entryRouter.jsEntry 라우팅/entry, /entry_editor, /entry/api/load-projectlib/s3Manager.jsS3 연동S3 업로드/다운로드 (구현 예정)
+8070번 EntryJS 서버
+파일역할핵심 함수entry/js/app.mjs메인 앱loadProjectFromBase64(), showNotification()entry/index.htmlHTML 템플릿EntryJS 컨테이너 제공entry/server.jsExpress 서버정적 파일 서빙, 헬스체크
+Apache 설정
+파일역할핵심 설정/etc/apache2/sites-available/000-default.conf프록시 설정Alias, ProxyPass 예외
+
+📊 이미지 경로 매핑 테이블
+단계경로 형태실제 경로 예시설명S3 ENT 내부temp/60/62/image/6062...pngS3 압축 파일 내부TAR 압축된 상태3000번 파싱parse_123.../temp/60/62/image/6062...png/var/www/html/temp/ent_files/parse_123.../임시 압축 해제3000번 고정current/60/62/image/6062...png/var/www/html/temp/ent_files/current/Apache Alias 대상EntryJS 요청/temp/60/62/image/6062...png브라우저 HTTP 요청상대 경로Apache 서빙/var/www/html/temp/ent_files/current/60/62/image/6062...png실제 파일 시스템Alias 매핑 결과

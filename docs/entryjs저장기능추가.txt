@@ -1,0 +1,464 @@
+# S3 ENT 파일 로드/저장 기능 구현 명세서
+
+## 📋 프로젝트 개요
+
+**기능명**: EntryJS 워크스페이스 S3 ENT 파일 로드/저장 시스템  
+**목표**: 3000번-8070번 서버 분리 아키텍처에서 S3 ENT 파일 처리  
+**구현 방식**: 역할 분담 기반 분산 처리  
+**작성일**: 2025년 7월 30일  
+
+## 🏗️ 시스템 아키텍처
+
+### 🔵 서버 역할 분담
+
+**3000번 서버 (메인 서버)**
+- 사용자 인증 및 권한 관리
+- AWS/S3 접근 권한 처리
+- Google Sheets 연동
+- ENT 파일 다운로드/업로드
+- 프로젝트 메타데이터 관리
+
+**8070번 서버 (EntryJS 독립 서버)**
+- EntryJS 워크스페이스 렌더링
+- 받은 프로젝트 데이터 로드
+- Entry-tool 팝업 처리
+- 순수 프론트엔드 역할
+
+### 🔄 데이터 흐름 구조
+
+```
+사용자 → 3000번 서버 → S3/Google Sheets → 3000번 서버 → 8070번 서버 → EntryJS
+```
+
+## 🎯 구현 단계
+
+### Phase 1: S3 ENT 파일 로드 기능 ⭐ 우선 구현
+
+**목표**: 카드 클릭 → S3 ENT 다운로드 → 8070번에서 EntryJS 로드
+
+**구현 범위**
+- [x] Google Sheets에서 S3 URL 조회 (3000번)
+- [x] S3 ENT 파일 다운로드 (3000번)
+- [x] ENT 파일 파싱 (3000번)
+- [x] 8070번으로 프로젝트 데이터 전달
+- [ ] 8070번에서 EntryJS 프로젝트 로드
+
+### Phase 2: ENT 파일 저장 기능
+
+**목표**: 8070번 워크스페이스 → 3000번 처리 → S3 저장
+
+**구현 범위**
+- [ ] 8070번에서 프로젝트 데이터 추출
+- [ ] 3000번으로 저장 요청 전달
+- [ ] ENT 파일 생성 (3000번)
+- [ ] S3 업로드 (3000번)
+- [ ] 메타데이터 DB 저장 (3000번)
+
+### Phase 3: 통합 관리 시스템
+
+**목표**: 내 작품 관리 + 공유 기능
+
+**구현 범위**
+- [ ] 내 작품 목록 페이지
+- [ ] 프로젝트 공유 기능
+- [ ] 버전 관리 시스템
+- [ ] 협업 기능
+
+## 🗂️ 파일 구조
+
+### 3000번 서버 (메인 서버)
+
+```
+educodingnplay/
+├── 📁 routes/api/
+│   ├── entryFileRouter.js              # ENT 파일 처리 API
+│   └── entryProjectRouter.js           # 프로젝트 관리 API (신규)
+├── 📁 lib/
+│   ├── entFileManager.js               # ENT 파일 생성/파싱 로직
+│   ├── s3Manager.js                    # S3 업로드/다운로드 관리
+│   └── projectDataProcessor.js         # 프로젝트 데이터 처리 (신규)
+├── 📁 routes/
+│   ├── entryRouter.js                  # Entry 프로젝트 라우터 (수정)
+│   └── entry_project.ejs               # 카드 목록 페이지 (수정)
+└── 📁 temp/ent_files/                  # 임시 ENT 파일 저장소
+```
+
+### 8070번 서버 (EntryJS 독립 서버)
+
+```
+/var/www/html/entry/
+├── 📄 server.js                        # Express 서버 (수정)
+├── 📄 index.html                       # EntryJS Base 예제 (수정)
+├── 📁 js/
+│   ├── app.mjs                         # 메인 앱 모듈 (수정)
+│   ├── projectLoader.mjs               # 프로젝트 로드 모듈 (신규)
+│   └── projectSaver.mjs                # 프로젝트 저장 모듈 (신규)
+└── 📁 api/
+    └── projectHandler.js               # 프로젝트 API 핸들러 (신규)
+```
+
+## 📡 API 설계
+
+### 3000번 서버 API
+
+#### 1. 프로젝트 로드 API
+
+```javascript
+GET /api/entry/load-project
+Query Parameters:
+- examName: string          // 시험지명 (예: python, algorithm)
+- problemNumber: string     // 문제번호 (예: p01, p02)
+
+Response:
+{
+  "success": true,
+  "projectData": {},        // 파싱된 Entry 프로젝트 JSON
+  "fileName": "python_p01.ent",
+  "metadata": {
+    "examName": "python",
+    "problemNumber": "p01",
+    "title": "파이썬 기초 - 변수와 출력",
+    "difficulty": 1,
+    "category": "기초"
+  }
+}
+```
+
+#### 2. 프로젝트 저장 API
+
+```javascript
+POST /api/entry/save-project
+Content-Type: application/json
+
+Request Body:
+{
+  "projectData": {},        // Entry.exportProject() 결과
+  "fileName": "내프로젝트",
+  "metadata": {
+    "title": "프로젝트 제목",
+    "description": "프로젝트 설명",
+    "category": "카테고리"
+  }
+}
+
+Response:
+{
+  "success": true,
+  "s3Url": "https://s3.../my-project.ent",
+  "projectId": "proj_123456",
+  "createdAt": "2025-07-30T10:30:00Z"
+}
+```
+
+#### 3. 8070번 리다이렉트 API
+
+```javascript
+GET /entry/entry_editor
+Query Parameters:
+- examName: string (optional)
+- problemNumber: string (optional)
+
+Process:
+1. 사용자 인증 확인
+2. Google Sheets에서 S3 URL 조회 (프로젝트 로드 시)
+3. S3에서 ENT 파일 다운로드
+4. ENT 파일 파싱하여 프로젝트 JSON 추출
+5. Base64 인코딩하여 8070번으로 리다이렉트
+
+Redirect URL:
+https://app.codingnplay.co.kr/entry/?auth=base64EncodedData&project=base64ProjectData
+```
+
+### 8070번 서버 API
+
+#### 1. 메인 워크스페이스
+
+```javascript
+GET /
+Query Parameters:
+- auth: string              // Base64 인코딩된 사용자 정보
+- project: string           // Base64 인코딩된 프로젝트 데이터 (optional)
+
+Process:
+1. 인증 정보 디코딩
+2. 프로젝트 데이터 디코딩 (있는 경우)
+3. index.html에 데이터 주입
+4. EntryJS 워크스페이스 렌더링
+```
+
+#### 2. 프로젝트 저장 요청
+
+```javascript
+POST /api/save-project
+Content-Type: application/json
+
+Request Body:
+{
+  "projectData": {},        // Entry.exportProject() 결과
+  "fileName": "프로젝트명",
+  "userInfo": {}           // 사용자 정보
+}
+
+Process:
+1. 3000번 서버 /api/entry/save-project로 프록시
+2. 응답 결과 반환
+```
+
+## 🔄 상세 데이터 흐름
+
+### 프로젝트 로드 플로우
+
+```
+1. 사용자가 entry_project.ejs에서 카드 클릭
+   ↓
+2. 3000번: /entry/entry_editor?examName=python&problemNumber=p01 요청
+   ↓
+3. 3000번: Google Sheets에서 S3 URL 조회
+   SELECT s3_url FROM problems WHERE examName='python' AND problemNumber='p01'
+   ↓
+4. 3000번: S3에서 ENT 파일 다운로드
+   aws s3 cp s3://bucket/path/python_p01.ent /tmp/
+   ↓
+5. 3000번: ENT 파일 파싱 (tar 압축 해제 + project.json 추출)
+   tar -xf python_p01.ent && cat temp/project.json
+   ↓
+6. 3000번: 데이터 Base64 인코딩 후 8070번으로 리다이렉트
+   const projectData = base64Encode(JSON.stringify(parsedProject));
+   redirect(`/entry/?auth=${authData}&project=${projectData}`);
+   ↓
+7. 8070번: 받은 데이터를 EntryJS에 로드
+   const project = JSON.parse(base64Decode(projectParam));
+   Entry.loadProject(project);
+```
+
+### 프로젝트 저장 플로우
+
+```
+1. 8070번: 사용자가 [저장] 버튼 클릭
+   ↓
+2. 8070번: Entry.exportProject()로 프로젝트 데이터 추출
+   const projectData = Entry.exportProject();
+   ↓
+3. 8070번: 3000번 서버로 저장 요청
+   POST /api/entry/save-project { projectData, fileName, metadata }
+   ↓
+4. 3000번: ENT 파일 생성 (tar 압축)
+   createEntFile(projectData, metadata) → /tmp/user_project.ent
+   ↓
+5. 3000번: S3에 업로드
+   aws s3 cp /tmp/user_project.ent s3://bucket/user-projects/
+   ↓
+6. 3000번: DB에 메타데이터 저장
+   INSERT INTO user_projects (userId, fileName, s3Url, metadata)
+   ↓
+7. 3000번: 성공 응답 반환
+   { success: true, s3Url, projectId }
+   ↓
+8. 8070번: 사용자에게 저장 완료 알림
+   Entry.toast.success('프로젝트가 저장되었습니다');
+```
+
+## 🛠️ 기술 스택
+
+### 3000번 서버 NPM 패키지
+
+```json
+{
+  "dependencies": {
+    "tar": "^6.1.15",           // ENT 파일(TAR) 생성/파싱
+    "aws-sdk": "^2.1691.0",     // AWS S3 연동
+    "uid": "^2.0.2",            // 파일 ID 생성
+    "puid": "^1.0.7",           // EntryJS 표준 ID 생성
+    "node-cron": "^3.0.2",      // 임시파일 정리 스케줄러
+    "mime-types": "^2.1.35"     // 파일 타입 검증
+  }
+}
+```
+
+### 8070번 서버 NPM 패키지
+
+```json
+{
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "axios": "^1.4.0"           // 3000번 서버 API 호출용
+  }
+}
+```
+
+## 🔧 핵심 구현 포인트
+
+### 1. ENT 파일 처리 (3000번 서버)
+
+```javascript
+// lib/entFileManager.js
+class EntFileManager {
+  // S3에서 ENT 파일 다운로드 후 파싱
+  async loadProjectFromS3(s3Url) {
+    const entBuffer = await this.downloadFromS3(s3Url);
+    const projectData = await this.parseEntFile(entBuffer);
+    return projectData;
+  }
+
+  // 프로젝트 데이터를 ENT 파일로 생성 후 S3 업로드
+  async saveProjectToS3(projectData, fileName) {
+    const entBuffer = await this.createEntFile(projectData);
+    const s3Url = await this.uploadToS3(entBuffer, fileName);
+    return s3Url;
+  }
+}
+```
+
+### 2. 프로젝트 로드 (8070번 서버)
+
+```javascript
+// js/projectLoader.mjs
+export class ProjectLoader {
+  constructor() {
+    this.baseUrl = window.EDUCODINGNPLAY_USER?.baseUrl;
+  }
+
+  // URL 파라미터에서 프로젝트 데이터 추출 및 로드
+  async loadFromUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectParam = urlParams.get('project');
+    
+    if (projectParam) {
+      try {
+        const projectData = JSON.parse(atob(projectParam));
+        await this.loadProject(projectData);
+        console.log('✅ 프로젝트 로드 완료:', projectData.name);
+      } catch (error) {
+        console.error('❌ 프로젝트 로드 실패:', error);
+        Entry.toast.alert('프로젝트 로드 실패', error.message);
+      }
+    }
+  }
+
+  // EntryJS에 프로젝트 로드
+  async loadProject(projectData) {
+    if (window.Entry && Entry.loadProject) {
+      Entry.loadProject(projectData);
+    }
+  }
+}
+```
+
+### 3. 프로젝트 저장 (8070번 서버)
+
+```javascript
+// js/projectSaver.mjs
+export class ProjectSaver {
+  constructor() {
+    this.baseUrl = window.EDUCODINGNPLAY_USER?.baseUrl;
+  }
+
+  // 현재 프로젝트를 3000번 서버로 저장 요청
+  async saveProject(fileName = '내 프로젝트') {
+    try {
+      const projectData = Entry.exportProject();
+      const userInfo = window.EDUCODINGNPLAY_USER;
+
+      const response = await fetch(`${this.baseUrl}/api/entry/save-project`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          projectData,
+          fileName,
+          metadata: {
+            title: fileName,
+            description: '',
+            category: 'user'
+          }
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        Entry.toast.success('저장 완료', '프로젝트가 성공적으로 저장되었습니다.');
+        return result;
+      } else {
+        throw new Error(result.message || '저장 실패');
+      }
+    } catch (error) {
+      console.error('❌ 프로젝트 저장 실패:', error);
+      Entry.toast.alert('저장 실패', error.message);
+      throw error;
+    }
+  }
+}
+```
+
+## 🔒 보안 및 성능
+
+### 보안 정책
+
+- **권한 관리**: 3000번 서버에서 모든 AWS/S3 접근 권한 통합 관리
+- **데이터 전달**: Base64 인코딩 + 타임스탬프 기반 토큰 검증
+- **파일 검증**: ENT 파일 구조 및 크기 검증 (최대 100MB)
+- **사용자 격리**: 사용자별 S3 경로 분리 (`/user-projects/{userID}/`)
+
+### 성능 최적화
+
+- **비동기 처리**: 모든 S3 작업 비동기 처리
+- **캐싱**: 자주 사용되는 프로젝트 임시 캐싱
+- **스트리밍**: 대용량 ENT 파일 스트리밍 다운로드
+- **자동 정리**: 임시 파일 30분 후 자동 삭제
+
+### 에러 처리
+
+```javascript
+// 주요 에러 시나리오 및 대응
+- S3 접근 권한 오류 → 사용자에게 관리자 문의 안내
+- ENT 파일 파싱 오류 → 기본 프로젝트로 대체 로드
+- 네트워크 오류 → 재시도 로직 (최대 3회)
+- 용량 초과 → 파일 크기 경고 및 압축 권장
+- 인증 만료 → 자동 로그인 페이지 리다이렉트
+```
+
+## 📋 구현 체크리스트
+
+### Phase 1: 프로젝트 로드 기능
+
+- [ ] **3000번 서버**
+  - [ ] entFileManager.js - ENT 파일 파싱 기능
+  - [ ] entryProjectRouter.js - 프로젝트 로드 API
+  - [ ] entryRouter.js 수정 - 8070번 리다이렉트 로직
+  - [ ] entry_project.ejs 수정 - 카드 클릭 이벤트
+
+- [ ] **8070번 서버**
+  - [ ] projectLoader.mjs - 프로젝트 로드 모듈
+  - [ ] app.mjs 수정 - 로더 통합
+  - [ ] index.html 수정 - 프로젝트 로드 UI
+
+### Phase 2: 프로젝트 저장 기능
+
+- [ ] **3000번 서버**
+  - [ ] entFileManager.js - ENT 파일 생성 기능
+  - [ ] 저장 API 구현
+  - [ ] DB 테이블 생성 (user_projects)
+
+- [ ] **8070번 서버**
+  - [ ] projectSaver.mjs - 프로젝트 저장 모듈
+  - [ ] 저장 UI 구현
+
+### Phase 3: 통합 테스트
+
+- [ ] 전체 플로우 테스트
+- [ ] 에러 시나리오 테스트
+- [ ] 성능 최적화
+- [ ] 사용자 피드백 수집
+
+---
+
+**📝 작성자**: AI Assistant  
+**📅 작성일**: 2025년 7월 30일  
+**🔄 최종 수정**: 2025년 7월 30일  
+**📊 상태**: 설계 완료  
+**🎯 환경**: AWS EC2 Ubuntu + Apache + Express (3000번 + 8070번)
+
+*이 명세서는 3000번-8070번 서버 분리 아키텍처에서 S3 ENT 파일 로드/저장 기능을 구현하기 위한 상세 가이드입니다.*

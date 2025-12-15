@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>컴퓨터 활용 - 개선 UI</title>
+
+  <!-- ✅ 가독성 좋은 한글 웹폰트 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- ✅ Bootstrap 및 아이콘 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
+
+  <!-- ✅ 기본 스타일 개선 -->
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: #1e1e1e;
+      background-color: #fafafa;
+      padding-bottom: 60px;
+    }
+
+    h1, h2, h3 {
+      font-weight: 700;
+    }
+
+    .nav-tabs .nav-link {
+      font-weight: 500;
+      font-size: 1.05rem;
+    }
+
+    .tab-content {
+      background: white;
+      padding: 20px;
+      border: 1px solid #dee2e6;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .container {
+      max-width: 960px;
+    }
+
+    /* 반응형 대응 */
+    @media (max-width: 768px) {
+      body {
+        font-size: 15px;
+      }
+
+      .nav-tabs .nav-link {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="bg-white shadow-sm py-3 mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+      <h1 class="h4 mb-0">컴퓨터 활용</h1>
+      <span class="text-muted">학습 시스템</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- 탭 네비게이션 -->
+    <ul class="nav nav-tabs" id="categoryTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab">
+          워드프로세서
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab2-tab" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab">
+          엑셀
+        </button>
+      </li>
+    </ul>
+
+    <!-- 탭 콘텐츠 -->
+    <div class="tab-content" id="content-container">
+      <div class="tab-pane fade show active" id="tab1" role="tabpanel">
+        <h2>워드프로세서 기초</h2>
+        <p>문서 작성을 위한 기본적인 타자, 서식, 문단 정렬 등을 배웁니다.</p>
+      </div>
+      <div class="tab-pane fade" id="tab2" role="tabpanel">
+        <h2>엑셀 활용</h2>
+        <p>표 계산, 함수 사용법, 데이터 시각화에 대해 배웁니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스크립트 -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+</body>
+</html>

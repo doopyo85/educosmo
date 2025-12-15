@@ -1,0 +1,632 @@
+🎯 통합 프로젝트 저장 시스템 아키텍처 설계
+📋 설계 철학
+핵심 원칙:
+
+플랫폼 독립적인 공통 레이어 - 모든 플랫폼이 동일한 API 사용
+플랫폼별 어댑터 패턴 - 각 플랫폼 특성에 맞는 처리
+3000번 중앙 집중식 관리 - 인증, 권한, DB, S3 통합
+8070/8601/8888은 클라이언트 역할 - 저장 로직은 3000번에 위임
+
+
+🏗️ 전체 아키텍처
+┌─────────────────────────────────────────────────────────┐
+│                   Client Side (각 포트)                  │
+├─────────────────────────────────────────────────────────┤
+│  8070 (Entry)    8601 (Scratch)    8888 (AppInventor)  │
+│      ↓                 ↓                    ↓           │
+│  projectSaver.js   scratchSaver.js   aiSaver.js        │
+│      ↓                 ↓                    ↓           │
+│      └─────────────────┴────────────────────┘           │
+│                        ↓                                │
+│           POST /api/projects/save (통합 API)            │
+└─────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────┐
+│              Server Side (3000번 통합)                   │
+├─────────────────────────────────────────────────────────┤
+│  routes/api/projectRouter.js (통합 라우터)              │
+│      ↓                                                   │
+│  lib_project/ProjectManager.js (공통 비즈니스 로직)     │
+│      ↓                                                   │
+│  lib_project/adapters/ (플랫폼별 어댑터)                │
+│      ├── EntryAdapter.js                                │
+│      ├── ScratchAdapter.js                              │
+│      └── AppInventorAdapter.js                          │
+│      ↓                                                   │
+│  lib_storage/s3Manager.js (S3 통합)                     │
+│  lib_storage/dbManager.js (DB 통합)                     │
+└─────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────┐
+│                   Storage Layer                          │
+├─────────────────────────────────────────────────────────┤
+│  S3: educodingnplaycontents/projects/                   │
+│      ├── entry/{userID}/                                │
+│      ├── scratch/{userID}/                              │
+│      └── appinventor/{userID}/                          │
+│                                                          │
+│  MySQL: ProjectSubmissions 테이블 (통합)                │
+└─────────────────────────────────────────────────────────┘
+
+📊 데이터베이스 스키마 (통일된 구조)
+sql-- 🔥 통합 프로젝트 제출 테이블
+CREATE TABLE ProjectSubmissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    center_id INT,
+    
+    -- 플랫폼 구분
+    platform ENUM('entry', 'scratch', 'appinventor', 'python', 'jupyter') NOT NULL,
+    
+    -- 프로젝트 정보
+    project_name VARCHAR(255) NOT NULL,
+    original_filename VARCHAR(255),
+    
+    -- 저장 타입
+    save_type ENUM('draft', 'final', 'autosave') DEFAULT 'draft',
+    
+    -- 파일 정보
+    s3_url VARCHAR(500) NOT NULL,
+    s3_key VARCHAR(500) NOT NULL,
+    file_size_kb INT,
+    
+    -- 플랫폼별 메타데이터 (JSON)
+    metadata JSON,
+    
+    -- 자동 분석 결과
+    complexity_score DECIMAL(5,2),
+    blocks_count INT,
+    
+    -- 타임스탬프
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- 인덱스
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    INDEX idx_user_platform (user_id, platform),
+    INDEX idx_save_type (save_type),
+    INDEX idx_created (created_at)
+);
+
+-- 🔥 학습 로그 연동 (기존 LearningLogs 확장)
+ALTER TABLE LearningLogs 
+ADD COLUMN project_submission_id INT,
+ADD FOREIGN KEY (project_submission_id) REFERENCES ProjectSubmissions(id);
+```
+
+---
+
+## 📁 파일 구조
+```
+educodingnplay/
+├── routes/
+│   └── api/
+│       └── projectRouter.js          # 🔥 통합 프로젝트 API 라우터
+│
+├── lib_project/                      # 🔥 신규 폴더
+│   ├── ProjectManager.js             # 공통 비즈니스 로직
+│   ├── ProjectValidator.js           # 입력 검증
+│   ├── ProjectAnalyzer.js            # 프로젝트 분석
+│   │
+│   └── adapters/                     # 플랫폼별 어댑터
+│       ├── BaseAdapter.js            # 추상 베이스 클래스
+│       ├── EntryAdapter.js           # Entry 전용
+│       ├── ScratchAdapter.js         # Scratch 전용
+│       ├── AppInventorAdapter.js     # AppInventor 전용
+│       ├── PythonAdapter.js          # Python 전용
+│       └── JupyterAdapter.js         # Jupyter 전용
+│
+├── lib_storage/                      # 기존 폴더 확장
+│   ├── s3Manager.js                  # S3 통합 관리
+│   └── dbManager.js                  # DB 통합 관리
+│
+└── entry/js/                         # 클라이언트 (8070)
+    └── projectSaver.js               # Entry 클라이언트
+
+🔧 핵심 코드 구조
+1. 통합 API 엔드포인트 (projectRouter.js)
+javascript// routes/api/projectRouter.js
+const express = require('express');
+const router = express.Router();
+const ProjectManager = require('../../lib_project/ProjectManager');
+const { authenticateUser } = require('../../lib_login/authMiddleware');
+
+// 🔥 모든 플랫폼 통합 저장 API
+router.post('/save', authenticateUser, async (req, res) => {
+    try {
+        const {
+            platform,        // 'entry', 'scratch', 'appinventor' 등
+            projectName,
+            projectData,
+            saveType,        // 'draft', 'final', 'autosave'
+            metadata         // 플랫폼별 추가 정보
+        } = req.body;
+
+        const userId = req.session.userID;
+        const centerId = req.session.centerID;
+
+        // 공통 매니저로 처리
+        const projectManager = new ProjectManager();
+        const result = await projectManager.saveProject({
+            platform,
+            projectName,
+            projectData,
+            saveType,
+            userId,
+            centerId,
+            metadata
+        });
+
+        res.json(result);
+        
+    } catch (error) {
+        console.error('프로젝트 저장 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// 🔥 목록 조회 (플랫폼별 필터링)
+router.get('/list', authenticateUser, async (req, res) => {
+    try {
+        const { platform, saveType } = req.query;
+        const userId = req.session.userID;
+
+        const projectManager = new ProjectManager();
+        const projects = await projectManager.listProjects({
+            userId,
+            platform,
+            saveType
+        });
+
+        res.json({ success: true, projects });
+        
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// 🔥 불러오기
+router.get('/load/:id', authenticateUser, async (req, res) => {
+    try {
+        const projectId = req.params.id;
+        const userId = req.session.userID;
+
+        const projectManager = new ProjectManager();
+        const project = await projectManager.loadProject(projectId, userId);
+
+        res.json({
+            success: true,
+            projectData: project.data,
+            metadata: project.metadata
+        });
+        
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// 🔥 삭제
+router.delete('/:id', authenticateUser, async (req, res) => {
+    try {
+        const projectId = req.params.id;
+        const userId = req.session.userID;
+
+        const projectManager = new ProjectManager();
+        await projectManager.deleteProject(projectId, userId);
+
+        res.json({ success: true });
+        
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+module.exports = router;
+
+2. 공통 비즈니스 로직 (ProjectManager.js)
+javascript// lib_project/ProjectManager.js
+const EntryAdapter = require('./adapters/EntryAdapter');
+const ScratchAdapter = require('./adapters/ScratchAdapter');
+const AppInventorAdapter = require('./adapters/AppInventorAdapter');
+const S3Manager = require('../lib_storage/s3Manager');
+const db = require('../lib_login/db');
+
+class ProjectManager {
+    constructor() {
+        this.adapters = {
+            entry: new EntryAdapter(),
+            scratch: new ScratchAdapter(),
+            appinventor: new AppInventorAdapter()
+        };
+        this.s3Manager = new S3Manager();
+    }
+
+    /**
+     * 🔥 통합 프로젝트 저장
+     */
+    async saveProject(options) {
+        const {
+            platform,
+            projectName,
+            projectData,
+            saveType,
+            userId,
+            centerId,
+            metadata
+        } = options;
+
+        // 1. 플랫폼별 어댑터 선택
+        const adapter = this.adapters[platform];
+        if (!adapter) {
+            throw new Error(`지원하지 않는 플랫폼: ${platform}`);
+        }
+
+        // 2. 플랫폼별 검증
+        await adapter.validate(projectData);
+
+        // 3. 플랫폼별 변환 (필요시)
+        const processedData = await adapter.process(projectData);
+
+        // 4. S3에 업로드
+        const s3Key = this.generateS3Key(platform, userId, projectName, saveType);
+        const s3Url = await this.s3Manager.uploadProject(
+            s3Key,
+            processedData,
+            adapter.getContentType()
+        );
+
+        // 5. 플랫폼별 분석 (복잡도, 블록 수 등)
+        const analysis = await adapter.analyze(projectData);
+
+        // 6. DB 저장
+        const submissionId = await this.saveToDatabase({
+            userId,
+            centerId,
+            platform,
+            projectName,
+            saveType,
+            s3Url,
+            s3Key,
+            fileSize: processedData.length,
+            metadata: {
+                ...metadata,
+                ...analysis
+            },
+            complexityScore: analysis.complexity,
+            blocksCount: analysis.blocks
+        });
+
+        // 7. LearningLogs 연동
+        await this.logLearningActivity(userId, centerId, platform, submissionId);
+
+        return {
+            success: true,
+            submissionId,
+            s3Url,
+            projectName,
+            analysis
+        };
+    }
+
+    /**
+     * 🔥 S3 키 생성 (통일된 규칙)
+     */
+    generateS3Key(platform, userId, projectName, saveType) {
+        const timestamp = Date.now();
+        const sanitized = projectName.replace(/[^a-zA-Z0-9가-힣_-]/g, '_');
+        return `projects/${platform}/${userId}/${sanitized}_${timestamp}.${this.getExtension(platform)}`;
+    }
+
+    getExtension(platform) {
+        const extensions = {
+            entry: 'ent',
+            scratch: 'sb3',
+            appinventor: 'aia',
+            python: 'py',
+            jupyter: 'ipynb'
+        };
+        return extensions[platform] || 'json';
+    }
+
+    /**
+     * 🔥 DB 저장
+     */
+    async saveToDatabase(data) {
+        const query = `
+            INSERT INTO ProjectSubmissions 
+            (user_id, center_id, platform, project_name, save_type, 
+             s3_url, s3_key, file_size_kb, metadata, 
+             complexity_score, blocks_count)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const result = await db.queryDatabase(query, [
+            data.userId,
+            data.centerId,
+            data.platform,
+            data.projectName,
+            data.saveType,
+            data.s3Url,
+            data.s3Key,
+            Math.round(data.fileSize / 1024),
+            JSON.stringify(data.metadata),
+            data.complexityScore,
+            data.blocksCount
+        ]);
+
+        return result.insertId;
+    }
+
+    /**
+     * 🔥 학습 로그 기록
+     */
+    async logLearningActivity(userId, centerId, platform, submissionId) {
+        const query = `
+            INSERT INTO LearningLogs 
+            (user_id, center_id, content_type, content_name, 
+             start_time, end_time, duration, project_submission_id)
+            VALUES (?, ?, ?, ?, NOW(), NOW(), 0, ?)
+        `;
+
+        await db.queryDatabase(query, [
+            userId,
+            centerId,
+            platform,
+            `${platform}_project_save`,
+            submissionId
+        ]);
+    }
+
+    /**
+     * 🔥 프로젝트 목록 조회
+     */
+    async listProjects(options) {
+        const { userId, platform, saveType } = options;
+
+        let query = `
+            SELECT 
+                id,
+                platform,
+                project_name,
+                save_type,
+                s3_url,
+                file_size_kb,
+                complexity_score,
+                blocks_count,
+                created_at,
+                updated_at
+            FROM ProjectSubmissions
+            WHERE user_id = ?
+        `;
+
+        const params = [userId];
+
+        if (platform) {
+            query += ` AND platform = ?`;
+            params.push(platform);
+        }
+
+        if (saveType) {
+            query += ` AND save_type = ?`;
+            params.push(saveType);
+        }
+
+        query += ` ORDER BY created_at DESC`;
+
+        return await db.queryDatabase(query, params);
+    }
+
+    /**
+     * 🔥 프로젝트 불러오기
+     */
+    async loadProject(projectId, userId) {
+        // 1. DB에서 메타데이터 조회
+        const [project] = await db.queryDatabase(
+            `SELECT * FROM ProjectSubmissions WHERE id = ? AND user_id = ?`,
+            [projectId, userId]
+        );
+
+        if (!project) {
+            throw new Error('프로젝트를 찾을 수 없습니다.');
+        }
+
+        // 2. S3에서 데이터 다운로드
+        const projectData = await this.s3Manager.downloadProject(project.s3_key);
+
+        // 3. 플랫폼별 어댑터로 후처리
+        const adapter = this.adapters[project.platform];
+        const processedData = await adapter.postProcess(projectData);
+
+        return {
+            data: processedData,
+            metadata: JSON.parse(project.metadata || '{}')
+        };
+    }
+
+    /**
+     * 🔥 프로젝트 삭제
+     */
+    async deleteProject(projectId, userId) {
+        // 1. DB 조회
+        const [project] = await db.queryDatabase(
+            `SELECT * FROM ProjectSubmissions WHERE id = ? AND user_id = ?`,
+            [projectId, userId]
+        );
+
+        if (!project) {
+            throw new Error('프로젝트를 찾을 수 없습니다.');
+        }
+
+        // 2. S3 삭제
+        await this.s3Manager.deleteProject(project.s3_key);
+
+        // 3. DB 삭제
+        await db.queryDatabase(
+            `DELETE FROM ProjectSubmissions WHERE id = ?`,
+            [projectId]
+        );
+    }
+}
+
+module.exports = ProjectManager;
+
+3. 어댑터 패턴 (BaseAdapter.js)
+javascript// lib_project/adapters/BaseAdapter.js
+class BaseAdapter {
+    /**
+     * 프로젝트 데이터 검증
+     */
+    async validate(projectData) {
+        throw new Error('validate() 메서드를 구현해야 합니다.');
+    }
+
+    /**
+     * 프로젝트 데이터 전처리
+     */
+    async process(projectData) {
+        throw new Error('process() 메서드를 구현해야 합니다.');
+    }
+
+    /**
+     * 프로젝트 분석
+     */
+    async analyze(projectData) {
+        throw new Error('analyze() 메서드를 구현해야 합니다.');
+    }
+
+    /**
+     * Content-Type 반환
+     */
+    getContentType() {
+        return 'application/json';
+    }
+
+    /**
+     * 프로젝트 데이터 후처리 (불러오기 시)
+     */
+    async postProcess(projectData) {
+        return projectData;
+    }
+}
+
+module.exports = BaseAdapter;
+
+4. Entry 어댑터 예시
+javascript// lib_project/adapters/EntryAdapter.js
+const BaseAdapter = require('./BaseAdapter');
+const JSZip = require('jszip');
+
+class EntryAdapter extends BaseAdapter {
+    async validate(projectData) {
+        if (!projectData || !projectData.objects) {
+            throw new Error('유효하지 않은 Entry 프로젝트 데이터입니다.');
+        }
+    }
+
+    async process(projectData) {
+        // Entry는 JSON으로 저장
+        return Buffer.from(JSON.stringify(projectData));
+    }
+
+    async analyze(projectData) {
+        const objects = projectData.objects || [];
+        const totalBlocks = objects.reduce((sum, obj) => {
+            return sum + (obj.script?.length || 0);
+        }, 0);
+
+        return {
+            complexity: this.calculateComplexity(totalBlocks),
+            blocks: totalBlocks,
+            sprites: objects.length,
+            variables: this.countVariables(projectData),
+            functions: this.countFunctions(projectData)
+        };
+    }
+
+    calculateComplexity(blocks) {
+        // 간단한 복잡도 계산
+        if (blocks < 10) return 1;
+        if (blocks < 30) return 2;
+        if (blocks < 50) return 3;
+        if (blocks < 100) return 4;
+        return 5;
+    }
+
+    countVariables(projectData) {
+        return projectData.variables?.length || 0;
+    }
+
+    countFunctions(projectData) {
+        return projectData.functions?.length || 0;
+    }
+
+    getContentType() {
+        return 'application/json';
+    }
+}
+
+module.exports = EntryAdapter;
+
+🌐 Apache 프록시 설정
+apache# /api/projects는 통합 프로젝트 API로
+ProxyPass /api/projects/ http://localhost:3000/api/projects/
+ProxyPassReverse /api/projects/ http://localhost:3000/api/projects/
+
+# 레거시 호환성 유지
+ProxyPass /api/entry-project/ http://localhost:3000/api/projects/
+ProxyPassReverse /api/entry-project/ http://localhost:3000/api/projects/
+
+🎨 클라이언트 사용 예시 (통일된 인터페이스)
+Entry (8070)
+javascriptawait fetch('/api/projects/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        platform: 'entry',
+        projectName: 'my_game',
+        projectData: Entry.exportProject(),
+        saveType: 'draft'
+    })
+});
+Scratch (8601)
+javascriptawait fetch('/api/projects/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        platform: 'scratch',
+        projectName: 'my_animation',
+        projectData: vm.saveProjectSb3(),
+        saveType: 'draft'
+    })
+});
+AppInventor (8888)
+javascriptawait fetch('/api/projects/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        platform: 'appinventor',
+        projectName: 'my_app',
+        projectData: aiaFileData,
+        saveType: 'final'
+    })
+});
+
+✅ 이 구조의 장점
+
+확장성: 새 플랫폼 추가 시 어댑터만 추가
+유지보수: 공통 로직 한 곳에서 관리
+일관성: 모든 플랫폼이 동일한 API 사용
+분석: 플랫폼 간 학습 데이터 비교 가능
+보안: 인증/권한이 3000번에서 통합 관리

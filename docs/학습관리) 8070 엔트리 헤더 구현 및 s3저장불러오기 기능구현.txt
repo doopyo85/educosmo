@@ -1,0 +1,136 @@
+8070 엔트리 헤더 구현 및 s3저장/불러오기 기능구현
+
+🎯 해결 방향 요약
+목표: 8070번 EntryJS 서버에 완전한 헤더/툴바 추가 + 3000번 서버 연동
+S3 구조: s3://bucket/users/{userID}/projects/{projectName}.ent 방식으로 사용자별 폴더 구성
+연동 방식: 8070번 ↔ 3000번 API 통신으로 저장/불러오기
+
+📁 S3 저장 구조 설계
+제안하는 S3 폴더 구조
+s3://educodingnplaycontents/
+├── ent/                           # 기존 교육용 ENT (그대로 유지)
+│   ├── cpe1-1a.ent
+│   └── cpe1-1b.ent
+└── users/                         # 신규: 사용자 작품 폴더
+    ├── {userID}/
+    │   ├── projects/
+    │   │   ├── 내첫작품.ent
+    │   │   ├── 게임프로젝트.ent
+    │   │   └── metadata.json      # 프로젝트 목록 정보
+    │   └── temp/                  # 임시 파일
+    └── shared/                    # 공유 작품
+        └── public/
+MySQL 사용자 프로젝트 테이블
+sqlCREATE TABLE user_projects (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id VARCHAR(255) NOT NULL,
+    project_name VARCHAR(255) NOT NULL,
+    s3_key VARCHAR(500) NOT NULL,           -- S3 경로
+    thumbnail_url VARCHAR(500),             -- 썸네일
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_public BOOLEAN DEFAULT FALSE,
+    INDEX idx_user_id (user_id)
+);
+
+🔧 코드 구현
+1. 8070번 서버 헤더 추가
+파일: /var/www/html/entry/index.html 수정EntryJS 워크스페이스 + 헤더대화형 아티팩트 2. 3000번 서버 API 엔드포인트 추가
+파일: /var/www/html/routes/api/entryUserProjectRouter.js (신규)사용자 프로젝트 API 라우터코드 const express = require('express');
+const router = express.Router();
+const AWS = require('@aws-sdk/client-s3');
+const tar = require('tar');
+const fs = require('fs/promises');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+
+// S재시도D이어서 계속 출력편집사용자 프로젝트 API 라우터코드 ∙ 버전 2 // 사용자 프로젝트 로드
+router.post('/load-user-project', async (req, res) => {
+    try {
+        const { userID, projectId } = req.body;
+        
+        if (!userID || !projectId) {
+            return res.status(400).json({ 
+                error: 'userID와 3. 3000번 서버 메인 라우터 연결
+파일: /var/www/html/routes/entryRouter.js 수정업데이트된 Entry 라우터코드 const express = require('express');
+const router = express.Router();
+const { authenticateUser, checkPageAccess } = require('../lib_login/authMiddleware');
+
+// 사용자 프로젝트 API 라우터 연결
+const userProjectRouter = require('./api/entryUserProjectRouter');
+rout4. MySQL 테이블 생성 스크립트사용자 프로젝트 테이블 생성코드 -- 사용자 프로젝트 테이블 생성
+CREATE TABLE IF NOT EXISTS user_projects (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id VARCHAR(255) NOT NULL,
+    project_name VARCHAR(255) NOT NULL,
+    s3_key VARCHAR(500) NOT NULL,
+    thumbnail_url VARCHAR(500),
+    desc5. 서버 배포 스크립트EntryJS 헤더 기능 배포 스크립트코드 #!/bin/bash
+
+echo "🚀 EntryJS 헤더 기능 배포 시작..."
+
+# 1. MySQL 테이블 생성
+echo "📊 MySQL 테이블 생성..."
+mysql -u root -p educodingnplay << 'EOF'
+-- 사용자 프로젝트 테이블 생성
+CREATE TABLE IF NOT EXISTS user_projects (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id VARCH
+🎯 배포 및 설정 가이드
+1. 단계별 배포
+bash# 1. 배포 스크립트 실행
+chmod +x deploy_script.sh
+./deploy_script.sh
+
+# 2. 수동으로 파일 내용 교체 (위의 아티팩트 코드들)
+# - /var/www/html/entry/index.html
+# - /var/www/html/routes/api/entryUserProjectRouter.js  
+# - /var/www/html/routes/entryRouter.js
+2. S3 권한 설정
+bash# IAM 사용자에 추가 권한 필요
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject", 
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::educodingnplaycontents/users/*"
+            ]
+        }
+    ]
+}
+3. 환경 변수 설정
+bash# .env 파일에 추가
+AWS_REGION=ap-northeast-2
+S3_BUCKET_NAME=educodingnplaycontents
+
+🔧 주요 기능 설명
+헤더 기능들
+
+새로만들기: 빈 프로젝트로 초기화
+불러오기: 사용자의 저장된 프로젝트 목록 → 선택 → 로드
+저장하기: 현재 프로젝트를 S3에 ENT 파일로 저장
+되돌리기/다시실행: EntryJS 기본 기능
+실행/정지: EntryJS 기본 기능
+
+S3 저장 구조
+s3://educodingnplaycontents/
+├── ent/                    # 기존 교육용 (변경 없음)
+└── users/                  # 신규 사용자 폴더
+    └── {userID}/
+        └── projects/
+            ├── 프로젝트1_timestamp.ent
+            └── 프로젝트2_timestamp.ent
+데이터베이스 연동
+
+MySQL: 프로젝트 메타데이터 저장
+S3: 실제 ENT 파일 저장
+사용자별 관리: userID 기반으로 완전 분리
+
+이제 완전한 EntryJS 웹 에디터가 구축됩니다! 테스트 후 문제가 있으면 알려주세요.

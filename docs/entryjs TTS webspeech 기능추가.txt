@@ -1,0 +1,319 @@
+EntryJS TTS(Text-To-Speech) 구현 명세서
+📋 프로젝트 개요
+프로젝트명: EntryJS Web Speech API TTS 통합 시스템
+목표: 8070번 EntryJS 서버에 TTS Router 연동 및 Web Speech API 활성화
+아키텍처: 3000번(API) + 8070번(EntryJS) 하이브리드 TTS 시스템
+작성일: 2025년 8월 2일
+상태: 🟡 구현 계획 수립 완료
+
+🎯 구현 목표
+✅ 기존 완료 사항
+
+3000번 서버 TTS API Router 구현 완료
+EntryJS Web Speech API 구현체 작성 완료
+8070번 EntryJS Base 서버 구축 완료
+
+🔧 구현 필요 사항
+
+8070번 서버에 TTS API Router 추가
+index.html에 TTS 스크립트 로드 추가
+app.mjs에 TTS 초기화 코드 통합
+EntryJS 블록과 Web Speech API 연동
+
+
+🏗️ 시스템 아키텍처
+🔄 TTS 요청 흐름
+EntryJS 블록 (8070번)
+       ↓
+Web Speech API 직접 실행
+       ↓
+브라우저 TTS 엔진
+       ↓
+스피커 출력
+🌐 API 요청 흐름 (백업용)
+EntryJS 블록 (8070번)
+       ↓
+/api/expansionBlock/tts/read.mp3
+       ↓ 
+8070번 TTS Router
+       ↓
+Web Speech API 명령 JSON 반환
+       ↓
+프론트엔드에서 Web Speech 실행
+
+📂 파일 구조 및 수정 계획
+🔧 수정 대상 파일
+educodingnplay/entry/
+├── server.js                    # 🔧 TTS Router 추가
+├── index.html                   # 🔧 TTS 스크립트 로드 추가
+├── js/
+│   ├── app.mjs                  # 🔧 TTS 초기화 코드 추가
+│   └── entryjs-webspeech-tts.js # ✅ 기존 유지
+└── package.json                 # 🔧 필요시 의존성 추가
+📋 구현 우선순위
+순서파일작업 내용예상 시간1server.jsTTS API Router 추가10분2index.htmlTTS 스크립트 로드5분3app.mjsTTS 초기화 통합15분4테스트전체 시스템 검증20분
+
+🔧 구체적 구현 계획
+Phase 1: 8070번 서버 TTS Router 추가
+📍 server.js 수정 사항
+1.1 TTS API 엔드포인트 추가
+javascript// EntryJS TTS 블록 API (3000번과 동일한 구조)
+app.get('/api/expansionBlock/tts/read.mp3', (req, res) => {
+    // Web Speech API 명령 JSON 반환
+});
+
+app.get('/api/tts/status', (req, res) => {
+    // TTS 상태 확인
+});
+
+app.post('/api/tts/test', (req, res) => {
+    // TTS 테스트
+});
+1.2 CORS 헤더 강화
+javascript// TTS API 전용 CORS 설정
+app.use('/api/tts/*', cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS']
+}));
+
+Phase 2: index.html 스크립트 로드
+📍 index.html 수정 사항
+2.1 TTS 스크립트 추가 위치
+html<!-- EntryJS 라이브러리 다음에 추가 -->
+<script src="./node_modules/@entrylabs/entry/dist/entry.js"></script>
+
+<!-- 🔥 TTS 스크립트 추가 -->
+<script src="./js/entryjs-webspeech-tts.js"></script>
+
+<script src="./lib/modal/dist/entry-modal.js"></script>
+<script type="module" src="./js/app.mjs"></script>
+2.2 Web Speech API 지원 체크
+html<script>
+// Web Speech API 지원 확인
+if (!('speechSynthesis' in window)) {
+    console.warn('⚠️ 이 브라우저는 Web Speech API를 지원하지 않습니다.');
+}
+</script>
+
+Phase 3: app.mjs TTS 초기화 통합
+📍 app.mjs 수정 사항
+3.1 TTS 초기화 함수 추가
+javascript// TTS 시스템 초기화
+function initializeTTSSystem() {
+    if (window.EntryJSWebSpeechTTS) {
+        console.log('🔊 EntryJS TTS 시스템 초기화 시작');
+        
+        // EntryJS 로드 완료 후 TTS 블록 교체
+        if (window.Entry && Entry.addEventListener) {
+            Entry.addEventListener('entryLoaded', () => {
+                window.EntryJSWebSpeechTTS.initializeEntryBlocks();
+            });
+        }
+    }
+}
+3.2 DOMContentLoaded 이벤트에 추가
+javascriptdocument.addEventListener('DOMContentLoaded', function() {
+    // 기존 초기화 코드...
+    
+    // TTS 시스템 초기화 추가
+    initializeTTSSystem();
+    
+    console.log('✅ EntryJS Base + TTS 초기화 완료!');
+});
+
+Phase 4: EntryJS 블록 연동 강화
+📍 entryjs-webspeech-tts.js 수정 사항
+4.1 EntryJS 블록 감지 개선
+javascript// EntryJS 블록 교체 함수 개선
+function replaceEntryTTSBlocks() {
+    if (!window.Entry || !Entry.block) {
+        console.warn('Entry.block이 아직 로드되지 않았습니다.');
+        setTimeout(replaceEntryTTSBlocks, 500); // 재시도
+        return;
+    }
+    
+    // 블록 교체 로직...
+}
+4.2 API 백업 연동
+javascript// Web Speech API 실패 시 서버 API 호출
+async function fallbackToServerAPI(text, voiceProps) {
+    try {
+        const response = await fetch('/api/expansionBlock/tts/read.mp3?' + 
+            new URLSearchParams({
+                text: text,
+                speed: voiceProps.speed || 0,
+                pitch: voiceProps.pitch || 0,
+                speaker: voiceProps.speaker || 'default',
+                volume: voiceProps.volume || 1
+            }));
+        
+        const result = await response.json();
+        if (result.success) {
+            // 서버에서 받은 명령으로 Web Speech 실행
+            executeWebSpeechCommand(result.command);
+        }
+    } catch (error) {
+        console.error('TTS API 백업 호출 실패:', error);
+    }
+}
+
+🧪 테스트 계획
+Phase 5: 단계별 테스트
+📋 5.1 기본 연결 테스트
+bash# 8070번 TTS API 테스트
+curl "http://localhost:8070/api/tts/status"
+
+# TTS 블록 API 테스트
+curl "http://localhost:8070/api/expansionBlock/tts/read.mp3?text=안녕하세요"
+📋 5.2 브라우저 기능 테스트
+
+ Web Speech API 지원 확인: 콘솔에서 speechSynthesis 객체 존재
+ TTS 스크립트 로드: window.EntryJSWebSpeechTTS 객체 생성
+ EntryJS 블록 교체: Entry.block.read_text 함수 교체 확인
+ 음성 재생 테스트: window.testEntryTTS() 함수 실행
+
+📋 5.3 EntryJS 워크스페이스 테스트
+
+ TTS 블록 추가: 인공지능 블록 → 읽어주기 블록 사용
+ 블록 실행: "안녕하세요" 텍스트 음성 재생
+ 속도/음높이 조절: TTS 속성 설정 블록 테스트
+ 대기 블록: 읽기 완료 후 다음 블록 실행 확인
+
+
+🔍 디버깅 도구
+개발자 콘솔 명령어
+javascript// TTS 시스템 상태 확인
+console.log('TTS 지원:', 'speechSynthesis' in window);
+console.log('TTS 객체:', window.EntryJSWebSpeechTTS);
+console.log('TTS 상태:', window.getEntryTTSStatus());
+
+// TTS 직접 테스트
+window.testEntryTTS('테스트 음성입니다');
+
+// EntryJS 블록 상태 확인
+console.log('read_text 블록:', Entry.block?.read_text);
+console.log('TTS 속성 블록:', Entry.block?.set_tts_property);
+
+// 사용 가능한 음성 목록
+speechSynthesis.getVoices().forEach((voice, i) => {
+    console.log(`${i}: ${voice.name} (${voice.lang})`);
+});
+로그 모니터링
+bash# 8070번 서버 로그 (PM2)
+pm2 logs entry-server --lines 50
+
+# 실시간 TTS 요청 모니터링
+pm2 logs entry-server | grep -E "(TTS|🔊)"
+
+# 브라우저 네트워크 탭에서 TTS API 호출 확인
+# /api/expansionBlock/tts/read.mp3 요청 상태 체크
+
+🚨 예상 문제점 및 해결책
+⚠️ 예상 이슈
+1. Web Speech API 브라우저 호환성
+문제: 일부 브라우저에서 Web Speech API 미지원
+해결책:
+
+브라우저 감지 및 안내 메시지 표시
+서버 API 백업 시스템 활용
+Polyfill 라이브러리 검토
+
+2. EntryJS 블록 교체 타이밍
+문제: Entry 객체 로드 전에 블록 교체 시도
+해결책:
+
+Entry.addEventListener('entryLoaded') 이벤트 활용
+재시도 메커니즘 구현
+타이머 기반 지연 로드
+
+3. 음성 재생 권한 문제
+문제: 브라우저 자동재생 정책으로 인한 차단
+해결책:
+
+사용자 상호작용 후 TTS 활성화
+권한 요청 안내 표시
+대체 알림 시스템
+
+4. 한국어 음성 품질
+문제: 브라우저별 한국어 TTS 품질 차이
+해결책:
+
+최적 음성 자동 선택 알고리즘
+사용자 음성 선택 옵션 제공
+품질 피드백 수집
+
+
+📊 성능 지표
+✅ 완료 기준
+기능성공 조건측정 방법API 응답200ms 이내 응답curl 테스트음성 재생1초 이내 시작브라우저 타이머블록 교체100% 성공률콘솔 로그 확인메모리 사용20MB 이하 추가개발자 도구
+📈 품질 목표
+
+음성 명료도: 한국어 발음 정확도 90% 이상
+응답 속도: TTS 시작까지 평균 500ms 이하
+안정성: 연속 재생 시 오류율 5% 이하
+호환성: Chrome, Edge, Firefox, Safari 지원
+
+
+📅 구현 일정
+Day 1: 핵심 구현 (2시간)
+
+09:00-09:30: Phase 1 - server.js TTS Router 추가
+09:30-10:00: Phase 2 - index.html 스크립트 로드
+10:00-10:30: Phase 3 - app.mjs TTS 초기화
+10:30-11:00: Phase 4 - 블록 연동 강화
+
+Day 1: 테스트 및 검증 (1시간)
+
+11:00-11:20: Phase 5 - 기본 연결 테스트
+11:20-11:40: 브라우저 기능 테스트
+11:40-12:00: EntryJS 워크스페이스 테스트
+
+Day 2: 최적화 및 안정화 (1시간)
+
+09:00-09:30: 성능 최적화 및 버그 수정
+09:30-10:00: 문서화 및 배포 준비
+
+
+🔗 참고 자료
+기술 문서
+
+Web Speech API MDN
+EntryJS 인공지능 블록 문서
+Speech Synthesis 브라우저 호환성
+
+기존 구현 파일
+
+routes/api/ttsRouter.js - 3000번 서버 TTS API
+entry/js/entryjs-webspeech-tts.js - Web Speech API 구현체
+entryjs 인공지능블록.txt - EntryJS TTS 블록 명세
+
+관련 명세서
+
+educodingnplay컴포넌트시스템아키텍처명세서.txt
+entryjs핵심api.txt
+entryjs Base 통합명세서.txt
+
+
+📞 연락처 및 지원
+🛠️ 개발 도구
+
+서버 모니터링: pm2 monit
+로그 분석: pm2 logs entry-server
+API 테스트: curl, Postman
+브라우저 디버깅: Chrome DevTools
+
+🔄 롤백 계획
+bash# TTS 기능 비활성화 (긴급시)
+# index.html에서 entryjs-webspeech-tts.js 스크립트 주석 처리
+# server.js에서 TTS API 라우터 주석 처리
+
+# 서버 재시작
+pm2 restart entry-server
+
+📝 작성자: AI Assistant
+📅 작성일: 2025년 8월 2일
+🔄 최종 수정: 2025년 8월 2일
+📊 상태: 구현 계획 수립 완료
+🎯 목표: EntryJS TTS 시스템 완전 통합
+
+이 명세서는 8070번 EntryJS 서버에 TTS Router를 통합하여 Web Speech API 기반의 완전한 TTS 시스템을 구축하기 위한 상세 가이드입니다.

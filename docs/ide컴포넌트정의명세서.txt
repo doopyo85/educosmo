@@ -1,0 +1,268 @@
+# IDE 컴포넌트 시스템 명세서
+
+## 📋 개요
+
+본 문서는 educodingnplay 프로젝트의 IDE 컴포넌트 시스템의 전체 구조와 파일별 역할을 정의합니다.
+
+## 🏗️ 전체 아키텍처
+
+```
+IDE Component System
+├── 🎯 Main Controller (IDEComponent.js)
+├── 📝 Code Editor Module (CodeEditor.js + 보조 모듈들)
+├── 🖥️ Terminal Module (Terminal.js + 보조 모듈들)
+├── 🎨 CSS Styling (3개 모듈 + 통합 파일)
+└── 📄 HTML Template (template.ejs)
+```
+
+---
+
+## 📁 파일 구조 및 역할
+
+### 🎯 **메인 컨트롤러**
+
+#### `public/js/components/ide/IDEComponent.js`
+**역할**: IDE 전체 시스템의 중앙 관리자
+- **주요 기능**:
+  - CodeEditor와 Terminal 모듈 초기화 및 생명주기 관리
+  - EventBus를 통한 모듈 간 통신 중재
+  - 공통 API 인터페이스 제공 (`getCurrentCode`, `setCode`, `runCode` 등)
+  - 컴포넌트 활성화/비활성화 관리
+- **의존성**: CodeEditor.js, Terminal.js, EventBus
+- **패턴**: Facade Pattern (복잡한 내부 구조를 단순한 API로 노출)
+
+---
+
+### 📝 **코드 편집 모듈**
+
+#### `public/js/components/ide/CodeEditor.js`
+**역할**: 코드 편집 환경 전담
+- **주요 기능**:
+  - ACE 에디터 초기화 및 VSCode 테마 적용
+  - ACE ↔ Jupyter 모드 전환
+  - 정답 코드 가져오기 및 표시 (`/api/get-answer-code` 호출)
+  - Python 자동완성 설정
+  - 에디터 크기 조정 및 이벤트 처리
+- **상태 관리**: 현재 문제, 에디터 모드, 초기화 상태
+- **통신**: EventBus publish로 터미널에 메시지 전달
+
+#### `public/js/components/ide/PythonAutoCompleter.js`
+**역할**: Python 코드 자동완성 기능
+- **주요 기능**:
+  - ACE 에디터에 Python 키워드/함수 자동완성 추가
+  - 거터 너비 강제 설정
+  - 자동완성 팝업 스타일링
+- **연동**: CodeEditor.js에서 초기화 시 호출
+
+---
+
+### 🖥️ **터미널 모듈**
+
+#### `public/js/components/ide/Terminal.js`
+**역할**: Python 실행 및 터미널 출력 관리
+- **주요 기능**:
+  - 일반/대화형 Python 코드 실행
+  - `/api/run-python` API 호출
+  - 터미널 출력 스타일링 및 관리
+  - 하위 모듈 통합 관리 (TerminalInput, TerminalResize)
+- **상태 관리**: 실행 상태, 대화형 모드, 세션 ID
+- **통신**: EventBus subscribe로 에디터 이벤트 수신
+
+#### `public/js/components/ide/TerminalInput.js`
+**역할**: 터미널 사용자 입력 처리
+- **주요 기능**:
+  - `input()` 함수 감지 및 입력 UI 생성
+  - 대화형 Python 실행 지원
+  - 입력값 검증 및 서버 전송
+- **API 연동**: `/python/api/resume-python` 호출
+
+#### `public/js/components/ide/TerminalResize.js`
+**역할**: 터미널 크기 조정 및 레이아웃 관리
+- **주요 기능**:
+  - 드래그 앤 드롭으로 터미널 높이 조정
+  - 터미널 최대화/복원 기능
+  - 키보드 접근성 지원 (화살표 키)
+  - 설정값 localStorage 저장
+- **이벤트**: 리사이즈 핸들 (`#ide-resize-handle`) 드래그 처리
+
+---
+
+### 🎨 **CSS 스타일링**
+
+#### `public/css/common-ide.css`
+**역할**: IDE CSS 모듈 통합 관리자
+```css
+@import url('./ide/ide-core.css');     /* 기본 변수, 컨테이너, 레이아웃 */
+@import url('./ide/ide-editor.css');   /* 툴바, ACE 에디터, 버튼 */
+@import url('./ide/ide-terminal.css'); /* 터미널, 출력, 입력 처리 */
+```
+
+#### `public/css/ide/ide-core.css`
+**역할**: IDE 기본 변수, 컨테이너, 레이아웃
+- **VSCode 색상 변수 정의**: `.ide-container` 스코프로 격리
+- **기본 레이아웃**: 에디터 70% + 터미널 30% 분할
+- **리사이즈 핸들**: 6px 높이, 드래그 커서, 호버 효과
+- **터미널 최대화**: `.maximized` 클래스 상태 관리
+- **반응형 디자인**: 모바일/태블릿 대응
+
+#### `public/css/ide/ide-editor.css`
+**역할**: 코드 에디터 관련 스타일
+- **툴바 스타일**: 60px 높이, VSCode 색상
+- **ACE 에디터**: 14px 폰트, VSCode 테마
+- **거터**: 60px 너비, 중앙 정렬, 13px 폰트
+- **Python 구문 강조**: 키워드, 문자열, 주석 색상
+- **자동완성 팝업**: VSCode 스타일 드롭다운
+- **Jupyter 컨테이너**: iframe 스타일링
+
+#### `public/css/ide/ide-terminal.css`
+**역할**: 터미널 출력 및 입력 스타일
+- **터미널 버튼**: 8px gap, 12px 폰트
+- **출력 메시지**: 색상별 스타일 (success, error, warning 등)
+- **터미널 입력**: 투명 배경, 13px 폰트
+- **스크롤바**: 8px 너비, VSCode 스타일
+
+---
+
+### 📄 **HTML 템플릿**
+
+#### `views/template.ejs`
+**역할**: IDE 컴포넌트 HTML 구조 정의
+- **CSS 로드 순서**: 
+  ```html
+  /css/common-ide.css → /css/components/ide.css
+  ```
+- **스크립트 로드**: IDE 모듈들을 컴포넌트 시스템보다 먼저 로드
+- **HTML 구조**:
+  ```html
+  <div id="ide-component" class="ide-container">
+    <div class="code-editor-top-bar">     /* 툴바 */
+    <div id="ace-editor-inner">           /* 에디터 컨테이너 */
+      <div class="editor-area">           /* 에디터 영역 */
+      <div id="ide-resize-handle">        /* 리사이즈 핸들 */
+      <div class="output-container">      /* 터미널 영역 */
+  ```
+
+---
+
+## 🔄 동작 흐름
+
+### 1. 초기화 과정
+```
+template.ejs 로드 
+→ CSS 파일들 순차 로드 
+→ JS 모듈들 로드 
+→ IDEComponent.init() 
+→ CodeEditor.init() + Terminal.init() 
+→ 하위 모듈들 초기화 
+→ EventBus 리스너 설정
+```
+
+### 2. 코드 실행 흐름
+```
+사용자 클릭 (#runCodeBtn) 
+→ Terminal.runCode() 
+→ CodeEditor.getCurrentCode() 호출 
+→ /api/run-python POST 요청 
+→ 결과를 Terminal.appendToOutput()으로 출력
+```
+
+### 3. 리사이즈 흐름
+```
+사용자 드래그 (#ide-resize-handle) 
+→ TerminalResize.handleResizeStart() 
+→ mousemove 이벤트로 setTerminalHeight() 
+→ CSS flex 속성 동적 변경 
+→ ACE 에디터 resize() 트리거
+```
+
+### 4. 정답 보기 흐름
+```
+교사 클릭 (#showAnswerBtn) 
+→ CodeEditor.showAnswer() 
+→ /api/get-answer-code?examName&problemNumber 
+→ 응답을 ACE 에디터에 setValue() 
+→ EventBus로 터미널에 성공 메시지 전송
+```
+
+---
+
+## 🔧 API 연동
+
+### 서버 API 엔드포인트
+- **`POST /api/run-python`**: 일반 Python 코드 실행
+- **`POST /python/api/run-python-interactive`**: 대화형 Python 실행
+- **`POST /python/api/resume-python`**: 입력값으로 Python 실행 재개
+- **`GET /api/get-answer-code`**: 정답 코드 가져오기
+- **`GET /api/jupyter-auth-direct`**: Jupyter 인증 및 URL 획득
+
+### 응답 형식
+```javascript
+// Python 실행 응답
+{
+  success: boolean,
+  output: string,
+  error: string,
+  warning?: string,
+  needsInput?: boolean,
+  prompt?: string,
+  sessionId?: string
+}
+```
+
+---
+
+## 🎛️ 이벤트 시스템
+
+### EventBus 이벤트 목록
+- **`editor:resize`**: 에디터 크기 조정 요청
+- **`editor:getCode`**: 현재 코드 가져오기 요청
+- **`editor:codeResponse`**: 코드 응답
+- **`terminal:output`**: 터미널 출력 추가
+- **`terminal:resumeExecution`**: Python 실행 재개
+- **`terminal:cancelExecution`**: 실행 취소
+
+---
+
+## 🔍 디버깅 가이드
+
+### 1. 터미널이 보이지 않는 경우
+- **확인 파일**: `ide-core.css` → `.output-container` 강제 표시 규칙
+- **HTML 확인**: `template.ejs` → `#ide-resize-handle` ID 존재 여부
+
+### 2. 리사이즈가 작동하지 않는 경우
+- **확인 파일**: `TerminalResize.js` → `init()` 메서드 호출 여부
+- **HTML 확인**: 리사이즈 핸들에 `id="ide-resize-handle"` 있는지
+
+### 3. 코드 실행이 안 되는 경우
+- **네트워크**: 브라우저 개발자 도구에서 `/api/run-python` 요청 확인
+- **확인 파일**: `Terminal.js` → `runCode()` 메서드 로직
+
+### 4. 폰트 크기가 이상한 경우
+- **확인 파일**: `ide-editor.css`, `ide-terminal.css` → font-size 설정값
+- **우선순위**: `!important` 규칙 충돌 여부
+
+---
+
+## 📋 체크리스트
+
+### IDE 컴포넌트 정상 작동 확인
+- [ ] 터미널 영역이 200px 높이로 표시
+- [ ] 리사이즈 핸들 드래그로 터미널 크기 조정 가능
+- [ ] 코드 실행 버튼 클릭 시 Python 코드 실행
+- [ ] 터미널에 실행 결과 출력
+- [ ] 거터 줄번호가 중앙 정렬
+- [ ] 모든 폰트 크기가 VSCode 수준 (13-14px)
+- [ ] 최대화 버튼으로 터미널 전체화면 전환
+- [ ] 정답보기 버튼 (교사권한) 정상 작동
+
+---
+
+###. 파일 명명 규칙 표준화
+
+문제 파일: cospro_1-7_p01.html (p = problem)
+
+예제 파일: cospro_1-7_e01.py (e = example/기본코드)
+
+정답 파일: cospro_1-7_a01.py (a = answer)
+
+해설 파일: cospro_1-7_s01.md (s = solution)

@@ -1,0 +1,1288 @@
+📁 S3 탐색기 모듈 기능 명세서
+프로젝트명: educodingnplay - 통합 S3 파일 관리 시스템
+작성일: 2025년 1월 3일
+버전: 1.0
+작성자: AI Assistant & 개발팀
+
+📋 목차
+
+개요
+시스템 아키텍처
+사용자 역할 및 권한
+주요 기능
+UI/UX 설계
+API 명세
+파일 구조
+데이터베이스
+보안
+향후 개선사항
+
+
+1. 개요
+1.1 프로젝트 목적
+educodingnplay 플랫폼에서 학생, 교사, 관리자가 AWS S3에 저장된 학습 자료 및 프로젝트 파일을 효율적으로 관리할 수 있는 통합 파일 탐색기 시스템 구축
+1.2 핵심 가치
+
+역할 기반 접근 제어: 7단계 권한 시스템으로 데이터 보안 강화
+사용자 격리: 학생별 독립된 폴더 구조로 개인정보 보호
+직관적 UI: Windows 탐색기 스타일의 친숙한 인터페이스
+플랫폼 통합: Entry, Scratch 에디터와 원클릭 연동
+
+1.3 기술 스택
+구분기술FrontendJavaScript (ES6+), Bootstrap 5, Bootstrap IconsBackendNode.js, Express.jsStorageAWS S3DatabaseMySQL (사용자 정보)SessionRedis (세션 저장소)AuthenticationExpress Session + JWT
+
+2. 시스템 아키텍처
+2.1 전체 구조도
+┌─────────────────────────────────────────────────────┐
+│                   Client Layer                      │
+│  ┌──────────────────────────────────────────────┐   │
+│  │  Header Component (내 파일 아이콘)            │   │
+│  │  └─ 역할별 자동 경로 분기                    │   │
+│  └──────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────┐   │
+│  │  S3Explorer Component (JavaScript Class)     │   │
+│  │  • 폴더 트리 (왼쪽)                          │   │
+│  │  • 파일 목록 (오른쪽)                        │   │
+│  │  • Breadcrumb 네비게이션                     │   │
+│  │  • 드래그 앤 드롭 업로드                     │   │
+│  └──────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────┘
+                        ↕ HTTP/HTTPS
+┌─────────────────────────────────────────────────────┐
+│                  Server Layer (Express)             │
+│  ┌──────────────────────────────────────────────┐   │
+│  │  s3Router.js (통합 라우터)                   │   │
+│  │  • GET /s3/browser (공통)                    │   │
+│  │  • GET /s3/my-files (학생)                   │   │
+│  │  • GET /s3/student-files (교사)              │   │
+│  └──────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────┐   │
+│  │  apiRouter.js (S3 API)                       │   │
+│  │  • GET /api/s3/browse                        │   │
+│  │  • GET /api/s3/download                      │   │
+│  │  • POST /api/s3/upload                       │   │
+│  │  • DELETE /api/s3/delete                     │   │
+│  └──────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────┘
+                        ↕ AWS SDK
+┌─────────────────────────────────────────────────────┐
+│                  Storage Layer                      │
+│  ┌──────────────────────────────────────────────┐   │
+│  │  AWS S3 Bucket                               │   │
+│  │  educodingnplaycontents                      │   │
+│  │                                              │   │
+│  │  users/                                      │   │
+│  │  ├── student1/                               │   │
+│  │  │   ├── entry/draft/                        │   │
+│  │  │   ├── entry/final/                        │   │
+│  │  │   ├── scratch/draft/                      │   │
+│  │  │   └── scratch/final/                      │   │
+│  │  └── student2/...                            │   │
+│  │                                              │   │
+│  │  sb3/ (공유 스크래치 파일)                   │   │
+│  │  ent/ (공유 엔트리 파일)                     │   │
+│  └──────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────┘
+```
+
+### 2.2 데이터 흐름
+```
+1. 사용자 클릭 "내 파일" 아이콘
+   ↓
+2. header.ejs → openMyFiles() 함수 실행
+   ↓
+3. 역할별 경로 자동 선택
+   • admin → /s3/browser
+   • teacher → /s3/student-files
+   • student → /s3/my-files
+   ↓
+4. s3Router.js → 역할 검증 및 설정
+   ↓
+5. s3-browser.ejs 렌더링 (모달 iframe)
+   ↓
+6. S3Explorer.js 초기화
+   • scope, enableDelete 자동 설정
+   • 초기 경로 로드
+   ↓
+7. GET /api/s3/browse?prefix=users/student1/
+   ↓
+8. AWS S3 ListObjectsV2Command 실행
+   ↓
+9. 파일/폴더 목록 반환 (JSON)
+   ↓
+10. S3Explorer → UI 렌더링
+
+3. 사용자 역할 및 권한
+3.1 권한 매트릭스
+역할접근 범위업로드삭제Entry/Scratch 열기Root 접근admin전체 (all)✅✅✅✅manager센터 학생 (center)✅✅✅❌teacher센터 학생 (center)✅✅✅❌student본인 (self)✅✅✅❌school소속 학생 (center)❌❌✅❌kinder소속 학생 (center)❌❌✅❌guest접근 불가❌❌❌❌
+3.2 초기 경로 설정
+javascript// s3Router.js - 역할별 자동 설정
+switch(role) {
+  case 'admin':
+    scope = 'all';
+    enableDelete = true;
+    초기경로 = '';  // Root부터 시작
+    break;
+    
+  case 'manager':
+  case 'teacher':
+    scope = 'center';
+    enableDelete = true;
+    초기경로 = 'users/';  // users 폴더부터
+    break;
+    
+  case 'student':
+    scope = 'self';
+    enableDelete = true;
+    초기경로 = `users/${userID}/`;  // 본인 폴더만
+    break;
+    
+  case 'school':
+  case 'kinder':
+    scope = 'center';
+    enableDelete = false;  // 조회만 가능
+    초기경로 = 'users/';
+    break;
+    
+  default:
+    // guest는 접근 차단
+    return 403 Forbidden;
+}
+3.3 경로 접근 제어
+javascript// S3Explorer.js - isPathAllowed()
+isPathAllowed(path) {
+  // Admin은 모든 경로 허용
+  if (this.config.userRole === 'admin') {
+    return true;
+  }
+  
+  // Root 경로 차단 (비admin)
+  if (!path || path === '' || path === '/') {
+    return false;
+  }
+  
+  // Teacher/Manager: users/ 하위만
+  if (['teacher', 'manager'].includes(this.config.userRole)) {
+    return path.startsWith('users/');
+  }
+  
+  // Student: 본인 폴더만
+  if (this.config.userRole === 'student') {
+    return path.startsWith(`users/${this.config.userID}/`);
+  }
+  
+  return false;
+}
+```
+
+---
+
+## 4. 주요 기능
+
+### 4.1 파일 탐색 기능
+
+#### 4.1.1 폴더 트리 (좌측)
+
+**기능:**
+- 현재 경로의 하위 폴더 목록 표시
+- 빈 폴더 표시 (회색 "(비어있음)" 뱃지)
+- 한글 폴더명 디코딩 지원
+
+**UI:**
+```
+📁 폴더
+├── 📁 entry
+├── 📁 scratch
+├── 📁 portfolio (비어있음)
+└── 📁 gallery
+코드:
+javascriptrenderFolderTree(folders) {
+  container.innerHTML = folders.map(folder => {
+    const displayName = decodeURIComponent(folder.name);
+    const emptyBadge = folder.isEmpty ? 
+      ' <small class="text-muted">(비어있음)</small>' : '';
+    
+    return `
+      <div class="folder-item" 
+           onclick="window.s3Explorer.loadFolder('${folder.fullPath}')">
+        <span class="folder-icon">📁</span>
+        <span class="folder-name">${displayName}${emptyBadge}</span>
+      </div>
+    `;
+  }).join('');
+}
+4.1.2 파일 목록 (우측)
+기능:
+
+파일명, 크기, 수정일, 액션 표시
+정렬 기능 (이름/크기/날짜)
+한글 파일명 디코딩 지원
+ENT/SB3 파일 클릭 시 에디터 자동 열기
+
+테이블 구조:
+이름크기수정일삭제🎨 1-1 완성코드.ent1.2 MB오늘 14:30🗑️🐱 게임프로젝트.sb3850 KB어제 10:15🗑️
+정렬 기능:
+javascriptsortBy(field) {
+  if (this.sortOptions.field === field) {
+    // 같은 필드 클릭 시 오름차순/내림차순 토글
+    this.sortOptions.order = this.sortOptions.order === 'asc' ? 'desc' : 'asc';
+  } else {
+    // 다른 필드 선택 시 오름차순으로 초기화
+    this.sortOptions.field = field;
+    this.sortOptions.order = 'asc';
+  }
+  this.loadFolder(this.currentPath);
+}
+```
+
+#### 4.1.3 Breadcrumb 네비게이션
+
+**기능:**
+- 현재 경로를 `/` 구분자로 표시
+- 클릭 시 해당 경로로 이동
+- Root 경로는 비admin 사용자에게 숨김
+
+**예시:**
+```
+Admin:    Root > users > student1 > entry > draft
+Teacher:  users > student1 > entry > draft
+Student:  entry > draft
+코드:
+javascriptrenderBreadcrumbs(breadcrumbs) {
+  let filteredBreadcrumbs = breadcrumbs;
+  
+  // 비admin은 Root 숨김
+  if (!this.canAccessRoot) {
+    filteredBreadcrumbs = breadcrumbs.filter((crumb, idx) => {
+      if (idx === 0 && (!crumb.path || crumb.path === '')) {
+        return false;
+      }
+      return true;
+    });
+  }
+  
+  return filteredBreadcrumbs.map((crumb, idx) => {
+    const displayName = decodeURIComponent(crumb.name);
+    
+    if (idx === filteredBreadcrumbs.length - 1) {
+      return `<span class="current">${displayName}</span>`;
+    }
+    return `<a href="#" onclick="window.s3Explorer.navigateTo('${crumb.path}')">${displayName}</a>`;
+  }).join(' > ');
+}
+```
+
+### 4.2 파일 업로드 기능
+
+#### 4.2.1 드래그 앤 드롭
+
+**기능:**
+- 전체 페이지 드래그 앤 드롭 지원
+- 오버레이 UI 표시
+- 최대 10개 파일, 100MB 제한
+
+**사용자 흐름:**
+```
+1. 파일을 S3 탐색기 영역으로 드래그
+   ↓
+2. 파란색 오버레이 표시
+   "📤 파일을 드롭하세요"
+   ↓
+3. 파일 드롭
+   ↓
+4. 자동 업로드 시작
+   ↓
+5. 완료 후 새로고침
+코드:
+javascriptsetupDragAndDrop() {
+  const mainContent = document.getElementById('mainContent');
+  const overlay = document.getElementById('drag-drop-overlay');
+  let dragCounter = 0;
+  
+  mainContent.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    if (dragCounter === 1) {
+      overlay.style.display = 'flex';
+    }
+  });
+  
+  mainContent.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    overlay.style.display = 'none';
+    
+    const files = e.dataTransfer.files;
+    this.uploadDroppedFiles(files);
+  });
+}
+```
+
+#### 4.2.2 버튼 업로드
+
+**기능:**
+- "📤 업로드" 버튼 클릭
+- 모달 팝업으로 파일 선택
+- 미리보기 및 개별 파일 제거 가능
+
+**모달 구조:**
+```
+┌─────────────────────────────────────┐
+│ 📤 파일 업로드                  [X] │
+├─────────────────────────────────────┤
+│  ┌───────────────────────────────┐  │
+│  │ 📂 파일을 드래그하거나 클릭   │  │
+│  │    최대 100MB, 10개 파일      │  │
+│  │ 📌 업로드 위치: users/student1│  │
+│  └───────────────────────────────┘  │
+│                                     │
+│  선택된 파일:                       │
+│  🎨 파일1.ent  1.2MB  [X]           │
+│  🐱 파일2.sb3  850KB  [X]           │
+│                                     │
+│  [━━━━━━━━━━━━━] 0%                 │
+├─────────────────────────────────────┤
+│               [취소] [업로드]       │
+└─────────────────────────────────────┘
+API 호출:
+javascriptasync startUpload() {
+  const formData = new FormData();
+  this.selectedUploadFiles.forEach(file => {
+    formData.append('files', file);
+  });
+  formData.append('folder', this.currentPath);
+  
+  const response = await fetch('/api/s3/upload', {
+    method: 'POST',
+    body: formData
+  });
+  
+  const data = await response.json();
+  
+  if (data.success) {
+    this.showSuccess('업로드 완료');
+    this.refresh();
+  }
+}
+```
+
+### 4.3 파일 삭제 기능
+
+**기능:**
+- 🗑️ 삭제 버튼 클릭
+- 확인 다이얼로그
+- S3에서 파일 영구 삭제
+
+**사용자 흐름:**
+```
+1. 🗑️ 버튼 클릭
+   ↓
+2. "정말 삭제하시겠습니까?" 확인
+   ↓
+3. [확인] 클릭
+   ↓
+4. DELETE /api/s3/delete?key=...
+   ↓
+5. S3에서 파일 삭제
+   ↓
+6. "삭제되었습니다." 메시지
+   ↓
+7. 파일 목록 새로고침
+코드:
+javascriptasync deleteFile(key) {
+  if (!confirm('정말 삭제하시겠습니까?')) return;
+  
+  const response = await fetch(`/api/s3/delete?key=${encodeURIComponent(key)}`, {
+    method: 'DELETE'
+  });
+  
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.error);
+  }
+  
+  this.showSuccess('삭제되었습니다.');
+  this.refresh();
+}
+4.4 Entry/Scratch 통합
+4.4.1 파일 클릭 시 자동 열기
+지원 확장자:
+확장자동작URL 파라미터.entEntry 에디터 새 탭s3Url, userID, role.sb2, .sb3Scratch 에디터 새 탭project_file기타클릭 불가-
+Entry 열기:
+javascriptasync openInEntry(key) {
+  // S3 직접 URL 생성
+  const s3Url = `https://educodingnplaycontents.s3.amazonaws.com/${key}`;
+  
+  // Entry 에디터 URL
+  const userID = this.config.userID || 'guest';
+  const userRole = this.config.userRole || 'student';
+  const entryUrl = `/entry_editor/?s3Url=${encodeURIComponent(s3Url)}&userID=${userID}&role=${userRole}`;
+  
+  window.open(entryUrl, '_blank');
+}
+```
+
+**생성 URL 예시:**
+```
+https://app.codingnplay.co.kr/entry_editor/
+  ?s3Url=https%3A%2F%2Feducodingnplaycontents.s3.amazonaws.com%2Fusers%2Fdoopyo%2Fentry%2Fdraft%2F1-1%20%EC%99%84%EC%84%B1%EC%BD%94%EB%93%9C.ent
+  &userID=doopyo
+  &role=admin
+Scratch 열기:
+javascriptasync openInScratch(key) {
+  // S3 직접 URL 생성
+  const s3Url = `https://educodingnplaycontents.s3.amazonaws.com/${key}`;
+  
+  // Scratch URL
+  const scratchUrl = `/scratch/?project_file=${encodeURIComponent(s3Url)}`;
+  
+  window.open(scratchUrl, '_blank');
+}
+```
+
+**생성 URL 예시:**
+```
+https://app.codingnplay.co.kr/scratch/
+  ?project_file=https%3A%2F%2Feducodingnplaycontents.s3.amazonaws.com%2Fsb3%2Fcps1-1a.sb2
+```
+
+---
+
+## 5. UI/UX 설계
+
+### 5.1 레이아웃 구조
+```
+┌──────────────────────────────────────────────────────────┐
+│ 📂 Root > users > student1 > entry > draft   [🔄 새로고침] │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌─────────────┐  ┌─────────────────────────────────┐   │
+│  │ 📁 폴더     │  │ 파일 목록                     │   │
+│  ├─────────────┤  ├─────────────────────────────────┤   │
+│  │ 📁 entry    │  │ 이름 ▼ | 크기 | 수정일 | 삭제 │   │
+│  │ 📁 scratch  │  ├─────────────────────────────────┤   │
+│  │ 📁 gallery  │  │ 🎨 파일1.ent | 1MB | 오늘 | 🗑️  │   │
+│  │             │  │ 🐱 파일2.sb3 | 2MB | 어제 | 🗑️  │   │
+│  │             │  │                                 │   │
+│  │             │  │                                 │   │
+│  └─────────────┘  └─────────────────────────────────┘   │
+│                                                          │
+│  📌 20개 항목                    [📤 업로드] [🗑️ 삭제]   │
+└──────────────────────────────────────────────────────────┘
+5.2 색상 및 아이콘
+파일 아이콘 매핑:
+javascriptconst icons = {
+  'ent': '🎨',      // Entry
+  'sb3': '🐱',      // Scratch
+  'sb2': '🐱',      // Scratch 2.0
+  'png': '🖼️',     // 이미지
+  'jpg': '🖼️',
+  'pdf': '📄',      // 문서
+  'zip': '📦',      // 압축
+  'mp4': '🎬',      // 비디오
+  'html': '🌐',     // 웹
+  'js': '📜',       // 스크립트
+  'json': '📋'      // 데이터
+};
+상태 색상:
+
+🟢 성공: #28a745
+🔴 오류: #dc3545
+🟡 경고: #ffc107
+🔵 정보: #007bff
+
+5.3 반응형 디자인
+브레이크포인트:
+
+Desktop: >= 1200px - 3열 레이아웃
+Tablet: 768px ~ 1199px - 2열 레이아웃
+Mobile: < 768px - 1열 레이아웃 (폴더 트리 숨김)
+
+
+6. API 명세
+6.1 파일 탐색 API
+GET /api/s3/browse
+설명: 지정된 경로의 폴더 및 파일 목록 조회
+파라미터:
+이름타입필수설명prefixstring✅S3 경로 (예: users/student1/)platformstring❌플랫폼 필터 (entry, scratch 등)
+응답 (성공):
+json{
+  "success": true,
+  "breadcrumbs": [
+    { "name": "Root", "path": "" },
+    { "name": "users", "path": "users/" },
+    { "name": "student1", "path": "users/student1/" }
+  ],
+  "folders": [
+    {
+      "name": "entry",
+      "fullPath": "users/student1/entry/",
+      "isEmpty": false
+    },
+    {
+      "name": "scratch",
+      "fullPath": "users/student1/scratch/",
+      "isEmpty": true
+    }
+  ],
+  "files": [
+    {
+      "key": "users/student1/entry/파일.ent",
+      "name": "%ED%8C%8C%EC%9D%BC.ent",
+      "size": 1234567,
+      "sizeFormatted": "1.18 MB",
+      "lastModified": "2025-01-03T10:30:00.000Z",
+      "icon": "🎨"
+    }
+  ]
+}
+응답 (리다이렉트):
+json{
+  "success": true,
+  "redirect": true,
+  "redirectPath": "users/student1/",
+  "message": "본인 폴더로 리다이렉트합니다."
+}
+응답 (오류):
+json{
+  "success": false,
+  "error": "접근 권한이 없습니다."
+}
+```
+
+### 6.2 파일 다운로드 API
+
+#### GET `/api/s3/download`
+
+**설명:** S3 파일 다운로드 (브라우저 자동 다운로드)
+
+**파라미터:**
+| 이름 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `key` | string | ✅ | S3 객체 키 (예: `users/student1/file.ent`) |
+
+**응답:** 파일 스트림 (Content-Disposition: attachment)
+
+**예시:**
+```
+GET /api/s3/download?key=users/student1/entry/draft/파일.ent
+
+HTTP/1.1 200 OK
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="파일.ent"
+Content-Length: 1234567
+
+[Binary Data]
+6.3 파일 업로드 API
+POST /api/s3/upload
+설명: 다중 파일 업로드
+Content-Type: multipart/form-data
+파라미터:
+이름타입필수설명filesFile[]✅업로드할 파일들 (최대 10개)folderstring✅대상 폴더 경로
+요청 예시:
+httpPOST /api/s3/upload
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="파일.ent"
+Content-Type: application/octet-stream
+
+[Binary Data]
+------WebKitFormBoundary
+Content-Disposition: form-data; name="folder"
+
+users/student1/entry/draft/
+------WebKitFormBoundary--
+응답 (성공):
+json{
+  "success": true,
+  "message": "2개 파일 업로드 완료",
+  "uploadedFiles": [
+    {
+      "key": "users/student1/entry/draft/파일1.ent",
+      "size": 1234567
+    },
+    {
+      "key": "users/student1/entry/draft/파일2.ent",
+      "size": 987654
+    }
+  ]
+}
+응답 (오류):
+json{
+  "success": false,
+  "error": "파일 크기가 100MB를 초과합니다."
+}
+6.4 파일 삭제 API
+DELETE /api/s3/delete
+설명: S3 파일 삭제 (영구 삭제)
+파라미터:
+이름타입필수설명keystring✅삭제할 S3 객체 키
+요청 예시:
+httpDELETE /api/s3/delete?key=users/student1/entry/draft/파일.ent
+**재시도D계속응답 (성공):**
+json{
+  "success": true,
+  "message": "파일이 삭제되었습니다.",
+  "deletedKey": "users/student1/entry/draft/파일.ent"
+}
+응답 (오류):
+json{
+  "success": false,
+  "error": "삭제 권한이 없습니다."
+}
+6.5 미리보기 API
+GET /api/s3/preview
+설명: 이미지 파일 미리보기 (Base64 데이터 URL 반환)
+파라미터:
+이름타입필수설명keystring✅S3 객체 키
+응답 (성공):
+json{
+  "success": true,
+  "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...",
+  "contentType": "image/png"
+}
+응답 (오류):
+json{
+  "success": false,
+  "error": "미리보기를 지원하지 않는 파일 형식입니다."
+}
+```
+
+---
+
+## 7. 파일 구조
+
+### 7.1 프로젝트 디렉토리 구조
+```
+educodingnplay/
+├── routes/
+│   ├── s3Router.js                    # 🔥 통합 S3 라우터
+│   ├── apiRouter.js                   # S3 API 엔드포인트
+│   ├── adminRouter.js                 # Admin 대시보드
+│   ├── teacherRouter.js               # Teacher 대시보드
+│   └── ...
+│
+├── views/
+│   ├── partials/
+│   │   └── header.ejs                 # 🔥 "내 파일" 아이콘 포함
+│   ├── common/
+│   │   └── s3-browser.ejs             # S3 탐색기 템플릿
+│   ├── admin/
+│   │   └── dashboard.ejs              # Admin 대시보드
+│   └── teacher/
+│       └── student-files.ejs          # Teacher 파일 관리
+│
+├── public/
+│   ├── js/
+│   │   └── components/
+│   │       └── S3Explorer.js          # 🔥 S3 탐색기 클라이언트
+│   ├── css/
+│   │   └── admin/
+│   │       └── s3-browser.css         # S3 탐색기 스타일
+│   └── resource/
+│       └── profiles/
+│           └── default.webp           # 기본 프로필 이미지
+│
+├── lib_login/
+│   ├── auth.js                        # 인증 모듈
+│   ├── permissions.js                 # 권한 관리
+│   └── authMiddleware.js              # 인증 미들웨어
+│
+├── server.js                          # 🔥 메인 서버 (캐치올 라우트 수정)
+├── config.js                          # 환경 설정
+└── .env                               # 환경 변수 (AWS 키)
+7.2 핵심 파일 상세
+7.2.1 routes/s3Router.js (통합 라우터)
+역할: 역할별 S3 브라우저 접근 통합 관리
+주요 기능:
+
+✅ 역할 검증 및 자동 설정
+✅ scope, enableDelete 자동 할당
+✅ 3가지 엔드포인트 제공
+
+코드 구조:
+javascriptconst express = require('express');
+const router = express.Router();
+const { authenticateUser } = require('../lib_login/authMiddleware');
+
+/**
+ * GET /s3/browser (공통)
+ * 역할별 자동 설정
+ */
+router.get('/browser', authenticateUser, (req, res) => {
+  const { userID, role, centerID } = req.session;
+  
+  let config = {
+    userID, role, centerID,
+    pageTitle: 'S3 파일 관리'
+  };
+  
+  // 🎯 역할별 scope, enableDelete 설정
+  switch(role) {
+    case 'admin':
+      config.scope = 'all';
+      config.enableDelete = true;
+      break;
+    case 'manager':
+    case 'teacher':
+      config.scope = 'center';
+      config.enableDelete = true;
+      break;
+    case 'student':
+      config.scope = 'self';
+      config.enableDelete = true;
+      break;
+    default:
+      return res.status(403).json({ error: '접근 권한이 없습니다.' });
+  }
+  
+  res.render('common/s3-browser', config);
+});
+
+/**
+ * GET /s3/my-files (학생 전용)
+ */
+router.get('/my-files', authenticateUser, (req, res) => {
+  if (req.session.role !== 'student') {
+    return res.redirect('/s3/browser');
+  }
+  
+  res.render('common/s3-browser', {
+    userID: req.session.userID,
+    role: req.session.role,
+    centerID: req.session.centerID,
+    pageTitle: '내 파일 관리',
+    scope: 'self',
+    enableDelete: true
+  });
+});
+
+/**
+ * GET /s3/student-files (교사 전용)
+ */
+router.get('/student-files', authenticateUser, (req, res) => {
+  const allowedRoles = ['admin', 'teacher', 'manager'];
+  
+  if (!allowedRoles.includes(req.session.role)) {
+    return res.status(403).send('교사 권한이 필요합니다.');
+  }
+  
+  res.render('common/s3-browser', {
+    userID: req.session.userID,
+    role: req.session.role,
+    centerID: req.session.centerID,
+    pageTitle: '학생 파일 관리',
+    scope: req.session.role === 'admin' ? 'all' : 'center',
+    enableDelete: true
+  });
+});
+
+module.exports = router;
+7.2.2 views/partials/header.ejs (헤더 컴포넌트)
+역할: 전역 네비게이션 및 "내 파일" 아이콘 제공
+주요 기능:
+
+✅ 역할별 메뉴 표시
+✅ "내 파일" 아이콘 클릭 → 모달 열기
+✅ 역할별 자동 경로 분기
+
+핵심 코드:
+html<!-- 내 파일 아이콘 (전체 사용자) -->
+<div class="board-notification-wrapper">
+    <button class="board-icon-btn" onclick="openMyFiles()" title="내 파일 관리">
+        <i class="bi bi-folder-fill"></i>
+    </button>
+    <div class="board-tooltip">내 파일</div>
+</div>
+
+<!-- 내 파일 모달 (전체화면 iframe) -->
+<div class="modal fade" id="myFilesModal" tabindex="-1">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <iframe id="myFilesFrame" 
+                        src="" 
+                        style="width: 100%; height: 100%; border: none;">
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * 🔥 내 파일 모달 열기 (역할별 자동 경로 선택)
+ */
+function openMyFiles() {
+    const userRole = '<%= role %>';
+    const modal = new bootstrap.Modal(document.getElementById('myFilesModal'));
+    const iframe = document.getElementById('myFilesFrame');
+    
+    // 역할별 경로 자동 선택
+    let s3Path;
+    
+    if (userRole === 'admin') {
+        s3Path = '/s3/browser';  // Admin은 전체 탐색
+    } else if (userRole === 'teacher' || userRole === 'manager') {
+        s3Path = '/s3/student-files';  // Teacher는 학생 파일
+    } else if (userRole === 'student') {
+        s3Path = '/s3/my-files';  // Student는 본인 파일만
+    } else {
+        s3Path = '/s3/browser';  // 기본값
+    }
+    
+    console.log('📂 S3 경로:', s3Path, '(역할:', userRole, ')');
+    iframe.src = s3Path;
+    
+    modal.show();
+}
+
+// 모달 닫을 때 iframe 초기화
+document.getElementById('myFilesModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('myFilesFrame').src = '';
+});
+</script>
+7.2.3 public/js/components/S3Explorer.js (클라이언트)
+역할: S3 파일 탐색 UI 렌더링 및 API 호출
+클래스 구조:
+javascriptclass S3Explorer {
+  constructor(config) {
+    this.config = {
+      containerId,       // 렌더링할 컨테이너 ID
+      apiEndpoint,       // API 엔드포인트
+      scope,             // 접근 범위 (all/center/self)
+      rootPath,          // 초기 경로
+      enableUpload,      // 업로드 가능 여부
+      enableDelete,      // 삭제 가능 여부
+      userID,            // 사용자 ID
+      userRole           // 사용자 역할
+    };
+    
+    this.currentPath = '';           // 현재 경로
+    this.allowedBasePath = '';       // 허용된 기본 경로
+    this.canAccessRoot = false;      // Root 접근 가능 여부
+    this.sortOptions = { field: 'name', order: 'asc' };
+    
+    this.init();
+  }
+  
+  // 🔥 핵심 메서드
+  async init() { ... }                     // 초기화
+  setInitialPath() { ... }                 // 역할별 초기 경로 설정
+  renderLayout() { ... }                   // UI 레이아웃 렌더링
+  async loadFolder(path) { ... }          // 폴더 로드
+  renderBreadcrumbs(breadcrumbs) { ... }   // Breadcrumb 렌더링
+  renderFolderTree(folders) { ... }        // 폴더 트리 렌더링
+  renderFileList(files) { ... }            // 파일 목록 렌더링
+  sortFiles(files) { ... }                 // 파일 정렬
+  isPathAllowed(path) { ... }              // 경로 접근 권한 확인
+  
+  // 파일 작업
+  async download(key) { ... }              // 다운로드
+  async deleteFile(key) { ... }            // 삭제
+  async openInEntry(key) { ... }           // Entry에서 열기
+  async openInScratch(key) { ... }         // Scratch에서 열기
+  
+  // 업로드
+  setupDragAndDrop() { ... }               // 드래그 앤 드롭 설정
+  showUploadModal() { ... }                // 업로드 모달
+  async uploadDroppedFiles(files) { ... }  // 드롭된 파일 업로드
+  async startUpload() { ... }              // 업로드 시작
+  
+  // 유틸리티
+  formatDate(dateString) { ... }           // 날짜 포맷팅
+  formatFileSize(bytes) { ... }            // 파일 크기 포맷팅
+  getFileIcon(fileName) { ... }            // 파일 아이콘 반환
+  showLoading(show) { ... }                // 로딩 표시
+  showError(message) { ... }               // 에러 메시지
+  showSuccess(message) { ... }             // 성공 메시지
+}
+
+// 전역 인스턴스
+window.S3Explorer = S3Explorer;
+초기화 예시:
+javascript// views/common/s3-browser.ejs
+window.s3Explorer = new S3Explorer({
+  containerId: 's3-browser',
+  apiEndpoint: '/api/s3/browse',
+  scope: '<%= scope %>',
+  rootPath: '',
+  userID: '<%= userID %>',
+  userRole: '<%= role %>',
+  enableUpload: <%= enableDelete %>,  // 업로드/삭제 권한 동일
+  enableDelete: <%= enableDelete %>,
+  enablePreview: true
+});
+7.2.4 server.js (메인 서버 - 캐치올 라우트 수정)
+문제: 기존 캐치올 라우트가 /s3/* 경로를 가로채서 index.ejs 렌더링
+해결: S3 경로 예외 처리 추가
+수정 코드:
+javascript// 캐치올 라우트 (가장 마지막)
+app.get('*', (req, res, next) => {
+  const reqPath = req.path.toLowerCase();
+  
+  const staticExtensions = ['.js', '.css', '.png', ...];
+  const staticPaths = ['/js/', '/css/', '/resource/', ...];
+  
+  const isStaticFile = staticExtensions.some(ext => reqPath.endsWith(ext));
+  const isStaticPath = staticPaths.some(path => reqPath.startsWith(path));
+  const isApiRequest = reqPath.startsWith('/api/');
+  
+  // 🔥 S3 라우터 예외 처리
+  const isS3Route = reqPath.startsWith('/s3/');
+  
+  if (isStaticFile || isStaticPath) {
+    return res.status(404).send('File not found');
+  }
+  
+  if (isApiRequest) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  // 🔥 S3 경로는 404 반환 (라우터에서 처리)
+  if (isS3Route) {
+    console.log('❌ S3 라우트 처리 실패:', reqPath);
+    return res.status(404).json({ error: 'S3 route not found' });
+  }
+  
+  // 인증 확인
+  if (!req.session || !req.session.is_logined) {
+    return res.redirect('/auth/login');
+  }
+  
+  // 일반 페이지는 index.ejs로
+  res.render('index', { ... });
+});
+```
+
+### 7.3 AWS S3 폴더 구조
+```
+educodingnplaycontents/
+├── users/                              # 사용자별 격리 폴더
+│   ├── student1/
+│   │   ├── entry/
+│   │   │   ├── draft/                 # 임시 저장
+│   │   │   │   ├── 1-1 완성코드.ent
+│   │   │   │   └── 프로젝트1.ent
+│   │   │   └── final/                 # 최종 제출
+│   │   │       └── 최종작품.ent
+│   │   ├── scratch/
+│   │   │   ├── draft/
+│   │   │   │   ├── 게임1.sb3
+│   │   │   │   └── 애니메이션.sb3
+│   │   │   └── final/
+│   │   │       └── 게임완성.sb3
+│   │   ├── portfolio/                 # 포트폴리오
+│   │   │   └── 작품모음.zip
+│   │   └── gallery/                   # 갤러리
+│   │       ├── 이미지1.png
+│   │       └── 이미지2.jpg
+│   │
+│   ├── student2/
+│   │   └── ... (동일 구조)
+│   │
+│   └── teacher1/                      # 교사도 동일 구조
+│       └── ...
+│
+├── sb3/                                # 공유 스크래치 템플릿
+│   ├── cps1-1a.sb2
+│   ├── cps1-1e1.sb3
+│   └── ...
+│
+├── ent/                                # 공유 엔트리 템플릿
+│   ├── cpe1-1a.ent
+│   ├── cpe1-2a.ent
+│   └── ...
+│
+├── resource/                           # 공통 리소스
+│   ├── images/
+│   ├── sounds/
+│   └── backgrounds/
+│
+└── uploads/                            # 기타 업로드 파일
+    └── ...
+
+8. 데이터베이스
+8.1 Users 테이블
+설명: 사용자 정보 및 권한 관리
+구조:
+sqlCREATE TABLE Users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userID VARCHAR(255) UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    name VARCHAR(255),
+    phone VARCHAR(20),
+    birthdate DATE,
+    role ENUM('admin', 'kinder', 'school', 'manager', 'teacher', 'student', 'guest') NOT NULL,
+    centerID INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    profile_image VARCHAR(255) DEFAULT '/resource/profiles/default.webp',
+    last_board_visit TIMESTAMP,
+    
+    INDEX idx_role (role),
+    INDEX idx_centerID (centerID),
+    FOREIGN KEY (centerID) REFERENCES Centers(id) ON DELETE SET NULL
+);
+역할별 사용자 수 (예시):
+역할사용자 수admin5manager20teacher150student3,500Total3,675
+8.2 LearningLogs 테이블
+설명: 학습 활동 로그 (향후 S3 파일 활동 추적 가능)
+구조:
+sqlCREATE TABLE LearningLogs (
+    learning_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content_type VARCHAR(50),              -- 'entry', 'scratch', 's3_file' 등
+    content_name VARCHAR(255),
+    start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_time TIMESTAMP,
+    duration INT,                          -- 초 단위
+    progress INT,                          -- 진도율 (%)
+    center_id INT,
+    
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    INDEX idx_user_content (user_id, content_type),
+    INDEX idx_center (center_id)
+);
+S3 파일 활동 추적 예시 (향후 구현):
+sqlINSERT INTO LearningLogs (user_id, content_type, content_name, center_id)
+VALUES (123, 's3_upload', 'users/student1/entry/draft/프로젝트.ent', 11);
+
+INSERT INTO LearningLogs (user_id, content_type, content_name, center_id)
+VALUES (123, 's3_open_entry', 'users/student1/entry/draft/프로젝트.ent', 11);
+8.3 UserActivityLogs 테이블
+설명: 사용자 활동 로그 (S3 접근 기록 포함)
+구조:
+sqlCREATE TABLE UserActivityLogs (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    center_id INT,
+    action_type VARCHAR(50) NOT NULL,      -- 'GET', 'POST', 'DELETE'
+    action_detail TEXT,                    -- 'S3 파일 업로드', 'S3 파일 삭제' 등
+    url VARCHAR(255),                      -- '/s3/browser', '/api/s3/upload' 등
+    ip_address VARCHAR(45),
+    user_agent VARCHAR(255),
+    status VARCHAR(20),                    -- 'success', 'error'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    INDEX idx_user_action (user_id, action_type),
+    INDEX idx_created (created_at)
+);
+S3 활동 로그 예시:
+sql-- S3 브라우저 접근
+INSERT INTO UserActivityLogs (user_id, center_id, action_type, url, status)
+VALUES (123, 11, 'GET', '/s3/my-files', 'success');
+
+-- 파일 업로드
+INSERT INTO UserActivityLogs (user_id, center_id, action_type, action_detail, url, status)
+VALUES (123, 11, 'POST', 'S3 파일 업로드: 2개', '/api/s3/upload', 'success');
+
+-- 파일 삭제
+INSERT INTO UserActivityLogs (user_id, center_id, action_type, action_detail, url, status)
+VALUES (123, 11, 'DELETE', 'S3 파일 삭제: file.ent', '/api/s3/delete', 'success');
+8.4 센터별 통계 쿼리 예시
+sql-- 센터별 S3 사용량 통계
+SELECT 
+    u.centerID,
+    COUNT(DISTINCT u.id) AS total_users,
+    COUNT(DISTINCT CASE WHEN ual.url LIKE '/s3/%' THEN ual.user_id END) AS s3_active_users,
+    COUNT(CASE WHEN ual.action_type = 'POST' AND ual.url = '/api/s3/upload' THEN 1 END) AS total_uploads,
+    COUNT(CASE WHEN ual.action_type = 'DELETE' AND ual.url = '/api/s3/delete' THEN 1 END) AS total_deletes
+FROM Users u
+LEFT JOIN UserActivityLogs ual ON ual.user_id = u.id
+WHERE u.role = 'student'
+GROUP BY u.centerID;
+
+9. 보안
+9.1 인증 및 권한
+9.1.1 세션 기반 인증
+설정:
+javascript// server.js
+app.use(session({
+  store: new RedisStore({ client: redisClient }),
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false,           // HTTPS 환경에서는 true
+    httpOnly: true,
+    sameSite: 'lax',
+    domain: '.codingnplay.co.kr',
+    maxAge: 3600000          // 1시간
+  }
+}));
+인증 미들웨어:
+javascriptconst authenticateUser = (req, res, next) => {
+  const token = req.cookies.token;
+  
+  if (token) {
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+      if (err) {
+        return res.status(401).json({ error: '유효하지 않은 토큰' });
+      }
+      req.user = user;
+      next();
+    });
+  } else if (req.session && req.session.is_logined) {
+    next();
+  } else {
+    res.status(401).json({ error: '로그인이 필요합니다.' });
+  }
+};
+9.1.2 경로 접근 제어
+서버사이드 검증:
+javascript// s3Router.js
+router.get('/browser', authenticateUser, (req, res) => {
+  // 역할 검증
+  if (!req.session.role) {
+    return res.status(403).json({ error: '권한이 없습니다.' });
+  }
+  
+  // guest는 접근 차단
+  if (req.session.role === 'guest') {
+    return res.status(403).json({ error: '로그인이 필요합니다.' });
+  }
+  
+  // 역할별 설정
+  // ...
+});
+클라이언트사이드 검증:
+javascript// S3Explorer.js
+isPathAllowed(path) {
+  // Admin은 모든 경로 허용
+  if (this.config.userRole === 'admin') {
+    return true;
+  }
+  
+  // Root 차단
+  if (!path || path === '') {
+    return false;
+  }
+  
+  // Student는 본인 폴더만
+  if (this.config.userRole === 'student') {
+    const allowedPath = `users/${this.config.userID}/`;
+    return path.startsWith(allowedPath);
+  }
+  
+  // Teacher/Manager는 users/ 하위만
+  if (['teacher', 'manager'].includes(this.config.userRole)) {
+    return path.startsWith('users/');
+  }
+  
+  return false;
+}
+9.2 AWS S3 보안
+9.2.1 IAM 권한 설정
+필요 권한:
+json{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": "arn:aws:s3:::educodingnplaycontents"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::educodingnplaycontents/*"
+    }
+  ]
+}
+9.2.2 S3 버킷 정책
+CORS 설정:
+json[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["GET", "HEAD", "PUT", "POST", "DELETE"],
+    "AllowedOrigins": [
+      "https://app.codingnplay.co.kr",
+      "https://cosmoedu.co.kr"
+    ],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3000
+  }
+]
+```
+
+**버킷 암호화:**
+```
+기본 암호화: AES-256 (SSE-S3)
+9.3 파일 업로드 보안
+9.3.1 파일 크기 제한
+javascript// S3Explorer.js
+async uploadDroppedFiles(files) {
+  const fileArray = Array.from(files);
+  
+  // 파일 개수 검증
+  if (fileArray.length > 10) {
+    this.showError('한 번에 최대 10개 파일까지 업로드 가능');
+    return;
+  }
+  
+  // 파일 크기 검증
+  const maxSize = 100 * 1024 * 1024; // 100MB
+  const oversized = fileArray.filter(f => f.size > maxSize);
+  if (oversized.length > 0) {
+    this.showError(`파일 크기 초과: ${oversized.map(f => f.name).join(', ')}`);
+    return;
+  }
+  
+  // ...
+}
+9.3.2 파일 타입 검증
+javascript// 서버사이드 검증
+const allowedExtensions = [
+  '.ent', '.sb2', '.sb3',        // 프로젝트 파일
+  '.png', '.jpg', '.jpeg', '.gif', '.webp',  // 이미지
+  '.pdf', '.zip',                // 문서/압축
+  '.html', '.js', '.json'        // 웹 파일
+];
+
+const ext = path.extname(file.originalname).toLowerCase();
+if (!allowedExtensions.includes(ext)) {
+  throw new Error('지원하지 않는 파일 형식입니다.');
+}
+9.3.3 파일명 안전화
+javascript// 특수문자 제거 및 UTF-8 인코딩
+function sanitizeFileName(fileName) {
+  return fileName
+    .replace(/[^\w\s가-힣.-]/g, '')  // 특수문자 제거
+    .replace(/\s+/g, '_')            // 공백 → 언더스코어
+    .substring(0, 100);              // 최대 100자
+}
+9.4 XSS 및 CSRF 방어
+9.4.1 XSS 방어
+파일명 HTML 이스케이프:
+javascriptfunction escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+// 사용
+const safeFileName = escapeHtml(decodeURIComponent(file.name));
+CSP 헤더:
+javascriptres.setHeader("Content-Security-Policy", 
+  "default-src 'self'; " +
+  "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+  "img-src 'self' https://educodingnplaycontents.s3.amazonaws.com data:; " +
+  "connect-src 'self' https://educodingnplaycontents.s3.amazonaws.com"
+);
+9.4.2 CSRF 방어

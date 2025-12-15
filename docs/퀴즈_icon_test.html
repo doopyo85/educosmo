@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz 아이콘 선택</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .icon-card {
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: white;
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .icon-card:hover {
+            border-color: #0d6efd;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .icon-card.selected {
+            border-color: #0d6efd;
+            background-color: #e7f1ff;
+        }
+        .icon-display {
+            font-size: 3rem;
+            color: #0d6efd;
+            margin-bottom: 10px;
+        }
+        .icon-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .icon-description {
+            font-size: 0.8rem;
+            color: #6c757d;
+            line-height: 1.3;
+        }
+        .category-title {
+            background: linear-gradient(135deg, #0d6efd, #6f42c1);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 30px 0 20px 0;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .current-icon {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .current-icon .icon-display {
+            color: white;
+            font-size: 2rem;
+        }
+        .selection-info {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Quiz 메뉴 아이콘 선택</h1>
+        
+        <!-- 현재 사용 중인 아이콘 -->
+        <div class="current-icon">
+            <h3>현재 사용 중인 아이콘</h3>
+            <div class="icon-display">❓</div>
+            <div>원문자 물음표 (현재)</div>
+        </div>
+
+        <!-- 1차 추천 -->
+        <div class="category-title">🥇 1차 추천 (가장 적합)</div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="icon-card" data-icon="bi-question-circle">
+                    <div class="icon-display">
+                        <i class="bi bi-question-circle"></i>
+                    </div>
+                    <div class="icon-name">bi-question-circle</div>
+                    <div class="icon-description">원형 배경의 물음표<br>깔끔하고 직관적</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="icon-card" data-icon="bi-clipboard-check">
+                    <div class="icon-display">
+                        <i class="bi bi-clipboard-check"></i>
+                    </div>
+                    <div class="icon-name">bi-clipboard-check</div>
+                    <div class="icon-description">체크리스트 클립보드<br>시험/평가 느낌</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="icon-card" data-icon="bi-ui-checks-grid">
+                    <div class="icon-display">
+                        <i class="bi bi-ui-checks-grid"></i>
+                    </div>
+                    <div class="icon-name">bi-ui-checks-grid</div>
+                    <div class="icon-description">격자 형태 체크박스<br>문제 선택 느낌</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2차 추천 -->
+        <div class="category-title">🥈 2차 추천</div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="icon-card" data-icon="bi-pencil-square">
+                    <div class="icon-display">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <div class="icon-name">bi-pencil-square</div>
+                    <div class="icon-description">연필과 사각형<br>문제 풀이</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="icon-card" data-icon="bi-card-checklist">
+                    <div class="icon-display">
+                        <i class="bi bi-card-checklist"></i>
+                    </div>
+                    <div class="icon-name">bi-card-checklist</div>
+                    <div class="icon-description">체크리스트 카드<br>문제 목록</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="icon-card" data-icon="bi-journal-check">
+                    <div class="icon-display">
+                        <i class="bi bi-journal-check"></i>
+                    </div>
+                    <div class="icon-name">bi-journal-check</div>
+                    <div class="icon-description">체크 저널<br>문제집 느낌</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="icon-card" data-icon="bi-list-check">
+                    <div class="icon-display">
+                        <i class="bi bi-list-check"></i>
+                    </div>
+                    <div class="icon-name">bi-list-check</div>
+                    <div class="icon-description">체크리스트<br>문제 목록</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3차 추천 -->
+        <div class="category-title">🥉 3차 추천 (창의적)</div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="icon-card" data-icon="bi-puzzle">
+                    <div class="icon-display">
+                        <i class="bi bi-puzzle"></i>
+                    </div>
+                    <div class="icon-name">bi-puzzle</div>
+                    <div class="icon-description">퍼즐 조각<br>문제 해결</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="icon-card" data-icon="bi-lightbulb">
+                    <div class="icon-display">
+                        <i class="bi bi-lightbulb"></i>
+                    </div>
+                    <div class="icon-name">bi-lightbulb</div>
+                    <div class="icon-description">전구<br>아이디어/해답</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="icon-card" data-icon="bi-trophy">
+                    <div class="icon-display">
+                        <i class="bi bi-trophy"></i>
+                    </div>
+                    <div class="icon-name">bi-trophy</div>
+                    <div class="icon-description">트로피<br>성취/완료</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 기타 옵션 -->
+        <div class="category-title">📝 기타 옵션</div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="icon-card" data-icon="bi-patch-question">
+                    <div class="icon-display">
+                        <i class="bi bi-patch-question"></i>
+                    </div>
+                    <div class="icon-name">bi-patch-question</div>
+                    <div class="icon-description">육각형 물음표<br>특별한 디자인</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="icon-card" data-icon="bi-file-earmark-text">
+                    <div class="icon-display">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div class="icon-name">bi-file-earmark-text</div>
+                    <div class="icon-description">문서 파일<br>시험지 느낌</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="icon-card" data-icon="bi-calculator">
+                    <div class="icon-display">
+                        <i class="bi bi-calculator"></i>
+                    </div>
+                    <div class="icon-name">bi-calculator</div>
+                    <div class="icon-description">계산기<br>수학 문제</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="icon-card" data-icon="bi-search">
+                    <div class="icon-display">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <div class="icon-name">bi-search</div>
+                    <div class="icon-description">돋보기<br>문제 탐색</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 선택 정보 -->
+    <div class="selection-info" id="selectionInfo">
+        <strong>선택됨:</strong> <span id="selectedIcon"></span>
+        <br>
+        <small>클릭하여 복사할 수 있습니다</small>
+    </div>
+
+    <script>
+        let selectedIcon = '';
+
+        document.querySelectorAll('.icon-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // 이전 선택 제거
+                document.querySelectorAll('.icon-card').forEach(c => c.classList.remove('selected'));
+                
+                // 현재 선택 추가
+                this.classList.add('selected');
+                
+                // 선택된 아이콘 정보 표시
+                selectedIcon = this.dataset.icon;
+                document.getElementById('selectedIcon').textContent = selectedIcon;
+                document.getElementById('selectionInfo').style.display = 'block';
+                
+                console.log('선택된 아이콘:', selectedIcon);
+            });
+        });
+
+        // 선택 정보 클릭시 클립보드 복사
+        document.getElementById('selectionInfo').addEventListener('click', function() {
+            if (selectedIcon) {
+                navigator.clipboard.writeText(selectedIcon).then(() => {
+                    this.innerHTML = `
+                        <strong>복사됨!</strong> ${selectedIcon}
+                        <br>
+                        <small>클립보드에 복사되었습니다</small>
+                    `;
+                    setTimeout(() => {
+                        this.innerHTML = `
+                            <strong>선택됨:</strong> ${selectedIcon}
+                            <br>
+                            <small>클릭하여 복사할 수 있습니다</small>
+                        `;
+                    }, 2000);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

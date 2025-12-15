@@ -1,0 +1,300 @@
+EntryJS 오브젝트 에셋 추가 및 이미지 표시 작업 명세서
+📌 프로젝트 개요
+
+목적: Entry-tool 팝업에서 오브젝트 목록 및 이미지가 정상 표시되도록 수정
+현재 상태: 엔트리봇 1개만 표시, 이미지 미표시
+목표 상태: Entry 오프라인 에디터의 전체 오브젝트 라이브러리 통합
+작업 범위: 8070번 EntryJS 서버 + Apache 설정
+
+
+🎯 작업 목표
+
+Entry 오프라인 에디터의 오브젝트 에셋 통합
+Entry-tool 팝업에서 모든 오브젝트 표시
+오브젝트 이미지 정상 로딩
+카테고리별 필터링 기능 동작
+
+
+📂 Phase 1: 에셋 수집 및 배치
+1.1 오프라인 에디터 에셋 다운로드
+bash# Entry 오프라인 에디터 리소스 다운로드
+# https://github.com/entrylabs/entry-offline/releases 에서 최신 버전 다운로드
+# 또는 기존 설치된 오프라인 에디터에서 추출
+
+# Windows 경로 예시
+C:\Program Files\Entry\resources\app\src\renderer\resources\
+
+# 필요한 폴더
+- db/           # JSON 메타데이터
+- uploads/      # 실제 에셋 파일
+1.2 서버 디렉토리 구조 생성
+bash# 8070번 서버 에셋 디렉토리 생성
+sudo mkdir -p /var/www/html/entry/resources/db
+sudo mkdir -p /var/www/html/entry/resources/uploads
+
+# 권한 설정
+sudo chown -R ubuntu:ubuntu /var/www/html/entry/resources
+1.3 에셋 파일 복사
+bash# db 폴더 복사 (JSON 메타데이터)
+cp -r [오프라인에디터]/db/* /var/www/html/entry/resources/db/
+
+# uploads 폴더 복사 (이미지/사운드 파일)
+cp -r [오프라인에디터]/uploads/* /var/www/html/entry/resources/uploads/
+
+# 필수 JSON 파일 확인
+ls -la /var/www/html/entry/resources/db/
+# objects.json, pictures.json, sounds.json 확인
+
+📂 Phase 2: Apache 설정 수정
+2.1 Apache Alias 추가
+파일: /etc/apache2/sites-available/000-default.conf
+apache# Entry 오브젝트 에셋 서빙 추가
+Alias /resources/uploads /var/www/html/entry/resources/uploads
+<Directory "/var/www/html/entry/resources/uploads">
+    Options FollowSymLinks
+    AllowOverride None
+    Require all granted
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cache-Control "public, max-age=3600"
+</Directory>
+
+# JSON 데이터 서빙
+Alias /resources/db /var/www/html/entry/resources/db
+<Directory "/var/www/html/entry/resources/db">
+    Options FollowSymLinks
+    AllowOverride None
+    Require all granted
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Content-Type "application/json"
+</Directory>
+
+# 프록시 예외 설정
+ProxyPass /resources !
+2.2 Apache 재시작
+bashsudo apache2ctl configtest
+sudo systemctl reload apache2
+
+📂 Phase 3: EntryJS 코드 수정
+3.1 index.html 수정
+파일: /var/www/html/entry/index.html
+Entry 초기화 옵션에 경로 추가:
+javascriptvar initOption = {
+    type: 'workspace',
+    libDir: '/lib',
+    defaultDir: '/resources',               // 추가
+    mediaFilePath: '/resources/uploads/',   // 추가
+    // 기존 옵션들...
+};
+3.2 app.mjs 수정
+파일: /var/www/html/entry/js/app.mjs
+초기화 옵션 수정:
+javascriptvar initOption = {
+    type: 'workspace',
+    textCodingEnable: true,
+    defaultDir: '/resources',               // 추가
+    mediaFilePath: '/resources/uploads/',   // 추가
+    soundDir: '/resources/uploads/',        // 추가
+    // 기존 옵션들...
+};
+3.3 mock.mjs 교체
+파일: /var/www/html/entry/js/mock.mjs
+javascript// 기존 하드코딩 데이터를 실제 JSON 로드로 변경
+let spriteData = [];
+let pictureData = [];
+let soundData = [];
+
+// JSON 데이터 로드 함수
+async function loadEntryResources() {
+    try {
+        // objects.json 로드
+        const objectsResponse = await fetch('/resources/db/objects.json');
+        const objects = await objectsResponse.json();
+        
+        // pictures.json 로드
+        const picturesResponse = await fetch('/resources/db/pictures.json');
+        const pictures = await picturesResponse.json();
+        
+        // sounds.json 로드
+        const soundsResponse = await fetch('/resources/db/sounds.json');
+        const sounds = await soundsResponse.json();
+        
+        // 데이터 변환 및 저장
+        spriteData = processObjectsData(objects);
+        pictureData = processPicturesData(pictures);
+        soundData = processSoundsData(sounds);
+        
+        console.log('✅ Entry 리소스 로드 완료:', {
+            sprites: spriteData.length,
+            pictures: pictureData.length,
+            sounds: soundData.length
+        });
+    } catch (error) {
+        console.error('❌ Entry 리소스 로드 실패:', error);
+    }
+}
+
+// 데이터 처리 함수
+function processObjectsData(objects) {
+    return objects.map(obj => ({
+        ...obj,
+        // 이미지 경로 변환
+        pictures: obj.pictures?.map(pic => ({
+            ...pic,
+            fileurl: generateImagePath(pic.filename, pic.imageType || 'png'),
+            thumbUrl: generateThumbPath(pic.filename, pic.imageType || 'png')
+        }))
+    }));
+}
+
+function generateImagePath(filename, imageType) {
+    if (!filename) return '';
+    const folder = `${filename.substr(0,2)}/${filename.substr(2,2)}`;
+    return `/resources/uploads/${folder}/image/${filename}.${imageType}`;
+}
+
+function generateThumbPath(filename, imageType) {
+    if (!filename) return '';
+    const folder = `${filename.substr(0,2)}/${filename.substr(2,2)}`;
+    return `/resources/uploads/${folder}/thumb/${filename}.${imageType}`;
+}
+
+// 페이지 로드 시 실행
+loadEntryResources();
+
+// Export 수정
+export const assets = {
+    get sprite() { return spriteData; },
+    get picture() { return pictureData; },
+    get sound() { return soundData; }
+};
+3.4 sprite.mjs 수정
+파일: /var/www/html/entry/js/popup/sprite.mjs
+javascriptexport function setSpritePopupEvent(popup) {
+    popup.on('fetch', async (category) => {
+        try {
+            const { sidebar, subMenu } = category;
+            console.log('🎭 스프라이트 페치 요청:', { sidebar, subMenu });
+            
+            // mock.mjs에서 로드된 데이터 사용
+            const { assets } = await import('../mock.mjs');
+            let data = assets.sprite || [];
+            
+            // 카테고리 필터링
+            if (sidebar && sidebar !== 'all') {
+                data = data.filter(item => 
+                    item.category?.main === sidebar ||
+                    item.category?.sub === sidebar
+                );
+            }
+            
+            console.log('✅ 스프라이트 데이터:', data.length);
+            popup.setData({ 
+                data: { 
+                    data: data,
+                    imageBaseUrl: '/resources/uploads/'
+                } 
+            });
+        } catch (error) {
+            console.error('❌ 스프라이트 페치 오류:', error);
+            popup.setData({ data: { data: [] } });
+        }
+    });
+    
+    // 나머지 이벤트 핸들러는 유지...
+}
+3.5 popup/index.mjs 수정
+파일: /var/www/html/entry/js/popup/index.mjs
+javascriptexport async function openSpriteManager() {
+    popup.removeAllListeners();
+    setSpritePopupEvent(popup);
+    
+    // 카테고리 데이터 로드
+    const categoriesResponse = await fetch('/resources/db/categories.json')
+        .catch(() => ({ json: () => [] }));
+    const categories = await categoriesResponse.json();
+    
+    // 카테고리가 없으면 기본값 사용
+    const sidebar = categories.length > 0 ? 
+        getSidebarTemplate({ category: categories }) :
+        getSidebarTemplate({ category: spriteCategory });
+    
+    popup.setData({ 
+        sidebar,
+        imageBaseUrl: '/resources/uploads/'
+    });
+    popup.show({ type: 'sprite' }, {});
+}
+
+📂 Phase 4: 테스트 및 검증
+4.1 에셋 로딩 테스트
+bash# JSON 파일 접근 테스트
+curl http://localhost:8070/resources/db/objects.json | head
+
+# 이미지 파일 접근 테스트 (예시)
+curl -I http://localhost:8070/resources/uploads/60/62/image/6062xxx.png
+4.2 브라우저 콘솔 테스트
+javascript// Entry 리소스 로드 확인
+fetch('/resources/db/objects.json')
+    .then(r => r.json())
+    .then(data => console.log('Objects:', data.length));
+
+// 이미지 경로 테스트
+const testImage = new Image();
+testImage.src = '/resources/uploads/60/62/image/[실제파일명].png';
+testImage.onload = () => console.log('✅ 이미지 로드 성공');
+testImage.onerror = () => console.log('❌ 이미지 로드 실패');
+4.3 팝업 동작 테스트
+
+EntryJS 워크스페이스 로드
+"오브젝트 추가하기" 버튼 클릭
+팝업에 오브젝트 목록 표시 확인
+오브젝트 이미지 표시 확인
+카테고리 필터링 동작 확인
+
+
+🔧 Phase 5: 문제 해결
+5.1 이미지가 안 보이는 경우
+
+Apache 로그 확인: sudo tail -f /var/log/apache2/error.log
+파일 경로 및 권한 확인
+브라우저 개발자 도구 Network 탭에서 404 오류 확인
+
+5.2 JSON 로드 실패
+
+CORS 헤더 확인
+Content-Type 헤더 확인
+파일 권한 확인
+
+5.3 카테고리가 안 보이는 경우
+
+categories.json 파일 생성 필요
+sidebar 데이터 구조 확인
+
+
+📊 예상 결과
+성공 지표
+
+✅ 오브젝트 팝업에 100개 이상 오브젝트 표시
+✅ 모든 오브젝트 이미지 정상 표시
+✅ 카테고리별 필터링 동작
+✅ 오브젝트 추가 시 워크스페이스에 정상 추가
+
+파일 구조 최종 상태
+/var/www/html/entry/
+├── resources/
+│   ├── db/
+│   │   ├── objects.json      # 오브젝트 메타데이터
+│   │   ├── pictures.json     # 이미지 메타데이터
+│   │   └── sounds.json       # 사운드 메타데이터
+│   └── uploads/
+│       ├── [해시]/[해시]/image/   # 실제 이미지 파일
+│       ├── [해시]/[해시]/thumb/   # 썸네일 파일
+│       └── [해시]/[해시]/sound/   # 사운드 파일
+└── js/
+    ├── mock.mjs              # 수정됨: JSON 로드
+    └── popup/
+        └── sprite.mjs        # 수정됨: 로컬 데이터 사용
+
+작성자: AI Assistant
+작성일: 2025년 1월
+상태: 구현 준비 완료

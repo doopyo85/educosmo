@@ -1,0 +1,1360 @@
+팝업 관리
+이 문서에서는 entry-tool의 팝업과 기타 툴들을 사용하는 방법을 소개합니다.
+
+
+목록
+설치 및 세팅
+패키지 매니저로 가져오기
+External JavaScript로 가져오기
+
+공통
+get set 함수
+show
+hide
+setData
+remove
+render
+
+Popup
+select
+upload
+dragUpload
+draw
+write
+sprite
+picture
+paint
+sound
+expansion
+aiUtilize
+hardwareLite
+projects
+table
+이벤트
+openManager 이벤트
+
+Widget
+Chart
+ModalChart
+ModalTable
+BillBoardChart
+TreeNode
+ModalProgress
+Dropper
+Sortable
+Draggable
+Dropdown
+DropdownExtra
+Angle
+Number
+ContextMenu
+Backpack
+MusicScale
+
+Entry제공 함수
+Entry.generateHash
+Entry.container.addObject
+Entry.playground.addPicture
+Entry.playground.addSound
+Entry.playground.addExpansionBlocks
+Entry.playground.removeExpansionBlocks
+Entry.playground.dataTable.addSources
+
+기타
+ListTool
+DataAnalytics
+
+React 컴포넌트
+Component.Dropdown
+Component.ModalProgress
+Component.ColorPicker
+Component.Backpack
+Component.Number
+Component.MusicScale
+Component.ContextMenu
+
+설치 및 세팅
+패키지 매니저로 가져오기
+entry-tool은 현재 npm에 패키지가 등록되어 있지 않습니다.
+
+따라서, 패키지 매니저로 설치하기 위해선 package.json에 github 링크를 추가해서 설치해야 합니다.
+
+# in package.json
+"dependencies": {
+        # 접두사 dist/가 있는 브랜치는 빌드파일만 있는 브랜치입니다.
+     "entry-tool": "git+https://github.com/entrylabs/entry-tool.git#dist/develop",
+}
+External JavaScript로 가져오기
+html에서 script태그를 사용하여 번들js와 css파일을 불러와 사용할 수 있습니다.
+
+# 설치경로에서 가져오기: node_modules
+<link rel='stylesheet' href='/node_modules경로/entry-tool/dist/entry-tool.css'/>
+<script type="text/javascript" src='/node_modules경로/entry-tool/dist/entry-tool.js'></script>
+
+# 설치경로에서 가져오기: 직접 추가한 경우
+<link rel='stylesheet' href='파일경로/entry-tool.css'/>
+<script type="text/javascript" src='파일경로/entry-tool.js'></script>
+
+# cdn
+<link href="https://playentry.org/lib/entry-tool/dist/entry-tool.css" rel="stylesheet" />
+<script
+    type="text/javascript"
+    src="https://playentry.org/lib/entry-tool/dist/entry-tool.js"
+></script>
+
+
+공통
+entry-tool에서 제공하는 툴들은 js모듈 형식으로 사용 가능합니다.
+React 컴포넌트로 사용 가능한 툴들은 아래 문서에서 별도로 기술합니다.
+
+js모듈로 entry-tool의 툴들을 사용하기 위해선 가져온 모듈 클래스를 생성자로 신규 인스턴스를 생성해야 합니다.
+
+// example 1
+import { Popup } from '@entrylabs/tool';
+const popup = new Popup({
+      container: this.container,
+      isShow: false,
+      theme: 'entry',
+      data: { data: { data: [] } },
+  });
+
+
+// example 2
+const { ListTool } = await import('@entrylabs/tool');
+const listTool = new ListTool({
+  container: this.listContainer,
+  isShow: false,
+  theme: 'entry',
+  data: {},
+});
+인스턴스 생성에 필요한 파라미터는 아래와 같습니다.
+
+각 파라미터는 js get, set 기능이나 show, hide 함수를 통해 변경이 가능합니다.
+
+상세한 구현내용은 withWrapper 에서 확인하실 수 있습니다.
+
+Returns: entry-tool 인스턴스(object)
+파라미터	타입	선택적	기본값	설명
+container	HTMLDivElement	✔️	document 하우 div	생성할 element의 부모가 될 html element 입니다.
+isShow		✔️	true	초기 노출여부를 설정합니다.
+data				리스트나 일부 팝업처럼 데이터를 시각화하는 툴들이 사용하는 데이터입니다. 초기값을 {}로 세팅하고 추후 setData 함수로 설정 가능합니다.
+props		✔️		명시된 파리미터 이외에 내부 React 컴포넌트에 전달할 props 값입니다.
+theme	‘entry’ | ‘lecture’ | ‘entryline’			테마 스타일을 설정 할 수 있습니다. 일반적으로 ‘entry’를 사용합니다.
+type	string	✔️		생성할 툴의 세부 타입
+target				deprecated
+아래는 JS모듈에서 공통으로 사용하는 함수들입니다.
+
+인스턴스명은 예시를 위해 임의로 tool로 지정합니다.
+
+
+get set 함수
+인스턴스 생성시 생성자 함수의 파라미터로 넣어준 값들의 js get, set 함수를 지원합니다.
+
+tool.container(container)
+toolContainer = tool.container
+
+tool.props(props)
+toolProps = tool.props
+
+toolType = tool.type
+
+toolIsShow = tool.isShow
+
+// set data의 경우 기존 값을 대체하는 것이 아닌, Object.assign으로 프로퍼티를 추가하는 방식입니다.
+tool.data(data)
+tooData = tool.data
+
+show
+툴을 노출시킵니다.
+
+tool.show(props, data);
+Returns: entry-tool 인스턴스(object)
+파라미터	타입	선택적	기본값	설명
+props	object	✔️		명시된 파리미터 이외에 내부 React 컴포넌트에 전달할 props 값입니다.
+data	object	✔️		시각화할 데이터 정보입니다.
+
+hide
+툴을 감춥니다.
+
+tool.hide(props, data);
+Returns: entry-tool 인스턴스(object)
+파라미터	타입	선택적	기본값	설명
+props	object	✔️		명시된 파리미터 이외에 내부 React 컴포넌트에 전달할 props 값입니다.
+data	object	✔️		시각화할 데이터 정보입니다.
+
+setData
+팝업에서 표시해줄 item, navigation, sort 정보와 같은 데이터를 전달합니다.
+
+entry-tool popup 사용시 가장 많이 사용하는 함수입니다.
+
+일반적으로 최초로 팝업을 시각화하거나, 사용자 액션을 통해 popup event가 발생했을 때, 핸들링 함수에서 많이 사용합니다.
+
+파라미터로 사용하는 data값의 양식은 어떤 type의 popup을 사용하는지에 따라 달라집니다.
+
+자세한 사용법은 아래의 각 popup type별 문서에서 기술합니다.
+
+tool.setData(data);
+Returns: entry-tool 인스턴스(object)
+파라미터	타입	선택적	기본값	설명
+data	object	✔️		시각화할 데이터 정보입니다.
+
+remove
+dom을 완전히 제거하고 내부값(data, props, container)를 초기화합니다.
+
+tool.remove();
+
+render
+현재 프로퍼티를 기반으로 새롭게 렌더합니다.
+
+await tool.render();
+
+Popup
+엔트리에서 사용하는 다양한 팝업을 제공합니다.
+
+팝업의 종류는 type 프로퍼티를 통해 지정할 수 있습니다.
+
+type은 단독 기능을 위해 만들어진 type과, 해당 기능들을 조합하여 특정 페이지를 구현한 type으로 나뉩니다.
+
+페이지 구현 type들은 entry-tool 소스에서는 constants/index.js에서 확인 가능합니다.
+
+navigations 프로퍼티에서 어떤 단독기능 type을 사용중인지 확인할 수 있으며, 실제 화면에서는 상단 네비게이션바에 각 팝업기능 바로가기가 할당됩니다.
+
+단독 기능 type
+type	설명
+select	카드뷰 형태로 리스트를 출력하고, 사용자가 특정 카드뷰를 선택하는 팝업입니다.
+upload	‘파일 올리기’ 기능을 위해 사용하는 팝업입니다.
+dragUpload	‘파일을 끌어다 놓거나 클릭해서 업로드’ 기능을 위해 사용하는 팝업입니다.
+draw	‘새로 그리기’ 기능을 위해 사용하는 팝업입니다.
+write	‘글상자’ 기능을 위해 사용하는 팝업입니다.
+페이지 구현 type
+type	사용 기능	설명
+sprite	select, upload, draw, write	‘오브젝트 추가하기’에서 사용하는 팝업입니다.
+picture	select, upload, draw	‘모양 추가하기’에서 사용하는 팝업입니다.
+paint	select, upload	‘모양 가져오기’에서 사용하는 팝업입니다.
+sound	select, upload	‘소리 추가하기’에서 사용하는 팝업입니다.
+expansion	select	‘확장 블록 불러오기’에서 사용하는 팝업입니다.
+aiUtilize	select	‘인공지능 블록 불러오기’에서 사용하는 팝업입니다.
+hardwareLite	select	하드웨어 ‘브라우저로 연결하기’에서 사용하는 팝업입니다.
+projects	project	‘작품 불러오기’에서 사용하는 팝업입니다. 전용 컴포넌트인 ‘project’를 사용합니다.
+table	select, dragUpload, draw	‘테이블 불러오기’에서 사용하는 팝업입니다.
+
+이 아래로는 각 type을 이미지와 함께 소개합니다.
+
+단독 기능 type은 구체적인 사용예시 코드가 포함되어 있습니다.
+
+페이지 구현 type들은 자신이 사용하는 단독type에서 사용하는 이벤트를 핸들링하여 setData로 적절히 데이터 처리를 해야 합니다.
+
+페이지 구현 type들은 tool.data.data.data의 데이터들이 조금씩 다릅니다.
+
+submit 이벤트로 제출시 entryjs를 사용해서 어떻게 WS화면에 추가하는지를 기술합니다.
+
+좀 더 구체적인 사용 예시는 entry-offline의 entryModalHelper.ts파일에서도 확인이 가능합니다.
+
+
+select
+select_main
+
+카드뷰 형태로 리스트를 출력하고, 사용자가 특정 카드뷰를 선택하는 팝업입니다.
+
+엔트리 서비스에서는 ‘오브젝트 추가하기’, ‘모양 추가하기’, ‘소리 추가하기’ 등에 적용되어 있습니다.
+
+select에서 각 item의 데이터들을 data 값에 할당해 주어야 합니다.
+
+data의 프로퍼티는 popup type별로 다를 수 있기에 이 문서에서는 가장 기본적인 프로퍼티만 예시로 소개합니다.
+
+// popup 인스턴스 초기화
+const popup = new Popup({
+    container: this.container,
+    isShow: false,
+    theme: 'entry',
+    data: { 
+      data: { 
+      // item이 사용할 썸네일 baseUrl, imageName과 조합하여 css style로 이미지를 불러온다.
+        imageBaseUrl: ''
+        data: [
+          {
+            name: 'item1',
+            description: '아이템 설명',
+            label: {
+              ko: '타이틀',
+              en: 'title',
+            },
+            imageName: 'file1.png'
+          },
+        ]
+      },
+    },
+});
+
+// 이벤트 핸들링
+popup.on('submit', (datas) => {
+    // ex) data가 엔트리 오브젝트인 경우
+    datas.map((item) => {
+        const object = {
+          id: Entry.generateHash(),
+          objectType: 'sprite',
+          sprite: item,
+        }
+    })
+    Entry.container.addObject(object, 0);
+})
+
+// 추가로 data 세팅이 필요한 경우 data 추가
+// sidebar data 추가시, 바로 sidebar 컴포넌트를 렌더한다.
+popup.setData({ sidebar });
+
+// show 함수로 사용자에게 노출
+popup.show();
+
+
+
+upload
+upload_main
+
+‘파일 올리기’ 기능을 위해 사용하는 팝업입니다.
+
+// 사용자 로컬 디렉토리에서 선택한 파일을 1차로 임시저장
+// 업로드한 파일이 sound, image, table 이면 formData에 object 데이터이면 'objectData'를 통해 넘어옵니다.
+popup.on('dummyUploads', async ({ formData, objectData }) => {
+  const validFormData = handleFormData(formData);
+  const validObjectData = handleObjectData(objectData);
+
+  // 가공된 파일데이터를 setData로 전달해서 팝업화면에 반영
+  popup.setData({
+    data: { 
+      uploads: validFormData,
+      data: []
+    }
+  })
+  popup.setData({
+    data: { 
+      uploads: validObjectData,
+      data: []
+    }
+  })
+})
+// 사용자가 '추가히기' 버튼을 클릭하여 임시보관중인 업로드 파일들을 서비스에 반영
+popup.on('uploads', (data) => {
+  data.uploads.map((item) => {
+    // 데이터 종류에 맞게 엔트리WS에 반영
+  })
+})
+// 업로드 실패시 에러 핸들링
+popup.on('uploadFail', (data) => {
+  console.alert(`${data.messageParent}${data.message}`);
+})
+         
+
+dragUpload
+dragupload_main
+
+‘파일을 끌어다 놓거나 클릭해서 업로드’ 기능을 위해 사용하는 팝업입니다.
+
+사용자가 파일 업로드를 드래그&드랍으로 해줄 수 있을 뿐, 개발자 입장에서 핸들링할 내용은 upload와 동일합니다.
+
+
+draw
+draw_main
+
+‘새로 그리기’ 기능을 위해 사용하는 팝업입니다.
+
+popup.on('draw', () => {
+  // WS의 그리기 페이지로 리다이렉트 혹은 기타 그리기 툴로 이동
+})
+
+write
+write_main
+
+‘글상자’ 기능을 위해 사용하는 팝업입니다.
+
+popup.on('write', (data) => {
+  // 파라미로 넘어온 글상자 데이터를 Entry WS에 반영
+  const object = {
+      id: Entry.generateHash(),
+      name: '글상자 이름',
+      text: data.text,
+      options: {
+          font: data.font,
+          bold: false,
+          underLine: false,
+          italic: false,
+          strike: data.effects.through || false,
+          colour: data.effects.color || '#000000',
+          background: data.effects.backgroundColor || '#ffffff',
+          lineBreak: data.writeType === 'one' ? false : true,
+          ...data.effects,
+      },
+      objectType: 'textBox',
+      sprite: { sounds: [], pictures: [] },
+  };
+  Entry.container.addObject(object, 0);
+})
+
+sprite
+sprite_main
+
+‘오브젝트 추가하기’에서 사용하는 팝업입니다.
+
+내부적으로 select, upload, draw, write 팝업 기능을 사용하며 상단 naviation에서 확인 가능합니다.
+
+WS에 등록
+// submit 이벤트 핸들링
+// @spriteItems : Array<spriteItem>
+popup.on('submit', (spriteItems) => {
+    // ex) data가 엔트리 오브젝트(sprite)인 경우
+    spriteItems.map((spriteItem) => {
+      spriteItem.name = spriteItem.label['국가']
+      const object = {
+          id: Entry.generateHash(),
+          objectType: 'sprite',
+          sprite: spriteItem,
+       }
+      Entry.container.addObject(object, 0);
+    }
+}
+
+popup.show({ type: 'sprite' },  { 
+    sidebar: {
+        entrybot_friends: {
+            id: "aa",
+            name: "엔트리봇",
+            value: "entrybot_friends",
+            sub: {
+                all: {"id":"","name":"전체","value":"all"}
+            }
+        }
+    }, 
+    data: {
+        data: [
+            {
+                "id": "오브젝트 고유id",
+                ...샘플데이터
+            }
+        ]
+    } 
+})
+샘플 데이터 : spriteItem
+{
+    "id": "오브젝트 고유id",
+    "name": "점프 엔트리봇",
+    // 국가별로 name값을 변경하고 싶다면, spriteItem.name = spriteItem.label['국가']로 변경
+    // 이하 picture, sound 등 모두 동일합니다.
+    "label": {
+        "ko": "점프 엔트리봇",
+        "en": "Jumping Entrybot",
+        "ja": null,
+        "vn": "Jumping Entrybot"
+    },
+    "category": {
+        "main": "entrybot_friends",
+        "sub": null
+    },
+    "pictures": [
+        {
+            "id": "이미지 고유id",
+            "name": "점프 엔트리봇_1",
+            "label": {
+                "ko": "점프 엔트리봇_1",
+                "en": "Jumping Entrybot_1",
+                "ja": null,
+                "vn": "Jumping Entrybot_1"
+            },
+            "filename": "f8d5a3da311c906490416996a02904d7",
+            "imageType": null,
+            "dimension": {
+                "width": 289,
+                "height": 302
+            },
+            "trimmed": null
+        }
+    ],
+    "sounds": []
+}
+타입정의 : spriteItem
+파라미터	타입	설명
+id	string	오브젝트를 구분하기 위한 id값입니다.
+name	string	오브젝트의 이름입니다.
+label	object	오브젝트의 이름을 국가별로 구분하기 위해 사용하는 값입니다.
+WS에 반영할때는 최종적으로 name 프로퍼티를 갱신해야 합니다.
+category	object	오브젝트의 카테고리 값입니다. main, sub 프로퍼티를 가집니다.
+pictures	Array< pictureItem>	오브젝트에 포함된 모양 정보입니다.
+sounds	Array< SoundItem>	오브젝트에 포함된 소리 정보입니다.
+
+picture
+popup_picture_main
+
+‘모양 추가하기’에서 사용하는 팝업입니다.
+
+내부적으로 select, upload, draw 팝업 기능을 사용하며 상단 naviation에서 확인 가능합니다.
+
+WS에 등록
+// submit 이벤트 핸들링
+// @pictureItems : Array<pictureItem>
+popup.on('submit', (pictureItems) => {
+    // ex) data가 엔트리 이미지(picture)인 경우
+    pictureItems.map((pictureItem) => {
+        // id가 없거나 WS에서 새로 발급해야 하는 경우
+        pictureItem.id = Entry.generateHash();
+        pictureItem.imageType = pictureItem.imageType || 'png';
+        Entry.playground.addPicture(pictureItem, true);
+    }
+}
+샘플 데이터 : pictureItem
+{
+    "id": "이미지 고유id",
+    "name": "달리기하는 엔트리봇_1",
+    // 국가별 언어분리시 사용
+    "label": {
+        "ko": "달리기하는 엔트리봇_1",
+        "en": "Running Entrybot_1",
+        "ja": null,
+        "vn": "Running Entrybot_1"
+    },
+    "filename": "41e5cafe6afb9bd7a9bcb3fbfdf55bd3",
+    "fileurl": "불러올 이미지 저장경로",
+    "imageType": "png",
+    "dimension": {
+        "width": 332,
+        "height": 351
+    },
+    "trimmed": null
+}
+타입정의 : pictureItem
+파라미터	타입	설명
+id	string	모양을 구분하기 위한 id값입니다.
+name	string	모양의 이름입니다.
+label	object	모양의 이름을 국가별로 구분하기 위해 사용하는 값입니다.
+WS에 반영할때는 최종적으로 name 프로퍼티를 갱신해야 합니다.
+fileurl	string	모양이 사용하는 실제 이미지파일의 위치입니다.
+파일명과 확장자를 포함한 전체경로를 작성해야 합니다.
+filename	string	모양이 사용하는 실제 이미지의파일의 파일명입니다.
+fileurl프로퍼티가 없는 경우 아래 경로에서 이미지와 썸네일을 불러옵니다.
+${Entry.defaultPath}/uploads/${filename.substr(0,2)}/${filename.substr(2,4)}/image/${filename}.${imageType}
+${Entry.defaultPath}/uploads/${filename.substr(0,2)}/${filename.substr(2,4)}/thumb/${filename}.${imageType}
+ex) /uploads/3k/82/image/3k82q167kxy3iswl000q75c06dfpkz5z.png
+코드 원본은 entry-js/painter.js에서 확인 가능합니다.
+imageType	string	모양 이미지 파일의 확장자입니다.
+dimension	object : { width: number , height: number }	모양의 가로세로 픽셀크기 값입니다.
+trimmed		deprecate된 프로퍼티입니다.
+
+paint
+popup_paint_main
+
+‘모양 가져오기’에서 사용하는 팝업입니다.
+
+‘모양 추가하기’와 달리 현재 이미지 위에 다른 이미지를 덧입히는 기능입니다.
+
+내부적으로 select, upload 팝업 기능을 사용하며 상단 naviation에서 확인 가능합니다.
+
+WS에 등록
+// submit 이벤트 핸들링
+// @pictureItems : Array<pictureItem>
+popup.on('submit', (pictureItems) => {
+    // ex) data가 엔트리 이미지(picture)인 경우
+    pictureItems.map((pictureItem) => {
+        pictureItem.id = Entry.generateHash();
+        pictureItem.imageType = pictureItem.imageType || 'png';
+        Entry.dispatchEvent('pictureImport', pictureItem);
+    }
+}
+샘플 데이터
+‘picture’와 동일하게 pictureItem을 사용합니다.
+
+sound
+popup_sound_main
+
+‘소리 추가하기’에서 사용하는 팝업입니다.
+
+내부적으로 select, upload 팝업 기능을 사용하며 상단 naviation에서 확인 가능합니다.
+
+WS에 등록
+// submit 이벤트 핸들링
+// @soundItems : Array<soundItem>
+popup.on('submit', (soundItems) => {
+    // ex) data가 엔트리 사운드(sound)인 경우
+    soundItems.map((soundItem) => {
+        soundItem.id = Entry.generateHash();
+        Entry.playground.addSound(soundItem, true);
+    }
+    // 'play' 이벤트로 재생되던 소리를 중지
+    Entry.Utils.forceStopSounds();
+}
+
+popup.show({ type: 'sprite' },  { 
+    sidebar: {
+        people: {
+            id: "aa",
+            name: "사람",
+            value: "people",
+            sub: {
+                all: {"id":"","name":"전체","value":"all"}
+            }
+          },
+    }, 
+    data: {
+        data: [
+            {
+                "id": "오브젝트 고유id",
+                ...샘플데이터
+            }
+        ]
+    } 
+})
+샘플 데이터 : soundItem
+{
+    "id": "소리 고유 id",
+    "name": "기타 루프1",
+    // 국가별 언어분리시 사용
+    "label": {
+        "ko": "기타 루프1",
+        "en": "기타 루프1.mp3",
+        "ja": null,
+        "vn": "기타 루프1.mp3"
+    },
+    "fileurl": "불러올 사운드파일 저장경로",
+    "filename": "9pcv13o6la1u2rhr000q75262d1nupd0",
+    "ext": ".mp3",
+    "duration": 8
+}
+타입정의 : soundItem
+파라미터	타입	설명
+id	string	소리를 구분하기 위한 id값입니다.
+name	string	소리의 이름입니다.
+label	object	소리의 이름을 국가별로 구분하기 위해 사용하는 값입니다.
+WS에 반영할때는 최종적으로 name 프로퍼티를 갱신해야 합니다.
+fileurl	string	소리가 사용하는 실제 사운드파일의 경로입니다. 파일명과 확장자를 포함한 전체경로를 작성해야 합니다.
+filename	string	소리가 사용하는 실제 사운드파일의 파일명입니다.
+fileurl이 없을 경우 filename값을 사용해 아래의 경로로 파일을 로드합니다.
+${Entry.defaultPath}/uploads/${sound.filename.substring(0, 2)}/${sound.filename.substring(2,4)}/${Entry.soundPath}${sound.filename}${sound.ext}
+코드 원본은 entry-js/init에서 확인 가능합니다.
+ext	string	소리가 사용하는 사운드 파일의 확장자입니다. 없을경우 자동으로 mp3로 적용됩니다.
+duration	number	소리 파일의 재생시간입니다.
+
+expansion
+popup_expansion_main
+
+‘확장 블록 불러오기’에서 사용하는 팝업입니다.
+
+내부적으로 select 팝업 기능을 사용합니다.
+
+WS에 등록
+const expansionBlocks = [];
+// submit 이벤트 핸들링
+// expansionItems : Array<expansionItem>
+popup.on('submit', (expansionItems) => {
+    // ex) data가 엔트리 확장블럭(expansion)인 경우
+  
+    // 확장블럭 추가 이벤트 dispatch
+    Entry.dispatchEvent('popupAddBlocks', { category: 'expansion', expansionItems });
+    // 추가할 블럭 필터링
+    const addBlocks = expansionItems.filter(({ name }) => !Entry.expansionBlocks.includes(name));
+    // 필요시 제거할 확장블럭 필터링
+    const removeBlocks = this.expansionBlocks
+            .filter((item) => item.active)
+            .filter((item) => !expansionItems.includes(item));
+    // WS 블록메뉴에 확장블럭 추가
+    Entry.playground.addExpansionBlocks(addBlocks, true, true);
+    // 필요할 경우 WS 블록메뉴에 확장블럭 제거
+    Entry.playground.removeExpansionBlocks(removeBlocks, true, true);
+}
+
+// popupAlertMessage : 알림 메세지 변경시 설정.
+popup.show({ type: 'expansion', popupAlertMessage: 'test' }, { data: { data: Object.values(Entry.EXPANSION_BLOCK) } });
+샘플 데이터 : expansionItem
+{
+    "name": "festival",
+    "imageName": "festival.png",
+    "title": {
+        "ko": "행사",
+        "en": "festival",
+        "jp": "イベント"
+    },
+    "titleKey": "template.festival_title_text",
+    "description": "국내 지역별 다양한 행사 및 축제와 관련된 불록 모음 입니다. [한국관광공사 제공]",
+    "descriptionKey": "Msgs.expansion_festival_description",
+    "isInitialized": false,
+    "api": "/api/expansionBlock/ko/festival",
+    "active": false
+    // 이하 프로퍼티들은 확장블록별 공유의 프로퍼티입니다. 아래는 예시로써 '행사' 확장블록의 공유 프로퍼티입니다.
+    "locationMap": {
+        "Seoul": {
+            "code": 1,
+            "sub": [
+                "강남구",
+                "강동구",
+                "강북구",
+            ]
+        },
+        "Incheon": {
+            "code": 2,
+            "sub": [
+                "강화군",
+                "계양구",
+                "남구",
+            ]
+        },
+        "Daejeon": {
+            "code": 3,
+            "sub": [
+                "대덕구",
+                "동구",
+            ]
+        },
+        "Daegu": {
+            "code": 4,
+            "sub": [
+                "남구",
+                "달서구",
+            ]
+        },
+        "Gwangju": {
+            "code": 5,
+            "sub": [
+                "광산구",
+                "남구",
+            ]
+        },
+    },
+    "infoTypeMap": {
+        "title": "title",
+        "address": "addr1",
+        "start_date": "eventstartdate",
+        "end_date": "eventenddate",
+        "coordinatex": "mapx",
+        "coordinatey": "mapy",
+        "area": "sigungucode",
+        "homepage": "homepage",
+        "overview": "overview"
+    },
+    "monthMap": {
+        "January": 1,
+        "Febuary ": 2,
+        "March": 3,
+        "April": 4,
+        "May": 5,
+        "June": 6,
+        "July": 7,
+        "August": 8,
+        "September": 9,
+        "October": 10,
+        "November": 11,
+        "December": 12
+    },
+}
+
+aiUtilize
+popup_aiUtilize_main
+
+‘인공지능 블록 불러오기’에서 사용하는 팝업입니다.
+
+내부적으로 select 팝업 기능을 사용합니다.
+
+WS에 등록
+// submit 이벤트 핸들링
+const aiUtilizeBlocks = [];
+
+// @aiUtilizeItems : Array<aiUtilizeItem>
+popup.on('submit', (aiUtilizeItems) => {
+    // ex) data가 엔트리 인공지능 블럭(aiUtilizeBlock)인 경우
+    Entry.dispatchEvent('popupAddBlocks', { category: 'ai_utilize', aiUtilizeItems });
+    // 추가할 블럭 필터링
+    const addBlocks = aiUtilizeItems.filter(({ name }) => !Entry.aiUtilizeBlocks.includes(name));
+    // 필요시 제거할 블록 필터링
+    const removeBlocks = this.aiUtilizeBlocks
+        .filter((item) => item.active)
+        .filter((item) => !aiUtilizeItems.includes(item));
+    // 인공지능 블럭 WS 블록메뉴에 추가
+    Entry.playground.addAIUtilizeBlocks(addBlocks, true, true);
+    // 인공지능 블럭 WS 블록메뉴에 제거
+    Entry.playground.removeAIUtilizeBlocks(removeBlocks, true, true);
+}
+샘플 데이터 : aiUtilizeItem
+{
+    "name": "translate",
+    "imageName": "papago.svg",
+    "category": "general",
+    "sponsorText": "Powered by {image}",
+    "sponsorImage": "naver.png",
+    "sponsorOnImage": "naverOn.png",
+    "title": {
+        "ko": "번역",
+        "en": "translate",
+        "jp": "翻訳"
+    },
+    "titleKey": "template.translate_title_text",
+    "description": "파파고를 이용하여 다른 언어로 번역할 수 있는 블록 모음입니다.",
+    "descriptionKey": "Msgs.expansion_translate_description",
+    "isInitialized": false,
+    "api": "/api/expansionBlock/papago/",
+    "sponsor": "papagoNaver",
+    "sponsorLink": "https://www.ncloud.com/product/aiService/papagoNmt",
+    "typeMap": {
+        "dictionary": "nsmt",
+        "artificial_intelligence": "n2mt"
+    },
+    "apiType": "n2mt",
+    "active": false
+}
+
+hardwareLite
+popup_hardwareLite_main
+
+하드웨어 ‘브라우저로 연결하기’에서 사용하는 팝업입니다.
+
+내부적으로 select 팝업 기능을 사용합니다.
+
+WS에 등록
+// submit 이벤트 핸들링
+// @hardwareLiteItems : Array<hardwareLiteItem>
+popup.on('submit', (hardwareLiteItems) => {
+    // ex) data가 엔트리 하드웨어 웹연결(hardwareLite)인 경우
+    // 일반적으로 하드웨어 연결은 한번에 1개씩만
+    const selectedModule = hardwareLiteItems.selected[0];
+
+    // 선택된 하드웨어 모듈을 WS에 추가
+    Entry.playground.addHardwareLiteModule(selectedModule);
+    const selectedFirmware = HARDWARE_LITE_FIRMWARE_REQUIRED[selectedModule.id];
+    
+    // 모듈에 문제가 있는 경우엔 failMenu 노출
+    Entry.hwLite.getConnectFailedMenu();
+    // 모듈에 문제가 없는 경우 연결 시도
+    Entry.hwLite.connect();
+}
+샘플 데이터 : hardwareLiteItem
+{
+    "retryLimitCnt": 8,
+    "portData": {
+        "baudRate": 115200,
+        "dataBits": 8,
+        "parity": "none",
+        "stopBits": 1,
+        "bufferSize": 512,
+        "connectionType": "ascii"
+    },
+    "duration": 64,
+    // 하드웨어 신청을 통해 발급받은 id
+    "id": "하드웨어 모듈 id",
+    "url": "http://microbit.org/ko/",
+    "imageName": "microbit2lite.png",
+    "title": {
+        "ko": "마이크로비트"
+    },
+    "name": "Microbit2lite",
+    "blockMenuBlocks": [
+        "microbit2lite_common_title",
+        "microbit2lite_get_analog",
+        "microbit2lite_set_analog",
+    ],
+    "version": "2",
+    "description": "Micro:bit Educational Foundation",
+    "linkBox": {
+        "desc": "고객센터",
+        "url": "http://microbit.org/ko/"
+    },
+    "active": false
+}
+
+projects
+popup_projects_empty
+
+popup_projects_main
+
+‘작품 불러오기’에서 사용하는 팝업입니다. 전용 컴포넌트인 ‘project’를 사용합니다.
+
+엔트리 서비스에서는 projectNavOptions으로 검색조건을 세팅해서 사용 중입니다.
+
+const popup = new Popup({
+    container: this.container,
+    isShow: false,
+    theme: 'entry',
+    data: { data: { data: [] } },
+});
+
+popup.setData({
+    projectNavOptions: {
+        categoryOptions: [
+            'all',
+            'game',
+            'living',
+            'storytelling',
+            'arts',
+            'knowledge',
+            'etc',
+        ],
+        sortOptions: ['updated', 'visit', 'likeCnt', 'comment'],
+        periodOptions: ['all', 'today', 'week', 'month', 'quarter'],
+    },
+});
+WS에 등록
+// submit 이벤트 핸들링
+// @projectItems : Array<projectItem>
+popup.on('submit', (projectItems) => {
+    // 프로젝트 저장정보의 경우 entryjs에서 제공하는 project저장 데이터와 완전히 독립적입니다.
+    // 따라서, 현재 엔트리 웹 서비스에서 사용하는 project데이터의 예시 샘플 데이터만 공유드립니다.
+}
+샘플 데이터 : projectItem
+{
+  "id": "작품 id",
+  "name": "작품명",
+  "user": {
+      "id": "사용자id",
+      "username": "사용자명",
+      "nickname": "사용자 닉네임",
+      "profileImage": null,
+      "_id": "유저 id",
+      "avatarImage": false
+  },
+  "thumb": "썸네일 경로/파일명.png",
+  "isopen": false,
+  "isPracticalCourse": false,
+  "category": "기타",
+  "categoryCode": "etc",
+  "created": "2024-02-28T05:41:16.878Z",
+  "updated": "2024-02-28T05:41:16.878Z",
+  "special": null,
+  "isForLecture": false,
+  "isForStudy": false,
+  "isForSubmit": false,
+  "hashId": null,
+  "complexity": 0,
+  "staffPicked": null,
+  "ranked": null,
+  "visit": 0,
+  "likeCnt": 0,
+  "comment": 0,
+  "showComment": true,
+  "project": null
+}
+
+table
+popup_table_main
+
+popup_table_select
+
+‘테이블 불러오기’에서 사용하는 팝업입니다.
+
+내부적으로 select, dragUpload, draw 팝업 기능을 사용하며 상단 naviation에서 확인 가능합니다.
+
+WS에 등록
+// submit 이벤트 핸들링
+// datas : { selected : Array<tableItem> }
+popup.on('submit', (datas) => {
+    // ex) data가 엔트리 테이블(table)인 경우
+    const tableItems = datas.selected;
+  
+    tableItems.map((tableItem) => {
+        Entry.playground.dataTable.addSources(tableItem);
+        Entry.creationChangedEvent.notify();
+    })
+}
+샘플 데이터 : tableItem
+{
+    "_id": "테이블정보 id",
+    "name": "vibe 장르별 재생 수",
+    "lang": "ko",
+    "url": "",
+    "rows": 12,
+    "fields": [
+        "월",
+        " 발라드",
+        " 댄스",
+        " 힙합",
+        " 팝",
+        " 락",
+        " 캐롤",
+        " 합계"
+    ],
+    "fieldInfos": [],
+    "provider": "vibe",
+    "summary": "summary",
+    "description": "summary",
+    "exampleurl": null,
+    "linkText": "",
+    "isOpen": true,
+    "projectTable": {
+        "_id": "테이블 데이터 id",
+        "chart": [],
+        "fields": [
+            "월",
+            " 발라드",
+            " 댄스",
+            " 힙합",
+            " 팝",
+            " 락",
+            " 캐롤",
+            " 합계"
+        ],
+        "type": "user",
+        "data": [
+            [
+                "2019-01",
+                " 4580340",
+                " 3506013",
+                " 2530997",
+                " 1781670",
+                " 433264",
+                " 0",
+                " 12832284"
+            ],
+            [
+                "2019-02",
+                " 5983086",
+                " 5039213",
+                " 3306147",
+                " 2441981",
+                " 563172",
+                " 0",
+                " 17333599"
+            ],
+        ],
+        "name": "월발라드댄스힙합팝락캐롤합계.csv",
+        "user": "5f9ab512df5079a03d4611f2",
+        "created": "2023-02-14T06:22:44.770Z",
+        "updated": "2023-02-14T06:22:44.770Z",
+        "__v": 0
+    },
+    "updated": "2023-02-14T06:22:45.960Z",
+    "hasOtherTypes": false,
+    "otherTypes": []
+}
+
+이벤트
+팝업 인스턴스는 특정 상황에서 커스텀 이벤트를 발생시킵니다.
+
+개발자는 각 커스텀 이벤트를 핸들링할 핸들러 함수를 인스턴스에 할당할 수 있습니다.
+
+이벤트의 종류는 entry-tool 소스에서는 constants/index.js 에서 확인 가능합니다.
+
+popup
+  .on('fetch', async (data) => {
+      // fetch핸들링 로직
+  })
+  .on('search', async (data) => {
+     // search핸들링 로직
+  })
+  .on('dummyUploads', async ({ formData, objectData }) => {
+    // dummyUploads핸들링 로직
+  });
+
+submit
+사용자가 선택한 item의 data를 추가할 때 발생하는 이벤트입니다.
+
+파라미터	타입	선택적	기본값	설명
+selected: Array	Array			선택된 아이템들의 데이터들의 배열입니다.
+
+search
+사용자가 특정 data를 검색할때 발생하는 이벤트입니다.
+
+파라미터	타입	선택적	기본값	설명
+category	Array			검색 카테고리 정보입니다. [다국어, value] 구조입니다.
+period	Array			검색 기간 정보입니다. [다국어, value] 구조입니다.
+searchQuery	string			사용자가 입력한 검색 키워드값 입니다.
+sort	Array			정렬 정보입니다. [다국어, value] 구조입니다.
+type	string			팝업의 type값
+
+fetch
+팝업이 로딩될 때, 데이터 fetch를 위해 발생하는 이벤트입니다.
+
+파라미터	타입	선택적	기본값	설명
+sidebar	string			선택된 사이드바값입니다.
+subMenu	string			선택된 서브메뉴값입니다.
+type	string			popup type 정보입니다.
+
+fetchMore
+‘propject’ type 팝업 사용시, 데이터 fetch를 위해 발생하는 이벤트입니다.
+
+‘project’ type 팝업은 infinity grid 형태로 item들을 노출시킵니다.
+
+최초 데이터로드를 할때와 사용자 스크롤로 인해 추가 데이터를 불러와야 하는 상황에서 발생합니다.
+
+파라미터	타입	선택적	기본값	설명
+callback	function			콜백 함수입니다.
+data	Array			현재까지 불러온 data 정보입니다.
+searchParam	Object			작품 검색조건입니다.
+type	string			popup 타입정보 입니다.
+
+close
+팝업이 닫혔을 때 발생하는 이벤트입니다.
+
+
+write
+‘글상자’ 생성시 발생하는 이벤트 입니다.
+
+파라미터	타입	선택적	기본값	설명
+data	Object			생성한 글상자 오브젝트 정보입니다.
+
+draw
+그리기 화면으로 이동시 발생하는 이벤트입니다.
+
+
+makeProject
+‘작품 불러오기’ 팝업에서 작품이 없을 경우 노출되는 ‘작품 만들기’ 클릭시 발생하는 이벤트입니다.
+
+
+itemon
+item 선택시 발생하는 이벤트입니다.
+
+파라미터	타입	선택적	기본값	설명
+data	Object			선택한 item 정보입니다.
+callback				콜백함수입니다.
+
+itemoff
+item 선택 해제시 발생하는 이벤트입니다.
+
+파라미터	타입	선택적	기본값	설명
+data	Object			선택 해제한 item 정보입니다.
+callback				콜백함수입니다.
+
+play
+소리 추가하기에서 아이템 선택시, 음원 재생을 위해 발생하는 이벤트입니다.
+
+파라미터	타입	선택적	기본값	설명
+item	Object			선택된 음원아이템의 데이터입니다.
+
+stop
+재생중인 음원 아이템을 한번 더 클릭시, 음원정지를 위해 발생하는 이벤트입니다.
+
+파라미터	타입	선택적	기본값	설명
+item	Object			선택된 음원 instance와 callback함수를 포함한 오브젝트입니다.
+
+uploadFail
+‘파일 올리기’ 실패시 발생하는 이벤트입니다.
+
+파라미터	타입	선택적	기본값	설명
+data	Object			실패 메시지 message와 메시지를 보낸 주체messageParent 정보를 담고 있습니다.
+
+uploads
+‘파일 올리기’로 받아온 데이터들을 ‘추가하기’ 버튼을 클릭하여 업로드 할때 발생하는 이벤트입니다.
+
+파라미터	타입	선택적	기본값	설명
+uploads	Array			업로드할 파일 데이터들 입니다.
+
+dummyUploads
+‘파일 올리기’로 데이터를 임시로 받아왔을 때 발생하는 이벤트입니다.
+
+파라미터	타입	선택적	기본값	설명
+formData	FormData			업로드한 파일의 formData입니다.
+
+
+openManager 이벤트
+엔트리 WS에서 ‘오브젝 추가하기’, ‘모양 추가하기’, ‘소리 추가하기’와 같은 버튼을 클릭하면 각 타입에 맞는 openManager 이벤트가 entryjs에서 발생합니다.
+
+각 타입에 맞는 Popup 창이 show되도록 이벤트 핸들링을 해주어야 합니다.
+
+// entryjs 초기화 이후
+import { Popup } from '@entrylabs/tool';
+const popup = new Popup({...});
+
+const addEventListener = Entry.addEventListener.bind(Entry);
+const removeAllEventListener = Entry.removeAllEventListener.bind(Entry);
+
+// '오브젝트 추가하기' 클릭시 dispatch
+removeAllEventListener('openSpriteManager');
+addEventListener('openSpriteManager', () => {
+    this.popup.show({ type: 'sprite' });
+});
+// '모양 추가하기' 클릭시 dispatch
+removeAllEventListener('openPictureManager');
+addEventListener('openPictureManager', () => {
+    this.popup.show({ type: 'picture' });
+});
+// '소리 추가하기' 클릭시 dispatch
+removeAllEventListener('openSoundManager');
+addEventListener('openSoundManager', () => {
+    this.popup.show({ type: 'sound' });
+});
+// '인공지능 블록 불러오기' 클릭시 dispatch
+removeAllEventListener('openAIUtilizeBlockManager');
+addEventListener('openAIUtilizeBlockManager', () => {
+    // Object.values(Entry.AI_UTILIZE_BLOCK_LIST)
+    const blocks = this.popup.aiUtilizeBlocks;
+    this.popup.show({ type: 'aiUtilize' }, { data: { data: blocks }});
+});
+// '확장 블록 불러오기' 클릭시 dispatch
+removeAllEventListener('openExpansionBlockManager');
+addEventListener('openExpansionBlockManager', () => {
+    // Object.values(Entry.EXPANSION_BLOCK_LIST)
+    const blocks = this.popup.expansionBlocks;
+    this.popup.show({ type: 'expansion' }, { data: { data: blocks } });
+});
+// '모양 가져오기' 클릭시 dispatch
+removeAllEventListener('openPictureImport');
+addEventListener('openPictureImport', () => {
+    this.popup.show({ type: 'paint' });
+});
+
+// 하드웨어 '브라우저로 연결하기' 클릭시 dispatch
+removeAllEventListener('openHardwareLiteBlockManager');
+addEventListener('openHardwareLiteBlockManager', () => {
+    // Object.values(Entry.HARDWARE_LITE_LIST)
+    const blocks = this.popup.hardwareLiteBlocks;
+    this.popup.show({ type: 'hardwareLite' }, { data: { data: blocks } });
+});
+
+
+Widget
+이 문서는 작성중인 문서입니다.
+
+Chart
+ModalChart
+ModalTable
+BillBoardChart
+TreeNode
+modalProgress
+Dropper
+Sortable
+Draggable
+Dropdown
+DropdownExtra
+angle
+Number
+ContextMenu
+Backpack
+MusicScale
+
+Entry제공 함수
+이 문서의 예시코드에서 사용중인 Entry객체 하위 함수에 대해 기술합니다.
+이 단원에 작성된 내용은 추후 별도의 페이지로 통합 될 수 있습니다.
+
+
+Entry.generateHash
+소스원본
+
+숫자와 알파벳으로 구성된 n자리 랜덤 해시값을 리턴합니다.
+
+파라미터	타입	선택적	기본값	설명
+length	number	✔️	4	리턴할 해시값의 자릿수입니다.
+Return : String
+
+
+Entry.container.addObject
+소스원본
+
+엔트리 WS에 오브젝트를 추가합니다.
+
+파라미터	타입	선택적	기본값	설명
+objectModel	Object			WS에 추가할 오브젝트 모델정보입니다.
+index	number			삽입될 오브젝트의 인덱스입니다. 일반적으로 0값을 입력합니다.
+Return : void
+
+
+Entry.playground.addPicture
+소스원본
+
+엔트리WS에 모양(picture)을 추가합니다.
+
+파라미터	타입	선택적	기본값	설명
+picture	Object			WS에 추가할 모양 정보입니다.
+isNew	boolean	✔️	false	추가할 모양이 신규인지 여부를 나타냅니다.
+이 값에따라 picture파라미터의 id값을 재사용할지 판단합니다.
+isSelect	boolean	✔️	true	이 모양을 포함하는 오브젝트에서 이 모양을 선택하고 있는지 여부를 나타냅니다.
+선택된 이미지는 오브젝트의 대표썸네일이 되며, 모양 탭에서 선택된 상태가 됩니다.
+Return : void
+
+
+Entry.playground.addSound
+소스원본
+
+엔트리 WS에 소리(sound)를 추가합니다.
+
+파라미터	타입	선택적	기본값	설명
+sound	Object			WS에 추가할 소리 정보입니다.
+NotForView	boolean	✔️	false	현재 사용하지 않는 파라미터입니다.
+isNew	boolean	✔️	false	추가할 소리가 신규인지 여부를 나타냅니다.
+이 값에따라 sound파라미터의 id값을 재사용할지 판단합니다.
+isSelect	boolean	✔️	true	
+Return : void
+
+
+
+Entry.playground.addExpansionBlocks
+소스원본1 소스원본2
+
+파라미터로 넘겨준 block들의 name값이 Entry.EXPANSION_BLOCK에 포함된 경우, 해당 블럭들을 초기화하고 WS에 노출시킵니다.
+
+파라미터	타입	선택적	기본값	설명
+expansionBlocks	Array< Object>			추가할 블록의 배열입니다.
+Return : void
+
+
+Entry.playground.removeExpansionBlocks
+소스원본1 소스원본2
+
+파라미터로 넘겨준 block들의 name값들을 기반으로 Entry.expansionBlocks에서 제거하고 해당 블럭들을 WS에서 미노출시킵니다.
+
+파라미터	타입	선택적	기본값	설명
+expansionBlocks	Array< Object>			제거할 블록을 배열입니다.
+Return : void
+
+
+Entry.playground.dataTable.addSources
+소스원본
+
+엔트리 WS에 테이블 정보를 추가합니다.
+
+파라미터	타입	선택적	기본값	설명
+tables	Array< Object >	✔️	[ ]	WS에 추가할 테이블 정보입니다.
+Return : void
+
+
+
+기타
+ListTool
+DataAnalytics
+
+React 컴포넌트
+이 문서는 작성중인 문서입니다.
+
+일부 툴들은 React컴포넌트로 제공됩니다.
+
+import { Dropdown } from '@entrylabs/tool/component'
+
+return(<Dropdown/>)
+Component.Dropdown
+<Dropdown
+    autoWidth
+    animation={false}
+    items={[]}
+    positionDom={buttonEl.current}
+    onSelectDropdown={(item) => {
+        const options = item[2] || {};
+        const { disabled } = options;
+        if (disabled) {
+            return;
+        }
+        if (onSelect) {
+            onSelect(item);
+        }
+        if (callback) {
+            callback();
+        }
+    }}
+    outsideExcludeDom={[buttonEl.current]}
+    onOutsideClick={(item) => {
+        setOn(!on);
+        if (onOutsideClick) {
+            onOutsideClick(item);
+        }
+    }}
+/>
+파라미터	타입	선택적	기본값	설명
+theme		✔️		
+checkedIndex				
+items				
+autoWidth				
+animation			true	
+onSelectDropdown				
+onChange				
+maximumSelectionLength				
+multiple				
+showSelectAll				
+onOutsideClick				
+eventTypes			[‘mouseup’, ‘touchend’, ‘wheel’]	
+outsideExcludeDom				
+Component.ModalProgress
+Component.ColorPicker
+Component.Backpack
+Component.Number
+Component.MusicScale
+Component.ContextMenu
+Caught a mistake or want to contribute to the documentation? Edit this page on Github

@@ -64,13 +64,13 @@
   max-width: 32px !important;
   padding: 0 !important;
   margin: 0 !important;
-  
+
   /* 같은 배경과 테두리 */
   background-color: var(--vscode-bg-secondary) !important;
   color: var(--vscode-text-primary) !important;
   border: 1px solid var(--vscode-border) !important;
   border-radius: var(--vscode-border-radius) !important;
-  
+
   /* 기본 설정 */
   display: inline-flex !important;
   align-items: center !important;
@@ -80,7 +80,7 @@
   transition: all 0.2s ease !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
   flex-shrink: 0 !important;
-  
+
   /* 폰트 설정 */
   font-family: var(--vscode-font-ui) !important;
   font-weight: normal !important;
@@ -171,7 +171,8 @@
   background-color: var(--vscode-bg-secondary) !important;
   color: var(--vscode-text-primary) !important;
   border: 1px solid var(--vscode-border) !important;
-  padding: 4px 12px !important; /* 🔥 패딩 축소 */
+  padding: 4px 12px !important;
+  /* 🔥 패딩 축소 */
   border-radius: var(--vscode-border-radius) !important;
   font-size: 14px !important;
   cursor: pointer;
@@ -179,7 +180,8 @@
   display: inline-flex !important;
   align-items: center;
   gap: 4px;
-  height: 32px !important; /* 🔥 명시적 높이 설정 */
+  height: 32px !important;
+  /* 🔥 명시적 높이 설정 */
   max-height: 32px !important;
   min-height: 32px !important;
   box-sizing: border-box !important;
@@ -192,7 +194,8 @@
 }
 
 .ide-container #ide-explanation-btn i {
-  color: #f39c12; /* 전구 아이콘 노란색 */
+  color: #f39c12;
+  /* 전구 아이콘 노란색 */
 }
 
 /* 정답보기 버튼 - HTML ID: showAnswerBtn - 🔥 높이 조정 */
@@ -200,7 +203,8 @@
   background-color: var(--vscode-bg-secondary) !important;
   color: var(--vscode-text-primary) !important;
   border: 1px solid var(--vscode-border) !important;
-  padding: 4px 12px !important; /* 🔥 패딩 축소 */
+  padding: 4px 12px !important;
+  /* 🔥 패딩 축소 */
   border-radius: var(--vscode-border-radius) !important;
   font-size: 14px !important;
   cursor: pointer;
@@ -208,7 +212,8 @@
   display: inline-flex !important;
   align-items: center;
   gap: 4px;
-  height: 32px !important; /* 🔥 명시적 높이 설정 */
+  height: 32px !important;
+  /* 🔥 명시적 높이 설정 */
   max-height: 32px !important;
   min-height: 32px !important;
   box-sizing: border-box !important;
@@ -221,7 +226,8 @@
 }
 
 .ide-container #showAnswerBtn i {
-  color: #3498db; /* 눈 아이콘 파란색 */
+  color: #3498db;
+  /* 눈 아이콘 파란색 */
 }
 
 /* 코드실행 버튼 - 강조 스타일 유지 */
@@ -287,7 +293,7 @@
 }
 
 /* ============================================================
-   ACE 에디터 VSCode 테마 + 거터 60px 고정
+   ACE 에디터 VSCode 테마 + 자연스러운 레이아웃
    ============================================================ */
 
 .ide-container .ace_editor {
@@ -295,77 +301,87 @@
   color: var(--vscode-text-primary) !important;
   font-family: var(--vscode-font-editor) !important;
   font-size: var(--editor-font-size, 16px) !important;
-  line-height: 1.4 !important;
+  line-height: 1.5 !important;
   border: none !important;
-  position: relative !important;
 }
 
-/* 🔥 거터 60px 고정 - 최우선 적용 */
+/* 거터 스타일 - 고정 너비 제거, 자연스러운 패딩 적용 */
 .ide-container .ace_gutter {
   background-color: var(--vscode-bg-primary) !important;
   color: var(--vscode-text-muted) !important;
-  border-right: 1px solid var(--vscode-border) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  /* 아주 연한 경계선 */
   font-family: var(--vscode-font-editor) !important;
   font-size: calc(var(--editor-font-size, 16px) - 1px) !important;
-  width: 60px !important;
-  min-width: 60px !important;
-  max-width: 60px !important;
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
   z-index: 10 !important;
 }
 
-/* 🔥 코드 영역 60px 시작 - 최우선 적용 */
-.ide-container .ace_scroller {
-  background-color: var(--vscode-bg-primary) !important;
-  margin-left: 0px !important;
-  padding-left: 0 !important;
-}
+/* 스크롤러 및 컨텐츠 - 마진 핵(Hack) 제거됨 (ACE 내부 계산 신뢰) */
 
-.ide-container .ace_content {
-  margin-left: 34px !important;
-  padding-left: 0 !important;
-}
-
-.ide-container .ace_layer {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-}
 
 .ide-container .ace_gutter-cell {
   color: #858585 !important;
   text-align: right !important;
-  padding-left: 4px !important;
-  padding-right: 8px !important;
+  padding-left: 12px !important;
+  /* 왼쪽 여백 */
+  padding-right: 12px !important;
+  /* 오른쪽 여백: 자릿수와 코드 사이 간격 확보 */
 }
 
 .ide-container .ace_gutter-cell.ace_gutter-active-line {
-  color: #cccccc !important;
-  background-color: var(--vscode-bg-secondary) !important;
+  color: #c6c6c6 !important;
 }
 
-.ide-container .ace_line {
-  padding-left: 4px !important;
-}
-
+/* 활성 라인 */
 .ide-container .ace_active-line {
   background-color: rgba(255, 255, 255, 0.04) !important;
+  /* VSCode 기본값 */
 }
 
+/* 커서 */
 .ide-container .ace_cursor {
   color: var(--vscode-text-primary) !important;
   border-left: 2px solid var(--vscode-text-primary) !important;
 }
 
+/* 선택 영역 */
 .ide-container .ace_selection {
-  background-color: rgba(0, 122, 204, 0.2) !important;
+  background-color: rgba(38, 79, 120, 0.4) !important;
+  /* VSCode Selection */
 }
 
 /* ============================================================
-   Python 구문 강조 스타일
+   VSCode 스타일 스크롤바 (Webkit)
    ============================================================ */
+.ide-container .ace_scrollbar {
+  display: block;
+}
 
+.ide-container .ace_scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.ide-container .ace_scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ide-container .ace_scrollbar::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 5px;
+  border: 2px solid var(--vscode-bg-primary);
+  /* 패딩 효과 */
+}
+
+.ide-container .ace_scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #4f4f4f;
+}
+
+.ide-container .ace_scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Python 구문 강조 스타일 */
 .ide-container .ace_keyword {
   color: #569cd6 !important;
   font-weight: normal !important;
@@ -453,7 +469,8 @@
 .ide-container .ide-font-controls .btn-group {
   display: flex;
   align-items: center;
-  gap: 2px; /* 버튼 간 작은 간격 */
+  gap: 2px;
+  /* 버튼 간 작은 간격 */
   background: none;
   border: none;
   border-radius: 0;
@@ -469,13 +486,13 @@
   max-width: 32px !important;
   padding: 0 !important;
   margin: 0 !important;
-  
+
   /* 또르각한 배경과 테두리 */
   background-color: var(--vscode-bg-secondary) !important;
   color: var(--vscode-text-primary) !important;
   border: 1px solid var(--vscode-border) !important;
   border-radius: var(--vscode-border-radius) !important;
-  
+
   /* 기본 설정 */
   display: inline-flex !important;
   align-items: center !important;
@@ -485,7 +502,7 @@
   transition: all 0.2s ease !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
   flex-shrink: 0 !important;
-  
+
   /* 폰트 설정 */
   font-family: var(--vscode-font-ui) !important;
   font-weight: normal !important;
@@ -530,19 +547,8 @@
 /* 버튼 그룹 내 특정 버튼들 개별 스타일링 */
 
 /* 폰트 축소 버튼 */
-.ide-container #font-decrease {
-  /* 기본 스타일 상속 */
-}
-
-/* 폰트 증가 버튼 */
-.ide-container #font-increase {
-  /* 기본 스타일 상속 */
-}
-
-/* 새로고침 버튼 */
-.ide-container #ide-refresh-btn {
-  /* 기본 스타일 상속 */
-}
+/* 버튼 그룹 내 특정 버튼들 개별 스타일링 */
+/* 기본 스타일 상속을 위해 빈 규칙 제거됨 */
 
 /* 다운로드 버튼 - 이미 위에 정의되어 있지만 그룹에서 사용시 오버라이드 */
 .ide-container .ide-font-controls #download-code-btn {
@@ -569,7 +575,7 @@
     max-width: 28px !important;
     font-size: 12px !important;
   }
-  
+
   .ide-container .ide-control-btn i {
     font-size: 12px !important;
   }
@@ -658,27 +664,27 @@
   .ide-container .code-editor-title {
     font-size: 16px;
   }
-  
+
   .ide-container #editor {
     min-height: 200px;
     font-size: 16px;
   }
-  
+
   .ide-container .ace_editor {
     font-size: 16px !important;
   }
-  
+
   .ide-container .ace_gutter {
     font-size: 16px !important;
     width: 60px !important;
     min-width: 60px !important;
     max-width: 60px !important;
   }
-  
+
   .ide-container .ace_scroller {
     margin-left: 60px !important;
   }
-  
+
   .ide-container .ace_content {
     margin-left: 60px !important;
   }
@@ -688,16 +694,16 @@
   .ide-container .code-editor-title {
     font-size: 12px;
   }
-  
+
   .ide-container #editor {
     min-height: 150px;
     font-size: 14px;
   }
-  
+
   .ide-container .ace_editor {
     font-size: 16px !important;
   }
-  
+
   .ide-container .ace_gutter {
     font-size: 16px !important;
     width: 60px !important;
@@ -718,27 +724,31 @@
     height: 28px !important;
     font-size: 14px !important;
   }
-  
+
   .ide-container #ide-explanation-btn {
-    padding: 3px 8px !important; /* 🔥 모바일에서 패딩 축소 */
+    padding: 3px 8px !important;
+    /* 🔥 모바일에서 패딩 축소 */
     font-size: 12px !important;
-    height: 28px !important; /* 🔥 모바일 높이 조정 */
+    height: 28px !important;
+    /* 🔥 모바일 높이 조정 */
     min-height: 28px !important;
     max-height: 28px !important;
   }
-  
+
   .ide-container #showAnswerBtn {
-    padding: 3px 8px !important; /* 🔥 모바일에서 패딩 축소 */
+    padding: 3px 8px !important;
+    /* 🔥 모바일에서 패딩 축소 */
     font-size: 12px !important;
-    height: 28px !important; /* 🔥 모바일 높이 조정 */
+    height: 28px !important;
+    /* 🔥 모바일 높이 조정 */
     min-height: 28px !important;
     max-height: 28px !important;
   }
-  
+
   .ide-container .ace_scroller {
     margin-left: 60px !important;
   }
-  
+
   .ide-container .ace_content {
     margin-left: 60px !important;
   }

@@ -1,0 +1,363 @@
+# 게시판 시스템 기능 명세서 (최종 업데이트)
+
+## 📋 프로젝트 개요
+- **프로젝트명**: educodingnplay 게시판 시스템
+- **기존 시스템**: 너구리톡 (채팅형 소통)
+- **신규 추가**: 카테고리형 게시판 시스템
+- **완성일**: 2025년 6월 9일
+- **최종 업데이트**: 2025년 6월 9일
+- **완성도**: 100% (핵심 기능 완료)
+
+---
+
+## 🗄️ 데이터베이스 구조
+
+### 기존 테이블 (분리 완료)
+```sql
+-- 기존 데이터 백업 완료
+posts_backup (16개 메시지 백업)
+posts (삭제됨 - 데이터 분리 완료)
+```
+
+### 너구리톡 전용 테이블
+```sql
+CREATE TABLE nuguritalk_posts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,          -- 메시지 내용
+    content TEXT NOT NULL,                -- 추가 내용  
+    author VARCHAR(100) NOT NULL,         -- 작성자명
+    author_id INT NULL,                   -- Users 테이블 참조
+    image VARCHAR(255) NULL,              -- 첨부 이미지
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (author_id) REFERENCES Users(id)
+);
+```
+
+### 게시판 전용 테이블
+```sql
+-- 카테고리 테이블
+CREATE TABLE board_categories (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,            -- 카테고리명
+    slug VARCHAR(50) UNIQUE NOT NULL,     -- URL용 영문명
+    description TEXT,                     -- 카테고리 설명
+    order_index INT DEFAULT 0,            -- 정렬 순서
+    is_active BOOLEAN DEFAULT TRUE,       -- 활성화 여부
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 게시글 테이블
+CREATE TABLE board_posts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    category_id INT NOT NULL,             -- 카테고리 ID
+    title VARCHAR(200) NOT NULL,          -- 제목
+    content TEXT NOT NULL,                -- 내용
+    author VARCHAR(100) NOT NULL,         -- 작성자명
+    author_id INT NOT NULL,               -- 작성자 ID
+    views INT DEFAULT 0,                  -- 조회수
+    is_pinned BOOLEAN DEFAULT FALSE,      -- 고정글 여부
+    is_notice BOOLEAN DEFAULT FALSE,      -- 공지사항 여부
+    source VARCHAR(255) NULL,             -- 출처
+    ccl VARCHAR(100) NULL,                -- 저작권 정보
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES board_categories(id),
+    FOREIGN KEY (author_id) REFERENCES Users(id)
+);
+
+-- 첨부파일 테이블
+CREATE TABLE board_attachments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    post_id INT NOT NULL,                 -- 게시글 ID
+    original_name VARCHAR(255) NOT NULL,  -- 원본 파일명
+    stored_name VARCHAR(255) NOT NULL,    -- 저장된 파일명
+    file_size INT NOT NULL,               -- 파일 크기
+    file_type VARCHAR(100) NOT NULL,      -- MIME 타입
+    s3_url VARCHAR(500),                  -- S3 저장 URL
+    download_count INT DEFAULT 0,         -- 다운로드 횟수
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES board_posts(id) ON DELETE CASCADE
+);
+```
+
+### 기본 카테고리 데이터 (업데이트됨)
+```sql
+INSERT INTO board_categories (id, name, slug, description, order_index) VALUES
+(1, '업데이트 노트', 'notice', '서비스 업데이트 및 개선사항을 안내합니다', 1),
+(2, '교육정보', 'education', '교육 관련 정보를 공유합니다', 2),  
+(3, '자유게시판', 'free', '자유로운 의견을 나눌 수 있는 공간입니다', 3);
+```
+
+---
+
+## 🛣️ 라우팅 구조
+
+### 너구리톡 (기존 기능)
+```
+/nuguritalk                    → 너구리톡 메인 (채팅형)
+/nuguritalk/write             → 메시지 작성
+/nuguritalk/edit/:id          → 메시지 수정
+/nuguritalk/delete/:id        → 메시지 삭제
+```
+
+### 게시판 (신규 기능)
+```
+/board                        → 게시판 메인 (전체 게시글 통합 목록)
+/board/:category              → 카테고리별 목록 (notice, education, free)
+/board/:category/:id          → 게시글 상세보기
+/board/write                  → 통합 글쓰기 (카테고리 선택 가능)
+/board/:category/write        → 카테고리별 글쓰기 (호환성 유지)
+/board/:category/:id/edit     → 글 수정
+```
+
+### API 엔드포인트
+```
+GET  /api/board/posts              → 게시글 목록 (메인용)
+GET  /api/board/posts?category=    → 카테고리별 게시글 목록
+POST /api/board/posts              → 게시글 작성
+PUT  /api/board/posts/:id          → 게시글 수정
+DELETE /api/board/posts/:id        → 게시글 삭제
+GET  /api/board/search             → 게시글 검색
+GET  /api/board/download/:id       → 첨부파일 다운로드
+DELETE /api/board/attachment/:id   → 첨부파일 삭제
+GET  /api/board/posts/:id/navigation → 이전글/다음글 정보
+```
+
+---
+
+## 📁 파일 구조
+
+### 라우터 파일
+```
+routes/
+├── boardRouter.js            → 게시판 페이지 라우터 ✅
+├── nuguritalkRouter.js       → 너구리톡 라우터 ✅
+└── api/
+    └── boardApiRouter.js     → 게시판 API 라우터 ✅
+```
+
+### 뷰 파일 (통합 레이아웃 적용 완료)
+```
+views/
+├── board/
+│   ├── board_index.ejs      → 게시판 메인 (전체 통합 목록) ✅
+│   ├── list.ejs             → 카테고리별 목록 ✅
+│   ├── view.ejs             → 게시글 상세보기 ✅
+│   └── write.ejs            → 글쓰기/수정 (통합) ✅
+├── nuguritalk.ejs           → 너구리톡 페이지 ✅
+└── partials/
+    └── header.ejs           → 헤더 (너구리톡 링크 수정됨) ✅
+```
+
+### CSS/JS 파일
+```
+public/
+├── css/
+│   ├── board-layout.css     → 통합 레이아웃 CSS (신규) ✅
+│   └── board.css            → 기존 너구리톡용 CSS (유지)
+└── js/
+    └── board.js             → 기존 너구리톡용 JS (유지)
+```
+
+---
+
+## 🎨 UI/UX 설계 (완성)
+
+### 통합 레이아웃 시스템 ✅
+**3컬럼 레이아웃 구조:**
+```
+┌─────────┬───────────────────┬─────────┐
+│         │                   │         │
+│  사이드 │   메인 콘텐츠      │ 액션버튼 │
+│  바     │   (고정 900px)    │ 그룹    │
+│ (250px) │                   │(100px)  │
+│         │                   │         │
+└─────────┴───────────────────┴─────────┘
+```
+
+### 게시판 메인 페이지 (board_index.ejs) ✅
+- **좌측 사이드바**: 카테고리 네비게이션 (스티키)
+- **중앙 메인**: 전체 게시글 통합 목록 (1줄 레이아웃)
+- **우측 버튼**: 글쓰기 버튼만 (스티키)
+- **정렬 옵션**: 최신순, 조회순, 댓글순
+- **반응형**: 모바일에서 사이드바 토글
+
+### 카테고리별 목록 페이지 (list.ejs) ✅
+- **동일한 3컬럼 레이아웃** 사용
+- **1줄 게시글 표시**: [번호] [제목] [뱃지] [작성자] [조회수] [시간]
+- **검색 기능**: 제목/내용/작성자 검색
+- **페이지네이션**: 20개씩 표시
+- **필터링**: 공지사항/고정글 우선 표시
+
+### 게시글 상세보기 (view.ejs) ✅
+- **헤더**: 카테고리 + 제목 + 수정/삭제 버튼 (우측 배치)
+- **내용**: 게시글 본문
+- **첨부파일**: 다운로드 지원
+- **댓글**: 기본 구조 (확장 가능)
+- **우측 버튼**: 글쓰기, 목록, 이전글, 다음글
+
+### 글쓰기/수정 페이지 (write.ejs) ✅
+- **헤더**: 제목 + 취소/등록 버튼 (우측 배치)
+- **CKEditor 5**: WYSIWYG 에디터
+- **카테고리 선택**: 드롭다운 (통합 글쓰기)
+- **출처/저작권**: 선택 입력
+- **관리자 옵션**: 공지사항/상단고정 (권한별)
+
+---
+
+## 🔐 권한 관리
+
+### 권한별 기능 매트릭스
+| 기능 | guest | student | teacher | manager | admin |
+|------|-------|---------|---------|---------|-------|
+| 게시글 읽기 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 자유게시판 쓰기 | ✗ | ✓ | ✓ | ✓ | ✓ |
+| 교육정보 쓰기 | ✗ | ✗ | ✓ | ✓ | ✓ |
+| 업데이트노트 쓰기 | ✗ | ✗ | ✗ | ✓ | ✓ |
+| 고정글 설정 | ✗ | ✗ | ✗ | ✓ | ✓ |
+| 타인글 수정 | ✗ | ✗ | ✗ | ✓ | ✓ |
+| 글 삭제 | ✗ | 본인만 | 본인만 | ✓ | ✓ |
+
+### 권한 확인 함수
+```javascript
+function checkWritePermission(userRole, category) {
+    const permissions = {
+        'notice': ['admin', 'manager'],
+        'education': ['admin', 'manager', 'teacher'],
+        'free': ['admin', 'manager', 'teacher', 'student']
+    };
+    return permissions[category]?.includes(userRole) || false;
+}
+```
+
+---
+
+## 🎯 주요 기능 상세
+
+### 1. 1줄 게시글 레이아웃 ✅
+**모든 게시판 페이지에서 통일된 1줄 표시:**
+```
+[카테고리] ──── 제목 ──── [뱃지] ── 작성자 ── 조회수 ── 시간
+   60px      flex:1       auto     60px    40px   50px
+```
+
+**특징:**
+- 카테고리별 색상 구분
+- 새글(N), 공지, 고정 뱃지
+- 조회수 포맷: 1k, 1.2M
+- 시간 포맷: 오늘(HH:MM), 이번년도(MM-DD)
+
+### 2. 스티키 버튼 그룹 최적화 ✅
+**페이지별 버튼 구성:**
+- **전체 게시판**: [글쓰기] 만
+- **개별 게시판**: [글쓰기] 만
+- **글쓰기 페이지**: [글쓰기] 만
+- **게시글 상세**: [글쓰기] [목록] [이전글] [다음글]
+
+### 3. 헤더 액션 버튼 ✅
+**글쓰기/상세보기 페이지:**
+- 제목 우측에 액션 버튼 배치
+- 회색 테마로 통일 (#6c757d)
+- 작은 크기 (12px 폰트, 6px×12px 패딩)
+
+### 4. 댓글 시스템 (기본 구조) ✅
+- 댓글 입력창 우측 하단에 등록 버튼
+- 수정/삭제 버튼과 동일한 스타일
+- 로그인 필요시 안내 메시지
+
+---
+
+## 🔧 기술 스택
+
+### 백엔드
+- **Node.js + Express**: 서버 프레임워크
+- **MySQL**: 데이터베이스
+- **EJS**: 템플릿 엔진
+- **multer**: 파일 업로드 (준비)
+- **AWS S3**: 파일 저장 (준비)
+
+### 프론트엔드
+- **Bootstrap 5.3.3**: UI 프레임워크
+- **CKEditor 5**: 에디터
+- **Bootstrap Icons**: 아이콘
+- **커스텀 CSS**: 통합 레이아웃
+
+### 보안
+- **세션 기반 인증**: express-session
+- **권한별 접근 제어**: 미들웨어
+- **XSS 방지**: CKEditor 기본 필터링
+- **CSRF 보호**: 준비 중
+
+---
+
+## 📊 현재 완성 상태 (100%)
+
+### ✅ 완료된 기능
+- [x] **데이터베이스 분리**: 너구리톡 ↔ 게시판 완전 분리
+- [x] **라우터 분리**: /board ↔ /nuguritalk 독립 운영
+- [x] **테이블 생성**: 카테고리, 게시글, 첨부파일 테이블
+- [x] **기본 데이터**: 3개 카테고리 + 테스트 게시글
+- [x] **통합 레이아웃**: 3컬럼 레이아웃 모든 페이지 적용
+- [x] **메인 페이지**: 전체 게시글 통합 목록 (1줄 레이아웃)
+- [x] **목록 페이지**: 카테고리별 목록 (1줄 레이아웃)
+- [x] **상세보기**: 게시글 상세보기 (헤더 버튼 배치)
+- [x] **글쓰기**: 통합 글쓰기/수정 (헤더 버튼 배치)
+- [x] **API 시스템**: 게시글 CRUD, 검색 API
+- [x] **권한 시스템**: 카테고리별 글쓰기 권한
+- [x] **반응형**: 모바일/태블릿 대응
+- [x] **버튼 최적화**: 페이지별 적절한 버튼 구성
+- [x] **스타일 통일**: 모든 액션 버튼 회색 테마
+
+### 🚧 확장 가능 기능 (선택)
+- [ ] **S3 파일 업로드**: 실제 파일 업로드/다운로드
+- [ ] **댓글 시스템**: 댓글 CRUD 기능 완성
+- [ ] **이전/다음글**: 네비게이션 기능
+- [ ] **검색 최적화**: 전문 검색 기능
+- [ ] **관리자 통계**: 대시보드
+
+---
+
+## 🚀 배포 및 운영
+
+### 현재 테스트 가능 URL
+- **메인 페이지**: https://app.codingnplay.co.kr/board
+- **업데이트 노트**: https://app.codingnplay.co.kr/board/notice
+- **교육정보**: https://app.codingnplay.co.kr/board/education  
+- **자유게시판**: https://app.codingnplay.co.kr/board/free
+- **글쓰기**: https://app.codingnplay.co.kr/board/write
+- **너구리톡**: https://app.codingnplay.co.kr/nuguritalk
+
+### 운영 고려사항
+- **SEO 최적화**: 메타 태그 및 구조화 데이터
+- **성능 최적화**: 인덱스, 캐싱, CDN
+- **백업 전략**: 정기 데이터베이스 백업
+- **모니터링**: 에러 로깅 및 성능 모니터링
+
+---
+
+## 📞 주요 변경사항 요약
+
+### 명칭 변경
+- **"공지사항" → "업데이트 노트"**: 각 게시판별 공지와 구분
+
+### 레이아웃 통일
+- **3컬럼 레이아웃**: 모든 게시판 페이지 통일
+- **1줄 게시글**: 테이블 → 카드형 1줄 레이아웃
+- **스티키 요소**: 사이드바(좌), 액션버튼(우) 고정
+
+### 버튼 최적화
+- **중복 제거**: 불필요한 네비게이션 버튼 제거
+- **페이지별 최적화**: 각 페이지 목적에 맞는 버튼만 표시
+- **스타일 통일**: 모든 액션 버튼 회색 테마
+
+### 사용성 개선
+- **헤더 액션**: 글쓰기/상세보기에서 제목 옆 버튼 배치
+- **직관적 네비게이션**: 좌측 사이드바로 카테고리 이동
+- **반응형 최적화**: 모바일에서도 쉬운 사용
+
+---
+
+**📅 최종 완성일**: 2025년 6월 9일  
+**🎯 완성도**: 100% (핵심 기능 완료)  
+**🔧 상태**: 프로덕션 준비 완료

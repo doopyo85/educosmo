@@ -1,0 +1,19 @@
+//문항파일 네이밍 규칙
+
+cospro_1-3_p03.html
+
+(시험지명)_(급수)-(회차)_(문항번호) + (확장자)
+
+시험지명: cospro
+급수: 1급
+회차: 1회차
+문항번호: p01 ~ p10
+확장자: .html
+
+//문항이미지 네이밍 규칙
+
+cospro_1-1_p05_01.webp
+
+https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/cospro_1-1_p05_01.webp
+
+(시험지명)_(급수)-(회차)_(문항번호)_(이미지번호) + (확장자)

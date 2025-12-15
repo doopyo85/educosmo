@@ -1,0 +1,53 @@
+### Project Summary for ChatGPT Continuation
+
+#### Environment Setup
+- **Frontend**: EJS (Embedded JavaScript), CSS (Bootstrap 및 Custom Styling), JavaScript, jQuery
+- **Backend**: Node.js with Express.js, Redis for session management, AWS S3 for problem storage
+- **APIs**: Google Sheets API for dynamic problem loading
+- **Authentication**: JWT for user authentication, session cookies for session handling
+
+#### Key Variables
+- **currentProblemNumber**: Manages the current problem being displayed (1 by default).
+- **totalProblems**: Total number of problems available (set to 10 by default).
+- **problemData**: Array containing problem details loaded via Google Sheets API.
+- **currentExamName**: Stores the currently selected exam for problem loading.
+- **spreadsheetId**: Google Sheets ID for fetching menu and problem data.
+- **googleApiKey**: API key for Google Sheets API.
+
+#### Application Flow
+1. **Page Load (Frontend)**:
+   - The page fetches user session data and renders the **header** with username.
+   - Google API loads the **menu** and **problem data** dynamically from Google Sheets.
+   - The **navigation menu** is rendered with collapsible submenus.
+   - A **problem** is loaded into an iframe upon selection, and the **Ace Editor** is initialized for user input.
+
+2. **Problem Navigation**:
+   - Users can navigate between problems using "previous" and "next" buttons.
+   - **Problem data** is dynamically loaded and displayed in an iframe.
+   - The problem's **title** and **details** are updated on selection.
+
+3. **Code Execution**:
+   - Users can write code in the **Ace Editor** and click "Run Code" to send the code to the backend.
+   - The backend runs the code in a Python environment and returns the output, which is displayed in the **output area**.
+
+4. **Authentication & Session**:
+   - The backend checks user session and JWT authentication for protected routes.
+   - Session management is handled by Redis, ensuring users remain logged in across requests.
+
+#### Key Files & Components
+1. **test.ejs**: Main template rendering the navigation, content, and Ace Editor layout.
+2. **test.css**: Handles the overall styling of the page, including layout and responsiveness.
+3. **test.js**: Handles Google API initialization, problem loading, menu interaction, and code execution logic with Ace Editor.
+4. **server.js**: Node.js backend setup, including session management, API routes, and rendering.
+5. **header.js**: Manages user session display and logout functionality.
+
+#### API Routes
+- `/get-user-session`: Retrieves the current user session.
+- `/run-python`: Executes user-submitted Python code on the server and returns the output.
+- `/auth`: Manages user authentication routes like login and logout.
+
+#### Key Functionality Enhancements (For Next Steps):
+1. **Improve Error Handling**: Implement better error messages when the Google API or problem data fails to load.
+2. **Extend Problem Features**: Add features such as problem hints or solution checking within the IDE.
+3. **Responsive Design**: Ensure better mobile compatibility, especially for the IDE section.
+4. **User Progress**: Track user progress by saving completed problems or submission history in the session.

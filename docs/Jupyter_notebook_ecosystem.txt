@@ -1,0 +1,46 @@
+module.exports = {
+  apps: [
+    {
+      name: 'server',
+      script: './server.js',
+      cwd: '/var/www/html',
+      instances: 1,
+      exec_mode: 'fork',
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000
+      }
+    },
+    {
+      name: 'jupyter-server',
+      script: '/var/www/html/myenv/bin/jupyter',
+      args: [
+        'notebook',
+        '--no-browser',
+        '--allow-root',
+        '--port=8889',
+        '--notebook-dir=/var/www/html/jupyter_notebooks',
+        '--ip=0.0.0.0',
+        '--ServerApp.token=""',
+        '--ServerApp.password=""',
+        '--ServerApp.disable_check_xsrf=True',
+        '--ServerApp.allow_origin=*',
+        '--ServerApp.allow_remote_access=True',
+        '--ServerApp.base_url=/jupyter',
+        '--ServerApp.root_dir=/var/www/html/jupyter_notebooks'
+      ],
+      cwd: '/var/www/html',
+      interpreter: 'none',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '500M',
+      env: {
+        PATH: '/var/www/html/myenv/bin:/usr/local/bin:/usr/bin:/bin',
+        VIRTUAL_ENV: '/var/www/html/myenv'
+      }
+    }
+  ]
+};

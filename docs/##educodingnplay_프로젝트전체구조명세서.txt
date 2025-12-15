@@ -1,0 +1,294 @@
+educodingnplay 프로젝트 전체 구조 파악 (업데이트)
+🎯 프로젝트 개요
+코딩앤플레이 - 초중고 학생 대상 코딩 교육 플랫폼
+
+🏗️ 시스템 아키텍처
+하이브리드 아키텍처
+┌─────────────────────────────────────────────────┐
+│   Server (MVC)          Client (Components)    │
+├─────────────────────────────────────────────────┤
+│ Express + EJS    ↔    EventBus 기반 컴포넌트   │
+│ MySQL + Redis    ↔    4대 핵심 컴포넌트        │
+│ Google Sheets    ↔    동적 레이아웃 시스템      │
+└─────────────────────────────────────────────────┘
+
+👥 사용자 권한 체계 (7단계)
+admin (최고 관리자)
+├── manager (센터장)
+├── teacher (강사)  
+├── kinder (유치원)
+├── school (학교)
+├── student (학생)
+└── guest (비로그인)
+
+📚 교육 콘텐츠 구조
+초등 과정
+
+컴퓨터 기초활용
+스크래치 (8601 포트)
+엔트리 (8070 프록시)
+자격증과정
+
+중고등 과정
+
+앱인벤터 (8888 포트)
+파이썬
+인공지능
+알고리즘
+
+
+🔧 4대 핵심 컴포넌트 시스템
+1. NavigationComponent
+
+사이드바 메뉴
+문제 목록 표시
+카테고리별 필터링
+
+2. ContentComponent
+
+문제 내용 표시 (iframe)
+마크다운 렌더링
+해설 팝업 관리
+문제 네비게이션 (이전/다음)
+
+3. IDEComponent (파이썬 전용)
+
+구성: CodeEditor + Terminal + PythonAutoCompleter
+기능:
+
+ACE Editor 기반 코드 작성
+Python 코드 실행 (/api/run-python)
+정답 코드 보기 (교사/관리자)
+원본 코드 복원
+
+
+
+4. JupyterComponent (🔥 새로 추가)
+
+구성: Jupyter Notebook iframe
+기능:
+
+사용자별 격리된 노트북 환경
+템플릿 기반 노트북 생성
+빈 노트북 자동 생성
+IDE 위치 공유 (ACE ↔ Jupyter 전환)
+
+
+
+기타 컴포넌트
+
+QuizComponent (퀴즈 문제)
+PPTViewerComponent (PDF/PPT 뷰어)
+ExplanationPopup (해설 팝업)
+
+
+🎨 레이아웃 시스템 (5가지)
+레이아웃활성 컴포넌트용도layout-htmlNavigation + Content일반 HTML 문제layout-ideNavigation + Content + IDE파이썬 코딩layout-jupyterNavigation + Content + Jupyter주피터 노트북layout-quizNavigation + Content + Quiz퀴즈 문제layout-pptNavigation + PPTViewerPDF/PPT 자료
+CSS 클래스 기반 전환:
+css.layout-jupyter .jupyter-container { display: flex !important; }
+.layout-ide .ide-container { display: flex !important; }
+/* 나머지는 숨김 */
+
+📊 데이터 흐름
+Google Sheets → API → Components
+Google Sheets (problems 시트)
+    ↓
+getSheetData() API
+    ↓
+/api/problems/:examName (메뉴 데이터)
+/api/problem/:examName/:num (문제 상세)
+    ↓
+NavigationComponent (메뉴 렌더링)
+ContentComponent (문제 표시)
+    ↓
+EventBus (menuSelected, problemChanged)
+    ↓
+IDEComponent / JupyterComponent 활성화
+
+🗄️ Jupyter Notebook 통합 시스템 (🔥 핵심 업데이트)
+아키텍처
+사용자별 격리 + 템플릿 시스템 + 파일 관리
+폴더 구조
+jupyter_notebooks/           # 사용자 노트북 루트
+├── admin/                   # 사용자별 격리 폴더
+│   ├── DataAnalysis_admin_2025-01-02.ipynb
+│   ├── BasicPython_admin_2025-01-02.ipynb
+│   └── MachineLearning_admin_2025-01-01.ipynb
+├── user123/
+│   ├── DataAnalysis_user123_2025-01-02.ipynb
+│   └── Visualization_user123_2025-01-01.ipynb
+└── guest_abc123/
+    └── BasicPython_guest_abc123_2025-01-02.ipynb
+
+jupyter_templates/           # 노트북 템플릿
+├── DataAnalysis_template.ipynb
+├── MachineLearning_template.ipynb
+├── Visualization_template.ipynb
+└── BasicPython_template.ipynb
+Jupyter 주요 API
+엔드포인트메서드기능인증/api/jupyter/create-user-notebookPOST템플릿 기반 노트북 생성O/api/jupyter/user-notebooksGET사용자 노트북 목록O/api/jupyter/templatesGET템플릿 목록 조회O/api/jupyter/statusGET서버 상태 확인X
+노트북 생성 흐름
+클라이언트 요청 (templateType 지정)
+    ↓
+POST /api/jupyter/create-user-notebook
+    ↓
+ensureUserDir(userID) → 사용자 폴더 생성
+    ↓
+기존 노트북 중복 체크 (오늘 날짜 기준)
+    ↓
+없으면 템플릿 로드 → 변수 치환 → 저장
+    ↓
+{templateType}_{userID}_{date}.ipynb 생성
+    ↓
+URL 반환: /jupyter/notebooks/{userID}/{filename}
+    ↓
+iframe에 로드
+템플릿 시스템
+
+변수 치환: {USER_ID}, {CREATE_DATE}, {TEMPLATE_TYPE} 자동 삽입
+중복 방지: 같은 날짜/템플릿은 기존 파일 재사용
+권한 체크: 본인 또는 admin만 접근 가능
+
+핵심 파일
+
+jupyterRouter.js - API 엔드포인트
+notebookManager.js - 파일 CRUD (사용자별 격리)
+templateManager.js - 템플릿 관리 및 변수 치환
+JupyterComponent.js - 클라이언트 UI 관리
+
+
+🌐 서버 포트 구조
+Apache :80
+├── /entry_editor → 8070 (EntryJS)
+├── /scratch → 8601 (Scratch GUI)
+├── /jupyter → 8000 (Jupyter Notebook) 🔥
+├── /appinventor → 8888
+└── / → 3000 (메인 Express 서버)
+Jupyter 프록시 설정
+apacheProxyPass /jupyter http://localhost:8000/
+ProxyPassReverse /jupyter http://localhost:8000/
+
+# WebSocket 지원
+ProxyPass /jupyter/api/kernels ws://127.0.0.1:8000/jupyter/api/kernels
+ProxyPass /jupyter/terminals/websocket ws://127.0.0.1:8000/jupyter/terminals/websocket
+
+📁 핵심 파일 구조
+educodingnplay/
+├── server.js              # 메인 서버
+├── config.js             # 환경 설정
+├── views/
+│   ├── index.ejs         # 메인 홈 (캐러셀)
+│   ├── header.ejs        # 공통 헤더
+│   └── template.ejs      # 동적 페이지 템플릿
+├── routes/
+│   ├── authRouter.js
+│   ├── learningRouter.js
+│   ├── templateRouter.js
+│   └── api/
+│       └── jupyterRouter.js    # 🔥 Jupyter API
+├── lib_login/
+│   ├── auth.js
+│   ├── permissions.js
+│   └── authMiddleware.js
+├── lib_jupyter/           # 🔥 Jupyter 관리
+│   ├── notebookManager.js
+│   └── templateManager.js
+├── public/js/components/
+│   ├── base/
+│   │   ├── EventBus.js
+│   │   ├── Component.js
+│   │   ├── ComponentRegistry.js
+│   │   └── ComponentFactory.js
+│   ├── nav/NavigationComponent.js
+│   ├── content/ContentComponent.js
+│   ├── ide/
+│   │   ├── IDEComponent.js
+│   │   ├── CodeEditor.js
+│   │   ├── Terminal.js
+│   │   └── PythonAutoCompleter.js
+│   └── jupyter/           # 🔥 Jupyter 컴포넌트
+│       └── JupyterComponent.js
+├── jupyter_notebooks/     # 🔥 사용자 노트북 (격리)
+├── jupyter_templates/     # 🔥 노트북 템플릿
+└── jupyter_start_new.sh  # 🔥 Jupyter 서버 시작
+
+🔐 보안 시스템
+Jupyter 격리 보안
+
+사용자별 디렉토리 격리: /jupyter_notebooks/{userID}/
+세션 기반 인증: requireAuth 미들웨어
+권한 체크: 본인 + admin만 접근
+파일명 검증: 사용자 ID 포함 필수
+경로 조작 방지: 서버에서만 경로 결정
+
+네트워크 보안
+
+Jupyter 8000번 포트: 외부 접근 차단
+Apache 프록시 전용 접근
+CSRF 검증 비활성화 (iframe 임베딩 전용)
+
+
+🔄 EventBus 통신 시스템
+주요 이벤트
+javascript// 메뉴 선택
+EventBus.publish('menuSelected', { examName, layoutType, pptUrl })
+
+// 문제 변경
+EventBus.publish('problemChanged', { examName, problemNumber, pythonFileUrl })
+
+// 레이아웃 변경
+EventBus.publish('layoutChanged', { layoutType })
+
+// 해설 요청
+EventBus.publish('explanation-request', problemData)
+
+🎨 Google Sheets 데이터 구조
+problems 시트 (콘텐츠 소스)
+열내용설명A문제파일명HTML/MD URLB시험지명python, algorithm 등C문제번호p01, p02 형식D개념파일URL추가 학습 자료E정답파일URL정답 코드F해설파일URL마크다운 해설GanswerTypecode, text, quiz 등H정답JSON 형식I인풋/아웃풋테스트 케이스J난이도1-5 단계
+
+💡 시스템 핵심 특징 요약
+1. 모듈러 컴포넌트 설계
+
+각 컴포넌트 독립 동작
+EventBus로 느슨한 결합
+ComponentFactory로 동적 생성
+
+2. 동적 레이아웃 전환
+
+CSS 클래스 기반 성능 최적화
+5가지 레이아웃 (HTML/IDE/Jupyter/Quiz/PPT)
+컴포넌트 재사용 (IDE ↔ Jupyter 위치 공유)
+
+3. Google Sheets 기반 CMS
+
+비개발자도 콘텐츠 관리 가능
+실시간 데이터 업데이트
+API 캐싱으로 성능 최적화
+
+4. 사용자별 격리 시스템 🔥
+
+Jupyter 노트북 완전 격리
+템플릿 기반 자동 생성
+파일명 규칙으로 중복 방지
+
+5. 하이브리드 인증
+
+세션 (Redis) + JWT
+7단계 권한 체계
+페이지별 접근 제어
+
+
+🚀 주요 개선 포인트
+완료된 기능
+✅ 컴포넌트 시스템 구축
+✅ IDE 통합 (Python 실행)
+✅ Jupyter Notebook 통합 🔥
+✅ 사용자별 격리 시스템 🔥
+✅ 템플릿 기반 노트북 생성 🔥
+✅ 퀴즈 시스템
+✅ 해설 팝업
+예정 기능
+🔲 학생 진도관리 대시보드
+🔲 실시간 협업 기능 (WebSocket)
+🔲 AI 기반 코딩 도우미
+🔲 자동 채점 시스템

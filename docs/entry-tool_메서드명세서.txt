@@ -1,0 +1,234 @@
+Entry-tool 메서드 및 시스템 명세서
+
+분석 완료일: 2025년 7월 8일
+대상: Entry-tool (웹 기반 Entry.js 통합 환경)
+목적: Entry-tool의 실제 구조와 사용법 파악
+
+
+📊 1. Entry-tool 전역 객체 구조
+1.1 핵심 전역 객체들
+객체명타입역할상태window.EntryToolObjectEntry-tool 핵심 컴포넌트 집합✅ 확인됨window.EntryObjectEntry.js 메인 엔진✅ 확인됨window.entrylmsObjectEntry LMS 모달 시스템✅ 확인됨window.entryConfigObjectEntry 설정 정보✅ 확인됨window.EntryStaticObjectEntry 정적 리소스✅ 확인됨
+1.2 Entry-tool 로드된 스크립트들
+- entry-tool.js (메인)
+- entry.js (Entry.js 엔진)
+- entry-lms.js (모달 시스템)
+- entry-paint.js (그림판)
+- sound-editor.js (사운드 에디터)
+
+🔧 2. EntryTool 컴포넌트 목록
+2.1 UI 컴포넌트들
+컴포넌트명기능생성자 패턴EntryTool.Popup팝업 창 관리new EntryTool.Popup()EntryTool.Modal모달 다이얼로그new EntryTool.Modal()EntryTool.Dropdown드롭다운 메뉴new EntryTool.Dropdown()EntryTool.ColorPicker색상 선택기new EntryTool.ColorPicker()EntryTool.ContextMenu우클릭 메뉴new EntryTool.ContextMenu()
+2.2 데이터 관리 컴포넌트들
+컴포넌트명기능생성자 패턴EntryTool.DataAnalytics데이터 분석new EntryTool.DataAnalytics()EntryTool.Chart차트 생성EntryTool.Chart(options)EntryTool.ListTool리스트 관리new EntryTool.ListTool()EntryTool.Tree트리 구조new EntryTool.Tree()
+2.3 입력/편집 컴포넌트들
+컴포넌트명기능생성자 패턴EntryTool.Number숫자 입력new EntryTool.Number()EntryTool.Angle각도 선택new EntryTool.Angle()EntryTool.MusicScale음계 선택new EntryTool.MusicScale()EntryTool.LedPickerLED 패턴new EntryTool.LedPicker()
+2.4 상호작용 컴포넌트들
+컴포넌트명기능생성자 패턴EntryTool.Draggable드래그 가능 요소new EntryTool.Draggable()EntryTool.Sortable정렬 가능 리스트new EntryTool.Sortable()EntryTool.Backpack백팩 시스템new EntryTool.Backpack()
+
+🎪 3. Entry 모달 시스템 (entrylms)
+3.1 기본 모달 메서드들
+javascript// 기본 알림
+entrylms.alert(message, title, options)
+
+// 확인 다이얼로그
+entrylms.confirm(message, title, options).then(result => {
+  // result: true/false
+})
+
+// 텍스트 입력 다이얼로그
+entrylms.alertTextarea(content, title, options)
+
+// 커스텀 모달
+new entrylms.Modal(element, options)
+3.2 모달 옵션 구조
+javascript{
+  title: "제목",
+  content: "내용",
+  width: 800,
+  height: 600,
+  theme: "BLUE", // BLUE, RED, GREEN 등
+  isCommon: false
+}
+3.3 이벤트 시스템
+javascript// 이벤트 등록
+entrylms.on('eventName', callback)
+
+// 일회성 이벤트
+entrylms.one('eventName', callback)
+
+// 이벤트 제거
+entrylms.off('eventName')
+
+// 이벤트 발생
+entrylms.emit('eventName', data)
+
+🎯 4. Entry 오브젝트 추가 시스템
+4.1 발견된 DOM 요소들
+선택자요소역할.entryAddButtonWorkspace_wButton"오브젝트 추가하기" 메인 버튼.addButtonSpan추가 버튼 (보조).entryContainerDivEntry 워크스페이스 컨테이너
+4.2 오브젝트 추가 버튼 후킹 방법
+javascript// 메인 오브젝트 추가 버튼 후킹
+const entryAddButton = document.querySelector('.entryAddButtonWorkspace_w');
+
+entryAddButton.addEventListener('click', function(e) {
+  console.log('Entry 오브젝트 추가 버튼 클릭됨');
+  
+  // 팝업 대기 후 후킹
+  setTimeout(() => {
+    hookEntryObjectPopup();
+  }, 100);
+}, true);
+4.3 팝업 감지 패턴
+javascript// 1. 일반적인 팝업 선택자들
+const popupSelectors = [
+  '.entryModal',
+  '.entry-modal', 
+  '.modal',
+  '.popup',
+  '[class*="modal"]',
+  '[class*="popup"]',
+  '[class*="selector"]'
+];
+
+// 2. MutationObserver를 이용한 동적 감지
+const observer = new MutationObserver((mutations) => {
+  // 새로 추가된 노드 확인
+});
+observer.observe(document.body, { childList: true, subtree: true });
+
+🏗️ 5. Entry.js 엔진 후킹 포인트
+5.1 Entry 컨테이너 시스템
+javascript// Entry 객체 추가 후킹
+const originalAddObject = window.Entry.container.addObject;
+window.Entry.container.addObject = function(...args) {
+  console.log('Entry.container.addObject 호출:', args);
+  return originalAddObject.apply(this, args);
+};
+5.2 Entry 스테이지 시스템
+javascript// Entry 스테이지 업데이트 후킹
+if (window.Entry.stage) {
+  window.Entry.stage.update();
+}
+5.3 Entry 설정 정보
+javascript// Entry 설정 확인
+window.entryConfig = {
+  userID: 'string',
+  role: 'string', 
+  projectFile: 'url',
+  projectData: {},
+  interfaceState: {}
+}
+
+📦 6. Entry 리소스 시스템
+6.1 Entry 오프라인 구조 (참조용)
+src/renderer/resources/
+├── db/
+│   ├── pictures.json    # 스프라이트 메타데이터
+│   ├── objects.json     # 오브젝트 메타데이터  
+│   └── sounds.json      # 사운드 메타데이터
+├── lang/               # 다국어 지원
+└── uploads/            # 실제 파일들
+    └── xx/xx/image/    # 해시 기반 폴더
+6.2 웹 환경 대안 구조
+javascript// Entry 호환 파일 ID 생성
+function createEntryFileId() {
+  const randomStr = Math.random().toString(16).substr(2, 8);
+  // MD5 해시 또는 대안 해시 생성
+}
+
+// Entry 호환 파일 경로 생성  
+function createEntryFilePath(fileId, type = 'image') {
+  const prefix = fileId.substr(0, 4);
+  return `uploads/${prefix.substr(0,2)}/${prefix.substr(2,2)}/${type}/${fileId}.png`;
+}
+6.3 Entry 카테고리 시스템
+javascript// 지원되는 카테고리들
+const ENTRY_CATEGORIES = {
+  pictures: [
+    "entrybot_friends", "architect", "vehicles", "stuff", 
+    "default", "animal", "interface", "environment", 
+    "food", "people", "plant", "background", "fantasy"
+  ],
+  sounds: [
+    "사람", "자연", "사물", "판타지", "악기"
+  ]
+};
+
+🔧 7. Entry-tool 활용 가이드
+7.1 기본 사용 패턴
+javascript// 1. EntryTool 컴포넌트 생성
+const popup = new EntryTool.Popup({
+  title: "제목",
+  content: "내용"
+});
+
+// 2. 렌더링 및 표시
+popup.render();
+popup.show();
+
+// 3. 이벤트 처리
+popup.on('close', () => {
+  console.log('팝업 닫힌');
+});
+7.2 Entry 객체 생성 패턴
+javascript// Entry 호환 객체 생성
+const entryObjectData = {
+  id: 'unique_id',
+  name: 'sprite_name',
+  objectType: 'sprite',
+  pictures: [/* picture objects */],
+  sounds: [],
+  script: '[[[[""]]]]'
+};
+
+const entryObject = new window.Entry.EntryObject(entryObjectData);
+window.Entry.container.addObject(entryObject);
+7.3 팝업 시스템 통합
+javascript// entrylms를 이용한 커스텀 팝업
+const modal = new entrylms.Modal(customElement, {
+  width: 800,
+  height: 600,
+  title: "스프라이트 선택"
+});
+
+modal.show();
+
+🎯 8. 다음 단계 실행 계획
+8.1 즉시 실행 가능한 작업들
+
+Entry 오브젝트 추가 버튼 후킹 ✅
+Entry 팝업 감지 시스템 구축 🔄
+EntryTool 컴포넌트 활용한 UI 생성 📋
+Entry 호환 스프라이트 생성 시스템 📋
+
+8.2 구현 우선순위
+Priority 1: Entry 팝업 후킹 및 분석
+Priority 2: EntryTool.Popup을 이용한 커스텀 UI
+Priority 3: Entry 호환 스프라이트 데이터 시스템
+Priority 4: 완전한 통합 및 테스트
+
+📝 9. 참고 코드 스니펫
+9.1 Entry-tool 상태 확인
+javascript// Entry-tool 시스템 전체 상태 확인
+console.log('EntryTool:', Object.keys(window.EntryTool));
+console.log('Entry:', window.Entry ? '✅' : '❌');
+console.log('entrylms:', window.entrylms ? '✅' : '❌');
+console.log('오브젝트 추가 버튼:', document.querySelector('.entryAddButtonWorkspace_w') ? '✅' : '❌');
+9.2 Entry 팝업 실시간 감지
+javascript// Entry 팝업 실시간 감지 시스템
+document.querySelector('.entryAddButtonWorkspace_w')?.addEventListener('click', () => {
+  setTimeout(() => {
+    const popups = document.querySelectorAll('[class*="modal"], [class*="popup"]');
+    console.log('감지된 팝업들:', popups);
+  }, 200);
+});
+
+✅ 10. 검증된 사실들
+
+✅ EntryTool 객체가 존재하고 다양한 UI 컴포넌트 제공
+✅ entrylms 모달 시스템이 완전히 구현되어 있음
+✅ Entry 오브젝트 추가 버튼 위치 확인됨
+✅ Entry.container.addObject가 실제 동작함
+✅ Entry-tool은 공식 Entry.js와 완전히 통합되어 있음
+
+
+이 명세서를 바탕으로 새로운 대화에서 Entry-tool의 실제 메서드들을 활용해서 올바른 스프라이트 추가 시스템을 구현할 수 있습니다! 🚀

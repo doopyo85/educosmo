@@ -13,88 +13,88 @@ class PythonAutoCompleter {
       enableSnippets: true,
       ...options
     };
-    
+
     // 상태 관리
     this.state = {
       editor: null,
       isInitialized: false,
       completionCache: new Map()
     };
-    
+
     // Python 언어 데이터 초기화
     this.initializePythonData();
   }
-  
+
   /**
    * Python 언어 데이터 초기화
    */
   initializePythonData() {
     // Python 키워드 목록
     this.pythonKeywords = [
-      "and", "as", "assert", "break", "class", "continue", "def", "del", 
-      "elif", "else", "except", "exec", "finally", "for", "from", "global", 
-      "if", "import", "in", "is", "lambda", "not", "or", "pass", "print", 
+      "and", "as", "assert", "break", "class", "continue", "def", "del",
+      "elif", "else", "except", "exec", "finally", "for", "from", "global",
+      "if", "import", "in", "is", "lambda", "not", "or", "pass", "print",
       "raise", "return", "try", "while", "with", "yield", "async", "await",
       "nonlocal", "True", "False", "None"
     ];
-    
+
     // Python 내장함수 목록
     this.pythonBuiltins = [
       "abs", "all", "any", "ascii", "bin", "bool", "bytearray", "bytes",
-      "callable", "chr", "classmethod", "compile", "complex", "delattr", 
-      "dict", "dir", "divmod", "enumerate", "eval", "exec", "filter", 
-      "float", "format", "frozenset", "getattr", "globals", "hasattr", 
-      "hash", "help", "hex", "id", "input", "int", "isinstance", 
-      "issubclass", "iter", "len", "list", "locals", "map", "max", 
-      "memoryview", "min", "next", "object", "oct", "open", "ord", 
-      "pow", "print", "property", "range", "repr", "reversed", "round", 
-      "set", "setattr", "slice", "sorted", "staticmethod", "str", "sum", 
+      "callable", "chr", "classmethod", "compile", "complex", "delattr",
+      "dict", "dir", "divmod", "enumerate", "eval", "exec", "filter",
+      "float", "format", "frozenset", "getattr", "globals", "hasattr",
+      "hash", "help", "hex", "id", "input", "int", "isinstance",
+      "issubclass", "iter", "len", "list", "locals", "map", "max",
+      "memoryview", "min", "next", "object", "oct", "open", "ord",
+      "pow", "print", "property", "range", "repr", "reversed", "round",
+      "set", "setattr", "slice", "sorted", "staticmethod", "str", "sum",
       "super", "tuple", "type", "vars", "zip", "__import__"
     ];
-    
+
     // 클래스별 메서드 목록
     this.commonMethods = {
       "list": [
-        "append", "clear", "copy", "count", "extend", "index", 
+        "append", "clear", "copy", "count", "extend", "index",
         "insert", "pop", "remove", "reverse", "sort"
       ],
       "dict": [
-        "clear", "copy", "fromkeys", "get", "items", "keys", 
+        "clear", "copy", "fromkeys", "get", "items", "keys",
         "pop", "popitem", "setdefault", "update", "values"
       ],
       "str": [
-        "capitalize", "casefold", "center", "count", "encode", "endswith", 
-        "expandtabs", "find", "format", "format_map", "index", "isalnum", 
-        "isalpha", "isdecimal", "isdigit", "islower", "isnumeric", 
-        "isprintable", "isspace", "istitle", "isupper", "join", "ljust", 
-        "lower", "lstrip", "maketrans", "partition", "replace", "rfind", 
-        "rindex", "rjust", "rpartition", "rsplit", "rstrip", "split", 
-        "splitlines", "startswith", "strip", "swapcase", "title", 
+        "capitalize", "casefold", "center", "count", "encode", "endswith",
+        "expandtabs", "find", "format", "format_map", "index", "isalnum",
+        "isalpha", "isdecimal", "isdigit", "islower", "isnumeric",
+        "isprintable", "isspace", "istitle", "isupper", "join", "ljust",
+        "lower", "lstrip", "maketrans", "partition", "replace", "rfind",
+        "rindex", "rjust", "rpartition", "rsplit", "rstrip", "split",
+        "splitlines", "startswith", "strip", "swapcase", "title",
         "translate", "upper", "zfill"
       ],
       "set": [
-        "add", "clear", "copy", "difference", "difference_update", 
-        "discard", "intersection", "intersection_update", "isdisjoint", 
-        "issubset", "issuperset", "pop", "remove", "symmetric_difference", 
+        "add", "clear", "copy", "difference", "difference_update",
+        "discard", "intersection", "intersection_update", "isdisjoint",
+        "issubset", "issuperset", "pop", "remove", "symmetric_difference",
         "symmetric_difference_update", "union", "update"
       ],
       "tuple": [
         "count", "index"
       ]
     };
-    
+
     // Python 모듈별 함수 (자주 사용되는 것들)
     this.moduleCompletions = {
       "math": [
-        "ceil", "floor", "sqrt", "pow", "exp", "log", "log10", "sin", 
+        "ceil", "floor", "sqrt", "pow", "exp", "log", "log10", "sin",
         "cos", "tan", "asin", "acos", "atan", "degrees", "radians", "pi", "e"
       ],
       "random": [
-        "random", "randint", "choice", "choices", "shuffle", "sample", 
+        "random", "randint", "choice", "choices", "shuffle", "sample",
         "uniform", "gauss", "seed"
       ],
       "os": [
-        "getcwd", "chdir", "listdir", "mkdir", "makedirs", "remove", 
+        "getcwd", "chdir", "listdir", "mkdir", "makedirs", "remove",
         "rename", "path", "environ", "system"
       ],
       "sys": [
@@ -104,7 +104,7 @@ class PythonAutoCompleter {
         "datetime", "date", "time", "timedelta", "now", "today", "strftime", "strptime"
       ]
     };
-    
+
     // 코드 스니펫
     this.snippets = {
       "def": "def ${1:function_name}(${2:parameters}):\n    ${3:pass}",
@@ -117,37 +117,37 @@ class PythonAutoCompleter {
       "main": "if __name__ == '__main__':\n    ${1:pass}"
     };
   }
-  
+
   /**
    * 컴포넌트 초기화
    */
   async init(editorInstance = null) {
     console.log('PythonAutoCompleter 초기화 시작');
-    
+
     try {
       // 에디터 인스턴스 설정
       if (editorInstance) {
         this.state.editor = editorInstance;
       }
-      
+
       // ACE 에디터 language tools 확인
       if (!this.checkAceDependencies()) {
         throw new Error('ACE 에디터 language tools를 찾을 수 없습니다');
       }
-      
+
       // 자동완성 설정
       this.setupAutoCompletion();
-      
+
       this.state.isInitialized = true;
       console.log('PythonAutoCompleter 초기화 완료');
       return true;
-      
+
     } catch (error) {
       console.error('PythonAutoCompleter 초기화 오류:', error);
       return false;
     }
   }
-  
+
   /**
    * ACE 에디터 의존성 확인
    */
@@ -157,7 +157,7 @@ class PythonAutoCompleter {
         console.error('ACE 에디터가 로드되지 않았습니다');
         return false;
       }
-      
+
       ace.require("ace/ext/language_tools");
       return true;
     } catch (error) {
@@ -165,7 +165,7 @@ class PythonAutoCompleter {
       return false;
     }
   }
-  
+
   /**
    * 에디터에 자동완성 설정 적용
    */
@@ -174,11 +174,11 @@ class PythonAutoCompleter {
       console.error('유효하지 않은 에디터 인스턴스');
       return false;
     }
-    
+
     this.state.editor = editor;
     return this.setupAutoCompletion();
   }
-  
+
   /**
    * 자동완성 설정
    */
@@ -187,39 +187,39 @@ class PythonAutoCompleter {
       console.error('에디터 인스턴스가 설정되지 않았습니다');
       return false;
     }
-    
+
     try {
       const langTools = ace.require("ace/ext/language_tools");
-      
+
       // 기존 completers 제거 후 새로 설정
       this.state.editor.completers = [];
-      
+
       // Python 자동완성 completer 추가
       const pythonCompleter = this.createPythonCompleter();
       this.state.editor.completers.push(pythonCompleter);
-      
+
       // 에디터 자동완성 옵션 설정
       this.state.editor.setOptions({
         enableLiveAutocompletion: this.options.enableLiveAutocompletion,
         enableBasicAutocompletion: this.options.enableBasicAutocompletion,
         enableSnippets: this.options.enableSnippets
       });
-      
+
       // UI 설정
       this.setupAutoCompleteUI();
-      
+
       // 키보드 단축키 설정
       this.setupKeyboardShortcuts();
-      
+
       console.log('Python 자동완성 설정 완료');
       return true;
-      
+
     } catch (error) {
       console.error('자동완성 설정 오류:', error);
       return false;
     }
   }
-  
+
   /**
    * Python Completer 생성
    */
@@ -236,7 +236,7 @@ class PythonAutoCompleter {
       }
     };
   }
-  
+
   /**
    * 자동완성 항목 생성
    */
@@ -244,13 +244,13 @@ class PythonAutoCompleter {
     const completions = [];
     const currentLine = session.getLine(pos.row);
     const context = this.analyzeContext(currentLine, pos.column);
-    
+
     // 캐시 키 생성
     const cacheKey = `${prefix}_${context.type}_${context.object}`;
     if (this.state.completionCache.has(cacheKey)) {
       return this.state.completionCache.get(cacheKey);
     }
-    
+
     // 컨텍스트에 따른 완성 항목 생성
     switch (context.type) {
       case 'method':
@@ -266,23 +266,23 @@ class PythonAutoCompleter {
         this.addGeneralCompletions(completions, prefix);
         break;
     }
-    
+
     // 캐시에 저장 (최대 100개 항목)
     if (this.state.completionCache.size > 100) {
       const firstKey = this.state.completionCache.keys().next().value;
       this.state.completionCache.delete(firstKey);
     }
     this.state.completionCache.set(cacheKey, completions);
-    
+
     return completions;
   }
-  
+
   /**
    * 컨텍스트 분석
    */
   analyzeContext(line, column) {
     const beforeCursor = line.substring(0, column);
-    
+
     // 메서드 호출 패턴 확인 (예: obj.method)
     const methodMatch = beforeCursor.match(/(\w+)\.(\w*)$/);
     if (methodMatch) {
@@ -292,7 +292,7 @@ class PythonAutoCompleter {
         partial: methodMatch[2]
       };
     }
-    
+
     // 모듈 함수 호출 패턴 확인 (예: math.sqrt)
     const moduleMatch = beforeCursor.match(/(\w+)\.(\w*)$/);
     if (moduleMatch && this.moduleCompletions[moduleMatch[1]]) {
@@ -302,22 +302,22 @@ class PythonAutoCompleter {
         partial: moduleMatch[2]
       };
     }
-    
+
     // import 문 확인
     if (beforeCursor.match(/^\s*(import|from)\s+/)) {
       return { type: 'import' };
     }
-    
+
     return { type: 'general' };
   }
-  
+
   /**
    * 메서드 자동완성 추가
    */
   addMethodCompletions(completions, objectName, prefix) {
     // 객체 타입 추론 (간단한 휴리스틱)
     let objectType = this.inferObjectType(objectName);
-    
+
     if (objectType && this.commonMethods[objectType]) {
       this.commonMethods[objectType].forEach(method => {
         if (method.toLowerCase().startsWith(prefix.toLowerCase())) {
@@ -332,7 +332,7 @@ class PythonAutoCompleter {
       });
     }
   }
-  
+
   /**
    * 모듈 함수 자동완성 추가
    */
@@ -351,7 +351,7 @@ class PythonAutoCompleter {
       });
     }
   }
-  
+
   /**
    * import 자동완성 추가
    */
@@ -368,7 +368,7 @@ class PythonAutoCompleter {
       }
     });
   }
-  
+
   /**
    * 일반 자동완성 추가
    */
@@ -384,7 +384,7 @@ class PythonAutoCompleter {
         });
       }
     });
-    
+
     // 내장함수 추가
     this.pythonBuiltins.forEach(builtin => {
       if (builtin.toLowerCase().startsWith(prefix.toLowerCase())) {
@@ -397,7 +397,7 @@ class PythonAutoCompleter {
         });
       }
     });
-    
+
     // 스니펫 추가
     Object.keys(this.snippets).forEach(snippet => {
       if (snippet.toLowerCase().startsWith(prefix.toLowerCase())) {
@@ -410,7 +410,7 @@ class PythonAutoCompleter {
       }
     });
   }
-  
+
   /**
    * 객체 타입 추론 (간단한 휴리스틱)
    */
@@ -423,10 +423,10 @@ class PythonAutoCompleter {
       'set': 'set', 'unique': 'set',
       'tuple': 'tuple', 'tup': 'tuple'
     };
-    
+
     return typeHints[objectName.toLowerCase()] || null;
   }
-  
+
   /**
    * 메서드 문서화 정보 가져오기
    */
@@ -448,10 +448,10 @@ class PythonAutoCompleter {
         'replace': 'str.replace(old, new) - 문자열의 일부를 다른 문자열로 교체합니다'
       }
     };
-    
+
     return docs[objectType] && docs[objectType][method] || `${objectType}.${method}()`;
   }
-  
+
   /**
    * 모듈 함수 문서화 정보 가져오기
    */
@@ -467,10 +467,10 @@ class PythonAutoCompleter {
         'choice': 'random.choice(seq) - 시퀀스에서 임의의 요소를 선택합니다'
       }
     };
-    
+
     return docs[moduleName] && docs[moduleName][funcName] || `${moduleName}.${funcName}()`;
   }
-  
+
   /**
    * 내장함수 문서화 정보 가져오기
    */
@@ -482,10 +482,10 @@ class PythonAutoCompleter {
       'range': 'range([start], stop[, step]) - 숫자 범위를 생성합니다',
       'type': 'type(obj) - 객체의 타입을 반환합니다'
     };
-    
+
     return docs[builtin] || `${builtin}() - Python 내장함수`;
   }
-  
+
   /**
    * 자동완성 UI 설정
    */
@@ -525,17 +525,17 @@ class PythonAutoCompleter {
       document.head.appendChild(styleSheet);
     }
   }
-  
+
   /**
    * 키보드 단축키 설정
    */
   setupKeyboardShortcuts() {
     if (!this.state.editor) return;
-    
+
     // Ctrl+Space로 자동완성 호출
     this.state.editor.commands.addCommand({
       name: "showPythonCompletions",
-      bindKey: {win: "Ctrl-Space", mac: "Command-Space"},
+      bindKey: { win: "Ctrl-Space", mac: "Command-Space" },
       exec: (editor) => {
         if (!editor.completer) {
           const Autocomplete = ace.require("ace/autocomplete").Autocomplete;
@@ -544,7 +544,7 @@ class PythonAutoCompleter {
         editor.completer.showPopup(editor);
       }
     });
-    
+
     // Tab으로 스니펫 확장
     this.state.editor.commands.addCommand({
       name: "expandSnippet",
@@ -555,44 +555,23 @@ class PythonAutoCompleter {
       }
     });
   }
-  
+
   /**
    * 에디터 활성화 및 초기 설정
    */
   activate() {
     console.log('PythonAutoCompleter 활성화');
-    
-    // 거터 너비 강제 설정
+
+    // 거터 너비 강제 설정 로직 제거
+    /*
     if (this.state.editor) {
       this.forceGutterWidth();
     }
+    */
   }
-  
-  /**
-   * 거터 너비 강제 설정
-   */
-  forceGutterWidth() {
-    if (!this.state.editor) return;
-    
-    try {
-      // ACE 에디터의 거터 요소 찾기
-      const gutterElement = this.state.editor.container.querySelector('.ace_gutter');
-      if (gutterElement) {
-        gutterElement.style.width = '80px';
-        gutterElement.style.minWidth = '80px';
-        console.log('거터 너비 80px로 설정 완료');
-      }
-      
-      // 에디터 리사이즈로 반영
-      setTimeout(() => {
-        this.state.editor.resize();
-      }, 100);
-      
-    } catch (error) {
-      console.error('거터 너비 설정 오류:', error);
-    }
-  }
-  
+
+
+
   /**
    * 자동완성 활성화
    */
@@ -605,7 +584,7 @@ class PythonAutoCompleter {
       });
     }
   }
-  
+
   /**
    * 자동완성 비활성화
    */
@@ -618,33 +597,33 @@ class PythonAutoCompleter {
       });
     }
   }
-  
+
   /**
    * 캐시 지우기
    */
   clearCache() {
     this.state.completionCache.clear();
   }
-  
+
   /**
    * 컴포넌트 정리
    */
   destroy() {
     console.log('PythonAutoCompleter 정리 시작');
-    
+
     // 캐시 지우기
     this.clearCache();
-    
+
     // 에디터 참조 제거
     this.state.editor = null;
     this.state.isInitialized = false;
-    
+
     // 스타일 제거
     const styleElement = document.getElementById('python-autocomplete-styles');
     if (styleElement) {
       styleElement.remove();
     }
-    
+
     console.log('PythonAutoCompleter 정리 완료');
   }
 }

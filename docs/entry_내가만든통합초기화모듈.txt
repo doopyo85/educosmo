@@ -1,0 +1,1305 @@
+EntryJS 통합 초기화 시스템 명세서
+작성일: 2025년 10월 10일
+목적: Entry 프로젝트의 분산된 초기화 로직을 하나의 통합 모듈로 재구성
+
+📋 1. 현황 분석
+1.1 현재 문제점
+문제영향받는 파일설명사용자 정보 파싱 중복index.html, app.mjs, global.jsQuery Params 읽기 로직이 3곳에 중복URL 생성 로직 분산entryRouter.js, card_project.jsEntry 워크스페이스 URL 생성 방식이 다름프로젝트 로드 분기 복잡app.mjsBase64/S3/New 분기 처리가 app.mjs에 직접 구현됨초기화 순서 불명확전체어떤 순서로 초기화되는지 추적 어려움
+1.2 영향받는 파일 목록
+📁 educodingnplay/
+├── 📁 entry/ (8070번 서버)
+│   ├── index.html               # 사용자 정보 표시
+│   ├── 📁 js/
+│   │   ├── app.mjs              # EntryJS 초기화 (비대해짐)
+│   │   ├── global.js            # 전역 설정
+│   │   ├── projectSaver.js      # 저장/불러오기
+│   │   └── EntryInitializer.js  # 🔥 신규: 통합 모듈
+│   └── 📁 lib/
+├── 📁 routes/
+│   └── entryRouter.js           # 서버 라우팅, URL 생성
+├── 📁 public/js/
+│   └── card_project.js          # 프로젝트 카드 클릭, URL 생성
+└── 📁 lib_entry/
+    └── entFileManager.js        # S3 파일 관리
+
+🎯 2. 통합 모듈 설계
+2.1 EntryInitializer 클래스 구조
+javascriptclass EntryInitializer {
+    // ===== 속성 =====
+    config: {
+        userInfo: {},      // 사용자 정보
+        projectInfo: {},   // 프로젝트 정보
+        environment: {}    // 환경 설정
+    }
+    
+    // ===== 핵심 기능 =====
+    1. getUserInfo()           // Query Params 파싱
+    2. validateUser()          // 사용자 정보 검증
+    3. updateUI()              // UI 업데이트
+    4. initializeEntry()       // Entry 초기화
+    5. loadProject()           // 프로젝트 로드 분기
+    
+    // ===== 프로젝트 로드 방식 =====
+    - loadFromBase64()         // Base64 인코딩된 프로젝트
+    - loadFromS3()             // S3 URL에서 로드
+    - createNewProject()       // 새 프로젝트 생성
+    
+    // ===== 유틸리티 =====
+    - waitForEntry()           // Entry 로드 대기
+    - handleError()            // 에러 처리
+    - logActivity()            // 활동 로깅
+}
+2.2 EntryUrlBuilder 유틸리티
+javascriptclass EntryUrlBuilder {
+    /**
+     * Entry 워크스페이스 URL 생성 (통합)
+     * @param {Object} options
+     * @returns {string} 완성된 URL
+     */
+    static build(options) {
+        const { 
+            s3Url,          // S3 프로젝트 URL
+            userID,         // 사용자 ID
+            role,           // 사용자 역할
+            sessionID,      // 세션 ID
+            projectData,    // Base64 인코딩할 프로젝트 데이터
+            baseUrl         // 기본 URL (기본값: /entry_editor/)
+        } = options;
+        
+        // Query Params 생성 로직
+    }
+}
+
+🔧 3. 상세 기능 명세
+3.1 사용자 정보 관리
+3.1.1 getUserInfo()
+javascript/**
+ * URL Query Params에서 사용자 정보 추출
+ * 
+ * @returns {Object} userInfo
+ * @returns {string} userInfo.userID - 사용자 ID
+ * @returns {string} userInfo.role - 사용자 역할
+ * @returns {string} userInfo.sessionID - 세션 ID (선택)
+ */
+getUserInfo() {
+    const params = new URLSearchParams(window.location.search);
+    
+    return {
+        userID: params.get('userID') || 'guest',
+        role: params.get('role') || 'guest',
+        sessionID: params.get('sessionID') || '',
+        centerID: params.get('centerID') || ''
+    };
+}
+입력:
+
+URL: https://app.codingnplay.co.kr/entry_editor/?userID=minho&role=student&sessionID=abc123
+
+출력:
+javascript{
+    userID: 'minho',
+    role: 'student',
+    sessionID: 'abc123',
+    centerID: ''
+}
+3.1.2 validateUser()
+javascript/**
+ * 사용자 정보 유효성 검증
+ * 
+ * @param {Object} userInfo
+ * @returns {boolean} 유효성 여부
+ */
+validateUser(userInfo) {
+    // 1. userID가 있는지 확인
+    // 2. role이 허용된 값인지 확인
+    // 3. guest가 아닌 경우 sessionID 확인
+}
+검증 규칙:
+
+userID: 필수, 빈 문자열 불가
+role: 허용 값 - admin, teacher, manager, student, guest
+sessionID: guest가 아니면 권장 (없어도 동작은 함)
+
+3.1.3 updateUI()
+javascript/**
+ * 사용자 정보를 UI에 반영
+ * 
+ * @param {Object} userInfo
+ */
+updateUI(userInfo) {
+    // 1. 헤더 사용자 ID 표시 (#headerUserID)
+    // 2. 전역 객체 설정 (window.EDUCODINGNPLAY_USER)
+    // 3. 콘솔 로그 출력
+}
+업데이트 대상:
+요소설명#headerUserID헤더 사용자 ID 텍스트window.EDUCODINGNPLAY_USER전역 사용자 정보 객체Console초기화 로그 출력
+
+3.2 프로젝트 정보 관리
+3.2.1 getProjectInfo()
+javascript/**
+ * URL에서 프로젝트 정보 추출
+ * 
+ * @returns {Object} projectInfo
+ */
+getProjectInfo() {
+    const params = new URLSearchParams(window.location.search);
+    
+    return {
+        type: this.detectProjectType(params),  // 'base64' | 's3' | 'new'
+        data: params.get('project') || null,   // Base64 데이터
+        s3Url: params.get('s3Url') || null,    // S3 URL
+        loadPath: params.get('loadPath') || null // 로컬 파일 경로 (8070 전용)
+    };
+}
+3.2.2 detectProjectType()
+javascript/**
+ * 프로젝트 로드 방식 자동 감지
+ * 
+ * @param {URLSearchParams} params
+ * @returns {'base64'|'s3'|'local'|'new'} 프로젝트 타입
+ */
+detectProjectType(params) {
+    if (params.has('project') && params.get('project')) return 'base64';
+    if (params.has('s3Url') && params.get('s3Url')) return 's3';
+    if (params.has('loadPath') && params.get('loadPath')) return 'local';
+    return 'new';
+}
+감지 우선순위:
+
+Base64 (?project=...) - 최우선
+S3 (?s3Url=...)
+Local (?loadPath=...) - 8070 서버 전용
+New (파라미터 없음) - 기본값
+
+
+3.3 Entry 초기화
+3.3.1 initializeEntry()
+javascript/**
+ * EntryJS 워크스페이스 초기화
+ * 
+ * @returns {Promise<void>}
+ */
+async initializeEntry() {
+    // 1. Entry 로드 대기
+    await this.waitForEntry();
+    
+    // 2. 워크스페이스 설정
+    const workspace = document.getElementById('workspace');
+    
+    // 3. Entry 초기화
+    Entry.init(workspace, {
+        type: 'workspace',
+        // ... 기타 옵션
+    });
+    
+    console.log('✅ Entry 워크스페이스 초기화 완료');
+}
+3.3.2 waitForEntry()
+javascript/**
+ * Entry 라이브러리 로드 대기
+ * 
+ * @param {number} timeout - 최대 대기 시간 (ms)
+ * @returns {Promise<boolean>} 로드 성공 여부
+ */
+waitForEntry(timeout = 10000) {
+    return new Promise((resolve, reject) => {
+        const startTime = Date.now();
+        
+        const checkInterval = setInterval(() => {
+            if (window.Entry && Entry.loadProject) {
+                clearInterval(checkInterval);
+                resolve(true);
+            }
+            
+            // 타임아웃 체크
+            if (Date.now() - startTime > timeout) {
+                clearInterval(checkInterval);
+                reject(new Error('Entry 로드 타임아웃'));
+            }
+        }, 100);
+    });
+}
+
+3.4 프로젝트 로드
+3.4.1 loadProject()
+javascript/**
+ * 프로젝트 로드 (분기 처리)
+ * 
+ * @returns {Promise<void>}
+ */
+async loadProject() {
+    const { type, data, s3Url, loadPath } = this.config.projectInfo;
+    
+    try {
+        switch (type) {
+            case 'base64':
+                await this.loadFromBase64(data);
+                break;
+            case 's3':
+                await this.loadFromS3(s3Url);
+                break;
+            case 'local':
+                await this.loadFromLocalPath(loadPath);
+                break;
+            case 'new':
+            default:
+                this.createNewProject();
+                break;
+        }
+    } catch (error) {
+        this.handleError('프로젝트 로드 실패', error);
+    }
+}
+3.4.2 loadFromBase64()
+javascript/**
+ * Base64 인코딩된 프로젝트 로드
+ * 
+ * @param {string} base64Data
+ * @returns {Promise<void>}
+ */
+async loadFromBase64(base64Data) {
+    try {
+        // 1. Base64 디코딩
+        const jsonString = atob(base64Data);
+        
+        // 2. JSON 파싱
+        const projectData = JSON.parse(jsonString);
+        
+        // 3. Entry에 로드
+        Entry.loadProject(projectData);
+        
+        console.log('✅ Base64 프로젝트 로드 완료');
+        
+        // 4. 활동 로그
+        this.logActivity('load_project_base64', {
+            dataLength: base64Data.length
+        });
+        
+    } catch (error) {
+        throw new Error(`Base64 파싱 실패: ${error.message}`);
+    }
+}
+3.4.3 loadFromS3()
+javascript/**
+ * S3 URL에서 프로젝트 로드
+ * 
+ * @param {string} s3Url
+ * @returns {Promise<void>}
+ */
+async loadFromS3(s3Url) {
+    try {
+        // 1. API 호출
+        const response = await fetch(
+            `/entry/api/load-project?s3Url=${encodeURIComponent(s3Url)}`
+        );
+        
+        // 2. 응답 검증
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'S3 로드 실패');
+        }
+        
+        // 3. Entry에 로드
+        Entry.loadProject(result.projectData);
+        
+        console.log('✅ S3 프로젝트 로드 완료:', result.fileName);
+        
+        // 4. 활동 로그
+        this.logActivity('load_project_s3', {
+            s3Url: s3Url,
+            fileName: result.fileName
+        });
+        
+    } catch (error) {
+        throw new Error(`S3 로드 실패: ${error.message}`);
+    }
+}
+3.4.4 loadFromLocalPath()
+javascript/**
+ * 로컬 파일 경로에서 프로젝트 로드 (8070 서버 전용)
+ * 
+ * @param {string} loadPath - /temp/ent_files/current/xxx.ent
+ * @returns {Promise<void>}
+ */
+async loadFromLocalPath(loadPath) {
+    try {
+        // 1. 로컬 파일 API 호출
+        const response = await fetch(
+            `/entry/api/load-local?path=${encodeURIComponent(loadPath)}`
+        );
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || '로컬 파일 로드 실패');
+        }
+        
+        // 2. Entry에 로드
+        Entry.loadProject(result.projectData);
+        
+        console.log('✅ 로컬 파일 로드 완료:', loadPath);
+        
+    } catch (error) {
+        throw new Error(`로컬 파일 로드 실패: ${error.message}`);
+    }
+}
+3.4.5 createNewProject()
+javascript/**
+ * 새 프로젝트 생성
+ */
+createNewProject() {
+    console.log('📝 새 프로젝트 생성');
+    
+    // Entry는 기본적으로 빈 프로젝트로 시작
+    // 추가 작업 필요 없음
+    
+    this.logActivity('create_new_project', {
+        timestamp: new Date().toISOString()
+    });
+}
+
+3.5 에러 처리 및 로깅
+3.5.1 handleError()
+javascript/**
+ * 에러 처리 및 사용자 알림
+ * 
+ * @param {string} context - 에러 발생 위치
+ * @param {Error} error - 에러 객체
+ */
+handleError(context, error) {
+    console.error(`❌ [${context}]`, error);
+    
+    // 사용자에게 알림
+    const message = `${context}\n${error.message}`;
+    
+    // 모달 또는 알림 표시
+    if (window.showNotification) {
+        window.showNotification(message, 'error');
+    } else {
+        alert(message);
+    }
+    
+    // 에러 로그 전송 (선택)
+    this.logActivity('error', {
+        context: context,
+        error: error.message,
+        stack: error.stack
+    });
+}
+3.5.2 logActivity()
+javascript/**
+ * 활동 로그 기록
+ * 
+ * @param {string} action - 액션 타입
+ * @param {Object} data - 추가 데이터
+ */
+async logActivity(action, data = {}) {
+    try {
+        await fetch('/learning/log', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: `entry_${action}`,
+                userID: this.config.userInfo.userID,
+                timestamp: new Date().toISOString(),
+                data: data
+            })
+        });
+    } catch (error) {
+        console.warn('로그 기록 실패:', error);
+        // 로그 실패는 무시 (핵심 기능 아님)
+    }
+}
+
+🔗 4. EntryUrlBuilder 명세
+4.1 기본 구조
+javascriptclass EntryUrlBuilder {
+    /**
+     * Entry 워크스페이스 URL 생성
+     * 
+     * @param {Object} options
+     * @param {string} options.s3Url - S3 프로젝트 URL
+     * @param {string} options.userID - 사용자 ID
+     * @param {string} options.role - 사용자 역할
+     * @param {string} options.sessionID - 세션 ID
+     * @param {Object} options.projectData - 프로젝트 데이터 (Base64 변환됨)
+     * @param {string} options.baseUrl - 기본 URL (기본값: /entry_editor/)
+     * @returns {string} 완성된 URL
+     */
+    static build(options) {
+        // 구현
+    }
+    
+    /**
+     * Query Params 객체 생성
+     * 
+     * @param {Object} options
+     * @returns {URLSearchParams}
+     */
+    static buildParams(options) {
+        // 구현
+    }
+    
+    /**
+     * 프로젝트 데이터를 Base64로 인코딩
+     * 
+     * @param {Object} projectData
+     * @returns {string} Base64 문자열
+     */
+    static encodeProjectData(projectData) {
+        return btoa(JSON.stringify(projectData));
+    }
+}
+4.2 사용 예시
+예시 1: S3 URL 기반
+javascriptconst url = EntryUrlBuilder.build({
+    s3Url: 'https://educodingnplaycontents.s3.amazonaws.com/ent/cpe1-3a.ent',
+    userID: 'minho',
+    role: 'student',
+    sessionID: 'abc123'
+});
+
+// 결과:
+// /entry_editor/?userID=minho&role=student&sessionID=abc123&s3Url=https%3A%2F%2F...
+예시 2: Base64 프로젝트 데이터
+javascriptconst projectData = { objects: [...], scenes: [...] };
+
+const url = EntryUrlBuilder.build({
+    userID: 'minho',
+    role: 'student',
+    projectData: projectData
+});
+
+// 결과:
+// /entry_editor/?userID=minho&role=student&project=eyJvYmplY3RzIjpbXX0...
+예시 3: 새 프로젝트
+javascriptconst url = EntryUrlBuilder.build({
+    userID: 'minho',
+    role: 'student'
+});
+
+// 결과:
+// /entry_editor/?userID=minho&role=student
+
+🔄 5. 통합 시나리오
+5.1 시나리오 1: 프로젝트 카드 클릭 (card_project.js)
+Before (현재)
+javascript// card_project.js
+loadProjectInEntryGUI(projectUrl) {
+    const userID = this.userID || document.getElementById('currentUserID')?.value || 'guest';
+    const role = this.userRole || document.getElementById('currentUserRole')?.value || 'guest';
+    
+    const workspaceUrl = `/entry_editor/?s3Url=${encodeURIComponent(projectUrl)}&userID=${userID}&role=${role}`;
+    window.open(workspaceUrl, '_blank');
+}
+After (통합 모듈 사용)
+javascript// card_project.js
+loadProjectInEntryGUI(projectUrl) {
+    const url = EntryUrlBuilder.build({
+        s3Url: projectUrl,
+        userID: this.userID,
+        role: this.userRole
+    });
+    
+    window.open(url, '_blank');
+}
+
+5.2 시나리오 2: 서버 라우팅 (entryRouter.js)
+Before (현재)
+javascript// routes/entryRouter.js
+const projectDataEncoded = Buffer.from(JSON.stringify(result.projectData)).toString('base64');
+const entryServerUrl = `https://app.codingnplay.co.kr/entry_editor/?userID=${req.session.userID}&role=${req.session.role}&sessionID=${result.sessionID}&project=${projectDataEncoded}`;
+res.redirect(entryServerUrl);
+After (통합 모듈 사용)
+javascript// routes/entryRouter.js
+const EntryUrlBuilder = require('../lib_entry/EntryUrlBuilder');
+
+const entryServerUrl = EntryUrlBuilder.build({
+    userID: req.session.userID,
+    role: req.session.role,
+    sessionID: result.sessionID,
+    projectData: result.projectData,
+    baseUrl: 'https://app.codingnplay.co.kr/entry_editor/'
+});
+
+res.redirect(entryServerUrl);
+
+5.3 시나리오 3: Entry 초기화 (app.mjs)
+Before (현재)
+javascript// entry/js/app.mjs
+import { loadProject } from './projectLoader.js';
+
+// Query Params 파싱
+const params = new URLSearchParams(window.location.search);
+const userID = params.get('userID') || 'guest';
+
+// 사용자 정보 표시
+document.getElementById('headerUserID').textContent = userID;
+
+// Entry 초기화
+Entry.init(document.getElementById('workspace'), {
+    type: 'workspace'
+});
+
+// 프로젝트 로드 분기
+if (params.has('project')) {
+    const projectData = JSON.parse(atob(params.get('project')));
+    Entry.loadProject(projectData);
+} else if (params.has('s3Url')) {
+    loadProject(params.get('s3Url'));
+}
+After (통합 모듈 사용)
+javascript// entry/js/app.mjs
+import { EntryInitializer } from './EntryInitializer.js';
+
+// 통합 초기화
+const initializer = new EntryInitializer();
+await initializer.initialize();
+
+📊 6. 데이터 흐름도
+6.1 전체 흐름
+┌─────────────────────────────────────────────────────────┐
+│  1. 사용자 액션 (카드 클릭 또는 직접 접속)              │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  2. URL 생성 (EntryUrlBuilder)                          │
+│  /entry_editor/?userID=xxx&role=xxx&s3Url=xxx           │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  3. 서버 라우팅 (entryRouter.js)                        │
+│  - 인증 확인                                            │
+│  - S3 파일 처리 (필요시)                                │
+│  - 8070번 리다이렉트                                    │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  4. EntryJS 페이지 로드 (8070번)                        │
+│  entry/index.html                                       │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  5. EntryInitializer 실행                               │
+│  ├─ getUserInfo()     - Query Params 파싱               │
+│  ├─ validateUser()    - 검증                            │
+│  ├─ updateUI()        - UI 업데이트                     │
+│  ├─ initializeEntry() - Entry 초기화                    │
+│  └─ loadProject()     - 프로젝트 로드                   │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  6. Entry 워크스페이스 준비 완료                        │
+└─────────────────────────────────────────────────────────┘
+6.2 프로젝트 로드 분기
+loadProject()
+    ↓
+detectProjectType()
+    ↓
+┌───────────┬───────────┬───────────┬───────────┐
+│ Base64    │ S3        │ Local     │ New       │
+├───────────┼───────────┼───────────┼───────────┤
+│ ?project= │ ?s3Url=   │ ?loadPath=│ 파라미터  │
+│           │           │           │ 없음      │
+└───────────┴───────────┴───────────┴───────────┘
+    ↓           ↓           ↓           ↓
+loadFrom-   loadFrom-   loadFrom-   createNew-
+Base64()    S3()        LocalPath() Project()
+    ↓           ↓           ↓           ↓
+Entry.loadProject(projectData)
+
+🧪 7. 테스트 시나리오
+7.1 단위 테스트
+테스트입력예상 출력getUserInfo()?userID=minho&role=student{ userID: 'minho', role: 'student' }detectProjectType()?project=abc123'base64'detectProjectType()?s3Url=https://...'s3'detectProjectType()파라미터 없음'new'validateUser(){ userID: '', role: 'student' }falsevalidateUser(){ userID: 'minho', role: 'invalid' }false
+7.2 통합 테스트
+테스트 1: 새 프로젝트 생성
+URL: https://app.codingnplay.co.kr/entry_editor/?userID=minho&role=student
+
+예상 결과:
+✅ 사용자 ID "minho" 표시
+✅ Entry 워크스페이스 빈 프로젝트로 로드
+✅ 콘솔에 "새 프로젝트 생성" 로그
+테스트 2: S3 프로젝트 로드
+URL: https://app.codingnplay.co.kr/entry_editor/?userID=minho&role=student&s3Url=https://...cpe1-3a.ent
+
+예상 결과:
+✅ 사용자 ID "minho" 표시
+✅ S3에서 ENT 파일 다운로드
+✅ Entry에 프로젝트 로드 완료
+✅ 콘솔에 "S3 프로젝트 로드 완료" 로그
+테스트 3: Base64 프로젝트 로드
+URL: https://app.codingnplay.co.kr/entry_editor/?userID=minho&role=student&project=eyJvYmplY3RzIjpbXX0...
+
+예상 결과:
+✅ 사용자 ID "minho" 표시
+✅ Base64 디코딩 성공
+✅ Entry에 프로젝트 로드 완료
+✅ 콘솔에 "Base64 프로젝트 로드 완료" 로그
+테스트 4: 게스트 접속
+URL: https://app.codingnplay.co.kr/entry_editor/
+
+예상 결과:
+✅ 사용자 ID "게스트" 표시
+✅ Entry 워크스페이스 빈 프로젝트로 로드
+✅ 경고 없이 정상 동작
+
+📦 8. 파일 구조
+8.1 신규 파일
+📁 entry/js/
+├── EntryInitializer.js      # 🔥 통합 초기화 모듈 (신규)
+└── EntryUrlBuilder.js        # 🔥 URL재시도D계속EntryJS 통합 초기화 시스템 명세서 (계속)
+
+📦 8. 파일 구조 (계속)
+8.1 신규 파일
+📁 entry/js/
+├── EntryInitializer.js      # 🔥 통합 초기화 모듈 (신규)
+└── EntryUrlBuilder.js        # 🔥 URL 생성 유틸리티 (신규)
+
+📁 lib_entry/
+└── EntryUrlBuilder.js        # 🔥 서버용 URL 빌더 (신규, Node.js)
+8.2 수정 파일
+📁 entry/
+├── index.html                # ✏️ 수정: 사용자 정보 표시 로직 제거
+└── 📁 js/
+    ├── app.mjs               # ✏️ 수정: 단순화 (EntryInitializer만 호출)
+    ├── global.js             # ✏️ 수정: 중복 제거
+    └── projectSaver.js       # ✏️ 수정: EntryInitializer 참조
+
+📁 routes/
+└── entryRouter.js            # ✏️ 수정: EntryUrlBuilder 사용
+
+📁 public/js/
+└── card_project.js           # ✏️ 수정: EntryUrlBuilder 사용
+
+🔧 9. API 명세
+9.1 EntryInitializer 클래스 API
+9.1.1 생성자
+javascript/**
+ * EntryInitializer 생성자
+ * 
+ * @param {Object} options - 초기화 옵션 (선택)
+ * @param {boolean} options.autoInit - 자동 초기화 여부 (기본값: false)
+ * @param {number} options.timeout - Entry 로드 타임아웃 (기본값: 10000ms)
+ * @param {boolean} options.enableLogging - 로깅 활성화 (기본값: true)
+ */
+constructor(options = {}) {
+    this.options = {
+        autoInit: false,
+        timeout: 10000,
+        enableLogging: true,
+        ...options
+    };
+    
+    this.config = {
+        userInfo: null,
+        projectInfo: null,
+        environment: this.detectEnvironment()
+    };
+    
+    this.initialized = false;
+}
+사용 예:
+javascript// 기본 사용
+const initializer = new EntryInitializer();
+
+// 옵션 지정
+const initializer = new EntryInitializer({
+    autoInit: true,      // 생성 즉시 초기화
+    timeout: 15000,      // 15초 타임아웃
+    enableLogging: false // 로그 비활성화
+});
+9.1.2 주요 메서드
+initialize()
+javascript/**
+ * Entry 전체 초기화 프로세스 실행
+ * 
+ * @returns {Promise<Object>} 초기화 결과
+ * @returns {boolean} result.success - 성공 여부
+ * @returns {Object} result.userInfo - 사용자 정보
+ * @returns {Object} result.projectInfo - 프로젝트 정보
+ * @returns {string} result.message - 결과 메시지
+ * 
+ * @throws {Error} 초기화 실패 시
+ */
+async initialize() {
+    try {
+        // 1. 사용자 정보 수집
+        this.config.userInfo = this.getUserInfo();
+        
+        // 2. 사용자 검증
+        if (!this.validateUser(this.config.userInfo)) {
+            throw new Error('사용자 정보 검증 실패');
+        }
+        
+        // 3. UI 업데이트
+        this.updateUI(this.config.userInfo);
+        
+        // 4. 프로젝트 정보 수집
+        this.config.projectInfo = this.getProjectInfo();
+        
+        // 5. Entry 초기화
+        await this.initializeEntry();
+        
+        // 6. 프로젝트 로드
+        await this.loadProject();
+        
+        this.initialized = true;
+        
+        return {
+            success: true,
+            userInfo: this.config.userInfo,
+            projectInfo: this.config.projectInfo,
+            message: 'Entry 초기화 완료'
+        };
+        
+    } catch (error) {
+        this.handleError('initialize', error);
+        throw error;
+    }
+}
+사용 예:
+javascriptconst initializer = new EntryInitializer();
+
+try {
+    const result = await initializer.initialize();
+    console.log('초기화 성공:', result);
+} catch (error) {
+    console.error('초기화 실패:', error);
+}
+getUserInfo()
+javascript/**
+ * URL Query Params에서 사용자 정보 추출
+ * 
+ * @returns {Object} userInfo
+ * @returns {string} userInfo.userID - 사용자 ID
+ * @returns {string} userInfo.role - 사용자 역할
+ * @returns {string} userInfo.sessionID - 세션 ID
+ * @returns {string} userInfo.centerID - 센터 ID
+ */
+getUserInfo() { /* ... */ }
+getProjectInfo()
+javascript/**
+ * URL Query Params에서 프로젝트 정보 추출
+ * 
+ * @returns {Object} projectInfo
+ * @returns {string} projectInfo.type - 'base64' | 's3' | 'local' | 'new'
+ * @returns {string|null} projectInfo.data - Base64 데이터
+ * @returns {string|null} projectInfo.s3Url - S3 URL
+ * @returns {string|null} projectInfo.loadPath - 로컬 파일 경로
+ */
+getProjectInfo() { /* ... */ }
+on()
+javascript/**
+ * 이벤트 리스너 등록
+ * 
+ * @param {string} eventName - 이벤트 이름
+ * @param {Function} callback - 콜백 함수
+ * 
+ * @example
+ * initializer.on('initialized', (data) => {
+ *     console.log('초기화 완료:', data);
+ * });
+ */
+on(eventName, callback) {
+    if (!this.events) {
+        this.events = {};
+    }
+    
+    if (!this.events[eventName]) {
+        this.events[eventName] = [];
+    }
+    
+    this.events[eventName].push(callback);
+}
+지원 이벤트:
+이벤트명설명데이터initialized초기화 완료{ userInfo, projectInfo }projectLoaded프로젝트 로드 완료{ type, source }error에러 발생{ context, error }userInfoUpdated사용자 정보 업데이트{ userInfo }
+
+9.2 EntryUrlBuilder 클래스 API
+9.2.1 정적 메서드
+build()
+javascript/**
+ * Entry 워크스페이스 URL 생성
+ * 
+ * @param {Object} options
+ * @param {string} [options.userID='guest'] - 사용자 ID
+ * @param {string} [options.role='guest'] - 사용자 역할
+ * @param {string} [options.sessionID] - 세션 ID
+ * @param {string} [options.centerID] - 센터 ID
+ * @param {string} [options.s3Url] - S3 프로젝트 URL
+ * @param {Object} [options.projectData] - 프로젝트 데이터 (Base64 변환됨)
+ * @param {string} [options.loadPath] - 로컬 파일 경로
+ * @param {string} [options.baseUrl='/entry_editor/'] - 기본 URL
+ * 
+ * @returns {string} 완성된 URL
+ * 
+ * @example
+ * const url = EntryUrlBuilder.build({
+ *     userID: 'minho',
+ *     role: 'student',
+ *     s3Url: 'https://...cpe1-3a.ent'
+ * });
+ * // => "/entry_editor/?userID=minho&role=student&s3Url=https%3A%2F%2F..."
+ */
+static build(options) {
+    const {
+        userID = 'guest',
+        role = 'guest',
+        sessionID,
+        centerID,
+        s3Url,
+        projectData,
+        loadPath,
+        baseUrl = '/entry_editor/'
+    } = options;
+    
+    // URLSearchParams 생성
+    const params = this.buildParams(options);
+    
+    // URL 조합
+    const queryString = params.toString();
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+}
+buildParams()
+javascript/**
+ * Query Params 객체 생성 (내부용)
+ * 
+ * @param {Object} options
+ * @returns {URLSearchParams}
+ */
+static buildParams(options) {
+    const params = new URLSearchParams();
+    
+    // 필수 파라미터
+    if (options.userID) params.set('userID', options.userID);
+    if (options.role) params.set('role', options.role);
+    
+    // 선택 파라미터
+    if (options.sessionID) params.set('sessionID', options.sessionID);
+    if (options.centerID) params.set('centerID', options.centerID);
+    
+    // 프로젝트 관련 (우선순위 순)
+    if (options.projectData) {
+        const encoded = this.encodeProjectData(options.projectData);
+        params.set('project', encoded);
+    } else if (options.s3Url) {
+        params.set('s3Url', options.s3Url);
+    } else if (options.loadPath) {
+        params.set('loadPath', options.loadPath);
+    }
+    
+    return params;
+}
+encodeProjectData()
+javascript/**
+ * 프로젝트 데이터를 Base64로 인코딩
+ * 
+ * @param {Object} projectData - Entry 프로젝트 JSON
+ * @returns {string} Base64 문자열
+ * 
+ * @throws {Error} 인코딩 실패 시
+ */
+static encodeProjectData(projectData) {
+    try {
+        const jsonString = JSON.stringify(projectData);
+        
+        // 브라우저 환경
+        if (typeof btoa !== 'undefined') {
+            return btoa(jsonString);
+        }
+        
+        // Node.js 환경
+        return Buffer.from(jsonString).toString('base64');
+        
+    } catch (error) {
+        throw new Error(`프로젝트 데이터 인코딩 실패: ${error.message}`);
+    }
+}
+decodeProjectData()
+javascript/**
+ * Base64 문자열을 프로젝트 데이터로 디코딩
+ * 
+ * @param {string} base64String - Base64 문자열
+ * @returns {Object} Entry 프로젝트 JSON
+ * 
+ * @throws {Error} 디코딩 실패 시
+ */
+static decodeProjectData(base64String) {
+    try {
+        // 브라우저 환경
+        if (typeof atob !== 'undefined') {
+            const jsonString = atob(base64String);
+            return JSON.parse(jsonString);
+        }
+        
+        // Node.js 환경
+        const jsonString = Buffer.from(base64String, 'base64').toString('utf-8');
+        return JSON.parse(jsonString);
+        
+    } catch (error) {
+        throw new Error(`프로젝트 데이터 디코딩 실패: ${error.message}`);
+    }
+}
+
+🔄 10. 마이그레이션 가이드
+10.1 단계별 마이그레이션
+Phase 1: 통합 모듈 생성 (1일차)
+✅ EntryInitializer.js 생성
+✅ EntryUrlBuilder.js 생성 (클라이언트용)
+✅ EntryUrlBuilder.js 생성 (서버용)
+✅ 단위 테스트 작성
+Phase 2: 클라이언트 마이그레이션 (2일차)
+✅ entry/js/app.mjs 단순화
+✅ entry/index.html 중복 제거
+✅ entry/js/global.js 정리
+✅ 통합 테스트
+Phase 3: 서버 마이그레이션 (3일차)
+✅ routes/entryRouter.js 수정
+✅ public/js/card_project.js 수정
+✅ 통합 테스트
+Phase 4: 검증 및 배포 (4일차)
+✅ 전체 시나리오 테스트
+✅ 성능 테스트
+✅ 문서화 업데이트
+✅ 프로덕션 배포
+10.2 롤백 계획
+각 Phase마다 별도 브랜치로 작업:
+bashgit checkout -b refactor/entry-initializer-phase1
+git checkout -b refactor/entry-initializer-phase2
+git checkout -b refactor/entry-initializer-phase3
+문제 발생 시 이전 Phase로 롤백 가능.
+
+📐 11. 아키텍처 다이어그램
+11.1 현재 구조 (Before)
+┌─────────────────────────────────────────────────────────┐
+│                    분산된 초기화 로직                    │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  entryRouter.js                                         │
+│  ├─ URL 생성 (중복 1)                                  │
+│  └─ 사용자 정보 처리 (중복 1)                          │
+│                                                         │
+│  card_project.js                                        │
+│  ├─ URL 생성 (중복 2)                                  │
+│  └─ 사용자 정보 처리 (중복 2)                          │
+│                                                         │
+│  index.html                                             │
+│  └─ 사용자 정보 표시 (중복 3)                          │
+│                                                         │
+│  app.mjs                                                │
+│  ├─ Query Params 파싱 (중복 4)                         │
+│  ├─ 프로젝트 로드 분기 (복잡)                          │
+│  └─ Entry 초기화                                       │
+│                                                         │
+│  global.js                                              │
+│  └─ 전역 설정 (중복 5)                                 │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+
+문제점:
+❌ 중복 코드 (5곳)
+❌ 일관성 부족
+❌ 유지보수 어려움
+❌ 버그 추적 복잡
+11.2 새 구조 (After)
+┌─────────────────────────────────────────────────────────┐
+│              통합 초기화 시스템 (EntryInitializer)       │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  📦 EntryInitializer.js (핵심 모듈)                     │
+│  ├─ getUserInfo()         ← 단일 진입점              │
+│  ├─ validateUser()                                      │
+│  ├─ updateUI()                                          │
+│  ├─ initializeEntry()                                   │
+│  └─ loadProject()                                       │
+│      ├─ loadFromBase64()                               │
+│      ├─ loadFromS3()                                   │
+│      ├─ loadFromLocalPath()                            │
+│      └─ createNewProject()                             │
+│                                                         │
+│  🔧 EntryUrlBuilder.js (유틸리티)                       │
+│  └─ build()               ← URL 생성 단일화          │
+│                                                         │
+├─────────────────────────────────────────────────────────┤
+│                     사용처 (단순화)                      │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  entryRouter.js                                         │
+│  └─ EntryUrlBuilder.build() 호출                       │
+│                                                         │
+│  card_project.js                                        │
+│  └─ EntryUrlBuilder.build() 호출                       │
+│                                                         │
+│  app.mjs                                                │
+│  └─ EntryInitializer.initialize() 호출                 │
+│                                                         │
+│  index.html                                             │
+│  └─ (간소화, 자동 처리)                                │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+
+개선점:
+✅ 중복 제거 (1곳으로 통합)
+✅ 일관성 보장
+✅ 유지보수 용이
+✅ 버그 추적 간단
+✅ 테스트 가능
+
+📊 12. 성능 고려사항
+12.1 로딩 시간
+현재 (Before)
+페이지 로드 → Query Params 파싱 (index.html)
+            → Query Params 파싱 (app.mjs)      ← 중복
+            → Entry 로드 대기 (10초 타임아웃)
+            → 프로젝트 로드 분기
+            → Entry.loadProject()
+            
+총 소요 시간: ~2-3초 (정상), ~10초 (타임아웃)
+개선 (After)
+페이지 로드 → EntryInitializer.initialize()
+            → Query Params 파싱 (1회만)      ← 개선
+            → Entry 로드 대기 (병렬 처리)
+            → 프로젝트 로드 (최적화)
+            → Entry.loadProject()
+            
+총 소요 시간: ~1-2초 (정상), ~10초 (타임아웃)
+개선율: 약 30-50% 단축
+12.2 메모리 사용
+최적화 포인트
+
+이벤트 리스너 정리
+
+javascript   // EntryInitializer에서 자동 정리
+   destroy() {
+       this.events = null;
+       this.config = null;
+   }
+
+캐싱 전략
+
+javascript   // Entry 로드 대기 결과 캐싱
+   static _entryLoaded = false;
+   
+   async waitForEntry() {
+       if (EntryInitializer._entryLoaded) {
+           return true;
+       }
+       // ... 로드 대기
+       EntryInitializer._entryLoaded = true;
+   }
+
+🔒 13. 보안 고려사항
+13.1 사용자 입력 검증
+javascriptvalidateUser(userInfo) {
+    // 1. XSS 방지: HTML 태그 제거
+    const sanitizedUserID = this.sanitizeInput(userInfo.userID);
+    
+    // 2. SQL Injection 방지: 특수문자 검증
+    if (!this.isValidUserID(sanitizedUserID)) {
+        console.error('유효하지 않은 userID:', userInfo.userID);
+        return false;
+    }
+    
+    // 3. Role 화이트리스트 검증
+    const allowedRoles = ['admin', 'teacher', 'manager', 'student', 'guest'];
+    if (!allowedRoles.includes(userInfo.role)) {
+        console.error('유효하지 않은 role:', userInfo.role);
+        return false;
+    }
+    
+    return true;
+}
+
+sanitizeInput(input) {
+    return input.replace(/<[^>]*>/g, '').trim();
+}
+
+isValidUserID(userID) {
+    // 영문, 숫자, 언더스코어만 허용
+    return /^[a-zA-Z0-9_]+$/.test(userID);
+}
+13.2 URL 파라미터 보안
+javascriptstatic build(options) {
+    // 1. URL 인코딩 자동 처리
+    const params = new URLSearchParams();
+    
+    // 2. 민감 정보 제외 (비밀번호 등)
+    const safeOptions = this.sanitizeOptions(options);
+    
+    // 3. 파라미터 검증
+    this.validateOptions(safeOptions);
+    
+    // URL 생성
+    return `${baseUrl}?${params.toString()}`;
+}
+
+📝 14. 문서화 요구사항
+14.1 JSDoc 주석
+모든 public 메서드에 JSDoc 주석 필수:
+javascript/**
+ * Entry 워크스페이스 초기화
+ * 
+ * @async
+ * @returns {Promise<void>}
+ * @throws {Error} Entry 로드 실패 시
+ * 
+ * @example
+ * const initializer = new EntryInitializer();
+ * await initializer.initializeEntry();
+ */
+async initializeEntry() {
+    // ...
+}
+14.2 README 문서
+각 모듈에 README.md 추가:
+📁 entry/js/
+├── EntryInitializer.js
+├── EntryInitializer.README.md      # 🔥 신규
+├── EntryUrlBuilder.js
+└── EntryUrlBuilder.README.md       # 🔥 신규
+
+🎯 15. 성공 지표 (KPI)
+15.1 정량적 지표
+지표현재 (Before)목표 (After)측정 방법코드 중복률~60%<10%SonarQube초기화 시간2-3초1-2초Performance API번들 크기~50KB~35KBWebpack Bundle Analyzer에러율5%<1%Sentry코드 커버리지30%>80%Jest
+15.2 정성적 지표
+✅ 코드 가독성 향상
+✅ 유지보수 용이성 증가
+✅ 신규 개발자 온보딩 시간 단축
+✅ 버그 수정 시간 감소
+
+🚀 16. 구현 우선순위
+High Priority (필수)
+
+✅ EntryInitializer.js 생성
+✅ EntryUrlBuilder.js 생성
+✅ app.mjs 단순화
+✅ entryRouter.js 수정
+✅ card_project.js 수정
+
+Medium Priority (권장)
+
+⚠️ 이벤트 시스템 구현 (on(), emit())
+⚠️ 에러 처리 강화
+⚠️ 로깅 시스템 통합
+
+Low Priority (선택)
+
+🔵 성능 모니터링
+🔵 A/B 테스트
+🔵 사용자 피드백 수집
+
+
+📋 17. 체크리스트
+17.1 개발 체크리스트
+Phase 1: 통합 모듈 생성
+
+ EntryInitializer.js 생성
+
+ 생성자 구현
+ initialize() 메서드
+ getUserInfo() 메서드
+ getProjectInfo() 메서드
+ loadProject() 메서드
+ 에러 처리
+
+
+ EntryUrlBuilder.js 생성 (클라이언트)
+
+ build() 정적 메서드
+ buildParams() 내부 메서드
+ encodeProjectData() 메서드
+
+
+ EntryUrlBuilder.js 생성 (서버)
+
+ Node.js 환경 대응
+
+
+ 단위 테스트 작성
+
+Phase 2: 클라이언트 마이그레이션
+
+ app.mjs 수정
+
+ EntryInitializer import
+ 기존 로직 제거
+ 단순화
+
+
+ index.html 수정
+
+ 사용자 정보 표시 로직 제거
+ 중복 스크립트 정리
+
+
+ global.js 정리
+
+ 중복 제거
+
+
+ 통합 테스트
+
+Phase 3: 서버 마이그레이션
+
+ entryRouter.js 수정
+
+ EntryUrlBuilder 사용
+ 기존 URL 생성 로직 제거
+
+
+ card_project.js 수정
+
+ EntryUrlBuilder 사용
+ 기존 URL 생성 로직 제거
+
+
+ 통합 테스트
+
+Phase 4: 검증 및 배포
+
+ E2E 테스트
+
+ 새 프로젝트 생성
+ S3 프로젝트 로드
+ Base64 프로젝트 로드
+ 게스트 접속
+
+
+ 성능 테스트
+ 보안 검증
+ 문서화 완료
+ 프로덕션 배포
+
+
+📖 18. 부록
+18.1 용어 정리
+용어설명EntryJS블록 기반 코딩 교육 플랫폼 라이브러리WorkspaceEntryJS 코딩 작업 공간ENT 파일Entry 프로젝트 파일 형식 (.ent)Base64바이너리 데이터를 텍스트로 인코딩하는 방식Query ParamsURL의 ? 뒤에 오는 파라미터들8070 서버EntryJS 프록시 서버 포트3000 서버메인 Express 서버 포트
+18.2 참고 문서
+
+EntryJS 공식 문서: https://github.com/entrylabs/entryjs
+URLSearchParams API: https://developer.mozilla.org/ko/docs/Web/API/URLSearchParams
+Base64 인코딩: https://developer.mozilla.org/ko/docs/Web/API/btoa
+
+
+✅ 19. 최종 요약
+19.1 핵심 목표
+분산된 Entry 초기화 로직을 하나의 통합 모듈로 재구성하여 유지보수성과 일관성을 향상시킨다.
+19.2 주요 산출물
+
+EntryInitializer.js - 통합 초기화 모듈
+EntryUrlBuilder.js - URL 생성 유틸리티
+단순화된 app.mjs - EntryJS 초기화만 담당
+정리된 문서 - 명세서, README, JSDoc
+
+19.3 예상 효과
+
+✅ 코드 중복 60% → 10% 감소
+✅ 초기화 시간 30-50% 단축
+✅ 유지보수 시간 50% 감소
+✅ 버그 추적 70% 용이

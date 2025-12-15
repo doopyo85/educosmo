@@ -1,0 +1,673 @@
+📋 Entry 에디터 오브젝트 업로드 기능 구현 명세서
+작성일: 2025년 1월 6일
+프로젝트: educodingnplay - Entry 에디터 통합
+버전: 1.0.0
+작성자: AI Assistant
+
+📑 목차
+
+개요
+시스템 아키텍처
+구현 상세
+API 명세
+파일 구조
+데이터 플로우
+트러블슈팅
+향후 개선 사항
+
+
+1. 개요
+1.1 목적
+Entry 에디터(8070 포트)에서 사용자가 커스텀 이미지를 업로드하여 스프라이트/오브젝트로 추가할 수 있는 기능 구현.
+1.2 주요 기능
+
+✅ 파일 업로드 (JPG, PNG, BMP, SVG 지원)
+✅ S3 클라우드 스토리지 저장
+✅ 사용자별 격리된 저장소
+✅ Entry 에디터와의 실시간 연동
+✅ 썸네일 자동 생성
+✅ 비로그인 사용자(guest) 지원
+
+1.3 기술 스택
+
+백엔드: Node.js (Express), AWS S3, Multer
+프론트엔드: Entry.js, Vanilla JavaScript
+프록시: Apache 2.4
+스토리지: AWS S3 (educodingnplaycontents)
+
+
+2. 시스템 아키텍처
+2.1 전체 구조도
+┌─────────────────────────────────────────────────────────────┐
+│                    Client Browser                           │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  Entry Editor (8070 포트)                             │  │
+│  │  /entry_editor                                        │  │
+│  │                                                       │  │
+│  │  ┌─────────────────────────────────────────────┐     │  │
+│  │  │  sprite.mjs / picture.mjs                   │     │  │
+│  │  │  - 파일 업로드 UI 처리                        │     │  │
+│  │  │  - FormData 생성                            │     │  │
+│  │  │  - API 호출                                 │     │  │
+│  │  └─────────────────────────────────────────────┘     │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                          ↓ HTTP POST
+                          ↓ multipart/form-data
+┌─────────────────────────────────────────────────────────────┐
+│                    Apache Proxy (Port 80)                   │
+│  /entry/data/* → http://localhost:3000/entry/data/*        │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│              Express Server (Port 3000)                     │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  routes/api/entryDataRouter.js                       │  │
+│  │  POST /entry/data/upload-image                       │  │
+│  │                                                      │  │
+│  │  ┌────────────────────────────────────────────┐      │  │
+│  │  │  lib_entry/entryImageUploader.js          │      │  │
+│  │  │  - 파일 검증                               │      │  │
+│  │  │  - S3 업로드                               │      │  │
+│  │  │  - 메타데이터 생성                          │      │  │
+│  │  └────────────────────────────────────────────┘      │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                          ↓ AWS SDK
+┌─────────────────────────────────────────────────────────────┐
+│              AWS S3 (educodingnplaycontents)                │
+│  ent/uploads/{userID}_{sessionID}/{timestamp}_{hash}.ext    │
+│                                                             │
+│  예: ent/uploads/minho_1762351297666/                       │
+│      1762351297828_fbffec72.png                             │
+└─────────────────────────────────────────────────────────────┘
+                          ↓ S3 URL
+┌─────────────────────────────────────────────────────────────┐
+│              Entry Editor (이미지 로드)                       │
+│  https://educodingnplaycontents.s3.ap-northeast-2.          │
+│  amazonaws.com/ent/uploads/...                              │
+└─────────────────────────────────────────────────────────────┘
+2.2 포트 구조
+포트서비스설명80Apache리버스 프록시3000Express (메인)API 서버8070Entry EditorEntry 에디터 UI
+
+3. 구현 상세
+3.1 파일 업로드 플로우
+3.1.1 클라이언트 (Entry Editor)
+파일: entry/js/popup/sprite.mjs
+javascriptpopup.on('dummyUploads', async ({ formData }) => {
+    // 1. FormData에서 파일 추출
+    const files = [];
+    for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+            files.push(value);
+        }
+    }
+    
+    // 2. 각 파일을 API로 업로드
+    const uploadPromises = files.map(async (file) => {
+        const uploadFormData = new FormData();
+        uploadFormData.append('image', file);
+        
+        // 3. sessionID 추출
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionID = urlParams.get('sessionID') || Date.now().toString();
+        
+        // 4. API 호출
+        const response = await fetch(
+            `/entry/data/upload-image?sessionID=${sessionID}`, 
+            {
+                method: 'POST',
+                body: uploadFormData,
+                credentials: 'include'
+            }
+        );
+        
+        const result = await response.json();
+        
+        // 5. Entry 형식으로 변환
+        return {
+            id: Entry.generateHash(),
+            name: file.name.replace(/\.[^/.]+$/, ''),
+            filename: result.filename,
+            fileurl: result.s3Url,      // 🔥 S3 절대 URL
+            thumbUrl: result.s3Url,     // 🔥 썸네일 URL
+            imageType: result.imageType,
+            dimension: result.dimension,
+            type: 'user',
+            mode: 'image'
+        };
+    });
+    
+    const uploads = await Promise.all(uploadPromises);
+    
+    // 6. Entry 팝업에 데이터 전달
+    popup.setData({ data: { uploads: uploads, data: [] } });
+});
+3.1.2 스프라이트 추가 처리
+javascriptfunction uploadObjects(data) {
+    // 🔥 data.uploads 배열 추출 (중요!)
+    const objects = data.uploads || data || [];
+    
+    if (!Array.isArray(objects) || objects.length === 0) {
+        console.warn('⚠️ 업로드할 객체가 없습니다.');
+        return;
+    }
+    
+    // Entry 컨테이너에 추가
+    objects.forEach((item) => {
+        if (!item.id) {
+            item.id = Entry.generateHash();
+        }
+
+        const object = {
+            id: Entry.generateHash(),
+            objectType: 'sprite',
+            sprite: {
+                name: item.name,
+                pictures: [item],
+                sounds: [],
+                category: {},
+            },
+        };
+        
+        Entry.container.addObject(object, 0);
+    });
+}
+
+popup.on('uploads', uploadObjects);
+3.2 서버 API 구현
+3.2.1 라우터 (routes/api/entryDataRouter.js)
+javascriptconst express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const EntryImageUploader = require('../../lib_entry/entryImageUploader');
+
+// Multer 메모리 스토리지 설정
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedExts = /\.(jpg|jpeg|png|bmp|svg|eo)$/i;
+    const ext = path.extname(file.originalname);
+    
+    if (allowedExts.test(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('허용되지 않는 파일 형식입니다.'));
+    }
+  }
+});
+
+/**
+ * POST /entry/data/upload-image
+ * Entry 오브젝트 이미지 업로드
+ */
+router.post('/upload-image', 
+  upload.single('image'),
+  async (req, res) => {
+    try {
+      // 🔥 인증 체크 (유연하게 - guest 허용)
+      let userID = req.session?.userID;
+      let sessionID = req.query.sessionID || req.sessionID;
+      
+      if (!userID) {
+        userID = 'guest';
+        sessionID = sessionID || `guest_${Date.now()}`;
+      }
+      
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({
+          success: false,
+          error: '업로드할 파일을 선택해주세요.'
+        });
+      }
+
+      // S3 업로드
+      const uploader = new EntryImageUploader();
+      const result = await uploader.uploadFile(file, userID, sessionID);
+
+      // 🔥 Entry 응답 형식 (S3 절대 URL 반환)
+      res.json({
+        success: true,
+        filename: result.filename,
+        fileurl: result.s3Url,      // 절대 URL
+        thumbUrl: result.s3Url,     // 썸네일 URL
+        s3Url: result.s3Url,
+        imageType: result.imageType,
+        dimension: result.dimension,
+        message: '파일 업로드 완료'
+      });
+
+    } catch (error) {
+      console.error('❌ 이미지 업로드 오류:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || '이미지 업로드에 실패했습니다.'
+      });
+    }
+  }
+);
+
+module.exports = router;
+3.2.2 업로드 매니저 (lib_entry/entryImageUploader.js)
+javascriptconst S3Manager = require('../lib_storage/s3Manager');
+const crypto = require('crypto');
+
+class EntryImageUploader {
+    constructor() {
+        this.s3Manager = new S3Manager();
+        this.allowedExtensions = ['jpg', 'jpeg', 'png', 'bmp', 'svg', 'eo'];
+        this.maxFileSize = 5 * 1024 * 1024; // 5MB
+    }
+
+    async uploadFile(file, userID, sessionID) {
+        // 1. 파일 검증
+        this.validateFile(file);
+        
+        // 2. 파일명 생성 (보안)
+        const timestamp = Date.now();
+        const randomStr = crypto.randomBytes(4).toString('hex');
+        const ext = path.extname(file.originalname).toLowerCase();
+        const safeFileName = `${timestamp}_${randomStr}${ext}`;
+        
+        // 3. S3 키 생성 (사용자별 격리)
+        const s3Key = `ent/uploads/${userID}_${sessionID}/${safeFileName}`;
+        
+        // 4. S3 업로드
+        const contentType = file.mimetype || this.getContentType(ext);
+        await this.s3Manager.uploadProject(s3Key, file.buffer, contentType);
+        
+        // 5. S3 URL 생성
+        const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${s3Key}`;
+        
+        // 6. 이미지 크기 정보
+        const dimension = await this.getImageDimension(file.buffer, ext);
+        
+        return {
+            success: true,
+            filename: safeFileName,
+            s3Key: s3Key,
+            s3Url: s3Url,
+            imageType: ext.replace('.', ''),
+            dimension: dimension,
+            fileSize: file.size,
+            contentType: contentType
+        };
+    }
+
+    validateFile(file) {
+        if (!file || !file.buffer) {
+            throw new Error('파일이 업로드되지 않았습니다.');
+        }
+        
+        if (file.size > this.maxFileSize) {
+            throw new Error('파일 크기가 너무 큽니다. (최대 5MB)');
+        }
+        
+        const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
+        if (!this.allowedExtensions.includes(ext)) {
+            throw new Error('허용되지 않는 파일 형식입니다.');
+        }
+        
+        return true;
+    }
+
+    async getImageDimension(buffer, ext) {
+        try {
+            const sharp = require('sharp');
+            const metadata = await sharp(buffer).metadata();
+            return {
+                width: metadata.width || 80,
+                height: metadata.height || 80
+            };
+        } catch (error) {
+            return { width: 80, height: 80 };
+        }
+    }
+}
+
+module.exports = EntryImageUploader;
+3.3 서버 등록 (server.js)
+javascript// Entry 데이터 API 라우터 등록
+app.use('/entry/data', require('./routes/api/entryDataRouter'));
+3.4 Apache 프록시 설정
+파일: /etc/apache2/sites-available/000-default.conf
+apache# Entry 데이터 API 프록시 (가장 먼저!)
+ProxyPass /entry/data/ http://localhost:3000/entry/data/
+ProxyPassReverse /entry/data/ http://localhost:3000/entry/data/
+
+# Entry 업로드 이미지 S3 리다이렉트 (302 방식)
+RewriteEngine On
+RewriteRule ^/entry/uploads/(.*)$ https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/$1 [R=302,L]
+```
+
+---
+
+## 4. API 명세
+
+### 4.1 이미지 업로드 API
+
+#### Endpoint
+```
+POST /entry/data/upload-image?sessionID={sessionID}
+```
+
+#### Request
+
+**Headers:**
+```
+Content-Type: multipart/form-data
+Cookie: connect.sid=...
+```
+
+**Body (FormData):**
+```
+image: [File Object]
+Query Parameters:
+파라미터타입필수설명sessionIDstringYes세션 ID (사용자별 격리용)
+Response
+Success (200 OK):
+json{
+  "success": true,
+  "filename": "1762351297828_fbffec72.png",
+  "fileurl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/minho_1762351297666/1762351297828_fbffec72.png",
+  "thumbUrl": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/minho_1762351297666/1762351297828_fbffec72.png",
+  "s3Url": "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/minho_1762351297666/1762351297828_fbffec72.png",
+  "imageType": "png",
+  "dimension": {
+    "width": 284,
+    "height": 350
+  },
+  "message": "파일 업로드 완료"
+}
+Error (400 Bad Request):
+json{
+  "success": false,
+  "error": "업로드할 파일을 선택해주세요."
+}
+Error (500 Internal Server Error):
+json{
+  "success": false,
+  "error": "파일 업로드에 실패했습니다."
+}
+```
+
+---
+
+## 5. 파일 구조
+```
+educodingnplay/
+├── server.js                              # 메인 서버
+├── routes/
+│   └── api/
+│       └── entryDataRouter.js             # 🔥 Entry 데이터 API
+├── lib_entry/
+│   └── entryImageUploader.js              # 🔥 이미지 업로드 매니저
+├── lib_storage/
+│   └── s3Manager.js                       # S3 업로드 유틸
+└── entry/                                 # Entry 에디터 (8070)
+    └── js/
+        └── popup/
+            ├── sprite.mjs                 # 🔥 스프라이트 업로드
+            └── picture.mjs                # 🔥 그림 업로드
+5.1 핵심 파일 설명
+파일역할주요 기능entryDataRouter.jsAPI 라우터파일 업로드 엔드포인트 제공entryImageUploader.js업로드 매니저S3 업로드, 파일 검증, 메타데이터 생성sprite.mjs클라이언트 UI파일 선택, FormData 생성, API 호출s3Manager.jsS3 유틸AWS SDK 래퍼
+
+6. 데이터 플로우
+6.1 업로드 프로세스
+mermaidsequenceDiagram
+    participant User
+    participant EntryEditor
+    participant Apache
+    participant Express
+    participant S3
+    
+    User->>EntryEditor: 파일 선택
+    EntryEditor->>EntryEditor: FormData 생성
+    EntryEditor->>Apache: POST /entry/data/upload-image
+    Apache->>Express: 프록시 (3000)
+    Express->>Express: Multer 파싱
+    Express->>Express: 파일 검증
+    Express->>S3: 파일 업로드
+    S3-->>Express: S3 URL 반환
+    Express-->>Apache: JSON 응답
+    Apache-->>EntryEditor: JSON 응답
+    EntryEditor->>EntryEditor: Entry 형식 변환
+    EntryEditor->>EntryEditor: popup.setData()
+    User->>EntryEditor: 추가하기 버튼 클릭
+    EntryEditor->>EntryEditor: uploadObjects() 호출
+    EntryEditor->>EntryEditor: Entry.container.addObject()
+    EntryEditor->>S3: 이미지 로드
+    S3-->>EntryEditor: 이미지 표시
+```
+
+### 6.2 파일 저장 경로
+
+#### S3 버킷 구조
+```
+educodingnplaycontents/
+└── ent/
+    └── uploads/
+        ├── minho_1762351297666/
+        │   ├── 1762351297828_fbffec72.png
+        │   └── 1762351400123_a1b2c3d4.jpg
+        ├── guest_1762351500000/
+        │   └── 1762351500555_e5f6g7h8.png
+        └── forena_1762351600000/
+            └── 1762351600888_i9j0k1l2.jpg
+```
+
+#### 파일명 규칙
+```
+{timestamp}_{randomHash}.{ext}
+
+예시:
+- 1762351297828_fbffec72.png
+  └─ timestamp: 1762351297828 (밀리초)
+  └─ randomHash: fbffec72 (4바이트 hex)
+  └─ ext: png
+```
+
+#### 사용자 디렉토리 규칙
+```
+{userID}_{sessionID}/
+
+예시:
+- minho_1762351297666
+  └─ userID: minho (로그인 사용자)
+  └─ sessionID: 1762351297666
+
+- guest_1762351500000
+  └─ userID: guest (비로그인)
+  └─ sessionID: 1762351500000
+```
+
+---
+
+## 7. 트러블슈팅
+
+### 7.1 발생했던 주요 이슈 및 해결
+
+#### 이슈 1: 404 - API 라우트 미등록
+**증상:**
+```
+POST /entry/data/upload-image → 404 Not Found
+원인:
+server.js에 entryDataRouter가 등록되지 않음
+해결:
+javascript// server.js
+app.use('/entry/data', require('./routes/api/entryDataRouter'));
+```
+
+---
+
+#### 이슈 2: 인증 실패 (401 Unauthorized)
+**증상:**
+```
+API 호출 → 401 Unauthorized
+로그인 페이지로 리다이렉트
+원인:
+Entry 에디터(8070)와 메인 서버(3000)가 다른 포트여서 세션 공유 안 됨
+해결:
+javascript// entryDataRouter.js - guest 모드 허용
+let userID = req.session?.userID;
+if (!userID) {
+  userID = 'guest';  // 비로그인 허용
+  sessionID = sessionID || `guest_${Date.now()}`;
+}
+
+이슈 3: 이미지 로드 실패 (상대 경로 문제)
+증상:
+javascripterr= test_image load failed
+fileurl: '/entry/uploads/minho_xxx/file.png'
+원인:
+Entry가 상대 경로(/entry/uploads/...)를 로드하려 했지만 실제 파일은 S3에 있음
+해결:
+javascript// entryDataRouter.js - S3 절대 URL 반환
+res.json({
+  fileurl: result.s3Url,   // 절대 URL
+  thumbUrl: result.s3Url,  // 썸네일
+  // NOT: result.entryUrl (상대 경로 X)
+});
+```
+
+---
+
+#### 이슈 4: Apache 프록시 500 에러
+**증상:**
+```
+/entry/uploads/xxx.png → 500 Internal Server Error
+원인:
+ProxyPass로 S3를 프록시하려 했지만 실패
+해결:
+apache# ProxyPass 대신 RewriteRule 사용
+RewriteEngine On
+RewriteRule ^/entry/uploads/(.*)$ https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/$1 [R=302,L]
+
+이슈 5: uploadObjects 함수에 배열이 아닌 객체 전달
+증상:
+javascript📥 uploadObjects 호출됨: {uploads: Array(1)}
+📊 받은 객체 개수: undefined
+원인:
+Entry 팝업이 {uploads: Array} 형태로 전달했지만, 함수는 배열을 직접 기대함
+해결:
+javascriptfunction uploadObjects(data) {
+  // data.uploads 배열 추출
+  const objects = data.uploads || data || [];
+  
+  if (!Array.isArray(objects)) {
+    return;
+  }
+  
+  objects.forEach((item) => {
+    Entry.container.addObject(...);
+  });
+}
+
+7.2 디버깅 가이드
+클라이언트 디버깅 (브라우저 콘솔)
+javascript// 1. 업로드 데이터 확인
+console.log('📦 최종 데이터:', uploads);
+
+// 2. Entry 컨테이너 확인
+console.log('📋 현재 오브젝트:', Entry.container.getAllObjects());
+
+// 3. 이미지 로드 테스트
+const img = new Image();
+img.onload = () => console.log('✅ 이미지 로드 성공');
+img.onerror = () => console.log('❌ 이미지 로드 실패');
+img.src = 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/...';
+서버 디버깅
+bash# 1. API 로그 확인
+cd /var/www/educodingnplay
+pm2 logs --lines 100
+
+# 2. Apache 로그 확인
+sudo tail -f /var/log/apache2/error.log
+
+# 3. S3 업로드 확인
+aws s3 ls s3://educodingnplaycontents/ent/uploads/ --recursive
+
+8. 향후 개선 사항
+8.1 단기 개선 (1개월 이내)
+1. 이미지 최적화
+
+ 업로드 시 자동 리사이징 (최대 1920x1080)
+ WebP 변환 지원
+ 썸네일 자동 생성 (200x200)
+
+2. 사용자 경험 개선
+
+ 업로드 진행 상태 표시 (프로그레스 바)
+ 드래그 앤 드롭 지원
+ 다중 파일 동시 업로드
+
+3. 보안 강화
+
+ 파일 마임 타입 검증 강화
+ 바이러스 스캔 통합
+ Rate Limiting 적용
+
+8.2 중기 개선 (3개월 이내)
+1. 파일 관리
+
+ 사용자 업로드 이미지 목록 조회 API
+ 이미지 삭제 기능
+ 이미지 편집 기능 (크롭, 회전)
+
+2. 스토리지 최적화
+
+ S3 Lifecycle 정책 (30일 후 자동 삭제)
+ CloudFront CDN 적용
+ 이미지 압축 최적화
+
+3. 모니터링
+
+ 업로드 성공/실패율 추적
+ 평균 업로드 시간 모니터링
+ 스토리지 사용량 대시보드
+
+8.3 장기 개선 (6개월 이후)
+1. AI 기능
+
+ AI 기반 배경 제거
+ AI 이미지 향상 (Super Resolution)
+ 자동 태깅 및 분류
+
+2. 협업 기능
+
+ 이미지 공유 기능
+ 공용 이미지 라이브러리
+ 버전 관리 시스템
+
+
+9. 부록
+9.1 환경 변수
+bash# .env
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_REGION=ap-northeast-2
+S3_BUCKET_NAME=educodingnplaycontents
+9.2 의존성 패키지
+json{
+  "dependencies": {
+    "express": "^4.18.0",
+    "multer": "^1.4.5-lts.1",
+    "@aws-sdk/client-s3": "^3.0.0",
+    "sharp": "^0.32.0"
+  }
+}
+9.3 관련 문서
+
+Entry.js 공식 문서
+AWS S3 문서
+Multer 문서
+
+
+📝 변경 이력
+날짜버전변경 내용작성자2025-01-061.0.0초안 작성AI Assistant
+
+문서 종료

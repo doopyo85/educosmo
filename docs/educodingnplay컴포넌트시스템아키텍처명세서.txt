@@ -1,0 +1,2465 @@
+# educodingnplay 컴포넌트 시스템 아키텍처 명세서
+
+## 📋 개요
+
+educodingnplay 프로젝트는 **전통적인 MVC 패턴**과 **클라이언트사이드 컴포넌트 시스템**을 결합한 **하이브리드 아키텍처**를 사용하고 있습니다.
+
+### 🔥 문제 해결 방향 요약
+
+1. **서버사이드**: Express.js + EJS 템플릿으로 초기 페이지 렌더링
+2. **클라이언트사이드**: 컴포넌트 시스템으로 동적 상호작용 처리  
+3. **데이터 소스**: Google Sheets API를 통한 콘텐츠 관리
+4. **인증**: 세션 + JWT 하이브리드 인증 시스템
+5. **통신**: EventBus 패턴으로 컴포넌트 간 통신
+
+---
+
+## 🏗️ 전체 아키텍처 구조
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    HYBRID ARCHITECTURE                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────┐    ┌─────────────────────────────┐ │
+│  │   SERVER SIDE       │    │      CLIENT SIDE            │ │
+│  │   (Traditional MVC) │◄──►│   (Component System)        │ │
+│  │                     │    │                             │ │
+│  │ • Express Router    │    │ • IDEComponent              │ │
+│  │ • EJS Templates     │    │ • QuizComponent             │ │
+│  │ • Session Auth      │    │ • NavigationComponent       │ │
+│  │ • Middleware Chain  │    │ • ContentComponent          │ │
+│  │ • Google Sheets API │    │ • EventBus                  │ │
+│  └─────────────────────┘    └─────────────────────────────┘ │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                      DATA LAYER                             │
+│                                                             │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────┐ │
+│  │ Google      │ │   Redis     │ │   MySQL     │ │   S3   │ │
+│  │ Sheets      │ │  (Session)  │ │    (DB)     │ │ (Files)│ │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔄 시스템 작동 흐름
+
+### 1. 초기 페이지 로드 흐름
+
+```
+사용자 요청 
+    ↓
+Express Router (server.js)
+    ↓
+인증 미들웨어 체인
+    ↓ 
+template.ejs 렌더링
+    ↓
+컴포넌트 시스템 초기화
+    ↓
+EventBus 이벤트 구독
+    ↓
+동적 컴포넌트 로드
+```
+
+### 2. 데이터 흐름
+
+```
+Google Sheets ──► getSheetData() ──► API Routes ──► Components
+       ↑                                              ↓
+   Content                                    User Interaction
+   Management                                        ↓
+                                              EventBus
+                                                 ↓
+                                        Component Updates
+```
+
+### 3. 컴포넌트 간 통신
+
+```
+NavigationComponent ──EventBus──► ContentComponent
+        ↑                               ↓
+        │                        Load Problem Data
+        │                               ↓
+EventBus ◄──────────── IDEComponent/QuizComponent
+```
+
+---
+
+## 📁 파일 구조 및 역할
+
+### 🎯 핵심 서버 파일
+
+#### `server.js` - 메인 서버 컨트롤러
+- **역할**: Express 서버 설정 및 라우터 통합
+- **주요 기능**:
+  - 라우터 등록 (auth, admin, learning, template 등)
+  - 미들웨어 체인 설정
+  - 정적 파일 서빙 최적화
+  - Google Sheets API 초기화
+  - 컴포넌트 시스템 통합
+
+#### `index.ejs` - 메인 페이지 템플릿
+- **역할**: 홈페이지 캐러셀 시스템
+- **구조**:
+  ```html
+  ┌─────────────────────────────────────┐
+  │           Header Component          │
+  ├─────────────────────────────────────┤
+  │       Bootstrap Carousel            │
+  │  ┌─────────────┬─────────────────┐  │
+  │  │ 초등 과정   │   중고등 과정    │  │
+  │  │ • 컴퓨터    │   • 앱인벤터    │  │
+  │  │ • 스크래치  │   • 파이썬      │  │
+  │  │ • 엔트리    │   • 인공지능    │  │
+  │  │ • 자격증    │   • 알고리즘    │  │
+  │  └─────────────┴─────────────────┘  │
+  └─────────────────────────────────────┘
+  ```
+
+#### `header.ejs` - 공통 헤더 컴포넌트
+- **역할**: 사용자 인터페이스 및 권한 관리
+- **기능**:
+  - 권한별 메뉴 표시 (admin, teacher, manager)
+  - 프로필 선택 모달
+  - Google API 설정 전역 변수
+
+---
+
+## 🛣️ 라우터 시스템 구조
+
+### 메인 라우터 등록 (server.js)
+
+```javascript
+const routes = {
+  'auth': require('./lib_login/auth'),           // 인증
+  'admin': require('./routes/adminRouter'),      // 관리자
+  'board': require('./routes/boardRouter'),      // 게시판
+  'learning': require('./routes/learningRouter'), // 학습관리
+  'template': require('./routes/templateRouter'), // 템플릿 시스템
+  'python': require('./routes/pythonRouter'),    // 파이썬
+  'machinelearning': require('./routes/machinelearningRouter'),
+  // ... 기타 라우터들
+};
+
+// 인증 미들웨어와 함께 등록
+Object.entries(routes).forEach(([path, router]) => {
+  if (path === 'auth') {
+    app.use(`/${path}`, router);  // 인증 라우터는 미들웨어 없이
+  } else {
+    app.use(`/${path}`, authenticateUser, router); // 나머지는 인증 필요
+  }
+});
+```
+
+### 페이지별 라우트 매핑
+
+| 경로 | 컴포넌트 | 설명 |
+|------|----------|------|
+| `/` | index.ejs | 메인 홈페이지 (캐러셀) |
+| `/computer` | computer.ejs | 컴퓨터 기초활용 |
+| `/scratch_project` | scratch_project.ejs | 스크래치 프로젝트 |
+| `/python_project` | template.ejs (pageType: python) | 파이썬 학습 |
+| `/algorithm` | template.ejs (pageType: algorithm) | 알고리즘 연습 |
+| `/certification` | template.ejs (pageType: certification) | 자격증 과정 |
+| `/aiMath` | template.ejs (pageType: aiMath) | AI 수학 |
+
+---
+
+## 🔐 하이브리드 인증 시스템
+
+### 인증 방식
+1. **세션 기반 인증**: Express Session + Redis Store
+2. **JWT 토큰 지원**: API 호출용
+3. **권한 기반 접근 제어**: 7단계 역할 시스템
+
+### 권한 계층 구조
+```
+admin (최고 관리자)
+  ├── manager (센터장)
+  ├── teacher (강사)
+  ├── kinder (유치원)
+  ├── school (학교)
+  ├── student (학생)
+  └── guest (비로그인)
+```
+
+### 미들웨어 체인
+```javascript
+// 인증 흐름
+authenticateUser → checkPageAccess → checkRole → 페이지 렌더링
+
+// 로깅 미들웨어
+logUserActivity → logMenuAccess → logLearningActivity
+```
+
+---
+
+## 🔧 컴포넌트 시스템 구조
+
+### 클라이언트사이드 컴포넌트
+
+#### 1. **IDEComponent** (코드 에디터)
+- **역할**: Python 코드 작성 및 실행
+- **구성**: CodeEditor + Terminal + PythonAutoCompleter
+- **API**: `/api/run-python`, `/api/get-answer-code`
+
+#### 2. **QuizComponent** (퀴즈 시스템)
+- **역할**: 다양한 형태의 퀴즈 처리
+- **지원 타입**: 객관식, 주관식, 코딩, 드래그앤드롭 등
+- **데이터**: Google Sheets problems 시트
+
+#### 3. **NavigationComponent** (네비게이션)
+- **역할**: 사이드바 메뉴 및 문제 목록
+- **기능**: 문제 선택, 진도 관리, 즐겨찾기
+
+#### 4. **ContentComponent** (콘텐츠 표시)
+- **역할**: 문제 내용 표시 및 해설 팝업
+- **기능**: iframe 기반 콘텐츠 로드, 플로팅 해설 버튼
+
+### EventBus 통신 시스템
+
+```javascript
+// 이벤트 발행/구독 패턴
+EventBus.publish('menuSelected', { problemNumber: 1 });
+EventBus.subscribe('problemChanged', (data) => {
+  // 컴포넌트 업데이트
+});
+
+// 주요 이벤트 목록
+- menuSelected: 메뉴 선택
+- problemChanged: 문제 변경  
+- codeExecuted: 코드 실행
+- quizSubmitted: 퀴즈 제출
+- layoutChanged: 레이아웃 변경
+```
+
+---
+
+## 📊 데이터 소스 및 API
+
+### Google Sheets 통합
+
+#### 시트 구조 (problems 시트)
+| 열 | 내용 | 설명 |
+|----|------|------|
+| A | 문제파일명 | HTML 파일 URL |
+| B | 시험지명 | 카테고리명 (python, algorithm 등) |
+| C | 문제번호 | p01, p02 형식 |
+| D | 개념파일URL | 추가 학습 자료 |
+| E | 정답파일URL | 정답 코드 파일 |
+| F | 해설파일URL | 마크다운 해설 파일 |
+| G | answerType | 답안 형식 (code, text, multiple_choice 등) |
+| H | 정답 | JSON 형식 정답 데이터 |
+| I | 인풋/아웃풋 | 테스트 케이스 |
+| J | 난이도 | 1-5 단계 |
+| K | 객관식/주관식 | 문제 유형 |
+| L | Tags | 태그 정보 |
+
+#### API 엔드포인트
+```javascript
+// 데이터 조회
+GET /api/problems/:examName     // 특정 시험의 문제 목록
+GET /api/problem/:examName/:num // 특정 문제 상세정보
+
+// 코드 실행
+POST /api/run-python           // Python 코드 실행
+POST /python/api/run-python-interactive // 대화형 실행
+
+// 답안 처리  
+GET /api/get-answer-code       // 정답 코드 조회
+POST /api/quiz/submit          // 퀴즈 답안 제출
+
+// 해설 시스템
+GET /api/get-explanation-md    // 마크다운 해설 파일
+```
+
+---
+
+## 🎨 템플릿 시스템
+
+### 동적 페이지 로딩
+
+#### `template.ejs` 시스템
+```javascript
+// pageType 파라미터로 동적 콘텐츠 결정
+res.render('template', {
+  pageType: 'python',      // 또는 algorithm, certification, aiMath
+  userID: req.session.userID,
+  role: req.session.role
+});
+```
+
+#### 페이지별 설정
+```javascript
+const pageConfigs = {
+  python: {
+    title: "파이썬 프로그래밍",
+    components: ["IDE", "Navigation", "Content"],
+    examName: "python"
+  },
+  algorithm: {
+    title: "알고리즘 연습", 
+    components: ["Quiz", "Navigation", "Content"],
+    examName: "algorithm"
+  },
+  certification: {
+    title: "자격증 과정",
+    components: ["Quiz", "Navigation", "Content"],
+    examName: "certification"  
+  }
+};
+```
+
+---
+
+## 🔄 상태 관리 및 생명주기
+
+### 컴포넌트 초기화 순서
+
+```
+1. DOM 로드 완료
+   ↓
+2. ComponentSystem.init()
+   ↓ 
+3. 개별 컴포넌트 등록
+   ↓
+4. EventBus 설정
+   ↓
+5. 초기 데이터 로드
+   ↓
+6. 사용자 상호작용 대기
+```
+
+### 상태 동기화
+
+```javascript
+// 전역 상태 관리
+const AppState = {
+  currentProblem: null,
+  userProgress: {},
+  examName: '',
+  layoutMode: 'split'  // split, full, quiz
+};
+
+// 컴포넌트 간 상태 공유
+EventBus.publish('stateChanged', { 
+  type: 'PROBLEM_CHANGED',
+  payload: { problemNumber: 3 }
+});
+```
+
+---
+
+## ⚡ 성능 최적화
+
+### 정적 파일 서빙 최적화
+
+```javascript
+// MIME 타입 명시적 설정
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    const ext = path.extname(filePath).toLowerCase();
+    switch (ext) {
+      case '.js': res.set('Content-Type', 'application/javascript'); break;
+      case '.css': res.set('Content-Type', 'text/css'); break;
+      // ... 기타 타입들
+    }
+    res.set('Cache-Control', 'public, max-age=3600');
+  }
+}));
+```
+
+### 캐싱 전략
+
+1. **Redis**: 세션 데이터 캐싱
+2. **브라우저 캐싱**: 정적 파일 1시간 캐시
+3. **권한 캐시**: 메모리 기반 권한 정보 캐싱
+
+---
+
+## 🚀 배포 및 모니터링
+
+### 환경 설정
+```javascript
+// 환경별 설정
+const config = {
+  development: { port: 3000, ssl: false },
+  production: { port: 443, ssl: true },
+  redis: { url: process.env.REDIS_URL },
+  cors: { allowedOrigins: [...] }
+};
+```
+
+### 로깅 시스템
+- **사용자 활동 로깅**: `logUserActivity`
+- **메뉴 접근 로깅**: `logMenuAccess` 
+- **학습 활동 로깅**: `logLearningActivity`
+- **에러 추적**: 중앙화된 에러 핸들링
+
+---
+
+## 📝 개발 가이드라인
+
+### 새 컴포넌트 추가 시
+
+1. **컴포넌트 클래스 생성**
+   ```javascript
+   class NewComponent extends Component {
+     async init() { /* 초기화 로직 */ }
+     render() { /* 렌더링 로직 */ }
+     destroy() { /* 정리 로직 */ }
+   }
+   ```
+
+2. **EventBus 이벤트 정의**
+   ```javascript
+   // 발행할 이벤트
+   EventBus.publish('newComponent:action', data);
+   
+   // 구독할 이벤트  
+   EventBus.subscribe('other:event', this.handleEvent.bind(this));
+   ```
+
+3. **CSS 모듈화**
+   ```css
+   /* /public/css/components/new-component.css */
+   .new-component-container { /* 스타일 */ }
+   ```
+
+4. **API 엔드포인트 추가** (필요시)
+   ```javascript
+   // /routes/apiRouter.js
+   router.get('/new-endpoint', async (req, res) => {
+     // API 로직
+   });
+   ```
+
+### 권한 확인 및 페이지 접근
+
+```javascript
+// 새 페이지 라우트 추가
+app.get('/new-page', 
+  authenticateUser,
+  checkPageAccess('/new-page'),
+  (req, res) => {
+    res.render('template', { pageType: 'newPage' });
+  }
+);
+```
+
+---
+
+## 🔍 트러블슈팅
+
+### 자주 발생하는 문제들
+
+1. **컴포넌트 초기화 실패**
+   - 원인: CSS/JS 로드 순서 문제
+   - 해결: `template.ejs`에서 스크립트 로드 순서 확인
+
+2. **EventBus 이벤트 누락**
+   - 원인: 비동기 초기화 타이밍 문제
+   - 해결: `await` 키워드로 순차 초기화
+
+3. **권한 접근 오류**
+   - 원인: 미들웨어 체인 설정 문제
+   - 해결: `permissions.json` 설정 확인
+
+4. **정적 파일 404 오류**
+   - 원인: MIME 타입 설정 문제
+   - 해결: `express.static` 설정에서 캐시올 라우트 확인
+
+---
+
+## 📈 향후 개선 방향
+
+1. **마이크로서비스 아키텍처**: 컴포넌트별 서비스 분리
+2. **WebSocket 통신**: 실시간 협업 기능
+3. **PWA 지원**: 오프라인 학습 환경
+4. **타입스크립트 도입**: 타입 안정성 향상
+5. **컨테이너화**: Docker 기반 배포 자동화
+
+---
+---
+
+## 📊 ContentComponent & IDEComponent 상세 분석
+
+### ContentComponent 핵심 기능
+
+ContentComponent는 문제 표시와 네비게이션을 담당하는 핵심 컴포넌트입니다:
+
+#### 1. 파일 타입별 처리 시스템
+
+```javascript
+// 🔥 NEW 기능: 파일 확장자에 따른 자동 분기
+loadContentByFileType(fileUrl, fileName, problemInfo, problemNumber, pythonFileUrl) {
+  const fileExtension = fileName.split('.').pop()?.toLowerCase();
+  
+  if (fileExtension === 'md') {
+    // 마크다운 → HTML 변환 후 렌더링
+    this.loadMarkdownContent(fileUrl, problemInfo, problemNumber, pythonFileUrl);
+  } else {
+    // 일반 HTML 파일 처리
+    this.loadHtmlContent(fileUrl, problemInfo, problemNumber, pythonFileUrl);
+  }
+}
+```
+
+#### 2. 해설 시스템 통합
+
+```javascript
+// 해설 버튼을 problem-navigation-container에 동적 생성
+createExplanationButton() {
+  const explanationBtn = document.createElement('button');
+  explanationBtn.id = 'explanation-btn';
+  explanationBtn.className = 'explanation-nav-btn';
+  explanationBtn.innerHTML = `
+    <i class="bi bi-lightbulb"></i>
+    <span class="btn-text">해설</span>
+  `;
+  
+  // 클릭 시 EventBus로 해설 요청 이벤트 발행
+  explanationBtn.addEventListener('click', () => {
+    window.EventBus.publish('explanation-request', this.explanationState.currentProblemData);
+  });
+}
+```
+
+#### 3. 문제 네비게이션 시스템
+
+```javascript
+// Bootstrap Icons를 활용한 문제 번호 표시
+renderProblemNavigation() {
+  for (let i = 1; i <= this.state.totalProblems; i++) {
+    const problemBtn = document.createElement('i');
+    problemBtn.classList.add('bi', 'problem-icon');
+    
+    // 현재 문제인지에 따라 채워진/빈 아이콘 선택
+    if (i === this.state.currentProblemNumber) {
+      problemBtn.classList.add(i === 10 ? 'bi-0-circle-fill' : `bi-${i}-circle-fill`);
+    } else {
+      problemBtn.classList.add(i === 10 ? 'bi-0-circle' : `bi-${i}-circle`);
+    }
+  }
+}
+```
+
+#### 4. 마크다운 렌더링 시스템
+
+```javascript
+// marked.js + highlight.js 통합 렌더링
+async loadMarkdownContent(markdownUrl, problemInfo, problemNumber, pythonFileUrl) {
+  const response = await fetch(markdownUrl);
+  const markdownText = await response.text();
+  
+  // 마크다운을 HTML로 변환
+  const htmlContent = marked.parse(markdownText);
+  
+  // 향상된 HTML 템플릿에 포함하여 렌더링
+  this.elements.iframe.srcdoc = this.getEnhancedMarkdownHtml(htmlContent);
+}
+```
+
+### IDEComponent 구조
+
+IDEComponent는 모듈러 설계로 구성되어 있습니다:
+
+#### 1. 모듈 관리 시스템
+
+```javascript
+// 하위 모듈 구조
+this.modules = {
+  codeEditor: null,  // CodeEditor 클래스 인스턴스
+  terminal: null     // Terminal 클래스 인스턴스
+};
+
+// 모듈별 초기화
+async initializeModules() {
+  // CodeEditor 모듈
+  this.modules.codeEditor = new window.CodeEditor({
+    editorId: 'editor',
+    showAnswerButtonId: 'showAnswerBtn',
+    aceButtonId: 'ace-btn',
+    jupyterButtonId: 'jupyter-btn'
+  });
+  
+  // Terminal 모듈
+  this.modules.terminal = new window.Terminal({
+    outputId: 'output-content',
+    runButtonId: 'runCodeBtn',
+    clearButtonId: 'clearOutputBtn'
+  });
+}
+```
+
+#### 2. API 프록시 패턴
+
+IDEComponent는 하위 모듈들의 API를 통합하여 제공합니다:
+
+```javascript
+// 코드 관련 API
+getCurrentCode() {
+  return this.modules.codeEditor?.getCurrentCode() || '';
+}
+
+setCode(code) {
+  return this.modules.codeEditor?.setCode(code) || false;
+}
+
+// 터미널 관련 API  
+appendToOutput(text, type = 'normal') {
+  this.modules.terminal?.appendToOutput(text, type);
+}
+
+clearOutput() {
+  this.modules.terminal?.clearOutput();
+}
+
+// 실행 관련 API
+runCode() {
+  this.modules.terminal?.runCode();
+}
+```
+
+#### 3. 문제 변경 핸들링
+
+```javascript
+onProblemChanged(examName, problemNumber) {
+  this.state.currentExamName = examName;
+  this.state.currentProblemNumber = problemNumber;
+  
+  // 하위 모듈에 변경 사항 전파
+  if (this.modules.codeEditor?.onProblemChanged) {
+    this.modules.codeEditor.onProblemChanged(examName, problemNumber);
+  }
+}
+```
+
+---
+
+## 🔄 이벤트 기반 컴포넌트 통신 시스템
+
+### EventBus 패턴 상세 구조
+
+```javascript
+// 핵심 이벤트 매핑
+const EVENTS = {
+  // 메뉴 관련
+  'menuSelected': '메뉴 선택 시 발행',
+  'layoutChanged': '레이아웃 변경 시 발행',
+  
+  // 문제 관련
+  'problemChanged': '문제 변경 시 발행', 
+  'problemLoaded': '문제 로드 완료 시 발행',
+  
+  // 컴포넌트 관련
+  'componentActivated': '컴포넌트 활성화 시 발행',
+  'componentDeactivated': '컴포넌트 비활성화 시 발행',
+  
+  // IDE 관련
+  'editor:resize': '에디터 크기 조정 요청',
+  'editor:getCode': '현재 코드 가져오기 요청',
+  'editor:codeResponse': '코드 응답',
+  
+  // 해설 관련 (🔥 NEW)
+  'explanation-request': '해설 팝업 요청'
+};
+```
+
+### 이벤트 처리 흐름 예시
+
+```
+사용자 메뉴 클릭
+    ↓
+NavigationComponent.handleMenuClick()
+    ↓
+EventBus.publish('menuSelected', {
+  examName: 'python_basic_01',
+  layoutType: 'ide',
+  pptUrl: ''
+})
+    ↓
+ComponentSystem.handleMenuSelected()
+    ↓
+1. applyLayout('ide')
+2. ContentComponent.state.currentExamName 설정
+3. ContentComponent.loadProblem(1)
+    ↓
+EventBus.publish('problemChanged', {
+  examName: 'python_basic_01', 
+  problemNumber: 1,
+  pythonFileUrl: 'example.py'
+})
+    ↓
+IDEComponent.onProblemChanged()
+    ↓
+CodeEditor.onProblemChanged()
+```
+
+---
+
+## 🎯 레이아웃 시스템 심화 분석
+
+### CSS 클래스 기반 레이아웃 제어
+
+```css
+/* 기본 레이아웃 (모든 컴포넌트 숨김) */
+.layout-html #ide-component,
+.layout-html #quiz-component,
+.layout-html #ppt-viewer-component { display: none !important; }
+
+/* IDE 레이아웃 (IDE + Navigation + Content 표시) */
+.layout-ide #ide-component { 
+  display: flex !important; 
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.layout-ide #quiz-component,
+.layout-ide #ppt-viewer-component { display: none !important; }
+
+/* Quiz 레이아웃 */
+.layout-quiz #quiz-component { display: block !important; }
+.layout-quiz #ide-component,
+.layout-quiz #ppt-viewer-component { display: none !important; }
+
+/* PPT 레이아웃 */
+.layout-ppt #ppt-viewer-component { display: block !important; }
+.layout-ppt #content-component,
+.layout-ppt #ide-component,
+.layout-ppt #quiz-component { display: none !important; }
+```
+
+### 동적 레이아웃 적용 과정
+
+```javascript
+applyLayout: function(layoutType) {
+  // 1. 이전 레이아웃 클래스 제거
+  Object.values(this.LAYOUT_TYPES).forEach(type => {
+    document.body.classList.remove(`layout-${type}`);
+  });
+  
+  // 2. 새 레이아웃 클래스 추가  
+  document.body.classList.add(`layout-${layoutType}`);
+  
+  // 3. 🔥 중요: DOM 강제 표시 (CSS 우선순위 무시)
+  this.forceShowComponents(layoutType);
+  
+  // 4. 컴포넌트 활성화/비활성화
+  this.activateComponents(layoutType);
+  
+  // 5. 레이아웃별 특수 처리
+  if (layoutType === 'ide') {
+    setTimeout(() => {
+      // ACE 에디터 리사이즈 트리거
+      this.components.ide?.resizeEditor();
+    }, 200);
+  }
+}
+```
+
+---
+
+## 🛠️ 모듈 로딩 및 의존성 관리
+
+### 스크립트 로딩 순서
+
+```html
+<!-- template.ejs에서의 로딩 순서 -->
+<!-- 1. 기본 라이브러리 -->
+<script src="https://cdnjs.cloudflare.com/# educodingnplay 컴포넌트 시스템 아키텍처 명세서
+
+## 📋 개요
+
+educodingnplay 프로젝트는 **전통적인 MVC 패턴**과 **클라이언트사이드 컴포넌트 시스템**을 결합한 **하이브리드 아키텍처**를 사용하고 있습니다.
+
+### 🔥 문제 해결 방향 요약
+
+1. **서버사이드**: Express.js + EJS 템플릿으로 초기 페이지 렌더링
+2. **클라이언트사이드**: 컴포넌트 시스템으로 동적 상호작용 처리  
+3. **데이터 소스**: Google Sheets API를 통한 콘텐츠 관리
+4. **인증**: 세션 + JWT 하이브리드 인증 시스템
+5. **통신**: EventBus 패턴으로 컴포넌트 간 통신
+
+---
+
+## 🏗️ 전체 아키텍처 구조
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    HYBRID ARCHITECTURE                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────┐    ┌─────────────────────────────┐ │
+│  │   SERVER SIDE       │    │      CLIENT SIDE            │ │
+│  │   (Traditional MVC) │◄──►│   (Component System)        │ │
+│  │                     │    │                             │ │
+│  │ • Express Router    │    │ • IDEComponent              │ │
+│  │ • EJS Templates     │    │ • QuizComponent             │ │
+│  │ • Session Auth      │    │ • NavigationComponent       │ │
+│  │ • Middleware Chain  │    │ • ContentComponent          │ │
+│  │ • Google Sheets API │    │ • EventBus                  │ │
+│  └─────────────────────┘    └─────────────────────────────┘ │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                      DATA LAYER                             │
+│                                                             │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────┐ │
+│  │ Google      │ │   Redis     │ │   MySQL     │ │   S3   │ │
+│  │ Sheets      │ │  (Session)  │ │    (DB)     │ │ (Files)│ │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔄 시스템 작동 흐름
+
+### 1. 초기 페이지 로드 흐름
+
+```
+사용자 요청 
+    ↓
+Express Router (server.js)
+    ↓
+인증 미들웨어 체인
+    ↓ 
+template.ejs 렌더링
+    ↓
+컴포넌트 시스템 초기화
+    ↓
+EventBus 이벤트 구독
+    ↓
+동적 컴포넌트 로드
+```
+
+### 2. 데이터 흐름
+
+```
+Google Sheets ──► getSheetData() ──► API Routes ──► Components
+       ↑                                              ↓
+   Content                                    User Interaction
+   Management                                        ↓
+                                              EventBus
+                                                 ↓
+                                        Component Updates
+```
+
+### 3. 컴포넌트 간 통신
+
+```
+NavigationComponent ──EventBus──► ContentComponent
+        ↑                               ↓
+        │                        Load Problem Data
+        │                               ↓
+EventBus ◄──────────── IDEComponent/QuizComponent
+```
+
+---
+
+## 📁 파일 구조 및 역할
+
+### 🎯 핵심 서버 파일
+
+#### `server.js` - 메인 서버 컨트롤러
+- **역할**: Express 서버 설정 및 라우터 통합
+- **주요 기능**:
+  - 라우터 등록 (auth, admin, learning, template 등)
+  - 미들웨어 체인 설정
+  - 정적 파일 서빙 최적화
+  - Google Sheets API 초기화
+  - 컴포넌트 시스템 통합
+
+#### `index.ejs` - 메인 페이지 템플릿
+- **역할**: 홈페이지 캐러셀 시스템
+- **구조**:
+  ```html
+  ┌─────────────────────────────────────┐
+  │           Header Component          │
+  ├─────────────────────────────────────┤
+  │       Bootstrap Carousel            │
+  │  ┌─────────────┬─────────────────┐  │
+  │  │ 초등 과정   │   중고등 과정    │  │
+  │  │ • 컴퓨터    │   • 앱인벤터    │  │
+  │  │ • 스크래치  │   • 파이썬      │  │
+  │  │ • 엔트리    │   • 인공지능    │  │
+  │  │ • 자격증    │   • 알고리즘    │  │
+  │  └─────────────┴─────────────────┘  │
+  └─────────────────────────────────────┘
+  ```
+
+#### `header.ejs` - 공통 헤더 컴포넌트
+- **역할**: 사용자 인터페이스 및 권한 관리
+- **기능**:
+  - 권한별 메뉴 표시 (admin, teacher, manager)
+  - 프로필 선택 모달
+  - Google API 설정 전역 변수
+
+---
+
+## 🛣️ 라우터 시스템 구조
+
+### 메인 라우터 등록 (server.js)
+
+```javascript
+const routes = {
+  'auth': require('./lib_login/auth'),           // 인증
+  'admin': require('./routes/adminRouter'),      // 관리자
+  'board': require('./routes/boardRouter'),      // 게시판
+  'learning': require('./routes/learningRouter'), // 학습관리
+  'template': require('./routes/templateRouter'), // 템플릿 시스템
+  'python': require('./routes/pythonRouter'),    // 파이썬
+  'machinelearning': require('./routes/machinelearningRouter'),
+  // ... 기타 라우터들
+};
+
+// 인증 미들웨어와 함께 등록
+Object.entries(routes).forEach(([path, router]) => {
+  if (path === 'auth') {
+    app.use(`/${path}`, router);  // 인증 라우터는 미들웨어 없이
+  } else {
+    app.use(`/${path}`, authenticateUser, router); // 나머지는 인증 필요
+  }
+});
+```
+
+### 페이지별 라우트 매핑
+
+| 경로 | 컴포넌트 | 설명 |
+|------|----------|------|
+| `/` | index.ejs | 메인 홈페이지 (캐러셀) |
+| `/computer` | computer.ejs | 컴퓨터 기초활용 |
+| `/scratch_project` | scratch_project.ejs | 스크래치 프로젝트 |
+| `/python_project` | template.ejs (pageType: python) | 파이썬 학습 |
+| `/algorithm` | template.ejs (pageType: algorithm) | 알고리즘 연습 |
+| `/certification` | template.ejs (pageType: certification) | 자격증 과정 |
+| `/aiMath` | template.ejs (pageType: aiMath) | AI 수학 |
+
+---
+
+## 🔐 하이브리드 인증 시스템
+
+### 인증 방식
+1. **세션 기반 인증**: Express Session + Redis Store
+2. **JWT 토큰 지원**: API 호출용
+3. **권한 기반 접근 제어**: 7단계 역할 시스템
+
+### 권한 계층 구조
+```
+admin (최고 관리자)
+  ├── manager (센터장)
+  ├── teacher (강사)
+  ├── kinder (유치원)
+  ├── school (학교)
+  ├── student (학생)
+  └── guest (비로그인)
+```
+
+### 미들웨어 체인
+```javascript
+// 인증 흐름
+authenticateUser → checkPageAccess → checkRole → 페이지 렌더링
+
+// 로깅 미들웨어
+logUserActivity → logMenuAccess → logLearningActivity
+```
+
+---
+
+## 🔧 컴포넌트 시스템 구조
+
+### 클라이언트사이드 컴포넌트
+
+#### 1. **IDEComponent** (코드 에디터)
+- **역할**: Python 코드 작성 및 실행
+- **구성**: CodeEditor + Terminal + PythonAutoCompleter
+- **API**: `/api/run-python`, `/api/get-answer-code`
+
+#### 2. **QuizComponent** (퀴즈 시스템)
+- **역할**: 다양한 형태의 퀴즈 처리
+- **지원 타입**: 객관식, 주관식, 코딩, 드래그앤드롭 등
+- **데이터**: Google Sheets problems 시트
+
+#### 3. **NavigationComponent** (네비게이션)
+- **역할**: 사이드바 메뉴 및 문제 목록
+- **기능**: 문제 선택, 진도 관리, 즐겨찾기
+
+#### 4. **ContentComponent** (콘텐츠 표시)
+- **역할**: 문제 내용 표시 및 해설 팝업
+- **기능**: iframe 기반 콘텐츠 로드, 플로팅 해설 버튼
+
+### EventBus 통신 시스템
+
+```javascript
+// 이벤트 발행/구독 패턴
+EventBus.publish('menuSelected', { problemNumber: 1 });
+EventBus.subscribe('problemChanged', (data) => {
+  // 컴포넌트 업데이트
+});
+
+// 주요 이벤트 목록
+- menuSelected: 메뉴 선택
+- problemChanged: 문제 변경  
+- codeExecuted: 코드 실행
+- quizSubmitted: 퀴즈 제출
+- layoutChanged: 레이아웃 변경
+```
+
+---
+
+## 📊 데이터 소스 및 API
+
+### Google Sheets 통합
+
+#### 시트 구조 (problems 시트)
+| 열 | 내용 | 설명 |
+|----|------|------|
+| A | 문제파일명 | HTML 파일 URL |
+| B | 시험지명 | 카테고리명 (python, algorithm 등) |
+| C | 문제번호 | p01, p02 형식 |
+| D | 개념파일URL | 추가 학습 자료 |
+| E | 정답파일URL | 정답 코드 파일 |
+| F | 해설파일URL | 마크다운 해설 파일 |
+| G | answerType | 답안 형식 (code, text, multiple_choice 등) |
+| H | 정답 | JSON 형식 정답 데이터 |
+| I | 인풋/아웃풋 | 테스트 케이스 |
+| J | 난이도 | 1-5 단계 |
+| K | 객관식/주관식 | 문제 유형 |
+| L | Tags | 태그 정보 |
+
+#### API 엔드포인트
+```javascript
+// 데이터 조회
+GET /api/problems/:examName     // 특정 시험의 문제 목록
+GET /api/problem/:examName/:num // 특정 문제 상세정보
+
+// 코드 실행
+POST /api/run-python           // Python 코드 실행
+POST /python/api/run-python-interactive // 대화형 실행
+
+// 답안 처리  
+GET /api/get-answer-code       // 정답 코드 조회
+POST /api/quiz/submit          // 퀴즈 답안 제출
+
+// 해설 시스템
+GET /api/get-explanation-md    // 마크다운 해설 파일
+```
+
+---
+
+## 🎨 템플릿 시스템
+
+### 동적 페이지 로딩
+
+#### `template.ejs` 시스템
+```javascript
+// pageType 파라미터로 동적 콘텐츠 결정
+res.render('template', {
+  pageType: 'python',      // 또는 algorithm, certification, aiMath
+  userID: req.session.userID,
+  role: req.session.role
+});
+```
+
+#### 페이지별 설정
+```javascript
+const pageConfigs = {
+  python: {
+    title: "파이썬 프로그래밍",
+    components: ["IDE", "Navigation", "Content"],
+    examName: "python"
+  },
+  algorithm: {
+    title: "알고리즘 연습", 
+    components: ["Quiz", "Navigation", "Content"],
+    examName: "algorithm"
+  },
+  certification: {
+    title: "자격증 과정",
+    components: ["Quiz", "Navigation", "Content"],
+    examName: "certification"  
+  }
+};
+```
+
+---
+
+## 🔄 상태 관리 및 생명주기
+
+### 컴포넌트 초기화 순서
+
+```
+1. DOM 로드 완료
+   ↓
+2. ComponentSystem.init()
+   ↓ 
+3. 개별 컴포넌트 등록
+   ↓
+4. EventBus 설정
+   ↓
+5. 초기 데이터 로드
+   ↓
+6. 사용자 상호작용 대기
+```
+
+### 상태 동기화
+
+```javascript
+// 전역 상태 관리
+const AppState = {
+  currentProblem: null,
+  userProgress: {},
+  examName: '',
+  layoutMode: 'split'  // split, full, quiz
+};
+
+// 컴포넌트 간 상태 공유
+EventBus.publish('stateChanged', { 
+  type: 'PROBLEM_CHANGED',
+  payload: { problemNumber: 3 }
+});
+```
+
+---
+
+## ⚡ 성능 최적화
+
+### 정적 파일 서빙 최적화
+
+```javascript
+// MIME 타입 명시적 설정
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    const ext = path.extname(filePath).toLowerCase();
+    switch (ext) {
+      case '.js': res.set('Content-Type', 'application/javascript'); break;
+      case '.css': res.set('Content-Type', 'text/css'); break;
+      // ... 기타 타입들
+    }
+    res.set('Cache-Control', 'public, max-age=3600');
+  }
+}));
+```
+
+### 캐싱 전략
+
+1. **Redis**: 세션 데이터 캐싱
+2. **브라우저 캐싱**: 정적 파일 1시간 캐시
+3. **권한 캐시**: 메모리 기반 권한 정보 캐싱
+
+---
+
+## 🚀 배포 및 모니터링
+
+### 환경 설정
+```javascript
+// 환경별 설정
+const config = {
+  development: { port: 3000, ssl: false },
+  production: { port: 443, ssl: true },
+  redis: { url: process.env.REDIS_URL },
+  cors: { allowedOrigins: [...] }
+};
+```
+
+### 로깅 시스템
+- **사용자 활동 로깅**: `logUserActivity`
+- **메뉴 접근 로깅**: `logMenuAccess` 
+- **학습 활동 로깅**: `logLearningActivity`
+- **에러 추적**: 중앙화된 에러 핸들링
+
+---
+
+## 📝 개발 가이드라인
+
+### 새 컴포넌트 추가 시
+
+1. **컴포넌트 클래스 생성**
+   ```javascript
+   class NewComponent extends Component {
+     async init() { /* 초기화 로직 */ }
+     render() { /* 렌더링 로직 */ }
+     destroy() { /* 정리 로직 */ }
+   }
+   ```
+
+2. **EventBus 이벤트 정의**
+   ```javascript
+   // 발행할 이벤트
+   EventBus.publish('newComponent:action', data);
+   
+   // 구독할 이벤트  
+   EventBus.subscribe('other:event', this.handleEvent.bind(this));
+   ```
+
+3. **CSS 모듈화**
+   ```css
+   /* /public/css/components/new-component.css */
+   .new-component-container { /* 스타일 */ }
+   ```
+
+4. **API 엔드포인트 추가** (필요시)
+   ```javascript
+   // /routes/apiRouter.js
+   router.get('/new-endpoint', async (req, res) => {
+     // API 로직
+   });
+   ```
+
+### 권한 확인 및 페이지 접근
+
+```javascript
+// 새 페이지 라우트 추가
+app.get('/new-page', 
+  authenticateUser,
+  checkPageAccess('/new-page'),
+  (req, res) => {
+    res.render('template', { pageType: 'newPage' });
+  }
+);
+```
+
+---
+
+## 🔍 트러블슈팅
+
+### 자주 발생하는 문제들
+
+1. **컴포넌트 초기화 실패**
+   - 원인: CSS/JS 로드 순서 문제
+   - 해결: `template.ejs`에서 스크립트 로드 순서 확인
+
+2. **EventBus 이벤트 누락**
+   - 원인: 비동기 초기화 타이밍 문제
+   - 해결: `await` 키워드로 순차 초기화
+
+3. **권한 접근 오류**
+   - 원인: 미들웨어 체인 설정 문제
+   - 해결: `permissions.json` 설정 확인
+
+4. **정적 파일 404 오류**
+   - 원인: MIME 타입 설정 문제
+   - 해결: `express.static` 설정에서 캐시올 라우트 확인
+
+---
+
+## 📈 향후 개선 방향
+
+1. **마이크로서비스 아키텍처**: 컴포넌트별 서비스 분리
+2. **WebSocket 통신**: 실시간 협업 기능
+3. **PWA 지원**: 오프라인 학습 환경
+4. **타입스크립트 도입**: 타입 안정성 향상
+5. **컨테이너화**: Docker 기반 배포 자동화
+
+------
+
+## 📊 ContentComponent & IDEComponent 상세 분석
+
+### ContentComponent 핵심 기능
+
+ContentComponent는 문제 표시와 네비게이션을 담당하는 핵심 컴포넌트입니다:
+
+#### 1. 파일 타입별 처리 시스템
+
+```javascript
+// 🔥 NEW 기능: 파일 확장자에 따른 자동 분기
+loadContentByFileType(fileUrl, fileName, problemInfo, problemNumber, pythonFileUrl) {
+  const fileExtension = fileName.split('.').pop()?.toLowerCase();
+  
+  if (fileExtension === 'md') {
+    // 마크다운 → HTML 변환 후 렌더링
+    this.loadMarkdownContent(fileUrl, problemInfo, problemNumber, pythonFileUrl);
+  } else {
+    // 일반 HTML 파일 처리
+    this.loadHtmlContent(fileUrl, problemInfo, problemNumber, pythonFileUrl);
+  }
+}
+```
+
+#### 2. 해설 시스템 통합
+
+```javascript
+// 해설 버튼을 problem-navigation-container에 동적 생성
+createExplanationButton() {
+  const explanationBtn = document.createElement('button');
+  explanationBtn.id = 'explanation-btn';
+  explanationBtn.className = 'explanation-nav-btn';
+  explanationBtn.innerHTML = `
+    <i class="bi bi-lightbulb"></i>
+    <span class="btn-text">해설</span>
+  `;
+  
+  // 클릭 시 EventBus로 해설 요청 이벤트 발행
+  explanationBtn.addEventListener('click', () => {
+    window.EventBus.publish('explanation-request', this.explanationState.currentProblemData);
+  });
+}
+```
+
+#### 3. 문제 네비게이션 시스템
+
+```javascript
+// Bootstrap Icons를 활용한 문제 번호 표시
+renderProblemNavigation() {
+  for (let i = 1; i <= this.state.totalProblems; i++) {
+    const problemBtn = document.createElement('i');
+    problemBtn.classList.add('bi', 'problem-icon');
+    
+    // 현재 문제인지에 따라 채워진/빈 아이콘 선택
+    if (i === this.state.currentProblemNumber) {
+      problemBtn.classList.add(i === 10 ? 'bi-0-circle-fill' : `bi-${i}-circle-fill`);
+    } else {
+      problemBtn.classList.add(i === 10 ? 'bi-0-circle' : `bi-${i}-circle`);
+    }
+  }
+}
+```
+
+#### 4. 마크다운 렌더링 시스템
+
+```javascript
+// marked.js + highlight.js 통합 렌더링
+async loadMarkdownContent(markdownUrl, problemInfo, problemNumber, pythonFileUrl) {
+  const response = await fetch(markdownUrl);
+  const markdownText = await response.text();
+  
+  // 마크다운을 HTML로 변환
+  const htmlContent = marked.parse(markdownText);
+  
+  // 향상된 HTML 템플릿에 포함하여 렌더링
+  this.elements.iframe.srcdoc = this.getEnhancedMarkdownHtml(htmlContent);
+}
+```
+
+### IDEComponent 구조
+
+IDEComponent는 모듈러 설계로 구성되어 있습니다:
+
+#### 1. 모듈 관리 시스템
+
+```javascript
+// 하위 모듈 구조
+this.modules = {
+  codeEditor: null,  // CodeEditor 클래스 인스턴스
+  terminal: null     // Terminal 클래스 인스턴스
+};
+
+// 모듈별 초기화
+async initializeModules() {
+  // CodeEditor 모듈
+  this.modules.codeEditor = new window.CodeEditor({
+    editorId: 'editor',
+    showAnswerButtonId: 'showAnswerBtn',
+    aceButtonId: 'ace-btn',
+    jupyterButtonId: 'jupyter-btn'
+  });
+  
+  // Terminal 모듈
+  this.modules.terminal = new window.Terminal({
+    outputId: 'output-content',
+    runButtonId: 'runCodeBtn',
+    clearButtonId: 'clearOutputBtn'
+  });
+}
+```
+
+#### 2. API 프록시 패턴
+
+IDEComponent는 하위 모듈들의 API를 통합하여 제공합니다:
+
+```javascript
+// 코드 관련 API
+getCurrentCode() {
+  return this.modules.codeEditor?.getCurrentCode() || '';
+}
+
+setCode(code) {
+  return this.modules.codeEditor?.setCode(code) || false;
+}
+
+// 터미널 관련 API  
+appendToOutput(text, type = 'normal') {
+  this.modules.terminal?.appendToOutput(text, type);
+}
+
+clearOutput() {
+  this.modules.terminal?.clearOutput();
+}
+
+// 실행 관련 API
+runCode() {
+  this.modules.terminal?.runCode();
+}
+```
+
+#### 3. 문제 변경 핸들링
+
+```javascript
+onProblemChanged(examName, problemNumber) {
+  this.state.currentExamName = examName;
+  this.state.currentProblemNumber = problemNumber;
+  
+  // 하위 모듈에 변경 사항 전파
+  if (this.modules.codeEditor?.onProblemChanged) {
+    this.modules.codeEditor.onProblemChanged(examName, problemNumber);
+  }
+}
+```
+
+---
+
+## 🔄 이벤트 기반 컴포넌트 통신 시스템
+
+### EventBus 패턴 상세 구조
+
+```javascript
+// 핵심 이벤트 매핑
+const EVENTS = {
+  // 메뉴 관련
+  'menuSelected': '메뉴 선택 시 발행',
+  'layoutChanged': '레이아웃 변경 시 발행',
+  
+  // 문제 관련
+  'problemChanged': '문제 변경 시 발행', 
+  'problemLoaded': '문제 로드 완료 시 발행',
+  
+  // 컴포넌트 관련
+  'componentActivated': '컴포넌트 활성화 시 발행',
+  'componentDeactivated': '컴포넌트 비활성화 시 발행',
+  
+  // IDE 관련
+  'editor:resize': '에디터 크기 조정 요청',
+  'editor:getCode': '현재 코드 가져오기 요청',
+  'editor:codeResponse': '코드 응답',
+  
+  // 해설 관련 (🔥 NEW)
+  'explanation-request': '해설 팝업 요청'
+};
+```
+
+### 이벤트 처리 흐름 예시
+
+```
+사용자 메뉴 클릭
+    ↓
+NavigationComponent.handleMenuClick()
+    ↓
+EventBus.publish('menuSelected', {
+  examName: 'python_basic_01',
+  layoutType: 'ide',
+  pptUrl: ''
+})
+    ↓
+ComponentSystem.handleMenuSelected()
+    ↓
+1. applyLayout('ide')
+2. ContentComponent.state.currentExamName 설정
+3. ContentComponent.loadProblem(1)
+    ↓
+EventBus.publish('problemChanged', {
+  examName: 'python_basic_01', 
+  problemNumber: 1,
+  pythonFileUrl: 'example.py'
+})
+    ↓
+IDEComponent.onProblemChanged()
+    ↓
+CodeEditor.onProblemChanged()
+```
+
+---
+
+## 🎯 레이아웃 시스템 심화 분석
+
+### CSS 클래스 기반 레이아웃 제어
+
+```css
+/* 기본 레이아웃 (모든 컴포넌트 숨김) */
+.layout-html #ide-component,
+.layout-html #quiz-component,
+.layout-html #ppt-viewer-component { display: none !important; }
+
+/* IDE 레이아웃 (IDE + Navigation + Content 표시) */
+.layout-ide #ide-component { 
+  display: flex !important; 
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.layout-ide #quiz-component,
+.layout-ide #ppt-viewer-component { display: none !important; }
+
+/* Quiz 레이아웃 */
+.layout-quiz #quiz-component { display: block !important; }
+.layout-quiz #ide-component,
+.layout-quiz #ppt-viewer-component { display: none !important; }
+
+/* PPT 레이아웃 */
+.layout-ppt #ppt-viewer-component { display: block !important; }
+.layout-ppt #content-component,
+.layout-ppt #ide-component,
+.layout-ppt #quiz-component { display: none !important; }
+```
+
+### 동적 레이아웃 적용 과정
+
+```javascript
+applyLayout: function(layoutType) {
+  // 1. 이전 레이아웃 클래스 제거
+  Object.values(this.LAYOUT_TYPES).forEach(type => {
+    document.body.classList.remove(`layout-${type}`);
+  });
+  
+  // 2. 새 레이아웃 클래스 추가  
+  document.body.classList.add(`layout-${layoutType}`);
+  
+  // 3. 🔥 중요: DOM 강제 표시 (CSS 우선순위 무시)
+  this.forceShowComponents(layoutType);
+  
+  // 4. 컴포넌트 활성화/비활성화
+  this.activateComponents(layoutType);
+  
+  // 5. 레이아웃별 특수 처리
+  if (layoutType === 'ide') {
+    setTimeout(() => {
+      // ACE 에디터 리사이즈 트리거
+      this.components.ide?.resizeEditor();
+    }, 200);
+  }
+}
+```
+
+---
+
+## 🛠️ 모듈 로딩 및 의존성 관리
+
+### 스크립트 로딩 순서
+
+```html
+<!-- template.ejs에서의 로딩 순서 -->
+<!-- 1. 기본 라이브러리 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<!-- 2. 기본 컴포넌트 시스템 -->
+<script src="/js/components/base/Component.js"></script>
+<script src="/js/components/base/EventBus.js"></script>
+<script src="/js/components/base/ComponentFactory.js"></script>
+<script src="/js/components/base/ComponentRegistry.js"></script>
+
+<!-- 3. 개별 컴포넌트들 -->
+<script src="/js/components/nav/NavigationComponent.js"></script>
+<script src="/js/components/content/ContentComponent.js"></script>
+<script src="/js/components/ide/IDEComponent.js"></script>
+<script src="/js/components/quiz/QuizComponent.js"></script>
+
+<!-- 4. 메인 시스템 (가장 마지막) -->
+<script src="/js/component-system.js"></script>
+```
+
+### 의존성 체크 시스템
+
+```javascript
+checkDependencies: function() {
+  const required = ['EventBus', 'ComponentRegistry', 'ComponentFactory'];
+  const missing = required.filter(dep => !window[dep]);
+  
+  if (missing.length > 0) {
+    console.error('누락된 의존성:', missing);
+    
+    // 🔥 자동 fallback 생성
+    missing.forEach(depName => {
+      if (depName === 'EventBus') {
+        this.createEventBusFallback();
+      } else if (depName === 'ComponentRegistry') {
+        this.createComponentRegistryFallback();
+      }
+    });
+    
+    return false;
+  }
+  return true;
+}
+```
+
+---
+
+## 🔧 실제 개발 가이드
+
+### 새 컴포넌트 추가 단계
+
+#### 1. 컴포넌트 클래스 생성
+```javascript
+// /public/js/components/새폴더/NewComponent.js
+class NewComponent extends Component {
+  constructor(options = {}) {
+    super(options);
+    this.state = {
+      initialized: false,
+      data: null
+    };
+  }
+  
+  async init(data = null) {
+    await super.init(data);
+    
+    // 컴포넌트별 초기화 로직
+    this.setupUI();
+    this.bindEvents();
+    
+    this.state.initialized = true;
+    return true;
+  }
+  
+  setupUI() {
+    // UI 요소 생성 및 설정
+  }
+  
+  bindEvents() {
+    // 이벤트 리스너 설정
+    if (window.EventBus) {
+      window.EventBus.subscribe('relevantEvent', this.handleEvent.bind(this));
+    }
+  }
+  
+  activate() {
+    super.activate();
+    // 활성화 로직
+  }
+  
+  deactivate() {
+    super.deactivate();
+    // 비활성화 로직
+  }
+}
+
+// 전역 등록
+window.NewComponent = NewComponent;
+```
+
+#### 2. component-system.js에 등록
+```javascript
+// registerComponents 함수에 추가
+registerComponents: function() {
+  const componentConfigs = {
+    // 기존 컴포넌트들...
+    newComponent: {
+      className: 'NewComponent',
+      options: {
+        elementId: 'new-component',
+        // 컴포넌트별 옵션들
+      }
+    }
+  };
+  
+  // 자동 등록 로직은 기존과 동일
+}
+```
+
+#### 3. HTML 템플릿에 추가
+```html
+<!-- template.ejs에 컴포넌트 컨테이너 추가 -->
+<div id="new-component" class="component-container">
+  <!-- 컴포넌트 내용 -->
+</div>
+
+<!-- 스크립트 로드 -->
+<script src="/js/components/새폴더/NewComponent.js"></script>
+```
+
+#### 4. CSS 스타일링
+```css
+/* /public/css/components/new-component.css */
+#new-component {
+  display: none; /* 기본 숨김 */
+}
+
+.layout-newLayout #new-component {
+  display: block; /* 특정 레이아웃에서만 표시 */
+}
+```
+
+### 이벤트 통신 패턴
+
+#### 발행자 패턴
+```javascript
+// 이벤트 발행
+window.EventBus.publish('customEvent', {
+  type: 'data_changed',
+  payload: { id: 123, value: 'new data' },
+  timestamp: Date.now()
+});
+```
+
+#### 구독자 패턴  
+```javascript
+// 이벤트 구독
+window.EventBus.subscribe('customEvent', (data) => {
+  console.log('이벤트 수신:', data);
+  
+  // 데이터 처리 로직
+  this.updateUI(data.payload);
+});
+```
+
+#### 일회성 이벤트 구독
+```javascript
+// 한 번만 실행되는 이벤트 리스너
+const unsubscribe = window.EventBus.subscribe('initComplete', (data) => {
+  console.log('초기화 완료:', data);
+  unsubscribe(); // 자동으로 구독 해제
+});
+```
+
+---
+
+## 🚀 성능 최적화 전략
+
+### 1. 지연 로딩 (Lazy Loading)
+
+```javascript
+// 컴포넌트는 필요할 때만 활성화
+activateComponents: function(layoutType) {
+  const activeComponents = {
+    'html': ['navigation', 'content'],
+    'ide': ['navigation', 'content', 'ide'],
+    'quiz': ['navigation', 'content', 'quiz']
+  };
+  
+  // 사용하지 않는 컴포넌트는 비활성화
+  Object.keys(this.components).forEach(name => {
+    if (!activeComponents[layoutType].includes(name)) {
+      this.components[name]?.deactivate();
+    }
+  });
+}
+```
+
+### 2. 이벤트 디바운싱
+
+```javascript
+// 문제 변경 이벤트 중복 방지
+handleProblemChanged: function(data) {
+  // 100ms 내 중복 호출 방지
+  const now = Date.now();
+  if (now - this.lastProblemChangeTime < 100) {
+    return;
+  }
+  this.lastProblemChangeTime = now;
+  
+  // 실제 처리 로직
+  this.processProblemChange(data);
+}
+```
+
+### 3. 메모리 관리
+
+```javascript
+// 컴포넌트 정리 시 이벤트 리스너 해제
+destroy: function() {
+  // EventBus 구독 해제
+  if (this.eventUnsubscribers) {
+    this.eventUnsubscribers.forEach(unsubscribe => unsubscribe());
+    this.eventUnsubscribers = [];
+  }
+  
+  // DOM 요소 참조 해제
+  Object.keys(this.elements).forEach(key => {
+    this.elements[key] = null;
+  });
+}
+```
+
+### 4. DOM 조작 최적화
+
+```javascript
+// 배치 DOM 업데이트
+updateProblemNavigation: function() {
+  // DocumentFragment 사용으로 리플로우 최소화
+  const fragment = document.createDocumentFragment();
+  
+  for (let i = 1; i <= this.state.totalProblems; i++) {
+    const problemBtn = this.createProblemButton(i);
+    fragment.appendChild(problemBtn);
+  }
+  
+  // 한 번에 DOM에 추가
+  this.elements.problemNavigation.innerHTML = '';
+  this.elements.problemNavigation.appendChild(fragment);
+}
+```
+
+---
+
+## 🔍 디버깅 도구 및 모니터링
+
+### 개발자 콘솔 명령어
+
+```javascript
+// 브라우저 콘솔에서 사용 가능한 디버깅 명령어들
+
+// 1. 시스템 상태 확인
+ComponentSystem.state
+
+// 2. 모든 컴포넌트 상태 확인
+Object.keys(ComponentSystem.components).map(key => ({
+  name: key,
+  initialized: ComponentSystem.components[key]?.initialized,
+  active: ComponentSystem.components[key]?.active,
+  visible: ComponentSystem.components[key]?.visible
+}))
+
+// 3. 이벤트 버스 상태 확인
+Object.keys(EventBus.events).map(event => ({
+  event: event,
+  listeners: EventBus.events[event].length
+}))
+
+// 4. 메뉴 데이터 확인
+ComponentSystem.state.menuData
+
+// 5. 현재 활성 레이아웃 확인
+document.body.className.split(' ').filter(cls => cls.startsWith('layout-'))
+
+// 6. 강제 레이아웃 변경 (테스트용)
+ComponentSystem.applyLayout('ide')  // 또는 'quiz', 'ppt', 'html'
+```
+
+### 로그 레벨 시스템
+
+```javascript
+// 개발 환경에서 상세 로깅
+const Logger = {
+  levels: { ERROR: 0, WARN: 1, INFO: 2, DEBUG: 3 },
+  currentLevel: 2, // INFO 레벨
+  
+  log: function(level, component, message, data = null) {
+    if (this.levels[level] <= this.currentLevel) {
+      const timestamp = new Date().toISOString();
+      console.log(`[${timestamp}] ${level} [${component}] ${message}`, data || '');
+    }
+  },
+  
+  error: (component, message, data) => Logger.log('ERROR', component, message, data),
+  warn: (component, message, data) => Logger.log('WARN', component, message, data),
+  info: (component, message, data) => Logger.log('INFO', component, message, data),
+  debug: (component, message, data) => Logger.log('DEBUG', component, message, data)
+};
+
+// 사용 예시
+Logger.info('ContentComponent', '문제 로드 시작', { examName, problemNumber });
+```
+
+### 성능 모니터링
+
+```javascript
+// 컴포넌트 초기화 시간 측정
+const PerformanceMonitor = {
+  timers: {},
+  
+  start: function(label) {
+    this.timers[label] = performance.now();
+  },
+  
+  end: function(label) {
+    if (this.timers[label]) {
+      const duration = performance.now() - this.timers[label];
+      console.log(`⏱️ ${label}: ${duration.toFixed(2)}ms`);
+      delete this.timers[label];
+      return duration;
+    }
+  }
+};
+
+// 사용 예시
+PerformanceMonitor.start('ComponentSystem.init');
+await ComponentSystem.init();
+PerformanceMonitor.end('ComponentSystem.init');
+```
+
+---
+
+## 📈 확장성 고려사항
+
+### 1. 마이크로 프론트엔드 준비
+```javascript
+// 컴포넌트를 독립적인 모듈로 분리 가능
+const ComponentModule = {
+  name: 'IDEComponent',
+  version: '1.0.0',
+  dependencies: ['EventBus', 'Component'],
+  
+  mount: (container, options) => {
+    const component = new IDEComponent(options);
+    container.appendChild(component.element);
+    return component;
+  },
+  
+  unmount: (component) => {
+    component.destroy();
+  }
+};
+```
+
+### 2. 플러그인 시스템
+```javascript
+// 플러그인 인터페이스
+const PluginManager = {
+  plugins: {},
+  
+  register: function(name, plugin) {
+    if (plugin.init && plugin.destroy) {
+      this.plugins[name] = plugin;
+      plugin.init();
+    }
+  },
+  
+  unregister: function(name) {
+    if (this.plugins[name]) {
+      this.plugins[name].destroy();
+      delete this.plugins[name];
+    }
+  }
+};
+```
+
+### 3. 테스트 가능한 구조
+```javascript
+// 의존성 주입으로 테스트 용이성 증대
+class TestableComponent extends Component {
+  constructor(options = {}) {
+    super(options);
+    
+    // 의존성 주입
+    this.eventBus = options.eventBus || window.EventBus;
+    this.httpClient = options.httpClient || fetch;
+    this.logger = options.logger || console;
+  }
+}
+```
+
+---
+
+## 🎓 결론 및 향후 개선 방향
+
+### 현재 시스템의 장점
+
+1. **모듈러 설계**: 각 컴포넌트가 독립적으로 동작
+2. **이벤트 기반 통신**: 느슨한 결합으로 확장성 확보
+3. **레이아웃 시스템**: CSS 클래스 기반으로 성능 최적화
+4. **Fallback 시스템**: 오류 상황에 대한 복구 메커니즘
+5. **개발자 친화적**: 풍부한 디버깅 도구 제공
+
+### 개선 가능한 영역
+
+1. **타입 안전성**: TypeScript 도입으로 런타임 오류 감소
+2. **상태 관리**: Redux/Zustand 등 중앙화된 상태 관리
+3. **번들링**: Webpack/Vite 도입으로 최적화된 배포
+4. **테스트**: Jest/Cypress 기반 자동화된 테스트 환경
+5. **문서화**: JSDoc 기반 API 문서 자동 생성
+
+### 차세대 아키텍처 방향
+
+1. **웹 컴포넌트 표준**: Custom Elements API 활용
+2. **서비스 워커**: 오프라인 지원 및 캐싱 전략
+3. **PWA**: 네이티브 앱과 유사한 사용자 경험
+4. **실시간 협업**: WebSocket 기반 실시간 기능
+5. **AI 통합**: 코딩 도우미 및 자동 채점 시스템
+
+---
+
+*이 명세서는 educodingnplay 프로젝트의 실제 코드 분석을 바탕으로 작성되었으며, 지속적으로 업데이트될 예정입니다.*
+
+**📅 최종 업데이트**: 2025년 7월 3일  
+**🔄 버전**: 2.0 (상세 분석 완료)  
+**👤 분석자**: AI Assistant# educodingnplay 컴포넌트 시스템 아키텍처 명세서
+
+## 📋 개요
+
+educodingnplay 프로젝트는 **전통적인 MVC 패턴**과 **클라이언트사이드 컴포넌트 시스템**을 결합한 **하이브리드 아키텍처**를 사용하고 있습니다.
+
+### 🔥 문제 해결 방향 요약
+
+1. **서버사이드**: Express.js + EJS 템플릿으로 초기 페이지 렌더링
+2. **클라이언트사이드**: 컴포넌트 시스템으로 동적 상호작용 처리  
+3. **데이터 소스**: Google Sheets API를 통한 콘텐츠 관리
+4. **인증**: 세션 + JWT 하이브리드 인증 시스템
+5. **통신**: EventBus 패턴으로 컴포넌트 간 통신
+
+---
+
+## 🏗️ 전체 아키텍처 구조
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    HYBRID ARCHITECTURE                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────┐    ┌─────────────────────────────┐ │
+│  │   SERVER SIDE       │    │      CLIENT SIDE            │ │
+│  │   (Traditional MVC) │◄──►│   (Component System)        │ │
+│  │                     │    │                             │ │
+│  │ • Express Router    │    │ • IDEComponent              │ │
+│  │ • EJS Templates     │    │ • QuizComponent             │ │
+│  │ • Session Auth      │    │ • NavigationComponent       │ │
+│  │ • Middleware Chain  │    │ • ContentComponent          │ │
+│  │ • Google Sheets API │    │ • EventBus                  │ │
+│  └─────────────────────┘    └─────────────────────────────┘ │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                      DATA LAYER                             │
+│                                                             │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────┐ │
+│  │ Google      │ │   Redis     │ │   MySQL     │ │   S3   │ │
+│  │ Sheets      │ │  (Session)  │ │    (DB)     │ │ (Files)│ │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔄 시스템 작동 흐름
+
+### 1. 초기 페이지 로드 흐름
+
+```
+사용자 요청 
+    ↓
+Express Router (server.js)
+    ↓
+인증 미들웨어 체인
+    ↓ 
+template.ejs 렌더링
+    ↓
+컴포넌트 시스템 초기화
+    ↓
+EventBus 이벤트 구독
+    ↓
+동적 컴포넌트 로드
+```
+
+### 2. 데이터 흐름
+
+```
+Google Sheets ──► getSheetData() ──► API Routes ──► Components
+       ↑                                              ↓
+   Content                                    User Interaction
+   Management                                        ↓
+                                              EventBus
+                                                 ↓
+                                        Component Updates
+```
+
+### 3. 컴포넌트 간 통신
+
+```
+NavigationComponent ──EventBus──► ContentComponent
+        ↑                               ↓
+        │                        Load Problem Data
+        │                               ↓
+EventBus ◄──────────── IDEComponent/QuizComponent
+```
+
+---
+
+## 📁 파일 구조 및 역할
+
+### 🎯 핵심 서버 파일
+
+#### `server.js` - 메인 서버 컨트롤러
+- **역할**: Express 서버 설정 및 라우터 통합
+- **주요 기능**:
+  - 라우터 등록 (auth, admin, learning, template 등)
+  - 미들웨어 체인 설정
+  - 정적 파일 서빙 최적화
+  - Google Sheets API 초기화
+  - 컴포넌트 시스템 통합
+
+#### `index.ejs` - 메인 페이지 템플릿
+- **역할**: 홈페이지 캐러셀 시스템
+- **구조**:
+  ```html
+  ┌─────────────────────────────────────┐
+  │           Header Component          │
+  ├─────────────────────────────────────┤
+  │       Bootstrap Carousel            │
+  │  ┌─────────────┬─────────────────┐  │
+  │  │ 초등 과정   │   중고등 과정    │  │
+  │  │ • 컴퓨터    │   • 앱인벤터    │  │
+  │  │ • 스크래치  │   • 파이썬      │  │
+  │  │ • 엔트리    │   • 인공지능    │  │
+  │  │ • 자격증    │   • 알고리즘    │  │
+  │  └─────────────┴─────────────────┘  │
+  └─────────────────────────────────────┘
+  ```
+
+#### `header.ejs` - 공통 헤더 컴포넌트
+- **역할**: 사용자 인터페이스 및 권한 관리
+- **기능**:
+  - 권한별 메뉴 표시 (admin, teacher, manager)
+  - 프로필 선택 모달
+  - Google API 설정 전역 변수
+
+---
+
+## 🛣️ 라우터 시스템 구조
+
+### 메인 라우터 등록 (server.js)
+
+```javascript
+const routes = {
+  'auth': require('./lib_login/auth'),           // 인증
+  'admin': require('./routes/adminRouter'),      // 관리자
+  'board': require('./routes/boardRouter'),      // 게시판
+  'learning': require('./routes/learningRouter'), // 학습관리
+  'template': require('./routes/templateRouter'), // 템플릿 시스템
+  'python': require('./routes/pythonRouter'),    // 파이썬
+  'machinelearning': require('./routes/machinelearningRouter'),
+  // ... 기타 라우터들
+};
+
+// 인증 미들웨어와 함께 등록
+Object.entries(routes).forEach(([path, router]) => {
+  if (path === 'auth') {
+    app.use(`/${path}`, router);  // 인증 라우터는 미들웨어 없이
+  } else {
+    app.use(`/${path}`, authenticateUser, router); // 나머지는 인증 필요
+  }
+});
+```
+
+### 페이지별 라우트 매핑
+
+| 경로 | 컴포넌트 | 설명 |
+|------|----------|------|
+| `/` | index.ejs | 메인 홈페이지 (캐러셀) |
+| `/computer` | computer.ejs | 컴퓨터 기초활용 |
+| `/scratch_project` | scratch_project.ejs | 스크래치 프로젝트 |
+| `/python_project` | template.ejs (pageType: python) | 파이썬 학습 |
+| `/algorithm` | template.ejs (pageType: algorithm) | 알고리즘 연습 |
+| `/certification` | template.ejs (pageType: certification) | 자격증 과정 |
+| `/aiMath` | template.ejs (pageType: aiMath) | AI 수학 |
+
+---
+
+## 🔐 하이브리드 인증 시스템
+
+### 인증 방식
+1. **세션 기반 인증**: Express Session + Redis Store
+2. **JWT 토큰 지원**: API 호출용
+3. **권한 기반 접근 제어**: 7단계 역할 시스템
+
+### 권한 계층 구조
+```
+admin (최고 관리자)
+  ├── manager (센터장)
+  ├── teacher (강사)
+  ├── kinder (유치원)
+  ├── school (학교)
+  ├── student (학생)
+  └── guest (비로그인)
+```
+
+### 미들웨어 체인
+```javascript
+// 인증 흐름
+authenticateUser → checkPageAccess → checkRole → 페이지 렌더링
+
+// 로깅 미들웨어
+logUserActivity → logMenuAccess → logLearningActivity
+```
+
+---
+
+## 🔧 컴포넌트 시스템 구조
+
+### 클라이언트사이드 컴포넌트
+
+#### 1. **IDEComponent** (코드 에디터)
+- **역할**: Python 코드 작성 및 실행
+- **구성**: CodeEditor + Terminal + PythonAutoCompleter
+- **API**: `/api/run-python`, `/api/get-answer-code`
+
+#### 2. **QuizComponent** (퀴즈 시스템)
+- **역할**: 다양한 형태의 퀴즈 처리
+- **지원 타입**: 객관식, 주관식, 코딩, 드래그앤드롭 등
+- **데이터**: Google Sheets problems 시트
+
+#### 3. **NavigationComponent** (네비게이션)
+- **역할**: 사이드바 메뉴 및 문제 목록
+- **기능**: 문제 선택, 진도 관리, 즐겨찾기
+
+#### 4. **ContentComponent** (콘텐츠 표시)
+- **역할**: 문제 내용 표시 및 해설 팝업
+- **기능**: iframe 기반 콘텐츠 로드, 플로팅 해설 버튼
+
+### EventBus 통신 시스템
+
+```javascript
+// 이벤트 발행/구독 패턴
+EventBus.publish('menuSelected', { problemNumber: 1 });
+EventBus.subscribe('problemChanged', (data) => {
+  // 컴포넌트 업데이트
+});
+
+// 주요 이벤트 목록
+- menuSelected: 메뉴 선택
+- problemChanged: 문제 변경  
+- codeExecuted: 코드 실행
+- quizSubmitted: 퀴즈 제출
+- layoutChanged: 레이아웃 변경
+```
+
+---
+
+## 📊 데이터 소스 및 API
+
+### Google Sheets 통합
+
+#### 시트 구조 (problems 시트)
+| 열 | 내용 | 설명 |
+|----|------|------|
+| A | 문제파일명 | HTML 파일 URL |
+| B | 시험지명 | 카테고리명 (python, algorithm 등) |
+| C | 문제번호 | p01, p02 형식 |
+| D | 개념파일URL | 추가 학습 자료 |
+| E | 정답파일URL | 정답 코드 파일 |
+| F | 해설파일URL | 마크다운 해설 파일 |
+| G | answerType | 답안 형식 (code, text, multiple_choice 등) |
+| H | 정답 | JSON 형식 정답 데이터 |
+| I | 인풋/아웃풋 | 테스트 케이스 |
+| J | 난이도 | 1-5 단계 |
+| K | 객관식/주관식 | 문제 유형 |
+| L | Tags | 태그 정보 |
+
+#### API 엔드포인트
+```javascript
+// 데이터 조회
+GET /api/problems/:examName     // 특정 시험의 문제 목록
+GET /api/problem/:examName/:num // 특정 문제 상세정보
+
+// 코드 실행
+POST /api/run-python           // Python 코드 실행
+POST /python/api/run-python-interactive // 대화형 실행
+
+// 답안 처리  
+GET /api/get-answer-code       // 정답 코드 조회
+POST /api/quiz/submit          // 퀴즈 답안 제출
+
+// 해설 시스템
+GET /api/get-explanation-md    // 마크다운 해설 파일
+```
+
+---
+
+## 🎨 템플릿 시스템
+
+### 동적 페이지 로딩
+
+#### `template.ejs` 시스템
+```javascript
+// pageType 파라미터로 동적 콘텐츠 결정
+res.render('template', {
+  pageType: 'python',      // 또는 algorithm, certification, aiMath
+  userID: req.session.userID,
+  role: req.session.role
+});
+```
+
+#### 페이지별 설정
+```javascript
+const pageConfigs = {
+  python: {
+    title: "파이썬 프로그래밍",
+    components: ["IDE", "Navigation", "Content"],
+    examName: "python"
+  },
+  algorithm: {
+    title: "알고리즘 연습", 
+    components: ["Quiz", "Navigation", "Content"],
+    examName: "algorithm"
+  },
+  certification: {
+    title: "자격증 과정",
+    components: ["Quiz", "Navigation", "Content"],
+    examName: "certification"  
+  }
+};
+```
+
+---
+
+## 🔄 상태 관리 및 생명주기
+
+### 컴포넌트 초기화 순서
+
+```
+1. DOM 로드 완료
+   ↓
+2. ComponentSystem.init()
+   ↓ 
+3. 개별 컴포넌트 등록
+   ↓
+4. EventBus 설정
+   ↓
+5. 초기 데이터 로드
+   ↓
+6. 사용자 상호작용 대기
+```
+
+### 상태 동기화
+
+```javascript
+// 전역 상태 관리
+const AppState = {
+  currentProblem: null,
+  userProgress: {},
+  examName: '',
+  layoutMode: 'split'  // split, full, quiz
+};
+
+// 컴포넌트 간 상태 공유
+EventBus.publish('stateChanged', { 
+  type: 'PROBLEM_CHANGED',
+  payload: { problemNumber: 3 }
+});
+```
+
+---
+
+## ⚡ 성능 최적화
+
+### 정적 파일 서빙 최적화
+
+```javascript
+// MIME 타입 명시적 설정
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    const ext = path.extname(filePath).toLowerCase();
+    switch (ext) {
+      case '.js': res.set('Content-Type', 'application/javascript'); break;
+      case '.css': res.set('Content-Type', 'text/css'); break;
+      // ... 기타 타입들
+    }
+    res.set('Cache-Control', 'public, max-age=3600');
+  }
+}));
+```
+
+### 캐싱 전략
+
+1. **Redis**: 세션 데이터 캐싱
+2. **브라우저 캐싱**: 정적 파일 1시간 캐시
+3. **권한 캐시**: 메모리 기반 권한 정보 캐싱
+
+---
+
+## 🚀 배포 및 모니터링
+
+### 환경 설정
+```javascript
+// 환경별 설정
+const config = {
+  development: { port: 3000, ssl: false },
+  production: { port: 443, ssl: true },
+  redis: { url: process.env.REDIS_URL },
+  cors: { allowedOrigins: [...] }
+};
+```
+
+### 로깅 시스템
+- **사용자 활동 로깅**: `logUserActivity`
+- **메뉴 접근 로깅**: `logMenuAccess` 
+- **학습 활동 로깅**: `logLearningActivity`
+- **에러 추적**: 중앙화된 에러 핸들링
+
+---
+
+## 📝 개발 가이드라인
+
+### 새 컴포넌트 추가 시
+
+1. **컴포넌트 클래스 생성**
+   ```javascript
+   class NewComponent extends Component {
+     async init() { /* 초기화 로직 */ }
+     render() { /* 렌더링 로직 */ }
+     destroy() { /* 정리 로직 */ }
+   }
+   ```
+
+2. **EventBus 이벤트 정의**
+   ```javascript
+   // 발행할 이벤트
+   EventBus.publish('newComponent:action', data);
+   
+   // 구독할 이벤트  
+   EventBus.subscribe('other:event', this.handleEvent.bind(this));
+   ```
+
+3. **CSS 모듈화**
+   ```css
+   /* /public/css/components/new-component.css */
+   .new-component-container { /* 스타일 */ }
+   ```
+
+4. **API 엔드포인트 추가** (필요시)
+   ```javascript
+   // /routes/apiRouter.js
+   router.get('/new-endpoint', async (req, res) => {
+     // API 로직
+   });
+   ```
+
+### 권한 확인 및 페이지 접근
+
+```javascript
+// 새 페이지 라우트 추가
+app.get('/new-page', 
+  authenticateUser,
+  checkPageAccess('/new-page'),
+  (req, res) => {
+    res.render('template', { pageType: 'newPage' });
+  }
+);
+```
+
+---
+
+## 🔍 트러블슈팅
+
+### 자주 발생하는 문제들
+
+1. **컴포넌트 초기화 실패**
+   - 원인: CSS/JS 로드 순서 문제
+   - 해결: `template.ejs`에서 스크립트 로드 순서 확인
+
+2. **EventBus 이벤트 누락**
+   - 원인: 비동기 초기화 타이밍 문제
+   - 해결: `await` 키워드로 순차 초기화
+
+3. **권한 접근 오류**
+   - 원인: 미들웨어 체인 설정 문제
+   - 해결: `permissions.json` 설정 확인
+
+4. **정적 파일 404 오류**
+   - 원인: MIME 타입 설정 문제
+   - 해결: `express.static` 설정에서 캐시올 라우트 확인
+
+---
+
+## 📈 향후 개선 방향
+
+1. **마이크로서비스 아키텍처**: 컴포넌트별 서비스 분리
+2. **WebSocket 통신**: 실시간 협업 기능
+3. **PWA 지원**: 오프라인 학습 환경
+4. **타입스크립트 도입**: 타입 안정성 향상
+5. **컨테이너화**: Docker 기반 배포 자동화
+
+---
+
+*📅 작성일: 2025년 7월 3일*  
+*🔄 버전: 1.0*  
+*👤 작성자: AI Assistant*

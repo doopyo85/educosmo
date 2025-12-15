@@ -1,0 +1,373 @@
+Jupyter 유저간 폴더관리 및 API 데이터 흐름 구조 명세서
+📋 시스템 개요
+목적: 사용자별 완전 격리된 Jupyter Notebook 작업환경 제공
+아키텍처: 3000번 서버 통합 관리 + 8000번 Jupyter 서버 실행
+격리 방식: 사용자별 독립 디렉토리 + 세션 기반 인증
+
+📁 폴더 구조 및 격리 시스템
+🎯 디렉토리 구조
+educodingnplay/
+├── jupyter_notebooks/              # 사용자 노트북 루트 디렉토리
+│   ├── admin/                      # 사용자별 격리 폴더
+│   │   ├── DataAnalysis_admin_2025-01-02.ipynb
+│   │   ├── BasicPython_admin_2025-01-02.ipynb
+│   │   └── MachineLearning_admin_2025-01-01.ipynb
+│   ├── user123/                    # 다른 사용자 폴더
+│   │   ├── DataAnalysis_user123_2025-01-02.ipynb
+│   │   └── Visualization_user123_2025-01-01.ipynb
+│   └── guest_abc123/               # 게스트 사용자
+│       └── BasicPython_guest_abc123_2025-01-02.ipynb
+├── jupyter_templates/              # 노트북 템플릿 저장소
+│   ├── DataAnalysis_template.ipynb
+│   ├── MachineLearning_template.ipynb
+│   ├── Visualization_template.ipynb
+│   └── BasicPython_template.ipynb
+└── lib_jupyter/                    # 관리 라이브러리
+    ├── notebookManager.js          # 파일 CRUD
+    └── templateManager.js          # 템플릿 관리
+🔐 격리 메커니즘
+1. 사용자별 디렉토리 자동 생성
+javascript// lib_jupyter/notebookManager.js
+const getUserNotebookDir = (userId) => {
+    return path.join(BASE_NOTEBOOK_DIR, userId); // /jupyter_notebooks/{userID}/
+};
+
+const ensureUserDir = async (userId) => {
+    const dir = getUserNotebookDir(userId);
+    await fse.ensureDir(dir); // 디렉토리 없으면 자동 생성
+};
+2. 파일명 규칙
+
+패턴: {templateType}_{userID}_{date}.ipynb
+예시: DataAnalysis_admin_2025-01-02.ipynb
+중복 방지: 같은 날짜/템플릿은 기존 파일 재사용
+
+3. 권한 체크 시스템
+javascript// routes/api/jupyterRouter.js
+const checkUserPermission = (req, res, next) => {
+    const targetUserId = req.params.userId || req.query.userID;
+    
+    // 본인 또는 관리자만 접근 가능
+    if (req.session.userID !== targetUserId && req.session.role !== 'admin') {
+        return res.status(403).json({
+            success: false,
+            message: '권한이 없습니다.'
+        });
+    }
+    next();
+};
+
+🚀 API 데이터 흐름 구조
+🎯 핵심 API 엔드포인트
+메서드경로목적권한POST/api/jupyter/create-user-notebook사용자 노트북 생성로그인 필요GET/api/jupyter/user-notebooks사용자 노트북 목록본인+관리자GET/api/jupyter/templates템플릿 목록 조회로그인 필요GET/api/jupyter/status서버 상태 확인공개
+
+🔄 상세 데이터 흐름
+Flow 1: 사용자 노트북 생성
+📍 클라이언트 요청
+javascript// JupyterComponent.js에서 호출
+const response = await fetch('/api/jupyter/create-user-notebook', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        templateType: 'DataAnalysis',  // 템플릿 종류
+        customName: '나의_데이터분석'   // 사용자 정의명 (선택)
+    })
+});
+📍 서버 처리 흐름
+javascript// routes/api/jupyterRouter.js → POST /create-user-notebook
+router.post('/create-user-notebook', requireAuth, async (req, res) => {
+    try {
+        // 1. 사용자 정보 추출
+        const userID = req.session?.userID || req.body.userID || 'guest';
+        const templateType = req.body.templateType || 'DataAnalysis';
+        
+        // 2. 사용자 디렉토리 생성 확인
+        await notebookManager.ensureUserDir(userID);
+        // → 실행: mkdir -p /jupyter_notebooks/{userID}/
+        
+        // 3. 기존 노트북 중복 체크 (오늘 날짜 기준)
+        const notebooks = await notebookManager.getNotebookList(userID);
+        // → 실행: fs.readdir('/jupyter_notebooks/{userID}/')
+        
+        const today = new Date().toISOString().split('T')[0]; // 2025-01-02
+        const existingNotebook = notebooks.find(nb => 
+            nb.includes(templateType) && nb.includes(today)
+        );
+        
+        if (existingNotebook) {
+            // 4a. 기존 노트북 반환
+            return res.json({
+                success: true,
+                notebook: existingNotebook,
+                url: `/jupyter/notebooks/${existingNotebook}`,
+                isNew: false
+            });
+        }
+        
+        // 4b. 새 노트북 생성
+        const userNotebooksDir = notebookManager.getUserNotebookDir(userID);
+        const result = await templateManager.createUserNotebook(
+            userID, 
+            templateType, 
+            userNotebooksDir
+        );
+        
+        // 5. 응답 반환
+        res.json({
+            success: true,
+            notebook: result.fileName,
+            url: result.url,
+            isNew: true,
+            templateType: result.templateType,
+            userID: result.userID
+        });
+        
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: '노트북 생성에 실패했습니다.',
+            details: error.message
+        });
+    }
+});
+📍 templateManager.createUserNotebook() 내부
+javascript// lib_jupyter/templateManager.js
+async createUserNotebook(userID, templateType = 'DataAnalysis', outputDir) {
+    try {
+        // 1. 템플릿 파일 로드
+        const templatePath = path.join(this.templatesDir, `${templateType}_template.ipynb`);
+        const templateContent = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+        
+        // 2. 변수 치환 (사용자 정보 자동 삽입)
+        const customizedContent = this.replaceTemplateVariables(templateContent, userID, templateType);
+        // → {USER_ID} → 'admin', {CREATE_DATE} → '2025-01-02 10:30:00'
+        
+        // 3. 파일명 생성
+        const timestamp = new Date().toISOString().slice(0, 10); // 2025-01-02
+        const outputFileName = `${templateType}_${userID}_${timestamp}.ipynb`;
+        const outputPath = path.join(outputDir, outputFileName);
+        
+        // 4. 파일 저장
+        fs.writeFileSync(outputPath, JSON.stringify(customizedContent, null, 2));
+        
+        return {
+            success: true,
+            fileName: outputFileName,
+            filePath: outputPath,
+            url: `/jupyter/notebooks/${outputFileName}`,
+            templateType: templateType,
+            userID: userID
+        };
+        
+    } catch (error) {
+        throw error;
+    }
+}
+
+Flow 2: 사용자 노트북 목록 조회
+📍 클라이언트 요청
+javascript// JupyterComponent.js에서 호출
+const response = await fetch(`/api/jupyter/user-notebooks?userID=${userID}&templateType=DataAnalysis`, {
+    method: 'GET',
+    credentials: 'include'
+});
+📍 서버 처리 흐름
+javascript// routes/api/jupyterRouter.js → GET /user-notebooks
+router.get('/user-notebooks', requireAuth, checkUserPermission, async (req, res) => {
+    try {
+        // 1. 파라미터 추출
+        const userID = req.session?.userID || req.query.userID || 'guest';
+        const templateType = req.query.templateType || null;
+        
+        // 2. 사용자 노트북 목록 조회
+        const notebooks = await notebookManager.getNotebookList(userID);
+        // → 실행: fs.readdir('/jupyter_notebooks/{userID}/')
+        
+        // 3. 템플릿 필터링 (선택적)
+        const filteredNotebooks = templateType ? 
+            notebooks.filter(nb => nb.includes(templateType)) : notebooks;
+        
+        // 4. 응답 반환
+        res.json({
+            success: true,
+            userID: userID,
+            notebooks: filteredNotebooks,
+            count: filteredNotebooks.length,
+            templateType: templateType || 'ALL'
+        });
+        
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: '노트북 목록을 가져올 수 없습니다.',
+            details: error.message
+        });
+    }
+});
+📍 notebookManager.getNotebookList() 내부
+javascript// lib_jupyter/notebookManager.js
+const getNotebookList = async (userId) => {
+    const userDir = getUserNotebookDir(userId); // /jupyter_notebooks/{userId}/
+    
+    // 디렉토리가 없다면 빈 배열 반환
+    if (!fs.existsSync(userDir)) {
+        return [];
+    }
+    
+    // .ipynb 파일만 필터링
+    const files = await fs.promises.readdir(userDir);
+    return files.filter(file => file.endsWith('.ipynb'));
+};
+
+Flow 3: 템플릿 목록 조회
+📍 서버 처리 흐름
+javascript// routes/api/jupyterRouter.js → GET /templates
+router.get('/templates', requireAuth, async (req, res) => {
+    try {
+        // templateManager에서 사용 가능한 템플릿 목록 조회
+        const templates = templateManager.getAvailableTemplates();
+        
+        res.json({
+            success: true,
+            templates: templates,
+            count: templates.length
+        });
+        
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: '템플릿 목록을 가져올 수 없습니다.',
+            details: error.message
+        });
+    }
+});
+📍 templateManager.getAvailableTemplates() 내부
+javascript// lib_jupyter/templateManager.js
+getAvailableTemplates() {
+    try {
+        const files = fs.readdirSync(this.templatesDir); // /jupyter_templates/
+        
+        const templates = files
+            .filter(file => file.endsWith('_template.ipynb'))
+            .map(file => {
+                const templateType = file.replace('_template.ipynb', '');
+                const filePath = path.join(this.templatesDir, file);
+                const stats = fs.statSync(filePath);
+                
+                return {
+                    type: templateType,         // 'DataAnalysis'
+                    title: templateType,        // 'DataAnalysis'  
+                    fileName: file,             // 'DataAnalysis_template.ipynb'
+                    created: stats.birthtime,
+                    modified: stats.mtime,
+                    size: stats.size
+                };
+            })
+            .sort((a, b) => a.type.localeCompare(b.type));
+            
+        return templates;
+        
+    } catch (error) {
+        console.error('❌ 템플릿 목록 조회 오류:', error);
+        return [];
+    }
+}
+
+🔐 보안 및 권한 관리
+권한 체크 흐름
+1. 인증 확인 (requireAuth)
+javascriptconst requireAuth = (req, res, next) => {
+    if (!req.session || !req.session.is_logined) {
+        return res.status(401).json({ 
+            success: false, 
+            message: '로그인이 필요합니다.' 
+        });
+    }
+    next();
+};
+2. 사용자별 접근 제한 (checkUserPermission)
+javascriptconst checkUserPermission = (req, res, next) => {
+    const targetUserId = req.params.userId || req.query.userID;
+    
+    // 본인의 노트북이거나 관리자인 경우만 허용
+    if (req.session.userID !== targetUserId && req.session.role !== 'admin') {
+        return res.status(403).json({
+            success: false,
+            message: '권한이 없습니다.'
+        });
+    }
+    next();
+};
+3. 파일 시스템 격리
+
+각 사용자는 자신의 디렉토리(/jupyter_notebooks/{userID}/)에만 접근 가능
+디렉토리 경로는 서버에서만 결정, 클라이언트에서 조작 불가
+파일명에 사용자 ID 포함으로 2차 보안
+
+
+🔄 전체 시스템 흐름도
+사용자 브라우저                  3000번 서버                    파일 시스템
+     │                         │                              │
+     │ 1. 노트북 생성 요청         │                              │
+     ├─────────────────────────►│                              │
+     │                         │ 2. 세션 인증 확인               │
+     │                         ├─ requireAuth()               │
+     │                         │                              │
+     │                         │ 3. 사용자 디렉토리 생성          │
+     │                         ├─────────────────────────────►│
+     │                         │   ensureUserDir(userID)      │ mkdir /jupyter_notebooks/userID/
+     │                         │                              │
+     │                         │ 4. 기존 파일 확인               │
+     │                         ├─────────────────────────────►│
+     │                         │   getNotebookList(userID)    │ ls /jupyter_notebooks/userID/
+     │                         │◄─────────────────────────────┤
+     │                         │   ['existing_files.ipynb']   │
+     │                         │                              │
+     │                         │ 5. 템플릿 기반 생성 (신규시)      │
+     │                         ├─────────────────────────────►│
+     │                         │   createUserNotebook()       │ 템플릿 로드 → 변수 치환 → 저장
+     │                         │◄─────────────────────────────┤
+     │                         │   생성된 파일 경로 반환          │
+     │                         │                              │
+     │ 6. 생성 결과 반환          │                              │
+     │◄─────────────────────────┤                              │
+     │   {notebook, url, ...}   │                              │
+     │                         │                              │
+     │ 7. Jupyter iframe 로드   │ 8. /jupyter 프록시           │
+     ├─────────────────────────►├─────────────► 8000번 Jupyter │
+     │                         │                              │
+
+📋 핵심 메서드 요약
+notebookManager.js 메서드들
+
+getUserNotebookDir(userId) - 사용자별 디렉토리 경로 반환
+ensureUserDir(userId) - 사용자 디렉토리 생성 (없으면)
+getNotebookList(userId) - 사용자 노트북 목록 조회
+saveNotebook(userId, filename, content) - 노트북 저장
+readNotebook(userId, filename) - 노트북 읽기
+deleteNotebook(userId, filename) - 노트북 삭제
+
+templateManager.js 메서드들
+
+getAvailableTemplates() - 사용 가능한 템플릿 목록
+createUserNotebook(userID, templateType, outputDir) - 사용자별 노트북 생성
+replaceTemplateVariables(content, userID, templateType) - 템플릿 변수 치환
+templateExists(templateType) - 템플릿 존재 여부 확인
+
+jupyterRouter.js API들
+
+POST /create-user-notebook - 사용자 노트북 생성
+GET /user-notebooks - 사용자 노트북 목록
+GET /templates - 템플릿 목록
+GET /status - 서버 상태
+
+
+🎯 다음 단계 작업 포인트
+
+JupyterComponent.js에서 이 API들을 호출하는 메서드 구현
+템플릿 선택 UI 구현
+노트북 목록 표시 UI 구현
+에러 핸들링 및 사용자 피드백 개선
+
+이 구조를 바탕으로 프론트엔드 컴포넌트를 구현하면 완전한 사용자별 격리 시스템이 완성됩니다!

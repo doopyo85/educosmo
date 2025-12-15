@@ -1,0 +1,51 @@
+module.exports = {
+ apps: [
+   {
+     name: 'server',
+     script: './server.js',
+     cwd: '/var/www/html',
+     instances: 1,
+     exec_mode: 'fork',
+     watch: false,
+     max_memory_restart: '1G',
+     env: {
+       NODE_ENV: 'production',
+       PORT: 3000
+     }
+   },
+   {
+     name: 'jupyter-server',
+     script: '/var/www/html/myenv/bin/python3',
+     args: [
+       '-m', 'jupyter', 'lab',
+       '--ip=0.0.0.0',
+       '--port=8000',
+       '--no-browser',
+       '--allow-root',
+       '--ServerApp.token=""',
+       '--ServerApp.password=""',
+       '--ServerApp.disable_check_xsrf=True',
+       '--ServerApp.allow_origin=*',
+       '--ServerApp.allow_remote_access=True',
+       '--ServerApp.base_url=/jupyter',
+       '--ServerApp.root_dir=/var/www/html/jupyter_notebooks',
+       '--notebook-dir=/var/www/html/jupyter_notebooks'
+     ],
+     cwd: '/var/www/html',
+     interpreter: 'none',
+     instances: 1,
+     autorestart: true,
+     watch: false,
+     max_memory_restart: '500M',
+     env: {
+       NODE_ENV: 'production',
+       PATH: '/var/www/html/myenv/bin:/usr/local/bin:/usr/bin:/bin',
+       VIRTUAL_ENV: '/var/www/html/myenv',
+       PYTHONPATH: '/var/www/html/myenv/lib/python3.8/site-packages'
+     },
+     log_file: '/var/www/html/logs/jupyter-combined.log',
+     out_file: '/var/www/html/logs/jupyter-out.log',
+     error_file: '/var/www/html/logs/jupyter-err.log'
+   }
+ ]
+};

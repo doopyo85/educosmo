@@ -1,0 +1,591 @@
+📘 Jupyter Notebook 통합 시스템 명세서
+📋 개요
+educodingnplay 프로젝트에 Jupyter Notebook 기능이 통합되었습니다. 이 시스템은 사용자별로 격리된 노트북 환경을 제공하며, IDE 컴포넌트와 동일한 위치에서 동작합니다.
+
+🎯 핵심 특징
+1. 사용자별 격리
+
+각 사용자는 독립적인 폴더(jupyter_notebooks/{userID}/)를 가짐
+자신의 노트북 파일만 접근 및 수정 가능
+다른 사용자의 파일은 접근 불가
+
+2. Jupyter Notebook 사용
+
+JupyterHub나 JupyterLab이 아닌 classic Jupyter Notebook 사용
+포트 8000번에서 실행
+Apache 프록시를 통해 /jupyter 경로로 서비스
+
+3. 빈 노트북 자동 생성
+
+사용자별로 새 빈 노트북 자동 생성
+타임스탬프 기반 파일명: {userID}_{timestamp}.ipynb
+웰컴 메시지와 샘플 코드 포함
+
+4. IDE 위치 공유
+
+IDE 컴포넌트와 동일한 DOM 위치 사용
+레이아웃 전환으로 ACE Editor ↔ Jupyter 전환 가능
+
+
+🏗️ 시스템 아키텍처
+┌─────────────────────────────────────────────────────────┐
+│              JUPYTER INTEGRATION ARCHITECTURE           │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌────────────────┐         ┌──────────────────────┐   │
+│  │  Client Side   │◄───────►│    Server Side       │   │
+│  │                │         │                      │   │
+│  │ JupyterComponent│        │ jupyterRouter.js     │   │
+│  │ (컴포넌트)      │         │ notebookManager.js   │   │
+│  │                │         │                      │   │
+│  │ - 빈 노트북 요청│         │ - 노트북 생성        │   │
+│  │ - iframe 로드  │         │ - 사용자 디렉토리   │   │
+│  │ - 상태 관리    │         │ - Jupyter 프로세스  │   │
+│  └────────────────┘         └──────────────────────┘   │
+│         ↓                              ↓                │
+│  ┌────────────────┐         ┌──────────────────────┐   │
+│  │ Component      │         │ Jupyter Notebook     │   │
+│  │ System         │         │ Server (Port 8000)   │   │
+│  │ (레이아웃 관리) │◄───────►│                      │   │
+│  └────────────────┘         │ 사용자별 격리        │   │
+│                             └──────────────────────┘   │
+│                                      ↓                  │
+│                         ┌──────────────────────┐       │
+│                         │ File System          │       │
+│                         │ jupyter_notebooks/   │       │
+│                         │ ├─ user1/            │       │
+│                         │ ├─ user2/            │       │
+│                         │ └─ user3/            │       │
+│                         └──────────────────────┘       │
+└─────────────────────────────────────────────────────────┘
+
+📁 파일 구조 및 역할
+🔥 클라이언트사이드
+JupyterComponent.js
+위치: /public/js/components/jupyter/JupyterComponent.js
+역할: Jupyter Notebook UI 관리 및 서버 통신
+주요 기능:
+javascriptclass JupyterComponent extends Component {
+  // 1. 초기화
+  async init(data = null)
+  
+  // 2. 사용자별 빈 노트북 생성 및 로드
+  async createAndLoadBlankNotebook()
+  
+  // 3. 노트북 로드
+  loadNotebook(notebookUrl)
+  
+  // 4. 컴포넌트 활성화/비활성화
+  activate()
+  deactivate()
+  
+  // 5. 강제 연결 (폴백)
+  async forceConnect()
+  
+  // 6. 상태 확인
+  getStatus()
+}
+특징:
+
+사용자 ID 자동 감지 (getCurrentUserID())
+로딩/에러 UI 자체 관리
+재시도 메커니즘 (최대 5회)
+iframe 기반 Jupyter 임베딩
+
+
+jupyter.css
+위치: /public/css/components/jupyter.css
+역할: Jupyter 컴포넌트 전용 스타일링
+주요 스타일:
+css/* 컨테이너 */
+.jupyter-container { ... }
+
+/* iframe */
+.jupyter-iframe { ... }
+
+/* 로딩 상태 */
+.jupyter-loading { ... }
+
+/* 에러 상태 */
+.jupyter-error { ... }
+
+/* 레이아웃별 표시/숨김 */
+.layout-jupyter .jupyter-container { display: flex !important; }
+.layout-html .jupyter-container,
+.layout-ide .jupyter-container,
+.layout-quiz .jupyter-container { display: none !important; }
+
+🔥 서버사이드
+jupyterRouter.js
+위치: /routes/api/jupyterRouter.js
+역할: Jupyter 관련 API 엔드포인트 제공
+주요 API:
+엔드포인트메서드기능인증/statusGETJupyter 서버 상태 확인X/create-blank-notebookPOST사용자별 빈 노트북 생성O/user-notebooksGET사용자 노트북 목록 조회O/restartPOSTJupyter 서버 재시작X
+핵심 코드:
+javascript// 빈 노트북 생성 API
+router.post('/create-blank-notebook', requireAuth, async (req, res) => {
+  const userID = req.session?.userID || req.body.userID || 'guest';
+  
+  // 사용자별 빈 노트북 생성
+  const result = await createBlankNotebook(userID);
+  
+  res.json({
+    success: true,
+    notebook: result.filename,
+    notebookUrl: `/jupyter/notebooks/${result.relativePath}`,
+    userID: userID,
+    timestamp: new Date().toISOString()
+  });
+});
+Jupyter 프로세스 관리:
+javascript// Jupyter Notebook 서버 시작
+const jupyterArgs = [
+  'notebook',
+  '--no-browser',
+  '--allow-root',
+  `--port=${JUPYTER_PORT}`,
+  `--notebook-dir=${NOTEBOOKS_DIR}`,
+  '--ip=0.0.0.0',
+  '--NotebookApp.token=""',
+  '--NotebookApp.password=""',
+  '--NotebookApp.disable_check_xsrf=True'
+];
+
+jupyterProcess = spawn('jupyter', jupyterArgs, {
+  stdio: ['ignore', 'pipe', 'pipe'],
+  detached: false
+});
+
+notebookManager.js
+위치: /lib_jupyter/notebookManager.js
+역할: 파일 시스템 기반 노트북 관리
+주요 함수:
+javascript// 사용자 디렉토리 경로 생성
+const getUserNotebookDir = (userId) => {
+  return path.join(BASE_NOTEBOOK_DIR, userId);
+};
+
+// 노트북 목록 조회
+const getNotebookList = async (userId) => { ... };
+
+// 노트북 저장
+const saveNotebook = async (userId, filename, content) => { ... };
+
+// 노트북 읽기
+const readNotebook = async (userId, filename) => { ... };
+
+// 노트북 삭제
+const deleteNotebook = async (userId, filename) => { ... };
+
+// 사용자 디렉토리 생성
+const ensureUserDir = async (userId) => { ... };
+
+jupyter_start_new.sh
+위치: /jupyter_start_new.sh
+역할: Jupyter Notebook 서버 시작 스크립트
+주요 내용:
+bash#!/bin/bash
+set -e
+
+# 가상환경 활성화
+source myenv/bin/activate
+
+# 한글 폰트 자동 설정
+cat > ~/.ipython/profile_default/startup/00-korean-font.py << 'EOF'
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+
+korean_fonts = ['NanumGothic', 'NanumBarunGothic', 'Malgun Gothic']
+available_fonts = [f.name for f in fm.fontManager.ttflist]
+
+for font in korean_fonts:
+    if font in available_fonts:
+        plt.rcParams['font.family'] = font
+        plt.rcParams['axes.unicode_minus'] = False
+        break
+EOF
+
+# Jupyter 서버 실행
+cd jupyter_notebooks
+
+exec jupyter notebook \
+  --ip=0.0.0.0 \
+  --port=8000 \
+  --no-browser \
+  --allow-root \
+  --NotebookApp.base_url=/jupyter \
+  --NotebookApp.token= \
+  --NotebookApp.password= \
+  --NotebookApp.disable_check_xsrf=True \
+  --NotebookApp.allow_origin="*" \
+  --NotebookApp.allow_remote_access=True
+특징:
+
+한글 폰트 자동 설정 (matplotlib)
+CSRF 검증 비활성화 (임베딩 허용)
+토큰/비밀번호 없음 (내부 네트워크 전용)
+
+
+🔥 컴포넌트 시스템 통합
+component-system.js 변경사항
+1. 레이아웃 타입 추가:
+javascriptLAYOUT_TYPES: {
+  HTML: 'html',
+  IDE: 'ide',
+  QUIZ: 'quiz',
+  PPT: 'ppt',
+  JUPYTER: 'jupyter'  // 🔥 추가
+}
+2. JupyterComponent 등록:
+javascriptregisterComponents: function() {
+  const componentConfigs = {
+    // ... 기존 컴포넌트들
+    jupyter: {
+      className: 'JupyterComponent',
+      options: {
+        elementId: 'jupyter-component',
+        autoInit: true,
+        retryOnFail: true
+      }
+    }
+  };
+  
+  // Jupyter 컴포넌트 자동 초기화
+  if (componentName === 'jupyter' && config.options.autoInit) {
+    setTimeout(() => {
+      this.initializeJupyterComponent(component);
+    }, 1000);
+  }
+}
+3. Jupyter 컴포넌트 초기화:
+javascriptinitializeJupyterComponent: function(component) {
+  try {
+    // 컨테이너 참조 설정
+    if (!component.elements?.container) {
+      const container = document.getElementById('jupyter-component');
+      component.elements.container = container;
+    }
+    
+    // 단순화 초기화 메서드 호출
+    if (component.initializeSimpleJupyter) {
+      component.initializeSimpleJupyter();
+    } else if (component.forceConnect) {
+      component.forceConnect();
+    }
+  } catch (error) {
+    console.error('Jupyter 자동 초기화 중 오류:', error);
+  }
+}
+4. 레이아웃 활성화:
+javascriptactivateComponents: function(layoutType) {
+  const activeComponents = {
+    'html': ['navigation', 'content'],
+    'ide': ['navigation', 'content', 'ide'],
+    'quiz': ['navigation', 'content', 'quiz'],
+    'ppt': ['navigation', 'pptViewer'],
+    'jupyter': ['navigation', 'content', 'jupyter']  // 🔥 추가
+  };
+  
+  // ...
+}
+
+🔥 템플릿 파일
+template.ejs 변경사항
+1. CSS 추가:
+html<link rel="stylesheet" href="/css/components/jupyter.css">
+2. Jupyter 컴포넌트 DOM 구조:
+html<!-- Jupyter 컴포넌트 -->
+<div id="jupyter-component" class="jupyter-container component component-hidden">
+  <!-- JupyterComponent.js에서 동적으로 생성됨 -->
+</div>
+3. Jupyter 관리 함수들:
+javascript// 재시도
+function retryJupyter() { ... }
+
+// 새로고침
+function refreshJupyter() { ... }
+
+// 전체화면
+function fullscreenJupyter() { ... }
+
+// 다운로드
+function downloadNotebook() { ... }
+4. Jupyter 컴포넌트 자동 복구 시스템:
+javascript// 5초 후부터 3초 간격으로 Jupyter 상태 체크
+setTimeout(() => {
+  jupyterCheckInterval = setInterval(checkJupyterComponent, 3000);
+}, 5000);
+5. 디버깅 명령어:
+javascriptwindow.checkJupyter()        // 상태 확인
+window.fixJupyterComponent() // 수동 복구
+window.recreateJupyter()     // 완전 재생성
+
+🌐 Apache 프록시 설정
+apache_proxy설정_20250805.txt 관련 부분
+apache# Jupyter 프록시 설정
+ProxyPass /jupyter http://localhost:8000/
+ProxyPassReverse /jupyter http://localhost:8000/
+
+# WebSocket 지원
+ProxyPass /jupyter/api/kernels ws://127.0.0.1:8000/jupyter/api/kernels
+ProxyPassReverse /jupyter/api/kernels ws://127.0.0.1:8000/jupyter/api/kernels
+ProxyPass /jupyter/terminals/websocket ws://127.0.0.1:8000/jupyter/terminals/websocket
+ProxyPassReverse /jupyter/terminals/websocket ws://127.0.0.1:8000/jupyter/terminals/websocket
+특징:
+
+HTTP 및 WebSocket 모두 프록시
+Jupyter Kernel API 및 Terminal WebSocket 지원
+기본 HTTP 프록시로 대부분의 요청 처리
+
+
+🔄 작동 흐름
+1. 초기 로드 흐름
+사용자가 페이지 접속
+    ↓
+template.ejs 렌더링
+    ↓
+JupyterComponent.js 로드
+    ↓
+Component-system.js가 JupyterComponent 등록
+    ↓
+자동 초기화 (1초 후)
+    ↓
+컨테이너 설정 (setupSimpleContainer)
+    ↓
+빈 노트북 생성 요청 (/api/jupyter/create-blank-notebook)
+    ↓
+서버에서 사용자별 노트북 파일 생성
+    ↓
+노트북 URL 반환 (/jupyter/notebooks/{userID}/{filename}.ipynb)
+    ↓
+iframe에 노트북 로드
+    ↓
+로딩 화면 숨기기, Jupyter 표시
+2. 사용자별 노트북 생성 흐름
+JupyterComponent.createAndLoadBlankNotebook()
+    ↓
+fetch POST /api/jupyter/create-blank-notebook
+    ↓
+jupyterRouter.js 처리
+    ↓
+createBlankNotebook(userID) 호출
+    ↓
+notebookManager.ensureUserDir(userID)
+    ↓
+jupyter_notebooks/{userID}/ 디렉토리 생성
+    ↓
+{userID}_{timestamp}.ipynb 파일 생성
+    ↓
+빈 노트북 구조 JSON 작성
+    ↓
+파일 저장
+    ↓
+상대 경로 반환 ({userID}/{filename})
+    ↓
+전체 URL 생성 (/jupyter/notebooks/{relativePath})
+    ↓
+클라이언트에 응답
+    ↓
+iframe.src = notebookUrl
+    ↓
+Jupyter Notebook 표시
+3. 레이아웃 전환 흐름
+사용자가 "Jupyter" 버튼 클릭
+    ↓
+IDE Selector 버튼 이벤트
+    ↓
+ComponentSystem.applyLayout('jupyter')
+    ↓
+레이아웃 클래스 변경
+  - 제거: layout-html, layout-ide, layout-quiz, layout-ppt
+  - 추가: layout-jupyter
+    ↓
+CSS 규칙 적용
+  .layout-jupyter .jupyter-container { display: flex !important; }
+    ↓
+activateComponents('jupyter')
+    ↓
+Jupyter 컴포넌트 활성화
+    ↓
+다른 컴포넌트 비활성화 (IDE, Quiz 등)
+    ↓
+iframe 표시
+
+📊 데이터 구조
+빈 노트북 JSON 구조
+json{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# {userID}님의 노트북\n",
+        "\n",
+        "생성일: {현재 날짜/시간}\n",
+        "\n",
+        "왼쪽 Content에서 내용을 복사해서 붙여넣으세요."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "# 여기에 코드를 입력하세요\n",
+        "print('Hello, Jupyter!')"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "name": "python",
+      "version": "3.8.5"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 4
+}
+API 응답 구조
+/api/jupyter/create-blank-notebook 응답
+json{
+  "success": true,
+  "notebook": "user123_20250930123045.ipynb",
+  "notebookUrl": "/jupyter/notebooks/user123/user123_20250930123045.ipynb",
+  "userID": "user123",
+  "message": "user123님의 새 노트북이 생성되었습니다.",
+  "timestamp": "2025-09-30T12:30:45.123Z"
+}
+/api/jupyter/user-notebooks 응답
+json{
+  "success": true,
+  "userID": "user123",
+  "notebooks": [
+    "user123_20250930123045.ipynb",
+    "user123_20250929151200.ipynb",
+    "user123_20250928093030.ipynb"
+  ],
+  "count": 3
+}
+/api/jupyter/status 응답
+json{
+  "status": "online",
+  "port": 8000,
+  "url": "http://localhost:8000",
+  "proxy_url": "/jupyter",
+  "notebooks_dir": "/var/www/html/jupyter_notebooks",
+  "message": "Simple Jupyter Server - User Isolation",
+  "timestamp": "2025-09-30T12:30:45.123Z"
+}
+
+🎨 UI/UX 특징
+1. 로딩 상태
+html<div class="jupyter-loading" style="display: flex;">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <p>Jupyter Notebook을 준비하고 있습니다...</p>
+    <small>사용자: {userID}</small>
+  </div>
+</div>
+2. 에러 상태
+html<div class="jupyter-error" style="display: flex;">
+  <div class="error-content">
+    <h5>Jupyter Notebook 연결 실패</h5>
+    <p id="jupyter-error-message">서버에 연결할 수 없습니다.</p>
+    <button class="btn btn-primary" id="jupyter-retry-btn">다시 시도</button>
+  </div>
+</div>
+3. 정상 동작 상태
+html<iframe 
+  id="jupyter-iframe" 
+  class="jupyter-iframe" 
+  src="/jupyter/notebooks/user123/user123_20250930123045.ipynb"
+  title="Jupyter Notebook"
+  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+  style="width: 100%; height: 100%; border: none; background: white; display: block;"
+></iframe>
+
+🔧 개발자 도구
+콘솔 디버깅 명령어
+javascript// 1. Jupyter 상태 확인
+checkJupyter()
+
+// 2. Jupyter 수동 복구
+fixJupyterComponent()
+
+// 3. Jupyter 완전 재생성
+recreateJupyter()
+
+// 4. 컴포넌트 상태 확인
+debugComponent('jupyter')
+
+// 5. 레이아웃 강제 전환
+forceLayout('jupyter')
+
+// 6. 전체 시스템 상태
+debugComponentSystem()
+
+// 7. 이벤트 버스 상태
+debugEventBus()
+
+// 8. 도움말
+debugHelp()
+
+🚀 배포 가이드
+1. 서버 설정 (Ubuntu)
+Jupyter 가상환경 설정
+bashcd /var/www/html
+
+# 가상환경 활성화
+source myenv/bin/activate
+
+# Jupyter Notebook 설치 (이미 설치되어 있음)
+pip install jupyter notebook matplotlib numpy pandas
+Jupyter 시작 스크립트 권한 설정
+bashchmod +x jupyter_start_new.sh
+노트북 디렉토리 생성 및 권한 설정
+bashmkdir -p jupyter_notebooks
+chmod 755 jupyter_notebooks
+2. Jupyter 서버 실행
+수동 실행
+bashcd /var/www/html
+./jupyter_start_new.sh
+PM2로 자동 실행 (권장)
+bashpm2 start jupyter_start_new.sh --name jupyter-notebook
+pm2 save
+pm2 startup
+3. Apache 재시작
+bashsudo systemctl restart apache2
+4. 방화벽 설정 확인
+bash# 8000번 포트는 외부 접근 차단 (내부 프록시만 허용)
+sudo ufw status
+
+🔐 보안 고려사항
+1. 사용자 격리
+
+각 사용자는 자신의 디렉토리 내 파일만 접근 가능
+노트북 파일명에 사용자 ID 포함
+세션 기반 인증으로 사용자 확인
+
+2. 인증 및 권한
+
+/api/jupyter/create-blank-notebook - 로그인 필요 (requireAuth)
+/api/jupyter/user-notebooks - 로그인 필요
+Jupyter 서버는 토큰/비밀번호 없음 (내부 프록시 전용)
+
+3. 네트워크 보안
+
+Jupyter 서버는 8000번 포트, 외부 접근 차단
+Apache 프록시를 통해서만 접근 가능 (/jupyter 경로)
+CSRF 검증 비활성화 (iframe 임베딩 허용)
+
+4. 파일 시스템 보안
+
+노트북 디렉토리 권한: 755
+생성된 노트북 파일: 기본 umask 적용
+상위 디렉토리 접근 방지 (path traversal 방지)

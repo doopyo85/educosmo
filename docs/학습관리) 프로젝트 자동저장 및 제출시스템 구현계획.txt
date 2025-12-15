@@ -1,0 +1,296 @@
+🎯 스크래치/엔트리 자동저장 및 제출 시스템 구현 계획
+📋 문제 해결 방향 요약
+현재 상황
+
+✅ S3 → 로컬 → 플랫폼 (다운로드/파싱) 구현 완료
+❌ 플랫폼 → 로컬 → S3 (저장/업로드) 미구현
+❌ 자동저장, 수동저장, 제출 기능 없음
+
+구현 목표
+
+자동저장: 3분마다 브라우저 localStorage에 임시 저장 → 창 재접속 시 복구 팝업
+수동저장: "저장하기" 버튼 → S3에 사용자 프로젝트 저장 (draft 상태)
+제출하기: "제출하기" 버튼 → S3 저장 + DB에 제출 기록 (final 상태)
+
+
+🗂️ S3 폴더 구조 설계
+s3://educodingnplaycontents/
+├── ent/                          # 기존 교육용 콘텐츠 (읽기 전용)
+│   ├── cpe1-1a.ent
+│   └── cpe1-1b.ent
+├── scratch/                      # 기존 교육용 콘텐츠 (읽기 전용)
+│   ├── game_basic.sb3
+│   └── animation_intro.sb3
+└── users/                        # 🔥 신규: 사용자 작품 저장소
+    ├── {userID}/
+    │   ├── scratch/
+    │   │   ├── drafts/           # 임시 저장
+    │   │   │   ├── my_game_draft_2025-01-05.sb3
+    │   │   │   └── my_game_draft_2025-01-05.json  # 메타데이터
+    │   │   └── final/            # 제출 완료
+    │   │       ├── my_game_final_2025-01-05.sb3
+    │   │       └── my_game_final_2025-01-05.json
+    │   └── entry/
+    │       ├── drafts/
+    │       │   ├── my_animation_draft_2025-01-05.ent
+    │       │   └── my_animation_draft_2025-01-05.json
+    │       └── final/
+    │           ├── my_animation_final_2025-01-05.ent
+    │           └── my_animation_final_2025-01-05.json
+
+📊 데이터베이스 확장
+1. ProjectSubmissions 테이블 활용
+sql-- 이미 명세서에 정의된 테이블 활용
+-- lib_storage/s3Manager.js에서 업로드 후 여기에 기록
+
+INSERT INTO ProjectSubmissions (
+    user_id, 
+    platform,           -- 'scratch' or 'entry'
+    project_name,
+    submission_type,    -- 'draft' or 'final'
+    s3_file_path,
+    file_size_kb,
+    submitted_at
+) VALUES (?, ?, ?, ?, ?, ?, NOW());
+2. 자동저장용 별도 테이블 (선택사항)
+sql-- 브라우저 localStorage 기반이므로 DB 불필요
+-- 단, 복구 이력 추적을 위해 선택적으로 사용 가능
+CREATE TABLE AutoSaveLogs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    platform VARCHAR(20),
+    project_name VARCHAR(255),
+    last_autosave_at TIMESTAMP,
+    INDEX idx_user_platform (user_id, platform)
+);
+
+🔄 시스템 흐름도
+1️⃣ 자동저장 (브라우저 localStorage)
+사용자 작업 (3분 간격)
+    ↓
+JavaScript setInterval
+    ↓
+Scratch: vm.saveProjectSb3()
+Entry: Entry.exportProject()
+    ↓
+localStorage.setItem('autosave_scratch_2025-01-05', projectData)
+    ↓
+페이지 재접속 시
+    ↓
+localStorage 확인 → 복구 팝업 표시
+    ↓
+"복구하기" 클릭 → Entry.loadProject(data)
+2️⃣ 수동 저장 (S3 업로드)
+"저장하기" 버튼 클릭
+    ↓
+프로젝트 데이터 추출
+    ↓
+POST /api/save-project
+{
+  platform: 'scratch',
+  projectName: '내게임',
+  projectData: <Blob or Base64>,
+  saveType: 'draft'
+}
+    ↓
+3000번 서버: lib_storage/s3Manager.js
+    ↓
+S3 업로드: users/{userID}/scratch/drafts/내게임_2025-01-05.sb3
+    ↓
+ProjectSubmissions 테이블에 기록
+    ↓
+응답: { success: true, s3Path: '...' }
+3️⃣ 제출하기 (S3 + DB + 교사 대시보드)
+"제출하기" 버튼 클릭
+    ↓
+확인 팝업: "정말 제출하시겠습니까?"
+    ↓
+POST /api/submit-project
+{
+  platform: 'entry',
+  projectName: '내애니메이션',
+  projectData: <Blob>,
+  saveType: 'final'
+}
+    ↓
+S3 업로드: users/{userID}/entry/final/내애니메이션_2025-01-05.ent
+    ↓
+ProjectSubmissions 테이블: submission_type = 'final'
+    ↓
+응답: { success: true, submissionId: 123 }
+    ↓
+UI 피드백: "제출 완료! 선생님이 확인할 예정입니다."
+
+📁 구현 파일 구조
+educodingnplay/
+├── lib_storage/
+│   ├── s3Manager.js              # 🔥 S3 업로드/다운로드 통합
+│   ├── scratchProjectManager.js  # 🔥 신규: Scratch 프로젝트 관리
+│   └── entryProjectManager.js    # 🔥 신규: Entry 프로젝트 관리
+├── routes/api/
+│   ├── scratchProjectRouter.js   # 🔥 신규: Scratch 저장/제출 API
+│   └── entryProjectRouter.js     # 기존 파일 확장
+├── public/js/
+│   ├── autosave.js               # 🔥 신규: 자동저장 클라이언트
+│   └── projectUpload.js          # 🔥 신규: 업로드 유틸리티
+└── views/
+    ├── scratch_project.ejs       # 기존 파일 수정 (툴바 추가)
+    └── entry_project.ejs         # 기존 파일 수정 (툴바 추가)
+
+🛠️ 단계별 구현 계획
+STEP 1: 자동저장 (클라이언트만 구현, 1일)
+목표: 브라우저 localStorage 기반 자동저장 + 복구 팝업
+작업 파일:
+
+public/js/autosave.js (신규)
+views/scratch_project.ejs (수정)
+views/entry_project.ejs (수정)
+
+기능:
+javascript// autosave.js
+class AutoSaveManager {
+  constructor(platform) {
+    this.platform = platform;
+    this.interval = 3 * 60 * 1000; // 3분
+    this.storageKey = `autosave_${platform}_${new Date().toISOString().split('T')[0]}`;
+  }
+  
+  startAutoSave() {
+    setInterval(() => {
+      const projectData = this.getProjectData();
+      localStorage.setItem(this.storageKey, JSON.stringify(projectData));
+      console.log('자동저장 완료:', new Date().toLocaleTimeString());
+    }, this.interval);
+  }
+  
+  checkRecovery() {
+    const saved = localStorage.getItem(this.storageKey);
+    if (saved) {
+      this.showRecoveryModal(JSON.parse(saved));
+    }
+  }
+}
+
+STEP 2: S3 업로드 인프라 구축 (2일)
+목표: 3000번 서버에서 Scratch/Entry 파일을 S3에 업로드하는 공통 모듈 구현
+작업 파일:
+
+lib_storage/s3Manager.js (확장)
+lib_storage/scratchProjectManager.js (신규)
+lib_storage/entryProjectManager.js (신규)
+
+핵심 메서드:
+javascript// s3Manager.js
+class S3Manager {
+  async uploadUserProject(userId, platform, fileName, fileBuffer, saveType) {
+    const s3Key = `users/${userId}/${platform}/${saveType}/${fileName}`;
+    // AWS SDK S3 업로드 로직
+    // return s3Path
+  }
+}
+
+STEP 3: 저장하기 API 구현 (2일)
+목표: 사용자가 "저장하기" 버튼 클릭 시 S3 업로드 + DB 기록
+작업 파일:
+
+routes/api/scratchProjectRouter.js (신규)
+routes/api/entryProjectRouter.js (확장)
+
+API 엔드포인트:
+javascript// POST /api/scratch/save-project
+router.post('/save-project', authenticateUser, async (req, res) => {
+  const { projectName, projectData } = req.body;
+  const userId = req.session.userID;
+  
+  // 1. 파일 생성
+  const buffer = Buffer.from(projectData, 'base64');
+  
+  // 2. S3 업로드
+  const s3Path = await s3Manager.uploadUserProject(
+    userId, 
+    'scratch', 
+    `${projectName}_${Date.now()}.sb3`, 
+    buffer, 
+    'draft'
+  );
+  
+  // 3. DB 기록
+  await db.query(
+    'INSERT INTO ProjectSubmissions (user_id, platform, project_name, submission_type, s3_file_path) VALUES (?, ?, ?, ?, ?)',
+    [userId, 'scratch', projectName, 'draft', s3Path]
+  );
+  
+  res.json({ success: true, s3Path });
+});
+
+STEP 4: 제출하기 API 구현 (1일)
+목표: "제출하기" 버튼 → submission_type = 'final'로 저장
+차이점:
+
+saveType: 'final'로 S3 저장
+DB에 submission_type = 'final' 기록
+제출 완료 알림
+
+
+STEP 5: UI 통합 (2일)
+목표: Scratch/Entry 워크스페이스에 툴바 추가
+Scratch (8601번):
+html<!-- /var/www/html/scratch/index.html 수정 -->
+<div class="custom-toolbar">
+  <button id="autosave-restore">복구하기</button>
+  <button id="save-draft">저장하기</button>
+  <button id="submit-final">제출하기</button>
+</div>
+
+<script src="/js/autosave.js"></script>
+<script>
+  const autoSave = new AutoSaveManager('scratch');
+  autoSave.startAutoSave();
+  autoSave.checkRecovery();
+  
+  document.getElementById('save-draft').onclick = async () => {
+    const projectData = await vm.saveProjectSb3();
+    const blob = new Blob([projectData]);
+    // FormData로 업로드
+  };
+</script>
+Entry (8070번):
+html<!-- /var/www/html/entry/index.html 수정 -->
+<div class="entry-toolbar">
+  <button onclick="saveProject('draft')">저장하기</button>
+  <button onclick="saveProject('final')">제출하기</button>
+</div>
+
+<script>
+  function saveProject(type) {
+    const projectData = Entry.exportProject();
+    fetch('/api/entry/save-project', {
+      method: 'POST',
+      body: JSON.stringify({ projectName: '내작품', projectData, saveType: type })
+    });
+  }
+</script>
+
+✅ 체크포인트
+STEP 1 완료 조건
+
+ 3분마다 localStorage에 자동저장 확인
+ 페이지 재접속 시 복구 팝업 표시
+ "복구하기" 클릭 시 프로젝트 로드
+
+STEP 2 완료 조건
+
+ S3에 users/{userID}/scratch/drafts/ 폴더 생성 확인
+ .sb3, .ent 파일 업로드 성공
+ 업로드 후 S3 콘솔에서 파일 확인 가능
+
+STEP 3 완료 조건
+
+ "저장하기" 버튼 클릭 → S3 업로드 성공
+ ProjectSubmissions 테이블에 draft 기록
+ 성공 메시지 UI 표시
+
+STEP 4 완료 조건
+
+ "제출하기" 버튼 클릭 → final 상태로 저장
+ DB에서 submission_type = 'final' 확인

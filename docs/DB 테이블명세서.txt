@@ -1,0 +1,278 @@
+educodingnplay DB 구조 명세서 (학습 로그 시스템)
+작성일: 2025년 1월 2일
+목적: 학생 진도관리 대시보드 구현을 위한 DB 구조 파악
+
+📊 핵심 테이블 구조
+1. Users - 사용자 정보
+sql+-----------------+---------+------+-----+
+| Field           | Type    | Null | Key |
++-----------------+---------+------+-----+
+| id              | int     | NO   | PRI |
+| userID          | varchar | YES  |     |
+| password        | varchar | NO   |     |
+| email           | varchar | NO   |     |
+| name            | varchar | YES  |     |
+| phone           | varchar | YES  |     |
+| birthdate       | date    | YES  |     |
+| role            | enum    | NO   |     | 
+| centerID        | int     | YES  | MUL |
+| created_at      | timestamp| YES |     |
+| profile_image   | varchar | YES  |     |
+| last_board_visit| timestamp| YES |     |
++-----------------+---------+------+-----+
+
+role 값: 'admin', 'kinder', 'school', 'manager', 'teacher', 'student', 'guest'
+핵심 포인트:
+
+centerID로 센터별 그룹핑 (학생-교사 매핑의 기준)
+role로 권한 관리
+
+
+2. LearningLogs - 학습 세션 기록
+sql+--------------+--------------+------+-----+
+| Field        | Type         | Null | Key |
++--------------+--------------+------+-----+
+| learning_id  | int          | NO   | PRI |
+| user_id      | int          | NO   | MUL |
+| content_type | varchar(50)  | YES  |     |
+| content_name | varchar(255) | YES  |     |
+| start_time   | timestamp    | YES  |     |
+| end_time     | timestamp    | YES  |     |
+| duration     | int          | YES  |     |
+| progress     | int          | YES  |     |
+| center_id    | int          | YES  | MUL |
++--------------+--------------+------+-----+
+용도:
+
+학습 세션 추적 (무엇을, 얼마나, 언제)
+duration: 초 단위 학습 시간
+progress: 진도율 (%)
+center_id: 센터별 통계 집계용
+
+
+3. MenuAccessLogs - 메뉴 접근 기록
+sql+-------------+--------------+------+-----+
+| Field       | Type         | Null | Key |
++-------------+--------------+------+-----+
+| access_id   | int          | NO   | PRI |
+| user_id     | int          | NO   | MUL |
+| menu_name   | varchar(100) | YES  |     |
+| access_time | timestamp    | YES  |     |
+| duration    | int          | YES  |     |
+| center_id   | int          | YES  | MUL |
++-------------+--------------+------+-----+
+용도:
+
+메뉴 클릭 추적
+어떤 콘텐츠에 관심이 많은지 파악
+
+
+4. QuizResults - 퀴즈 제출 기록
+sql+-------------------+--------------+------+-----+
+| Field             | Type         | Null | Key |
++-------------------+--------------+------+-----+
+| id                | int          | NO   | PRI |
+| user_id           | int          | NO   | MUL |
+| exam_name         | varchar(255) | NO   |     |
+| problem_number    | varchar(10)  | NO   |     |
+| user_answer       | text         | YES  |     |
+| is_correct        | tinyint(1)   | NO   |     |
+| timestamp         | datetime     | NO   |     |
+| execution_results | text         | YES  |     |
++-------------------+--------------+------+-----+
+용도:
+
+문제별 정답률 추적
+학생별 성취도 평가
+
+
+5. LearningRecords - 플랫폼별 학습 기록
+sql+-------------+----------------------------------------+------+-----+
+| Field       | Type                                   | Null | Key |
++-------------+----------------------------------------+------+-----+
+| id          | int                                    | NO   | PRI |
+| user_id     | int                                    | NO   | MUL |
+| platform    | enum('scratch','entry','online_judge') | NO   |     |
+| record_data | text                                   | NO   |     |
+| created_at  | timestamp                              | YES  |     |
++-------------+----------------------------------------+------+-----+
+용도:
+
+Scratch, Entry 등 외부 플랫폼 연동 데이터
+record_data: JSON 형식 저장
+
+
+6. UserActivityLogs - 사용자 활동 로그
+sql+-------------+--------------+------+-----+
+| Field       | Type         | Null | Key |
++-------------+--------------+------+-----+
+| (구조 미확인, 하지만 존재)        |
+| user_id     | int          |      |     |
+| action_type | varchar      |      |     |
+| url         | varchar      |      |     |
+| ip_address  | varchar      |      |     |
+| user_agent  | text         |      |     |
+| created_at  | timestamp    |      |     |
++-------------+--------------+------+-----+
+용도:
+
+페이지 접속 로그
+활동 시간 추적
+
+
+🎯 교사-학생 매핑 구조
+centerID 기반 매핑 (현재 구현)
+교사 (teacher/manager)
+├── centerID: 11
+└── 관리 가능 학생들:
+    ├── student1 (centerID: 11)
+    ├── student2 (centerID: 11)
+    └── student3 (centerID: 11)
+
+admin
+└── 모든 centerID 접근 가능
+특징:
+
+별도 매핑 테이블 없음
+Users.centerID로 직접 필터링
+간단하고 직관적
+
+
+🔐 권한 체계
+역할별 접근 권한
+RolecenterID학생 관리전체 센터 접근admin모든 센터전체✅manager자기 센터자기 센터만❌teacher자기 센터자기 센터만❌student자기 센터본인만❌
+
+📡 구현된 API 엔드포인트
+teacherRouter.js
+javascript// 학생 관리
+GET    /teacher/api/students                    // 학생 목록
+POST   /teacher/api/students                    // 학생 추가
+PUT    /teacher/api/students/:id                // 학생 수정
+DELETE /teacher/api/students/:id                // 학생 삭제
+
+// 학생 정보 조회
+GET    /teacher/api/students/:id/profile        // 프로필
+GET    /teacher/api/students/:id/logs           // 활동 로그 (UserActivityLogs)
+GET    /teacher/api/students/:id/learning-logs  // 학습 로그 (LearningLogs)
+GET    /teacher/api/students/:id/quiz-results   // 퀴즈 결과 (QuizResults)
+GET    /teacher/api/students/:id/stats          // 통계 요약
+권한 미들웨어
+javascriptrequireTeacher         // teacher/manager/admin만 접근
+checkSameCenter        // 같은 centerID만 접근 (admin 제외)
+
+📊 통계 계산 로직
+학생 통계 API (/api/students/:id/stats)
+javascript{
+  totalLearningTime: SUM(LearningLogs.duration),
+  sessionCount: COUNT(LearningLogs),
+  totalQuizzes: COUNT(QuizResults),
+  correctCount: SUM(QuizResults.is_correct),
+  accuracy: (correctCount / totalQuizzes * 100),
+  lastAccess: MAX(UserActivityLogs.created_at)
+}
+educodingnplay DB 구조 명세서 (학습 로그 시스템)
+작성일: 2025년 1월 2일 / 수정: 2025년 10월 3일
+목적: 학생 진도관리 대시보드 구현을 위한 DB 구조 파악
+
+📊 핵심 테이블 구조
+
+1. Users - 사용자 정보
++---------------------+-----------------------------------------------------------------------+------+-----+
+| Field               | Type                                                                  | Null | Key | 
++---------------------+-----------------------------------------------------------------------+------+-----+
+| id                  | int                                                                   | NO   | PRI |
+| userID              | varchar(255)                                                          | YES  | UNI |
+| password            | varchar(255)                                                          | NO   |     |
+| email               | varchar(255)                                                          | NO   |     |
+| name                | varchar(255)                                                          | YES  |     |
+| phone               | varchar(20)                                                           | YES  |     |
+| birthdate           | date                                                                  | YES  |     |
+| role                | enum('admin','kinder','school','manager','teacher','student','guest') | NO   |     |
+| subscription_status | enum('active','inactive','expired')                                   | YES  |     |
+| subscription_expiry | date                                                                  | YES  |     |
+| created_at          | timestamp                                                             | YES  |     |
+| centerID            | int                                                                   | YES  | MUL |
+| profile_image       | varchar(255)                                                          | YES  |     |
+| last_board_visit    | timestamp                                                             | YES  |     |
++---------------------+-----------------------------------------------------------------------+------+-----+
+
+2. LearningLogs - 학습 세션 기록
++--------------+--------------+------+-----+
+| Field        | Type         | Null | Key |
++--------------+--------------+------+-----+
+| learning_id  | int          | NO   | PRI |
+| user_id      | int          | NO   | MUL |
+| content_type | varchar(50)  | YES  |     |
+| content_name | varchar(255) | YES  |     |
+| start_time   | timestamp    | YES  |     |
+| end_time     | timestamp    | YES  |     |
+| duration     | int          | YES  |     |
+| progress     | int          | YES  |     |
+| center_id    | int          | YES  | MUL |
++--------------+--------------+------+-----+
+
+레코드 있음 (2703개)
+최근 항목 확인됨
+
+3. LearningRecords - 외부 플랫폼 학습 데이터
++-------------+----------------------------------------+------+-----+-------------------+-------------------+
+| Field       | Type                                   | Null | Key | Default           | Extra             |
++-------------+----------------------------------------+------+-----+-------------------+-------------------+
+| id          | int                                    | NO   | PRI | NULL              | auto_increment    |
+| user_id     | int                                    | NO   | MUL | NULL              |                   |
+| platform    | enum('scratch','entry','online_judge') | NO   |     | NULL              |                   |
+| record_data | text                                   | NO   |     | NULL              |                   |
+| created_at  | timestamp                              | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
++-------------+----------------------------------------+------+-----+-------------------+-------------------+
+
+레코드 없음 (0개)
+
+4. UserActivityLogs - 사용자 활동 로그
++---------------+--------------+------+-----+-------------------+-------------------+
+| Field         | Type         | Null | Key | Default           | Extra             |
++---------------+--------------+------+-----+-------------------+-------------------+
+| log_id        | int          | NO   | PRI | NULL              | auto_increment    |
+| user_id       | int          | NO   | MUL | NULL              |                   |
+| center_id     | int          | YES  | MUL | NULL              |                   |
+| action_type   | varchar(50)  | NO   |     | NULL              |                   |
+| action_detail | text         | YES  |     | NULL              |                   |
+| url           | varchar(255) | YES  |     | NULL              |                   |
+| ip_address    | varchar(45)  | YES  |     | NULL              |                   |
+| user_agent    | varchar(255) | YES  |     | NULL              |                   |
+| created_at    | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
++---------------+--------------+------+-----+-------------------+-------------------+
+
+레코드 316,845개 존재
+
+5. PortfolioProjectLogs - 포트폴리오 기록
++------------+--------------+------+-----+---------+----------------+
+| Field      | Type         | Null | Key | Default | Extra          |
++------------+--------------+------+-----+---------+----------------+
+| id         | int          | NO   | PRI | NULL    | auto_increment |
+| project_id | varchar(36)  | NO   | MUL | NULL    |                |
+| user_id    | varchar(50)  | NO   | MUL | NULL    |                |
+| action     | varchar(50)  | NO   |     | NULL    |                |
+| ip_address | varchar(45)  | YES  |     | NULL    |                |
+| user_agent | varchar(255) | YES  |     | NULL    |                |
+| created_at | datetime     | NO   |     | NULL    |                |
++------------+--------------+------+-----+---------+----------------+
+
+레코드 없음 (0개)
+
+6. MenuAccessLogs - 메뉴 접근 로그
++-------------+--------------+------+-----+-------------------+-------------------+
+| Field       | Type         | Null | Key | Default           | Extra             |
++-------------+--------------+------+-----+-------------------+-------------------+
+| access_id   | int          | NO   | PRI | NULL              | auto_increment    |
+| user_id     | int          | NO   | MUL | NULL              |                   |
+| menu_name   | varchar(100) | YES  |     | NULL              |                   |
+| access_time | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
+| duration    | int          | YES  |     | NULL              |                   |
+| center_id   | int          | YES  | MUL | NULL              |                   |
++-------------+--------------+------+-----+-------------------+-------------------+
+
+레코드 497개 존재
+
+📌 주의: created_at 컬럼이 아닌 access_time 기준으로 정렬 필요
+
+(이 외에 QuizResults 등 기존 항목은 생략)

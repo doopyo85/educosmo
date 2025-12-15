@@ -1,0 +1,402 @@
+아래는 방금 설명한 Scratch-GUI와 MySQL을 사용하는 서버를 연결하여 프로젝트를 저장 및 불러오는 전체 플로우를 하나의 프로젝트 문서로 정리한 내용입니다. 이 문서를 기반으로 각 기능을 하나씩 구현할 수 있습니다.
+
+프로젝트 문서: Scratch-GUI와 웹서비스(MySQL) 연결 프로젝트
+프로젝트 개요
+목적: Scratch-GUI(React 기반)에서 유저가 작업한 프로젝트 데이터를 MySQL을 사용하는 웹서비스(https://codingnplay.site)와 연결하여 저장 및 불러오기 기능을 구현.
+기술 스택:
+프론트엔드: Scratch-GUI (React)
+백엔드: Node.js (Express)
+데이터베이스: MySQL
+파일 저장소: AWS S3 (옵션, 파일 업로드를 사용하는 경우)
+1. Scratch-GUI와 서버 간 데이터 흐름
+1.1 프로젝트 저장 흐름
+유저가 "저장" 버튼 클릭
+
+Scratch-GUI의 리액트 컴포넌트에서 유저의 현재 프로젝트 데이터를 추출하여 서버로 전송.
+전송된 프로젝트는 JSON 형식의 데이터로 변환되어 서버로 전송됨.
+서버가 데이터 수신
+
+서버(Express.js)는 클라이언트로부터 받은 프로젝트 데이터를 처리.
+MySQL 데이터베이스에 해당 프로젝트 데이터를 저장.
+프로젝트 저장 완료 후 응답
+
+서버는 저장 완료 메시지를 클라이언트로 전송하고, 클라이언트는 이를 사용자에게 알림.
+1.2 프로젝트 저장 예시 코드
+1.2.1 리액트 컴포넌트에서 프로젝트 저장 요청
+javascript
+코드 복사
+function saveProjectToServer() {
+    const projectData = getScratchProjectData(); // 스크래치 프로젝트 데이터를 가져오는 함수
+    
+    fetch('https://codingnplay.site/api/save-project', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            userId: 'user123',
+            projectData: projectData
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('프로젝트 저장 성공:', data);
+        alert('프로젝트가 성공적으로 저장되었습니다!');
+    })
+    .catch((error) => {
+        console.error('프로젝트 저장 오류:', error);
+        alert('프로젝트 저장에 실패했습니다.');
+    });
+}
+1.2.2 서버(Express.js)에서 MySQL에 프로젝트 저장
+javascript
+코드 복사
+const express = require('express');
+const mysql = require('mysql');
+const app = express();
+
+// MySQL 연결 설정
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'password',
+    database: 'scratch_projects'
+});
+
+db.connect((err) => {
+    if (err) {
+        console.error('MySQL 연결 실패:', err);
+        return;
+    }
+    console.log('MySQL 연결 성공');
+});
+
+app.use(express.json());
+
+// 프로젝트 저장 API
+app.post('/api/save-project', (req, res) => {
+    const { userId, projectData } = req.body;
+    
+    const sql = 'INSERT INTO projects (user_id, project_data) VALUES (?, ?)';
+    db.query(sql, [userId, JSON.stringify(projectData)], (err, result) => {
+        if (err) {
+            console.error('DB 저장 오류:', err);
+            res.status(500).send({ message: '프로젝트 저장 실패' });
+            return;
+        }
+        res.send({ message: '프로젝트 저장 성공', projectId: result.insertId });
+    });
+});
+
+// 서버 실행
+app.listen(3000, () => {
+    console.log('서버가 3000번 포트에서 실행 중');
+});
+2. Scratch-GUI에서 프로젝트 불러오기 흐름
+2.1 프로젝트 불러오기 흐름
+유저가 로그인 후 "불러오기" 요청
+
+로그인 후 유저는 자신의 이전 프로젝트 데이터를 서버로부터 요청.
+서버는 유저의 프로젝트 데이터를 MySQL에서 조회하여 클라이언트에 전달.
+서버에서 MySQL로부터 프로젝트 조회
+
+서버는 MySQL에 저장된 유저의 프로젝트 데이터를 조회.
+조회한 데이터를 클라이언트에 JSON 형식으로 반환.
+클라이언트에서 프로젝트 로드
+
+서버에서 전달받은 프로젝트 데이터를 Scratch-GUI에서 로드하여 사용자에게 보여줌.
+2.2 프로젝트 불러오기 예시 코드
+2.2.1 리액트 컴포넌트에서 프로젝트 불러오기 요청
+javascript
+코드 복사
+// Scratch-GUI의 리액트 컴포넌트에서 프로젝트 데이터를 불러오는 함수
+function loadUserProject(userId) {
+    fetch(`https://codingnplay.site/api/load-project/${userId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.projectData) {
+            loadScratchProject(data.projectData); // 스크래치 프로젝트 데이터를 에디터에 로드
+        } else {
+            alert('프로젝트를 불러오지 못했습니다.');
+        }
+    })
+    .catch((error) => {
+        console.error('프로젝트 불러오기 오류:', error);
+    });
+}
+2.2.2 서버(Express.js)에서 MySQL로부터 프로젝트 불러오기
+javascript
+코드 복사
+// 프로젝트 불러오기 API
+app.get('/api/load-project/:userId', (req, res) => {
+    const userId = req.params.userId;
+    
+    const sql = 'SELECT project_data FROM projects WHERE user_id = ? ORDER BY saved_at DESC LIMIT 1';
+    db.query(sql, [userId], (err, result) => {
+        if (err) {
+            console.error('DB 조회 오류:', err);
+            res.status(500).send({ message: '프로젝트 불러오기 실패' });
+            return;
+        }
+        if (result.length > 0) {
+            res.send({ projectData: JSON.parse(result[0].project_data) });
+        } else {
+            res.status(404).send({ message: '프로젝트가 없습니다.' });
+        }
+    });
+});
+3. 테이블 설계
+MySQL에서 프로젝트 데이터를 저장하는 테이블 설계는 다음과 같습니다.
+
+3.1 테이블 구조
+컬럼명	데이터 타입	설명
+id	INT (PK)	고유한 프로젝트 ID
+user_id	VARCHAR(255)	유저 ID
+project_data	TEXT	JSON 형식의 프로젝트 데이터
+saved_at	TIMESTAMP	프로젝트 저장 시간
+3.2 테이블 생성 SQL
+sql
+코드 복사
+CREATE TABLE projects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    project_data TEXT NOT NULL,
+    saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+4. 프로젝트 로드 및 저장에 대한 요약
+프로젝트 저장: 유저가 Scratch-GUI에서 프로젝트 저장 버튼을 누르면, 프로젝트 데이터가 서버로 전송되어 MySQL에 저장됩니다.
+프로젝트 불러오기: 유저가 로그인 후 프로젝트를 불러오려고 할 때, 서버는 MySQL에서 해당 유저의 마지막 저장 프로젝트 데이터를 조회하고, 이를 Scratch-GUI로 전송하여 로드합니다.
+5. 향후 확장 가능성
+AWS S3 연동: 대용량 프로젝트 파일을 S3에 저장하고, 해당 파일 경로를 MySQL에 저장하여 파일 관리를 최적화할 수 있습니다.
+프로젝트 버전 관리: 유저가 여러 버전의 프로젝트를 저장할 수 있도록 프로젝트 버전 관리 기능을 추가할 수 있습니다.
+유저 인증: JWT 토큰을 사용하여 유저 인증을 강화하고, 각 유저가 자신의 프로젝트만 관리할 수 있도록 보안성을 강화할 수 있습니다.
+이 문서를 기준으로 프로젝트 저장 및 불러오기 기능을 하나씩 구현해나갈 수 있습니다. 각 기능을 순차적으로 구현하고 테스트하여 프로젝트의 기본 흐름을 완성해 나가면 됩니다.
+
+
+
+________________________________________
+프로젝트 문서: Scratch-GUI와 웹서비스(MySQL, S3) 연결 프로젝트
+프로젝트 개요
+•	목적: Scratch-GUI(React 기반)에서 유저가 미리 준비된 프로젝트 템플릿을 불러오고, 그 후 유저가 작업한 프로젝트 데이터를 MySQL과 S3에 저장 및 불러오기 기능을 구현.
+•	기술 스택:
+o	프론트엔드: Scratch-GUI (React)
+o	백엔드: Node.js (Express)
+o	데이터베이스: MySQL
+o	파일 저장소: AWS S3
+________________________________________
+1. 프로젝트 템플릿 불러오기
+1.1 템플릿 불러오기 흐름
+1.	유저가 "템플릿 불러오기" 버튼 클릭
+o	Scratch-GUI의 리액트 컴포넌트에서 프로젝트 템플릿을 불러오고자 할 때 서버로 요청을 전송.
+2.	서버가 AWS S3에서 템플릿 파일의 프리사인드 URL 생성
+o	서버는 S3에서 미리 저장된 프로젝트 템플릿 파일에 접근할 수 있는 프리사인드 URL을 생성.
+o	이 URL을 통해 모든 사용자가 S3에서 템플릿 파일을 다운로드할 수 있도록 허용.
+3.	클라이언트(Scratch-GUI)가 S3에서 템플릿 다운로드
+o	클라이언트는 서버로부터 받은 URL을 통해 S3에서 템플릿을 다운로드하고, 이를 Scratch-GUI에서 로드.
+1.2 템플릿 불러오기 예시 코드
+1.2.1 리액트 컴포넌트에서 템플릿 요청
+javascript
+코드 복사
+function loadTemplateFromS3() {
+    fetch('https://codingnplay.site/api/get-template')
+    .then(response => response.json())
+    .then(data => {
+        if (data.url) {
+            // 템플릿을 다운로드하고 Scratch-GUI에서 로드
+            loadScratchProjectFromUrl(data.url);
+        } else {
+            alert('템플릿을 불러오지 못했습니다.');
+        }
+    })
+    .catch((error) => {
+        console.error('템플릿 불러오기 오류:', error);
+    });
+}
+1.2.2 서버(Express.js)에서 S3 프리사인드 URL 생성
+javascript
+코드 복사
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+
+app.get('/api/get-template', (req, res) => {
+    const params = {
+        Bucket: 'your-s3-bucket-name',
+        Key: 'templates/project-template.sb2', // 미리 저장된 템플릿 파일 경로
+        Expires: 60 // URL 유효 기간(초)
+    };
+
+    // S3에서 프리사인드 URL 생성
+    s3.getSignedUrl('getObject', params, (err, url) => {
+        if (err) {
+            console.error('S3 템플릿 URL 생성 오류:', err);
+            res.status(500).send({ message: '템플릿 불러오기 실패' });
+            return;
+        }
+        res.send({ url });
+    });
+});
+1.2.3 S3에서 템플릿 파일을 불러와 Scratch-GUI에 로드하는 함수 (리액트 내)
+javascript
+코드 복사
+function loadScratchProjectFromUrl(url) {
+    fetch(url)
+    .then(response => response.blob())
+    .then(blob => {
+        const fileReader = new FileReader();
+        fileReader.onload = function(event) {
+            const arrayBuffer = event.target.result;
+            // 스크래치 프로젝트 데이터로 로드
+            ScratchProject.loadProject(arrayBuffer);
+        };
+        fileReader.readAsArrayBuffer(blob);
+    })
+    .catch(err => console.error('Error loading template project:', err));
+}
+________________________________________
+2. Scratch-GUI와 서버 간 프로젝트 저장
+2.1 프로젝트 저장 흐름
+1.	유저가 "저장" 버튼 클릭
+o	Scratch-GUI에서 유저의 현재 프로젝트 데이터를 추출하여 서버로 전송.
+2.	서버가 데이터 수신 및 처리
+o	서버(Express.js)는 클라이언트로부터 받은 프로젝트 데이터를 AWS S3에 저장하고, 그 메타데이터를 MySQL 데이터베이스에 저장.
+2.2 프로젝트 저장 예시 코드
+2.2.1 리액트 컴포넌트에서 프로젝트 저장 요청
+javascript
+코드 복사
+function saveProjectToServer() {
+    const projectData = getScratchProjectData(); // 스크래치 프로젝트 데이터를 가져오는 함수
+    
+    fetch('https://codingnplay.site/api/save-project', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            userId: 'user123',
+            projectData: projectData
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('프로젝트 저장 성공:', data);
+        alert('프로젝트가 성공적으로 저장되었습니다!');
+    })
+    .catch((error) => {
+        console.error('프로젝트 저장 오류:', error);
+        alert('프로젝트 저장에 실패했습니다.');
+    });
+}
+2.2.2 서버에서 프로젝트 저장 및 S3 업로드
+javascript
+코드 복사
+app.post('/api/save-project', (req, res) => {
+    const { userId, projectData } = req.body;
+    const fileName = `projects/${userId}/${Date.now()}.sb2`; // 유저별로 파일 저장
+
+    const params = {
+        Bucket: 'your-s3-bucket-name',
+        Key: fileName,
+        Body: Buffer.from(projectData, 'base64'), // base64로 인코딩된 프로젝트 데이터
+        ContentType: 'application/octet-stream'
+    };
+
+    // S3에 파일 업로드
+    s3.putObject(params, (err, data) => {
+        if (err) {
+            console.error('S3 업로드 오류:', err);
+            res.status(500).send('프로젝트 저장 실패');
+            return;
+        }
+
+        // MySQL에 메타데이터 저장
+        const sql = 'INSERT INTO projects (user_id, file_name, saved_at) VALUES (?, ?, ?)';
+        db.query(sql, [userId, fileName, new Date()], (err, result) => {
+            if (err) {
+                console.error('DB 저장 오류:', err);
+                res.status(500).send('프로젝트 저장 실패');
+                return;
+            }
+            res.send({ message: '프로젝트 저장 성공', projectId: result.insertId });
+        });
+    });
+});
+________________________________________
+3. Scratch-GUI에서 프로젝트 불러오기
+3.1 프로젝트 불러오기 흐름
+1.	유저가 로그인 후 "프로젝트 불러오기" 요청
+o	유저가 로그인한 후 자신의 저장된 프로젝트를 불러오기 위해 서버에 요청.
+2.	서버에서 MySQL을 조회하고 S3 프리사인드 URL 반환
+o	서버는 MySQL에서 해당 유저의 프로젝트 파일 경로를 조회한 후, S3에서 프리사인드 URL을 생성하여 클라이언트로 전달.
+3.	클라이언트가 S3에서 프로젝트 다운로드 및 Scratch-GUI에 로드
+3.2 프로젝트 불러오기 예시 코드
+3.2.1 리액트 컴포넌트에서 프로젝트 불러오기 요청
+javascript
+코드 복사
+function loadUserProject(userId) {
+    fetch(`https://codingnplay.site/api/load-project/${userId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.url) {
+            loadScratchProjectFromUrl(data.url); // S3에서 프로젝트 불러와 로드
+        } else {
+            alert('프로젝트를 불러오지 못했습니다.');
+        }
+    })
+    .catch((error) => {
+        console.error('프로젝트 불러오기 오류:', error);
+    });
+}
+3.2.2 서버에서 S3 프리사인드 URL 생성 및 MySQL 조회
+javascript
+코드 복사
+app.get('/api/load-project/:userId', (req, res) => {
+    const userId = req.params.userId;
+
+    const sql = 'SELECT file_name FROM projects WHERE user_id = ? ORDER BY saved_at DESC LIMIT 1';
+    db.query(sql, [userId], (err, result) => {
+        if (err) {
+            console.error('DB 조회 오류:', err);
+            res.status(500).send('프로젝트 불러오기 실패');
+            return;
+        }
+
+        if (result.length > 0) {
+            const fileName = result[0].file_name;
+
+            const params = {
+                Bucket: 'your-s3-bucket-name',
+                Key: fileName,
+                Expires: 60 // URL 유효 기간
+            };
+
+            const url = s3.getSignedUrl('getObject', params);
+            res.send({ url });
+        } else {
+            res.status(404).send('저장된 프로젝트가 없습니다.');
+        }
+    });
+});
+________________________________________
+4. 테이블 설계
+MySQL에서 프로젝트 데이터를 저장하는 테이블 구조는 다음과 같습니다.
+4.1 테이블 구조
+컬럼명	데이터 타입	설명
+id	INT (PK)	고유한 프로젝트 ID
+user_id	VARCHAR(255)	유저 ID
+file_name	VARCHAR(255)	S3에 저장된 파일 경로
+saved_at	TIMESTAMP	프로젝트 저장 시간
+4.2 테이블 생성 SQL
+sql
+코드 복사
+CREATE TABLE projects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+________________________________________
+5. 프로젝트 흐름 요약
+1.	프로젝트 템플릿 불러오기: 서버가 S3에서 미리 준비된 템플릿 파일의 프리사인드 URL을 생성하여 클라이언트에 제공, 유저가 이를 로드.
+2.	프로젝트 저장하기: 유저가 작업한 프로젝트 데이터를 서버에 전송하면, 서버가 이를 S3에 저장하고 메타데이터를 MySQL에 저장.
+3.	프로젝트 불러오기: 유저가 로그인하면 MySQL에서 해당 유저의 프로젝트 파일 경로를 조회하고, S3에서 해당 파일을 다운로드하여 Scratch-GUI에 로드.
+

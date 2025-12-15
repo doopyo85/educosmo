@@ -1,0 +1,893 @@
+🎯 IDE 코드 에디터 관련 기능 정의 명세서 (개정판)
+📋 개요
+프로젝트: educodingnplay IDE 코드 에디터 시스템
+목적: 표준적인 에디터 아키텍처 기반 IDE 구현
+설계 원칙: Single Responsibility + Plugin Pattern + Observer Pattern
+작성일: 2025년 7월 24일
+개정: 기존 명세서와 통합하여 완성도 향상
+
+🏗️ 전체 아키텍처 (개정)
+📐 설계 원칙
+1. Single Responsibility (단일 책임 원칙)
+
+IDEComponent: IDE 전체 시스템의 Facade 역할
+CodeEditor: 에디터 전체 UI/UX 및 레이아웃 통합 담당
+Terminal: Python 실행 및 터미널 출력 독립 관리
+PythonAutoCompleter: Python 자동완성 기능만 담당
+TerminalInput: 터미널 입력 처리만 담당
+TerminalResize: 터미널 크기 조정만 담당
+
+2. Plugin Pattern (플러그인 패턴)
+
+확장 기능들은 CodeEditor/Terminal에게 기능을 제공하는 역할
+호스트 컴포넌트가 플러그인들을 통합 관리
+플러그인 추가/제거가 핵심 로직에 영향 없음
+
+3. Observer Pattern (관찰자 패턴)
+
+상태 변경 시 EventBus 기반 알림
+플러그인들은 호스트 컴포넌트 상태 변화를 구독
+호스트 컴포넌트는 상태 변경을 발행
+
+🔄 Facade Pattern (IDEComponent)
+
+복잡한 내부 구조를 단순한 API로 노출
+외부 접점: getCurrentCode(), setCode(), runCode() 등
+내부 조율: CodeEditor ↔ Terminal 간 통신 중재
+
+
+📂 컴포넌트 구조 및 책임 (개정)
+🎯 IDEComponent.js (Facade Controller)
+핵심 책임
+
+전체 IDE 생명주기 관리
+CodeEditor와 Terminal 모듈 초기화 및 조율
+외부 API 통합 인터페이스 제공
+EventBus를 통한 모듈 간 통신 중재
+컴포넌트 활성화/비활성화 관리
+
+기능 정의 (신규 추가)
+javascriptclass IDEComponent extends Component {
+  // === Facade 패턴 핵심 API ===
+  async init()                    // 전체 IDE 시스템 초기화
+  activate()                      // IDE 활성화 (레이아웃 적용)
+  deactivate()                    // IDE 비활성화 (리소스 정리)
+  destroy()                       // 완전 정리 및 메모리 해제
+  
+  // === 외부 통합 API (Facade) ===
+  getCurrentCode()                // CodeEditor.getCurrentCode() 프록시
+  setCode(code)                   // CodeEditor.setCode() 프록시
+  runCode()                       // Terminal.runCode() 프록시
+  resizeEditor()                  // 전체 레이아웃 리사이즈
+  
+  // === 모듈 관리 ===
+  initializeModules()             // CodeEditor + Terminal 초기화
+  setupEventBridge()              // 모듈 간 EventBus 브리지 설정
+  
+  // === 외부 이벤트 처리 ===
+  onProblemChanged(problemData)   // NavigationComponent에서 문제 변경 알림
+  onLayoutChanged(layoutType)     // ComponentSystem에서 레이아웃 변경 알림
+}
+모듈 통합 관리 (신규)
+javascript// IDEComponent 내부 모듈 관리
+this.modules = {
+  codeEditor: null,    // CodeEditor 인스턴스
+  terminal: null       // Terminal 인스턴스
+};
+
+// 모듈 간 이벤트 브리지
+setupEventBridge() {
+  // CodeEditor → Terminal 이벤트 브리지
+  this.modules.codeEditor.on('codeChanged', (code) => {
+    // Terminal에 코드 변경 알림 (필요시)
+  });
+  
+  // Terminal → CodeEditor 이벤트 브리지
+  this.modules.terminal.on('executionStarted', () => {
+    // CodeEditor 읽기전용 모드 등
+  });
+}
+
+📝 CodeEditor.js (에디터 통합 컨트롤러)
+핵심 책임 (기존 + 추가)
+
+ACE 에디터 생명주기 관리
+UI 레이아웃 통합 제어 (거터, 툴바, 에디터 영역)
+플러그인 등록 및 통합 관리 ← 신규 강화
+상태 변경 이벤트 발행
+정답 코드 표시 기능 (교사 권한)
+ACE ↔ Jupyter 모드 전환
+
+플러그인 관리 시스템 (신규 추가)
+javascriptclass CodeEditor {
+  constructor() {
+    this.plugins = new Map();      // 등록된 플러그인들
+    this.pluginObservers = [];     // 플러그인 상태 관찰자들
+  }
+  
+  // === 플러그인 관리 (신규) ===
+  registerPlugin(PluginClass, options = {}) {
+    const plugin = new PluginClass(this, options);
+    this.plugins.set(plugin.pluginName, plugin);
+    
+    // 플러그인 초기화
+    plugin.init();
+    
+    // 상태 업데이트 및 레이아웃 재계산
+    this.onPluginRegistered(plugin);
+    
+    return plugin;
+  }
+  
+  unregisterPlugin(pluginName) {
+    const plugin = this.plugins.get(pluginName);
+    if (plugin) {
+      plugin.destroy();
+      this.plugins.delete(pluginName);
+      this.onPluginUnregistered(plugin);
+    }
+  }
+  
+  notifyPlugins(event, data) {
+    this.plugins.forEach(plugin => {
+      if (plugin.isActive && plugin.onHostEvent) {
+        plugin.onHostEvent(event, data);
+      }
+    });
+  }
+  
+  // === 레이아웃 통합 관리 (개정) ===
+  calculateGutterWidth() {
+    let baseWidth = 50;  // 기본 줄번호 너비
+    
+    // 1. 폰트 크기 고려
+    const fontMultiplier = this.state.fontSize / 14;
+    baseWidth *= fontMultiplier;
+    
+    // 2. 활성 플러그인 상태 확인 (개정)
+    this.plugins.forEach(plugin => {
+      if (plugin.isActive && plugin.getGutterWidthDelta) {
+        baseWidth += plugin.getGutterWidthDelta();
+      }
+    });
+    
+    // 3. 브라우저 확대/축소 고려 (신규)
+    const zoomFactor = this.detectBrowserZoom();
+    baseWidth *= zoomFactor;
+    
+    // 4. 최소/최대 제한
+    const finalWidth = Math.max(40, Math.min(120, baseWidth));
+    
+    // 5. 레이아웃 적용
+    this.applyGutterLayout(finalWidth);
+    
+    return finalWidth;
+  }
+  
+  // === 브라우저 확대/축소 감지 (신규) ===
+  detectBrowserZoom() {
+    return window.devicePixelRatio || 1;
+  }
+  
+  setupZoomListener() {
+    // 브라우저 확대/축소 감지
+    window.addEventListener('resize', () => {
+      clearTimeout(this.zoomTimeout);
+      this.zoomTimeout = setTimeout(() => {
+        this.onBrowserZoomChanged();
+      }, 100);
+    });
+  }
+  
+  onBrowserZoomChanged() {
+    console.log('브라우저 확대/축소 감지, 거터 재계산 중...');
+    this.calculateGutterWidth();
+  }
+  
+  // === 플러그인 상태 변경 핸들러 (신규) ===
+  onPluginStateChanged(plugin, stateChange) {
+    console.log(`플러그인 상태 변경: ${plugin.pluginName}`, stateChange);
+    
+    // 거터 재계산이 필요한 경우
+    if (stateChange.requiresGutterRecalculation) {
+      this.calculateGutterWidth();
+    }
+    
+    // 상태 업데이트
+    this.setState({
+      plugins: {
+        ...this.state.plugins,
+        [plugin.pluginName]: {
+          active: plugin.isActive,
+          ready: plugin.isReady,
+          ...stateChange
+        }
+      }
+    });
+  }
+}
+
+🔧 PythonAutoCompleter.js (표준 플러그인)
+표준 플러그인 인터페이스 구현 (신규)
+javascriptclass PythonAutoCompleter {
+  constructor(codeEditor, options = {}) {
+    this.host = codeEditor;           // 호스트 컴포넌트 참조
+    this.pluginName = 'autoCompleter'; // 플러그인 고유 이름
+    this.version = '1.0.0';           // 플러그인 버전
+    this.isActive = false;            // 활성화 상태
+    this.isReady = false;             // 준비 상태
+  }
+  
+  // === 표준 플러그인 인터페이스 ===
+  async init() {
+    console.log('PythonAutoCompleter 초기화 시작...');
+    
+    try {
+      // Python 자동완성 설정
+      this.setupPythonCompletion();
+      
+      // 상태 업데이트
+      this.isReady = true;
+      this.isActive = true;
+      
+      // 호스트에게 상태 변경 알림
+      this.notifyHost('activated', {
+        requiresGutterRecalculation: true
+      });
+      
+      console.log('PythonAutoCompleter 초기화 완료');
+    } catch (error) {
+      console.error('PythonAutoCompleter 초기화 실패:', error);
+      this.isReady = false;
+    }
+  }
+  
+  activate() {
+    if (!this.isActive) {
+      this.isActive = true;
+      this.notifyHost('activated', {
+        requiresGutterRecalculation: true
+      });
+    }
+  }
+  
+  deactivate() {
+    if (this.isActive) {
+      this.isActive = false;
+      this.notifyHost('deactivated', {
+        requiresGutterRecalculation: true
+      });
+    }
+  }
+  
+  destroy() {
+    this.deactivate();
+    // 자동완성 제거 로직
+  }
+  
+  getPluginInfo() {
+    return {
+      name: this.pluginName,
+      version: this.version,
+      description: 'Python 키워드 및 함수 자동완성',
+      isActive: this.isActive,
+      isReady: this.isReady
+    };
+  }
+  
+  // === 거터 너비 기여도 (신규) ===
+  getGutterWidthDelta() {
+    return this.isActive ? 5 : 0;  // 활성화 시 5px 추가
+  }
+  
+  // === 호스트 이벤트 핸들러 (신규) ===
+  onHostEvent(event, data) {
+    switch (event) {
+      case 'font:sizeChanged':
+        this.updateAutoCompletionStyle(data.fontSize);
+        break;
+      case 'theme:changed':
+        this.updateAutoCompletionTheme(data.theme);
+        break;
+    }
+  }
+  
+  // === 호스트 알림 (신규) ===
+  notifyHost(event, data = {}) {
+    if (this.host && this.host.onPluginStateChanged) {
+      this.host.onPluginStateChanged(this, { event, ...data });
+    }
+  }
+  
+  // === 기존 기능 (유지) ===
+  setupPythonCompletion() {
+    // 기존 Python 자동완성 로직
+    const aceEditor = this.host.aceEditor;
+    
+    // Python 키워드 및 함수 목록
+    const pythonCompletions = this.getPythonCompletions();
+    
+    // ACE 에디터에 자동완성 적용
+    aceEditor.completers = [{
+      getCompletions: (editor, session, pos, prefix, callback) => {
+        callback(null, pythonCompletions);
+      }
+    }];
+  }
+}
+
+🖥️ Terminal.js (독립 컴포넌트 + 플러그인 호스트)
+하위 모듈 통합 관리 (신규 추가)
+javascriptclass Terminal {
+  constructor(options = {}) {
+    this.subModules = new Map();   // 하위 모듈들 (TerminalInput, TerminalResize)
+    this.state = {
+      isExecuting: false,
+      sessionId: null,
+      interactiveMode: false
+    };
+  }
+  
+  // === 하위 모듈 관리 (신규) ===
+  async initializeSubModules() {
+    // TerminalInput 모듈 초기화
+    const terminalInput = new TerminalInput(this);
+    await terminalInput.init();
+    this.subModules.set('input', terminalInput);
+    
+    // TerminalResize 모듈 초기화
+    const terminalResize = new TerminalResize(this);
+    await terminalResize.init();
+    this.subModules.set('resize', terminalResize);
+    
+    console.log('Terminal 하위 모듈 초기화 완료');
+  }
+  
+  // === 하위 모듈 이벤트 전파 (신규) ===
+  notifySubModules(event, data) {
+    this.subModules.forEach(module => {
+      if (module.onTerminalEvent) {
+        module.onTerminalEvent(event, data);
+      }
+    });
+  }
+  
+  // === 상태 관리 (신규) ===
+  setState(newState) {
+    this.state = { ...this.state, ...newState };
+    this.notifySubModules('stateChanged', this.state);
+  }
+  
+  // === API 응답 형식 표준화 (개정) ===
+  handleAPIResponse(response) {
+    const standardResponse = {
+      success: response.success || false,
+      output: response.output || '',
+      error: response.error || '',
+      warning: response.warning || null,
+      needsInput: response.needsInput || false,
+      prompt: response.prompt || '',
+      sessionId: response.sessionId || null
+    };
+    
+    // 응답 타입별 처리
+    if (standardResponse.needsInput) {
+      // TerminalInput 모듈에게 입력 요청
+      const inputModule = this.subModules.get('input');
+      inputModule?.handleInputRequest(standardResponse.prompt);
+    } else {
+      // 일반 출력 처리
+      this.appendToOutput(standardResponse.output, 'success');
+      if (standardResponse.error) {
+        this.appendToOutput(standardResponse.error, 'error');
+      }
+    }
+  }
+}
+
+🔄 상호작용 플로우 (개정)
+📊 1. 초기화 플로우 (상세화)
+IDEComponent.init()
+    ↓
+initializeModules()
+    ↓ (병렬 초기화)
+┌─────────────────────┬─────────────────────┐
+│ CodeEditor.init()   │ Terminal.init()     │
+│    ↓                │    ↓                │
+│ registerPlugin()    │ initializeSubModules() │
+│    ↓                │    ↓                │
+│ PythonAutoCompleter │ TerminalInput +     │
+│ .init()             │ TerminalResize      │
+│    ↓                │                     │
+│ calculateGutterWidth() │                  │
+└─────────────────────┴─────────────────────┘
+    ↓
+setupEventBridge() (IDEComponent)
+    ↓
+EventBus 리스너 설정 완료
+🔧 2. 거터 너비 재계산 플로우 (신규)
+상황 발생 (폰트 변경 / 브라우저 확대 / 플러그인 상태 변경)
+    ↓
+CodeEditor.calculateGutterWidth()
+    ↓
+기본 너비 계산 (50px)
+    ↓ 
+폰트 크기 비율 적용 (fontSize / 14)
+    ↓
+플러그인 기여도 합산 (plugin.getGutterWidthDelta())
+    ↓
+브라우저 확대 비율 적용 (devicePixelRatio)
+    ↓
+최소/최대 제한 (40px ~ 120px)
+    ↓
+CodeEditor.applyGutterLayout(finalWidth)
+    ↓ (동시 적용)
+┌─────────────────────┬─────────────────────┐
+│ ACE 에디터 거터 설정 │ CSS 커스텀 속성 설정 │
+│ setGutterWidth()    │ --gutter-width      │
+└─────────────────────┴─────────────────────┘
+    ↓
+플러그인들에게 레이아웃 변경 알림
+🖱️ 3. 브라우저 확대/축소 대응 플로우 (신규)
+브라우저: Zoom 변경 (Ctrl + 마우스휠)
+    ↓
+window.resize 이벤트 발생
+    ↓
+CodeEditor.setupZoomListener() 감지
+    ↓
+100ms 디바운스 대기 (zoomTimeout)
+    ↓
+CodeEditor.onBrowserZoomChanged()
+    ↓
+devicePixelRatio 감지 및 비교
+    ↓ (변경된 경우)
+CodeEditor.calculateGutterWidth()
+    ↓
+새로운 거터 너비 적용
+    ↓
+console.log('브라우저 확대/축소 감지, 거터 재계산 완료')
+
+🎛️ 이벤트 시스템 (확장)
+📡 IDEComponent 이벤트 (신규)
+javascript// 외부에서 IDEComponent로 들어오는 이벤트
+'ide:problemChanged'         // NavigationComponent에서 문제 변경
+'ide:layoutChanged'          // ComponentSystem에서 레이아웃 변경
+'ide:activate'               // 컴포넌트 활성화 요청
+'ide:deactivate'             // 컴포넌트 비활성화 요청
+
+// IDEComponent에서 외부로 나가는 이벤트
+'ide:codeChanged'            // 코드 내용 변경됨
+'ide:executionStarted'       // 코드 실행 시작
+'ide:executionCompleted'     // 코드 실행 완료
+📡 CodeEditor 발행 이벤트 (확장)
+javascript// 기존 이벤트
+'state:changed'              // 전체 상태 변경
+'font:sizeChanged'           // 폰트 크기 변경  
+'theme:changed'              // 테마 변경
+'layout:gutterUpdated'       // 거터 레이아웃 업데이트
+'code:changed'               // 코드 내용 변경
+
+// 신규 플러그인 관련 이벤트
+'plugin:registered'          // 플러그인 등록
+'plugin:activated'           // 플러그인 활성화
+'plugin:deactivated'         // 플러그인 비활성화
+'plugin:unregistered'        // 플러그인 해제
+
+// 신규 브라우저 이벤트
+'browser:zoomChanged'        // 브라우저 확대/축소 변경
+'browser:windowResized'      // 창 크기 변경
+🔔 Terminal 하위 모듈 이벤트 (신규)
+javascript// Terminal → 하위 모듈
+'terminal:stateChanged'      // Terminal 상태 변경
+'terminal:outputAdded'       // 새 출력 추가됨
+'terminal:executionStarted'  // 실행 시작
+'terminal:executionEnded'    // 실행 종료
+
+// 하위 모듈 → Terminal
+'input:submitted'            // 사용자 입력 제출됨
+'input:cancelled'            // 입력 취소됨
+'resize:heightChanged'       // 터미널 높이 변경됨
+'resize:maximized'           // 터미널 최대화됨
+'resize:restored'            // 터미널 복원됨
+
+🔌 플러그인 인터페이스 표준 (신규)
+📋 표준 플러그인 인터페이스
+javascript// 모든 CodeEditor 플러그인이 구현해야 하는 표준 인터페이스
+class PluginInterface {
+  constructor(hostComponent, options = {}) {
+    this.host = hostComponent;      // 호스트 컴포넌트 참조
+    this.pluginName = '';           // 플러그인 고유 이름 (필수)
+    this.version = '1.0.0';         // 플러그인 버전
+    this.isActive = false;          // 활성화 상태
+    this.isReady = false;           // 준비 상태
+    this.options = options;         // 초기화 옵션
+  }
+  
+  // === 필수 구현 메서드 ===
+  async init()                      // 초기화 (async 가능)
+  activate()                        // 활성화
+  deactivate()                      // 비활성화  
+  destroy()                         // 정리 및 메모리 해제
+  getPluginInfo()                   // 플러그인 정보 반환
+  
+  // === 선택적 구현 메서드 ===
+  getGutterWidthDelta()             // 거터 너비 기여도 (px)
+  onHostEvent(event, data)          // 호스트 이벤트 핸들러
+  
+  // === 호스트 알림 메서드 ===
+  notifyHost(event, data = {}) {
+    if (this.host && this.host.onPluginStateChanged) {
+      this.host.onPluginStateChanged(this, { event, ...data });
+    }
+  }
+}
+🎯 플러그인 등록 시스템 (상세화)
+javascript// CodeEditor 내부 플러그인 관리 시스템
+class PluginManager {
+  constructor(codeEditor) {
+    this.host = codeEditor;
+    this.plugins = new Map();
+    this.pluginOrder = [];        // 플러그인 초기화 순서
+  }
+  
+  // 플러그인 등록
+  async registerPlugin(PluginClass, options = {}) {
+    // 1. 플러그인 인스턴스 생성
+    const plugin = new PluginClass(this.host, options);
+    
+    // 2. 필수 인터페이스 검증
+    this.validatePluginInterface(plugin);
+    
+    // 3. 플러그인 초기화
+    try {
+      await plugin.init();
+      
+      // 4. 등록 및 상태 업데이트
+      this.plugins.set(plugin.pluginName, plugin);
+      this.pluginOrder.push(plugin.pluginName);
+      
+      console.log(`플러그인 등록 완료: ${plugin.pluginName} v${plugin.version}`);
+      
+      return plugin;
+    } catch (error) {
+      console.error(`플러그인 등록 실패: ${plugin.pluginName}`, error);
+      throw error;
+    }
+  }
+  
+  // 플러그인 인터페이스 검증
+  validatePluginInterface(plugin) {
+    const requiredMethods = ['init', 'activate', 'deactivate', 'destroy', 'getPluginInfo'];
+    const requiredProperties = ['pluginName', 'version'];
+    
+    for (const method of requiredMethods) {
+      if (typeof plugin[method] !== 'function') {
+        throw new Error(`플러그인 ${plugin.pluginName}: ${method} 메서드가 구현되지 않음`);
+      }
+    }
+    
+    for (const prop of requiredProperties) {
+      if (!plugin[prop]) {
+        throw new Error(`플러그인 ${plugin.pluginName}: ${prop} 속성이 설정되지 않음`);
+      }
+    }
+  }
+}
+
+📐 레이아웃 관리 명세 (확장)
+🎯 거터 너비 통합 계산 알고리즘 (완성)
+javascriptcalculateGutterWidth() {
+  // === 1단계: 기본 너비 설정 ===
+  let baseWidth = 50;  // 기본 줄번호 영역
+  
+  // === 2단계: 폰트 크기 비례 조정 ===
+  const fontSize = this.state.fontSize || 14;
+  const fontMultiplier = fontSize / 14;  // 14px를 기준으로 비례
+  baseWidth *= fontMultiplier;
+  
+  // === 3단계: 활성 플러그인 기여도 합산 ===
+  let pluginDelta = 0;
+  this.plugins.forEach(plugin => {
+    if (plugin.isActive && typeof plugin.getGutterWidthDelta === 'function') {
+      const delta = plugin.getGutterWidthDelta();
+      pluginDelta += delta;
+      console.log(`플러그인 ${plugin.pluginName} 거터 기여도: +${delta}px`);
+    }
+  });
+  baseWidth += pluginDelta;
+  
+  // === 4단계: 브라우저 확대/축소 보정 ===
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  const zoomFactor = devicePixelRatio > 1 ? 1 + (devicePixelRatio - 1) * 0.1 : 1;
+  baseWidth *= zoomFactor;
+  
+  // === 5단계: 실용적 범위 제한 ===
+  const minWidth = 40;   // 최소: 줄번호 2자리 + 여백
+  const maxWidth = 120;  // 최대: 과도한 거터 방지
+  const finalWidth = Math.max(minWidth, Math.min(maxWidth, Math.round(baseWidth)));
+  
+  // === 6단계: 디버깅 정보 출력 ===
+  console.log('거터 너비 계산:', {
+    fontSize,
+    fontMultiplier,
+    pluginDelta,
+    zoomFactor,
+    baseWidth,
+    finalWidth
+  });
+  
+  // === 7단계: 레이아웃 적용 ===
+  this.applyGutterLayout(finalWidth);
+  
+  return finalWidth;
+}
+🔧 레이아웃 적용 동기화 (완성)
+javascriptapplyGutterLayout(width) {
+  const widthPx = `${width}px`;
+  
+  // === ACE 에디터 거터 설정 ===
+  if (this.aceEditor && this.aceEditor.renderer) {
+    this.aceEditor.renderer.setGutterWidth(width);
+    
+    // ACE 에디터 강제 리렌더링
+    setTimeout(() => {
+      this.aceEditor.renderer.updateFull();
+    }, 0);
+  }
+  
+  // === CSS 커스텀 속성 설정 ===
+  const container = this.elements.editorContainer;
+  if (container) {
+    container.style.setProperty('--gutter-width', widthPx);
+    container.style.setProperty('--editor-margin-left', widthPx);
+  }
+  
+  // === 거터 스타일 직접 적용 (보험) ===
+  const gutterElement = container?.querySelector('.ace_gutter');
+  if (gutterElement) {
+    gutterElement.style.width = widthPx;
+  }
+  
+  // === 에디터 영역 마진 조정 ===
+  const editorElement = container?.querySelector('.ace_scroller');
+  if (editorElement) {
+    editorElement.style재시도D계속편집javascript if (editorElement) {
+   editorElement.style.marginLeft = widthPx;
+ }
+ 
+ // === 상태 업데이트 ===
+ this.setState({
+   layout: { 
+     gutterWidth: width,
+     lastCalculated: Date.now()
+   }
+ });
+ 
+ // === 플러그인들에게 레이아웃 변경 알림 ===
+ this.notifyPlugins('layout:gutterUpdated', { 
+   width, 
+   timestamp: Date.now() 
+ });
+ 
+ console.log(`거터 레이아웃 적용 완료: ${widthPx}`);
+}
+
+🔍 디버깅 가이드 (확장)
+1. 거터 너비 계산 문제 디버깅
+javascript// 브라우저 콘솔에서 실행 가능한 디버깅 명령어
+
+// 현재 거터 상태 확인
+const ideComponent = ComponentSystem.components.ide;
+const codeEditor = ideComponent?.modules?.codeEditor;
+
+console.log('현재 거터 상태:', {
+  calculated: codeEditor?.state?.layout?.gutterWidth,
+  aceEditor: codeEditor?.aceEditor?.renderer?.getGutterWidth(),
+  cssProperty: getComputedStyle(document.querySelector('.ide-container'))
+    .getPropertyValue('--gutter-width'),
+  actualWidth: document.querySelector('.ace_gutter')?.offsetWidth
+});
+
+// 거터 재계산 강제 실행
+codeEditor?.calculateGutterWidth();
+
+// 플러그인 상태 확인
+codeEditor?.plugins?.forEach((plugin, name) => {
+  console.log(`플러그인 ${name}:`, {
+    isActive: plugin.isActive,
+    gutterDelta: plugin.getGutterWidthDelta?.() || 0
+  });
+});
+2. 브라우저 확대/축소 문제 디버깅
+javascript// 브라우저 확대 상태 확인
+console.log('브라우저 확대 정보:', {
+  devicePixelRatio: window.devicePixelRatio,
+  innerWidth: window.innerWidth,
+  outerWidth: window.outerWidth,
+  visualViewport: window.visualViewport?.scale
+});
+
+// 확대/축소 리스너 상태 확인
+console.log('확대/축소 리스너:', {
+  hasListener: !!codeEditor?.zoomTimeout,
+  lastZoomTime: codeEditor?.lastZoomTime
+});
+3. 플러그인 상태 문제 디버깅
+javascript// 플러그인 등록 상태 확인
+const plugins = codeEditor?.plugins;
+if (plugins) {
+  plugins.forEach((plugin, name) => {
+    console.log(`플러그인 ${name}:`, plugin.getPluginInfo());
+  });
+} else {
+  console.error('플러그인 시스템이 초기화되지 않음');
+}
+
+// 특정 플러그인 재초기화
+const autoCompleter = plugins?.get('autoCompleter');
+if (autoCompleter) {
+  autoCompleter.deactivate();
+  setTimeout(() => autoCompleter.activate(), 100);
+}
+4. 이벤트 시스템 디버깅
+javascript// EventBus 이벤트 모니터링
+const originalPublish = window.EventBus?.publish;
+if (originalPublish) {
+  window.EventBus.publish = function(event, data) {
+    console.log(`EventBus: ${event}`, data);
+    return originalPublish.call(this, event, data);
+  };
+}
+
+// CodeEditor 이벤트 구독
+codeEditor?.on?.('layout:gutterUpdated', (data) => {
+  console.log('거터 레이아웃 업데이트됨:', data);
+});
+
+🧪 테스트 시나리오 (확장)
+✅ 거터 너비 일관성 테스트 (상세화)
+javascript// 자동화된 거터 테스트 스크립트
+async function testGutterConsistency() {
+  const codeEditor = ComponentSystem.components.ide?.modules?.codeEditor;
+  if (!codeEditor) return;
+  
+  console.log('거터 일관성 테스트 시작...');
+  
+  // 1. 초기 상태 기록
+  const initialWidth = codeEditor.state.layout.gutterWidth;
+  console.log(`초기 거터 너비: ${initialWidth}px`);
+  
+  // 2. 폰트 크기 변경 테스트
+  const fontSizes = [12, 14, 16, 18, 14]; // 마지막에 원래대로 복원
+  for (const fontSize of fontSizes) {
+    codeEditor.applyFontSize(fontSize);
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const newWidth = codeEditor.state.layout.gutterWidth;
+    console.log(`폰트 ${fontSize}px → 거터 ${newWidth}px`);
+    
+    // 일관성 검증
+    const aceWidth = codeEditor.aceEditor.renderer.getGutterWidth();
+    if (Math.abs(newWidth - aceWidth) > 1) {
+      console.error(`거터 너비 불일치: 계산값 ${newWidth}px, ACE ${aceWidth}px`);
+    }
+  }
+  
+  // 3. 플러그인 상태 변경 테스트
+  const autoCompleter = codeEditor.plugins.get('autoCompleter');
+  if (autoCompleter) {
+    autoCompleter.deactivate();
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const widthWithoutPlugin = codeEditor.state.layout.gutterWidth;
+    
+    autoCompleter.activate();
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const widthWithPlugin = codeEditor.state.layout.gutterWidth;
+    
+    console.log(`플러그인 OFF: ${widthWithoutPlugin}px, ON: ${widthWithPlugin}px`);
+  }
+  
+  console.log('거터 일관성 테스트 완료');
+}
+
+// 테스트 실행
+testGutterConsistency();
+✅ 성능 및 메모리 테스트 (신규)
+javascript// 성능 모니터링 스크립트
+function startPerformanceMonitoring() {
+  const startTime = performance.now();
+  let layoutChangeCount = 0;
+  
+  // 레이아웃 변경 횟수 모니터링
+  const codeEditor = ComponentSystem.components.ide?.modules?.codeEditor;
+  const originalApplyLayout = codeEditor?.applyGutterLayout;
+  
+  if (originalApplyLayout) {
+    codeEditor.applyGutterLayout = function(width) {
+      layoutChangeCount++;
+      console.log(`레이아웃 변경 #${layoutChangeCount}: ${width}px`);
+      return originalApplyLayout.call(this, width);
+    };
+  }
+  
+  // 메모리 사용량 모니터링
+  setInterval(() => {
+    if (performance.memory) {
+      console.log('메모리 사용량:', {
+        used: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) + 'MB',
+        total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024) + 'MB',
+        layoutChanges: layoutChangeCount,
+        uptime: Math.round((performance.now() - startTime) / 1000) + 's'
+      });
+    }
+  }, 10000); // 10초마다
+}
+
+📊 파일별 역할 요약 (완성)
+파일명핵심 책임표준 패턴의존성신규 기능IDEComponent.jsIDE 전체 Facade + 모듈 조율Facade PatternCodeEditor, Terminal모듈 통합, EventBridgeCodeEditor.js에디터 통합 제어 + 플러그인 관리Main Controller + Plugin HostACE Editor플러그인 시스템, 거터 통합 계산PythonAutoCompleter.jsPython 자동완성Standard PluginCodeEditor표준 플러그인 인터페이스Terminal.js터미널 UI + 하위 모듈 관리Independent Component + Sub-Module HostAPI Server하위 모듈 통합 관리TerminalInput.js터미널 입력 처리Sub-PluginTerminalTerminal 이벤트 구독TerminalResize.js터미널 크기 조정Sub-PluginTerminal설정 저장, 접근성
+
+🎯 핵심 설계 원칙 요약 (완성)
+✅ 표준적인 아키텍처 패턴
+
+Facade Pattern: IDEComponent가 복잡한 내부를 단순 API로 노출
+Plugin Pattern: CodeEditor/Terminal이 확장 기능을 플러그인으로 관리
+Observer Pattern: EventBus 기반 느슨한 결합
+Module Pattern: 각 컴포넌트의 명확한 책임 분리
+
+✅ 거터 너비 계산 표준화
+
+단일 계산 지점: CodeEditor.calculateGutterWidth()에서 통합 관리
+다층 고려사항: 폰트 크기 + 플러그인 기여도 + 브라우저 확대 + 실용적 제한
+동기화 적용: ACE 에디터 + CSS 커스텀 속성 동시 적용
+자동 재계산: 상태 변경 시 자동으로 거터 재계산
+
+✅ 확장 가능한 플러그인 시스템
+
+표준 인터페이스: 모든 플러그인이 동일한 인터페이스 구현
+생명주기 관리: init → activate → deactivate → destroy
+호스트 알림: 플러그인 상태 변경 시 호스트에게 자동 알림
+의존성 주입: 플러그인이 호스트 컴포넌트 참조
+
+✅ 브라우저 호환성
+
+확대/축소 대응: devicePixelRatio 감지 및 거터 재계산
+이벤트 디바운싱: 100ms 지연으로 과도한 재계산 방지
+크로스 브라우저: 표준 웹 API 사용으로 호환성 확보
+
+✅ 디버깅 및 유지보수성
+
+풍부한 로깅: 모든 주요 동작에 콘솔 로그
+상태 투명성: 내부 상태를 외부에서 검사 가능
+단위별 테스트: 각 컴포넌트를 독립적으로 테스트 가능
+성능 모니터링: 메모리 사용량 및 성능 지표 추적
+
+
+📈 향후 확장 계획
+🔮 Phase 2: 고급 편집 기능
+
+코드 폴딩: 함수/클래스 단위 접기/펼치기
+멀티 커서: 여러 위치 동시 편집
+코드 포맷팅: 자동 들여쓰기 및 스타일 정리
+실시간 구문 검사: Python 문법 오류 실시간 표시
+
+🔮 Phase 3: 협업 기능
+
+실시간 공동 편집: 여러 사용자 동시 편집
+버전 관리: Git 연동 및 변경 이력 관리
+댓글 시스템: 코드 라인별 댓글 및 피드백
+화면 공유: 실시간 코드 공유 및 원격 지원
+
+🔮 Phase 4: AI 통합
+
+코드 자동완성 AI: GitHub Copilot 스타일 AI 자동완성
+코드 설명 AI: 선택한 코드 블록 자동 설명
+오류 해결 AI: 런타임 오류 자동 분석 및 해결책 제안
+코드 리뷰 AI: 코드 품질 자동 검토 및 개선안 제시
+
+
+📝 작성자: AI Assistant
+📅 작성일: 2025년 7월 24일
+🔄 버전: 2.0 (기존 명세서와 통합 완료)
+📊 상태: 표준 설계 완성
+🎯 목표: 일관성 있고 확장 가능한 IDE 코드 에디터 시스템 구축
+📋 통합: ide컴포넌트정의명세서.txt와 완전 통합

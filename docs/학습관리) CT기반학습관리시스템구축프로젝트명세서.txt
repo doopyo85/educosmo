@@ -1,0 +1,386 @@
+🎯 CT 기반 학습 관리 시스템 구축 프로젝트 명세서
+📋 프로젝트 개요
+목표: 학생별 컴퓨팅 사고력(CT) 분석이 가능한 종합 학습 관리 및 평가 시스템 구축
+현재 문제점 분석:
+
+완료 수 / 전체가 모두 0
+진도율이 null%
+현재 플랫폼 데이터 없음
+CT 레벨이 모두 0
+최근 학습일만 일부 기록됨
+
+→ 학습 데이터가 제대로 수집/집계되지 않고 있음
+
+🗄️ 데이터베이스 설계
+1. 기존 테이블 개선
+LearningLogs (기존 유지 + 확장)
+sqlALTER TABLE LearningLogs 
+ADD COLUMN project_id VARCHAR(255),
+ADD COLUMN file_type VARCHAR(50),
+ADD COLUMN s3_file_path VARCHAR(500),
+ADD COLUMN interaction_count INT DEFAULT 0;
+신규 테이블 1: ContentMap (콘텐츠-CT 매핑)
+sqlCREATE TABLE ContentMap (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    platform VARCHAR(50) NOT NULL,
+    category VARCHAR(100),
+    content_name VARCHAR(255) NOT NULL,
+    content_type ENUM('basic', 'practice', 'ppt', 'quiz') NOT NULL,
+    s3_url VARCHAR(500),
+    
+    -- CT 요소 매핑
+    ct_decomposition TINYINT DEFAULT 0,  -- 분해
+    ct_pattern TINYINT DEFAULT 0,        -- 패턴인식
+    ct_abstraction TINYINT DEFAULT 0,    -- 추상화
+    ct_algorithm TINYINT DEFAULT 0,      -- 알고리즘
+    ct_evaluation TINYINT DEFAULT 0,     -- 평가
+    
+    difficulty_level INT DEFAULT 1,
+    estimated_duration INT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_platform (platform),
+    INDEX idx_content_name (content_name),
+    UNIQUE KEY unique_content (platform, content_name, content_type)
+);
+신규 테이블 2: ProjectSubmissions (저장/제출 이력)
+sqlCREATE TABLE ProjectSubmissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content_map_id INT,
+    
+    platform VARCHAR(50) NOT NULL,
+    project_name VARCHAR(255) NOT NULL,
+    submission_type ENUM('draft', 'final') DEFAULT 'draft',
+    
+    s3_file_path VARCHAR(500) NOT NULL,
+    file_size_kb INT,
+    
+    -- 자동 분석 결과
+    blocks_count INT,
+    sprites_count INT,
+    variables_count INT,
+    functions_count INT,
+    complexity_score DECIMAL(5,2),
+    
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (content_map_id) REFERENCES ContentMap(id) ON DELETE SET NULL,
+    INDEX idx_user_platform (user_id, platform),
+    INDEX idx_submission_date (submitted_at)
+);
+신규 테이블 3: CTAssessments (CT 평가 결과)
+sqlCREATE TABLE CTAssessments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    submission_id INT,
+    
+    -- CT 요소별 점수 (0-100)
+    ct_decomposition_score INT DEFAULT 0,
+    ct_pattern_score INT DEFAULT 0,
+    ct_abstraction_score INT DEFAULT 0,
+    ct_algorithm_score INT DEFAULT 0,
+    ct_evaluation_score INT DEFAULT 0,
+    
+    overall_ct_level INT DEFAULT 0,  -- 종합 레벨 (0-120)
+    
+    assessment_type ENUM('auto', 'manual', 'quiz') DEFAULT 'auto',
+    assessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (submission_id) REFERENCES ProjectSubmissions(id) ON DELETE CASCADE,
+    INDEX idx_user_level (user_id, overall_ct_level)
+);
+신규 테이블 4: QuizResults (확장)
+sqlALTER TABLE QuizResults
+ADD COLUMN content_map_id INT,
+ADD COLUMN ct_element VARCHAR(50),
+ADD FOREIGN KEY (content_map_id) REFERENCES ContentMap(id);
+
+📊 Step-by-Step 구현 계획
+STEP 1: 데이터 수집 인프라 구축 (1주차)
+1.1 ContentMap 데이터 마이그레이션
+목표: Google Sheets → ContentMap 테이블
+작업:
+javascript// scripts/migrate-content-map.js
+// Google Sheets의 각 시트 → ContentMap 삽입
+// CT 요소는 수동으로 매핑 (엑셀에 컬럼 추가)
+체크포인트:
+
+ content_project.csv 전체 데이터 ContentMap 삽입
+ problems.csv 퀴즈 데이터 삽입
+ CT 요소 매핑 (최소 주요 콘텐츠 20개)
+
+1.2 프로젝트 로드 추적 구현
+파일 수정:
+
+card_project.js
+learningRouter.js
+
+신규 API:
+javascriptPOST /learning/project-load
+{
+  user_id: 99,
+  content_map_id: 45,
+  platform: 'scratch',
+  project_name: '미로게임_기본',
+  s3_url: 'https://...'
+}
+체크포인트:
+
+ 기본/확장 버튼 클릭 시 로그 기록
+ LearningLogs에 project_id, file_type 저장
+ 관리자 대시보드에서 로그 확인 가능
+
+
+STEP 2: S3 저장 기능 구현 (2주차)
+2.1 S3 Manager 모듈 생성
+파일: lib_storage/s3Manager.js
+javascriptclass S3ProjectManager {
+  async uploadProject(userId, platform, file, metadata) {}
+  async downloadProject(s3Path) {}
+  async listUserProjects(userId, platform) {}
+  async deleteProject(s3Path) {}
+}
+2.2 플랫폼별 저장 API
+파이썬 (가장 쉬움 - 먼저 구현):
+javascript// pythonRouter.js
+POST /python/api/save-project
+{
+  user_id: 99,
+  project_name: 'calculator',
+  code: 'def add(a, b): ...',
+  save_type: 'draft' // or 'final'
+}
+주피터:
+javascript// jupyterRouter.js  
+POST /jupyter/api/save-notebook
+{
+  user_id: 99,
+  notebook_name: 'data_analysis',
+  ipynb_data: {...},
+  save_type: 'draft'
+}
+앱인벤터:
+javascript// appinventorRouter.js
+POST /appinventor/api/submit-project
+{
+  user_id: 99,
+  project_name: 'myapp',
+  aia_file_url: 's3://...'  // 사용자가 업로드한 파일
+}
+스크래치/엔트리 (복잡 - 나중 구현):
+
+프록시 서버 수정 필요
+Phase 3에서 처리
+
+체크포인트:
+
+ 파이썬 저장 기능 작동
+ 주피터 저장 기능 작동
+ 앱인벤터 제출 기능 작동
+ S3에 사용자별 폴더 생성 확인
+ ProjectSubmissions 테이블에 기록 확인
+
+
+STEP 3: 진도 집계 로직 수정 (3주차)
+3.1 진도율 계산 쿼리 개선
+현재 문제: teacherRouter.js의 student-progress 쿼리가 잘못됨
+수정된 쿼리:
+sqlSELECT 
+    u.id AS user_id,
+    u.name,
+    u.userID AS username,
+    u.profile_image,
+    
+    -- 완료한 콘텐츠 수 (LearningLogs 기준)
+    COUNT(DISTINCT ll.content_name) AS completed_contents,
+    
+    -- 전체 활성 콘텐츠 수 (ContentMap 기준)
+    (SELECT COUNT(*) FROM ContentMap WHERE is_active = 1) AS total_contents,
+    
+    -- 진도율
+    ROUND(
+        (COUNT(DISTINCT ll.content_name) / 
+        (SELECT COUNT(*) FROM ContentMap WHERE is_active = 1)) * 100, 
+    1) AS progress_rate,
+    
+    -- 최근 학습일
+    MAX(ll.end_time) AS last_learning_at,
+    
+    -- 현재 플랫폼 (최근 학습 플랫폼)
+    (
+        SELECT ll2.content_type 
+        FROM LearningLogs ll2 
+        WHERE ll2.user_id = u.id 
+        ORDER BY ll2.end_time DESC 
+        LIMIT 1
+    ) AS current_platform,
+    
+    -- CT 레벨 (CTAssessments에서 가져오기)
+    COALESCE(
+        (SELECT MAX(overall_ct_level) FROM CTAssessments WHERE user_id = u.id),
+        0
+    ) AS ct_level
+    
+FROM Users u
+LEFT JOIN LearningLogs ll ON ll.user_id = u.id AND ll.end_time IS NOT NULL
+WHERE u.role = 'student' AND u.centerID = ?
+GROUP BY u.id
+ORDER BY u.name;
+체크포인트:
+
+ 완료 수 / 전체가 정확히 표시됨
+ 진도율이 null이 아님
+ 현재 플랫폼이 표시됨
+ CT 레벨이 0이 아닌 학생 존재
+
+
+STEP 4: CT 분석 시스템 구축 (4-5주차)
+4.1 프로젝트 파일 분석기
+파일: lib_ct/projectAnalyzer.js
+javascriptclass ProjectAnalyzer {
+  // 스크래치 분석
+  analyzeScratchProject(sb3Data) {
+    return {
+      blocks_count: ...,
+      sprites_count: ...,
+      ct_scores: {
+        decomposition: ...,  // 함수/이벤트 개수
+        pattern: ...,        // 반복 블록
+        abstraction: ...,    // 변수/리스트
+        algorithm: ...,      // 조건문/반복문
+        evaluation: ...      // 테스트/디버깅 흔적
+      }
+    };
+  }
+  
+  // 파이썬 분석 (AST 파싱)
+  analyzePythonCode(code) {}
+  
+  // 엔트리 분석 (XML 파싱)
+  analyzeEntryProject(entData) {}
+}
+4.2 자동 평가 API
+javascript// learningRouter.js
+POST /learning/analyze-project
+{
+  submission_id: 123
+}
+
+// 응답
+{
+  ct_scores: {
+    decomposition: 85,
+    pattern: 70,
+    abstraction: 60,
+    algorithm: 75,
+    evaluation: 50
+  },
+  overall_level: 68,
+  suggestions: [
+    "변수명을 더 의미있게 작성해보세요",
+    "반복되는 코드를 함수로 만들어보세요"
+  ]
+}
+체크포인트:
+
+ 파이썬 코드 자동 분석 작동
+ CTAssessments 테이블에 저장
+ 학생 진도관리에서 CT 레벨 반영
+
+
+STEP 5: 퀴즈-CT 연동 (6주차)
+5.1 QuizResults에 CT 요소 태깅
+Google Sheets problems 시트 수정:
+| 문제번호 | 정답 | answerType | CT요소      |
+|---------|------|------------|------------|
+| p01     | 3    | code       | algorithm  |
+| p02     | "서울"| text       | abstraction|
+5.2 퀴즈 제출 시 CT 점수 갱신
+javascript// quizRouter.js 수정
+POST /api/quiz/submit
+{
+  exam_name: 'python',
+  problem_number: 'p01',
+  user_answer: '...'
+}
+
+// 정답이면 → CTAssessments 업데이트
+UPDATE CTAssessments 
+SET ct_algorithm_score = ct_algorithm_score + 5
+WHERE user_id = ?;
+체크포인트:
+
+ 퀴즈 정답 시 CT 점수 증가
+ 학생별 CT 프로필 확인 가능
+
+
+STEP 6: 평가 보고서 생성 (7주차)
+6.1 학생 상세 보고서 페이지
+파일: views/teacher/student-report.ejs
+포함 내용:
+
+기본 정보
+플랫폼별 활동 이력
+CT 요소별 레이더 차트
+제출한 프로젝트 목록
+퀴즈 정답률
+학습 시간 그래프
+
+6.2 API
+javascriptGET /teacher/api/student-report/:userId
+{
+  basic_info: {...},
+  ct_profile: {
+    decomposition: 75,
+    pattern: 80,
+    abstraction: 65,
+    algorithm: 70,
+    evaluation: 60
+  },
+  learning_history: [...],
+  submissions: [...],
+  quiz_results: [...]
+}
+체크포인트:
+
+ 학생 진도관리에서 "보기" 클릭 시 보고서 팝업
+ 차트 라이브러리로 시각화
+ PDF 다운로드 기능
+
+
+🎯 최종 목표 달성 기준
+학습관리 대시보드에서 확인할 사항:
+
+완료 수 / 전체: 실제 학습한 콘텐츠 수 표시
+진도율: 0%가 아닌 정확한 퍼센트
+현재 플랫폼: 최근 학습한 플랫폼명
+CT 레벨: 0이 아닌 동적 계산 레벨
+최근 학습일: 정확한 날짜
+
+추가 기능:
+
+학생이 자기 프로젝트 다시 불러오기 가능
+교사가 학생 제출물 다운로드/검토 가능
+CT 요소별 약점 파악 및 추천 콘텐츠 제시
+
+
+📁 파일 구조
+educodingnplay/
+├── lib_storage/
+│   └── s3Manager.js (신규)
+├── lib_ct/
+│   ├── projectAnalyzer.js (신규)
+│   └── ctCalculator.js (신규)
+├── scripts/
+│   └── migrate-content-map.js (신규)
+├── routes/
+│   ├── learningRouter.js (수정)
+│   ├── teacherRouter.js (수정)
+│   └── projectRouter.js (신규)
+└── views/teacher/
+    └── student-report.ejs (신규)
+이 명세서대로 진행하면 7주 안에 최종 목표를 달성할 수 있습니다. 어떤 단계부터 시작할까요?
