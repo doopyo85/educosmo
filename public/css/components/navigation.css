@@ -65,9 +65,22 @@
   align-items: center;
   padding: 0 12px;
   /* Reduced padding for alignment */
-  border-bottom: 2px solid #e5e7eb;
-  /* 회색 줄 추가 */
+  border-bottom: none;
+  /* 회색 줄 제거 후 가상 요소로 대체 */
   margin-bottom: 8px;
+  position: relative;
+  /* For the separator positioning */
+}
+
+/* Header Separator Line (Open ends) */
+.sidebar-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 12px;
+  right: 12px;
+  height: 2px;
+  background-color: #e5e7eb;
 }
 
 .sidebar-title {
@@ -79,8 +92,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 40px;
-  padding-left: 4px;
-  /* Added left spacing */
+  padding-left: 12px;
+  /* Increased left spacing */
   /* 토글 버튼 공간 확보 */
 }
 
@@ -316,7 +329,8 @@
 }
 
 .nav-container.collapsed #navList {
-  padding: 60px 4px 16px 4px;
+  display: none !important;
+  /* Hide menus completely when collapsed */
 }
 
 .nav-container.collapsed .menu-item>a {
