@@ -387,6 +387,24 @@
   font-weight: normal !important;
 }
 
+.ide-container .ace_placeholder {
+  position: absolute;
+  top: 0;
+  z-index: 4;
+  color: #6a9955;
+  /* Comment color */
+  font-family: var(--vscode-font-editor);
+  font-size: var(--editor-font-size, 16px);
+  line-height: 1.5;
+  pointer-events: none;
+  white-space: pre-wrap;
+  display: none;
+  opacity: 0.8;
+  font-style: italic;
+  padding: 0 4px;
+  /* Match internal padding */
+}
+
 .ide-container .ace_string {
   color: #ce9178 !important;
 }

@@ -99,7 +99,7 @@ class ContentComponent extends Component {
         } else if (data.layoutType !== 'ppt') {
           if (data.examName) {
             // ✅ 로딩 화면 먼저 표시
-            this.showLoadingScreen();
+            // this.showLoadingScreen(); // 사용자 요청으로 로딩 화면 제거
 
             this.state.currentExamName = data.examName;
             this.state.currentProblemNumber = 1;
@@ -132,7 +132,7 @@ class ContentComponent extends Component {
         if (data.type !== 'ppt') {
           if (data.data && data.data.examName) {
             // ✅ 로딩 화면 먼저 표시
-            this.showLoadingScreen();
+            // this.showLoadingScreen(); // 사용자 요청으로 로딩 화면 제거
 
             this.state.currentExamName = data.data.examName;
             this.state.currentProblemNumber = 1;
@@ -496,7 +496,7 @@ class ContentComponent extends Component {
       return;
     }
 
-    this.elements.iframe.srcdoc = this.getLoadingHtml();
+    // this.elements.iframe.srcdoc = this.getLoadingHtml(); // 사용자 요청으로 로딩 화면 제거
 
     // 🔥 NEW: 파일 확장자 확인하여 MD 또는 HTML 처리
     this.loadContentByFileType(problemUrl, problemFileName, problemInfo, problemNumber, pythonFileUrl);
