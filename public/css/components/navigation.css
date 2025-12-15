@@ -105,8 +105,8 @@
    =================================== */
 
 .menu-item {
-  margin-bottom: 2px;
-  /* 🔥 Reduced spacing */
+  margin-bottom: 0;
+  /* 🔥 Reduced spacing to 0 */
   border-radius: 8px;
   /* overflow: hidden; <- Removed to allow tree lines if needed, but keeping for safe hover */
   position: relative;
@@ -117,8 +117,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  /* Consistent with header */
+  padding: 6px 12px;
+  /* Tighter padding */
   color: #374151;
   /* Gray-700 */
   text-decoration: none;
@@ -130,6 +130,8 @@
   border: 1px solid transparent;
   /* Reserve space for border to prevent layout shift */
   border-radius: 8px;
+  outline: none;
+  /* Prevent double highlight/focus ring */
 }
 
 /* Hover Effect: Clean */
@@ -169,7 +171,8 @@
 }
 
 .collapse ul {
-  padding: 2px 0 4px 0;
+  padding: 2px 0 2px 0;
+  /* Reduced bottom padding */
   margin: 0;
   position: relative;
 }
@@ -209,11 +212,11 @@
 .collapse .menu-item::before {
   content: '';
   position: absolute;
-  left: -10px;
-  /* Reach back to the trunk */
+  left: 0;
+  /* Start exactly at the trunk (0) */
   top: 50%;
-  width: 16px;
-  /* Length of the branch */
+  width: 12px;
+  /* Length matches padding to content */
   height: 1px;
   background-color: #e5e7eb;
 }
