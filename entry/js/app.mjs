@@ -68,8 +68,11 @@ document.addEventListener('DOMContentLoaded', function() {
    // 🔥 세션 Heartbeat 시작 (30분마다)
    startSessionHeartbeat(userInfo);
    
-   // 🔥 프로젝트 로드 (자동저장 복구 체크 포함)
-   loadProjectWithAutoSaveCheck(projectParam, s3UrlParam, userInfo);
+   // 🔥 프로젝트 로드 (복구 모달 없이 바로 로드)
+   loadProject(projectParam, s3UrlParam, userInfo);
+   
+   // 🔥 자동저장 시작 (5분마다 서버에 저장)
+   startAutoSave(userInfo);
    
    console.log('✅ EntryJS Base + TTS 초기화 완료!');
 });
@@ -116,200 +119,135 @@ function startSessionHeartbeat(userInfo) {
 }
 
 // =================================================================
-// 🔥 자동저장 복구 체크 후 프로젝트 로드
+// 🔥 프로젝트 로드 (복구 모달 제거됨 - 바로 로드)
 // =================================================================
-async function loadProjectWithAutoSaveCheck(projectParam, s3UrlParam, userInfo) {
-    // URL에서 프로젝트를 로드해야 하는 경우 (자동저장 무시)
+async function loadProject(projectParam, s3UrlParam, userInfo) {
+    // URL에서 Base64 프로젝트 로드
     if (projectParam && projectParam !== 'new') {
-        console.log('📦 URL에서 Base64 프로젝트 데이터 감지 - 자동저장 건너뜀');
+        console.log('📦 URL에서 Base64 프로젝트 데이터 감지');
         loadProjectFromBase64(projectParam);
         return;
     }
     
+    // S3 URL에서 프로젝트 로드
     if (s3UrlParam) {
-        console.log('🌎 URL에서 S3 URL 감지 - 자동저장 건너뜀:', s3UrlParam);
+        console.log('🌎 URL에서 S3 URL 감지:', s3UrlParam);
         loadProjectFromS3Url(s3UrlParam);
         return;
     }
     
+    // 사용자 정보에서 프로젝트 로드
     if (userInfo.project && userInfo.project !== 'new') {
-        console.log('📁 사용자 정보에서 프로젝트 로드 - 자동저장 건너뜀:', userInfo.project);
+        console.log('📁 사용자 정보에서 프로젝트 로드:', userInfo.project);
         loadProjectFromS3(userInfo.project);
         return;
     }
     
-    // 🔥 새 프로젝트 시작 시에만 자동저장 복구 체크
-    console.log('📄 새 프로젝트 시작 - 자동저장 복구 체크');
-    
-    const recoveryData = checkAutoSaveRecovery(userInfo.userID);
-    
-    if (recoveryData) {
-        console.log('💾 복구 가능한 자동저장 데이터 발견!');
-        
-        // 복구 모달 표시
-        const shouldRecover = await showRecoveryConfirmModal(recoveryData);
-        
-        if (shouldRecover) {
-            console.log('🔄 자동저장 데이터 복구 시작...');
-            try {
-                Entry.loadProject(recoveryData.projectData);
-                console.log('✅ 자동저장 프로젝트 복구 완료!');
-                showNotification('💾 자동저장 프로젝트가 복구되었습니다!', 'success');
-            } catch (error) {
-                console.error('❌ 자동저장 복구 실패:', error);
-                Entry.loadProject();
-            }
-        } else {
-            console.log('🗑️ 자동저장 데이터 삭제 후 새 프로젝트 시작');
-            clearAutoSaveData(userInfo.userID);
-            Entry.loadProject();
-        }
-    } else {
-        console.log('ℹ️ 복구할 자동저장 데이터 없음 - 새 프로젝트 시작');
-        Entry.loadProject();
-    }
+    // 🔥 새 프로젝트 시작 (복구 모달 없이 바로)
+    console.log('📄 새 프로젝트 시작');
+    Entry.loadProject();
 }
 
 // =================================================================
-// 🔥 자동저장 데이터 체크 함수
+// 🔥 자동저장 시스템 (서버 S3에 저장) - 5분마다
 // =================================================================
-function checkAutoSaveRecovery(userID) {
-    const storageKey = `autosave_entry_${userID || 'anonymous'}`;
-    const saved = localStorage.getItem(storageKey);
+let autoSaveTimer = null;
+let lastAutoSaveTime = null;
+
+function startAutoSave(userInfo) {
+    const AUTO_SAVE_INTERVAL = 5 * 60 * 1000; // 5분
     
-    if (!saved) {
-        console.log('[AutoSave] 복구할 데이터 없음');
-        return null;
+    // guest 사용자는 자동저장 안함
+    if (!userInfo.userID || userInfo.userID === 'guest') {
+        console.log('[AutoSave] guest 사용자는 자동저장 비활성화');
+        return;
     }
     
+    console.log(`[AutoSave] 🔄 자동저장 시작 (5분 간격) - 사용자: ${userInfo.userID}`);
+    
+    // 기존 타이머 정리
+    if (autoSaveTimer) {
+        clearInterval(autoSaveTimer);
+    }
+    
+    // 5분마다 자동저장 실행
+    autoSaveTimer = setInterval(() => {
+        performAutoSave(userInfo);
+    }, AUTO_SAVE_INTERVAL);
+    
+    // 전역 함수로 노출 (수동 호출 가능)
+    window.performAutoSave = () => performAutoSave(userInfo);
+}
+
+async function performAutoSave(userInfo) {
     try {
-        const data = JSON.parse(saved);
-        
-        // 데이터 유효성 검증
-        if (!data.projectData) {
-            console.warn('[AutoSave] 복구 데이터에 projectData가 없습니다.');
-            localStorage.removeItem(storageKey);
-            return null;
+        // Entry가 로드되지 않았으면 스킵
+        if (!window.Entry || !Entry.exportProject) {
+            console.log('[AutoSave] Entry가 아직 로드되지 않음 - 스킵');
+            return;
         }
         
-        // objects 배열 검증
-        if (!data.projectData.objects || data.projectData.objects.length === 0) {
-            console.warn('[AutoSave] 복구 데이터에 오브젝트가 없습니다.');
-            localStorage.removeItem(storageKey);
-            return null;
+        // 프로젝트 데이터 추출
+        const projectData = Entry.exportProject();
+        
+        // 오브젝트가 없으면 스킵 (빈 프로젝트)
+        if (!projectData.objects || projectData.objects.length === 0) {
+            console.log('[AutoSave] 빈 프로젝트 - 스킵');
+            return;
         }
         
-        // 너무 오래된 데이터 체크 (7일 이상)
-        const savedTime = new Date(data.timestamp);
-        const now = new Date();
-        const daysDiff = (now - savedTime) / (1000 * 60 * 60 * 24);
+        // 🔥 자동저장 파일명: "자동저장_유저명" (고정)
+        const autoSaveFileName = `자동저장_${userInfo.userID}`;
         
-        if (daysDiff > 7) {
-            console.warn(`[AutoSave] 복구 데이터가 ${Math.floor(daysDiff)}일 전입니다. 삭제합니다.`);
-            localStorage.removeItem(storageKey);
-            return null;
+        console.log(`[AutoSave] 💾 자동저장 시작: ${autoSaveFileName}`);
+        
+        const baseUrl = userInfo?.baseUrl || window.location.origin || 'https://app.codingnplay.co.kr';
+        
+        const response = await fetch(`${baseUrl}/entry/api/save-project`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-ID': userInfo.userID,
+                'X-User-Role': userInfo.role
+            },
+            body: JSON.stringify({
+                projectData: projectData,
+                projectName: autoSaveFileName,
+                userID: userInfo.userID,
+                centerID: userInfo.centerID,
+                isAutoSave: true  // 자동저장 플래그
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            lastAutoSaveTime = new Date();
+            console.log(`[AutoSave] ✅ 자동저장 완료: ${autoSaveFileName}`, {
+                time: lastAutoSaveTime.toLocaleTimeString('ko-KR'),
+                objects: projectData.objects.length
+            });
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('[AutoSave] ❌ 자동저장 실패:', errorData);
         }
-        
-        console.log(`[AutoSave] 🔄 복구 가능한 데이터 발견 - ${data.timestamp}`);
-        console.log(`[AutoSave] 📊 메타데이터:`, data.meta || '없음');
-        
-        return data;
-        
     } catch (error) {
-        console.error('[AutoSave] 복구 데이터 파싱 실패:', error);
-        localStorage.removeItem(storageKey);
-        return null;
+        console.error('[AutoSave] ❌ 자동저장 오류:', error.message);
     }
 }
 
-// =================================================================
-// 🔥 자동저장 데이터 삭제 함수
-// =================================================================
-function clearAutoSaveData(userID) {
-    const storageKey = `autosave_entry_${userID || 'anonymous'}`;
-    localStorage.removeItem(storageKey);
-    console.log('[AutoSave] 🗑️ 자동저장 데이터 삭제됨');
+// 자동저장 중지 함수
+function stopAutoSave() {
+    if (autoSaveTimer) {
+        clearInterval(autoSaveTimer);
+        autoSaveTimer = null;
+        console.log('[AutoSave] 🛑 자동저장 중지됨');
+    }
 }
 
-// =================================================================
-// 🔥 복구 확인 모달 표시 (Promise 기반)
-// =================================================================
-function showRecoveryConfirmModal(recoveryData) {
-    return new Promise((resolve) => {
-        const modal = document.createElement('div');
-        modal.id = 'autosave-recovery-modal';
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        `;
-        
-        const modalContent = document.createElement('div');
-        modalContent.style.cssText = `
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            max-width: 500px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        `;
-        
-        const timestamp = new Date(recoveryData.timestamp).toLocaleString('ko-KR');
-        const meta = recoveryData.meta || {};
-        
-        modalContent.innerHTML = `
-            <h2 style="margin-top: 0; color: #333;">🔄 자동저장 복구</h2>
-            <p style="color: #666; line-height: 1.6;">
-                <strong>${timestamp}</strong>에 자동저장된 프로젝트가 있습니다.<br>
-                ${meta.objectCount ? `<span style="color: #537EC5;">오브젝트: ${meta.objectCount}개</span>` : ''}
-                ${meta.sceneCount ? `, <span style="color: #537EC5;">장면: ${meta.sceneCount}개</span>` : ''}
-            </p>
-            <p style="color: #888; font-size: 14px;">복구하시겠습니까?</p>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button id="recover-yes" style="
-                    flex: 1;
-                    padding: 12px;
-                    background: #4CAF50;
-                    color: white;
-                    border: none;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    font-size: 16px;
-                ">복구하기</button>
-                <button id="recover-no" style="
-                    flex: 1;
-                    padding: 12px;
-                    background: #f44336;
-                    color: white;
-                    border: none;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    font-size: 16px;
-                ">새로 시작</button>
-            </div>
-        `;
-        
-        modal.appendChild(modalContent);
-        document.body.appendChild(modal);
-        
-        // 복구하기 버튼
-        document.getElementById('recover-yes').onclick = () => {
-            document.body.removeChild(modal);
-            resolve(true);
-        };
-        
-        // 새로 시작 버튼
-        document.getElementById('recover-no').onclick = () => {
-            document.body.removeChild(modal);
-            resolve(false);
-        };
-    });
+// 마지막 자동저장 시간 조회
+function getLastAutoSaveTime() {
+    return lastAutoSaveTime;
 }
 
 // =================================================================
@@ -591,3 +529,5 @@ window.loadProjectFromS3Url = loadProjectFromS3Url;
 window.loadProjectFromS3 = loadProjectFromS3;
 window.saveProjectToS3 = saveProjectToS3;
 window.showNotification = showNotification;
+window.stopAutoSave = stopAutoSave;
+window.getLastAutoSaveTime = getLastAutoSaveTime;
