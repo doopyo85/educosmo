@@ -200,10 +200,12 @@ async function startInteractivePython(code, sessionId, res) {
                     .replace(/PROMPT:.*\n/g, '');
 
                 // 🔥 프롬프트가 있다면 출력 버퍼의 끝에서 제거 (프론트엔드에서 input과 함께 인라인으로 표시하기 위함)
-                // 줄바꿈 문자 등을 고려하여 끝부분 공백 먼저 제거
-                let tempOutput = cleanOutput.trimEnd();
-                if (prompt && tempOutput.endsWith(prompt)) {
-                    cleanOutput = tempOutput.slice(0, -prompt.length);
+                if (prompt) {
+                    // 정규식을 사용하여 끝부분에 있는 프롬프트와 뒤따르는 공백/줄바꿈을 제거
+                    // 특수문자 이스케이프 처리
+                    const escapedPrompt = prompt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const promptRegex = new RegExp(escapedPrompt + "\\s*$", "");
+                    cleanOutput = cleanOutput.replace(promptRegex, '');
                 }
 
                 cleanOutput = cleanOutput.trim();

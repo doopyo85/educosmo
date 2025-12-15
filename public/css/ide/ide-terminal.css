@@ -6,17 +6,7 @@
    🔥 기본 출력 컨테이너 스타일 (단순화)
    ============================================================ */
 
-.ide-container .output-container {
-  /* 이미 ide-core.css에서 정의됨 */
-}
-
-.ide-container .output-title {
-  /* 이미 ide-core.css에서 정의됨 */
-}
-
-.ide-container .output-content {
-  /* 이미 ide-core.css에서 정의됨 */
-}
+/* 🔥 기본 출력 컨테이너 스타일 (이미 ide-core.css에서 정의됨) */
 
 /* ============================================================
    터미널 버튼 스타일
@@ -29,9 +19,10 @@
 }
 
 .ide-container .terminal-controls .btn {
-  padding: 4px 8px;
-  font-size: 16px;
-  line-height: 1;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: normal;
   border: 1px solid var(--vscode-border);
   background: transparent;
   color: var(--vscode-text-primary);
@@ -53,7 +44,8 @@
   margin: 0 0 2px 0;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  font-size: var(--terminal-font-size, 16px) !important; /* 동적 터미널 폰트 크기 */
+  font-size: var(--terminal-font-size, 16px) !important;
+  /* 동적 터미널 폰트 크기 */
   line-height: 1.4;
   font-family: var(--vscode-font-editor);
 }
@@ -92,8 +84,10 @@
 
 /* 🔥 새롭게 추가: VSCode 기본 터미널 색상 */
 .ide-container .output-content .terminal-default {
-  color: var(--vscode-text-primary); /* VSCode 기본 터미널 색상 (#cccccc) */
+  color: var(--vscode-text-primary);
+  /* VSCode 기본 터미널 색상 (#cccccc) */
 }
+
 /* ============================================================
    터미널 폰트 크기 강제 오버라이드
    ============================================================ */
@@ -150,7 +144,8 @@
   flex-shrink: 0;
   color: var(--vscode-text-secondary);
   font-family: var(--vscode-font-editor);
-  font-size: var(--terminal-font-size, 16px); /* 동적 터미널 폰트 크기 */
+  font-size: var(--terminal-font-size, 16px);
+  /* 동적 터미널 폰트 크기 */
 }
 
 .ide-container .output-content .input-line {
@@ -164,7 +159,8 @@
   outline: none;
   color: var(--vscode-text-primary);
   font-family: var(--vscode-font-editor);
-  font-size: var(--terminal-font-size, 16px); /* 동적 터미널 폰트 크기 */
+  font-size: var(--terminal-font-size, 16px);
+  /* 동적 터미널 폰트 크기 */
   line-height: 1.4;
 }
 
@@ -201,30 +197,36 @@
 
 @media (max-width: 992px) {
   .ide-container .output-content {
-    font-size: var(--terminal-font-size, 16px); /* 동적 터미널 폰트 크기 */
+    font-size: var(--terminal-font-size, 16px);
+    /* 동적 터미널 폰트 크기 */
     padding: 10px;
   }
-  
+
   .ide-container .output-content .terminal-input {
-    font-size: var(--terminal-font-size, 16px); /* 동적 터미널 폰트 크기 */
+    font-size: var(--terminal-font-size, 16px);
+    /* 동적 터미널 폰트 크기 */
   }
-  
+
   .ide-container .output-content .prompt-line {
-    font-size: var(--terminal-font-size, 16px); /* 동적 터미널 폰트 크기 */
+    font-size: var(--terminal-font-size, 16px);
+    /* 동적 터미널 폰트 크기 */
   }
 }
 
 @media (max-width: 768px) {
   .ide-container .output-content {
-    font-size: var(--terminal-font-size, 16px); /* 동적 터미널 폰트 크기 */
+    font-size: var(--terminal-font-size, 16px);
+    /* 동적 터미널 폰트 크기 */
     padding: 8px;
   }
-  
+
   .ide-container .output-content .terminal-input {
-    font-size: var(--terminal-font-size, 16px); /* 동적 터미널 폰트 크기 */
+    font-size: var(--terminal-font-size, 16px);
+    /* 동적 터미널 폰트 크기 */
   }
-  
+
   .ide-container .output-content .prompt-line {
-    font-size: var(--terminal-font-size, 16px); /* 동적 터미널 폰트 크기 */
+    font-size: var(--terminal-font-size, 16px);
+    /* 동적 터미널 폰트 크기 */
   }
 }
