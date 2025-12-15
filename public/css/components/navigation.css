@@ -1,6 +1,6 @@
 /**
  * navigation.css
- * 네비게이션 컴포넌트의 스타일 - Apple Style Glassmorphism & Soft UI (Refined)
+ * 네비게이션 컴포넌트의 스타일 - Apple Style Glassmorphism & Soft UI (Refined Round 2)
  */
 
 /* ===================================
@@ -15,26 +15,21 @@
   overflow-x: hidden;
 
   /* Glassmorphism Background */
-  background: rgba(249, 250, 251, 0.85);
-  /* Slightly transparent off-white */
+  background: rgba(249, 250, 251, 0.9);
+  /* Slightly more opaque for better contrast */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
-  /* Very subtle border */
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
 
   position: relative;
   z-index: 10;
   flex-shrink: 0;
-  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  /* iOS style easing */
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
-  /* Soft shadow for depth */
+  transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* 네비게이션 스크롤바 (Subtle) */
+/* 네비게이션 스크롤바 */
 .nav-container::-webkit-scrollbar {
   width: 4px;
-  /* Thin scrollbar */
 }
 
 .nav-container::-webkit-scrollbar-track {
@@ -42,19 +37,12 @@
 }
 
 .nav-container::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.0);
-  /* Hidden by default */
+  background: transparent;
   border-radius: 4px;
-  transition: background 0.2s ease;
 }
 
 .nav-container:hover::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-  /* Show on hover */
-}
-
-.nav-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 
@@ -64,8 +52,8 @@
 
 #navList {
   list-style-type: none;
-  padding: 50px 8px 16px 8px;
-  /* Top padding increased for toggle button space */
+  padding: 50px 10px 16px 10px;
+  /* Top padding for toggle button */
   margin: 0;
   width: 100%;
   box-sizing: border-box;
@@ -78,11 +66,9 @@
 
 .menu-item {
   margin-bottom: 2px;
-  /* Tighter spacing */
-  border-radius: 10px;
-  /* Slightly smaller radius for thinner rows */
-  overflow: hidden;
-  transition: all 0.2s ease;
+  /* 🔥 Reduced spacing */
+  border-radius: 8px;
+  /* overflow: hidden; <- Removed to allow tree lines if needed, but keeping for safe hover */
   position: relative;
 }
 
@@ -91,91 +77,127 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  /* 🔥 Refined: Thinner padding */
-  color: #1f2937;
-  /* Gray-800 */
+  padding: 8px 10px;
+  /* Compact padding */
+  color: #374151;
+  /* Gray-700 */
   text-decoration: none;
   font-weight: 600;
   font-size: 0.9rem;
-  /* Slightly smaller */
   letter-spacing: -0.01em;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border-radius: 10px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  /* No border/transform transitions to prevent double border artifact */
+  border: 1px solid transparent;
+  /* Reserve space for border to prevent layout shift */
+  border-radius: 8px;
 }
 
-/* Hover Effect: Soft Cloud */
+/* Hover Effect: Clean */
 .menu-item>a:hover {
   background-color: rgba(0, 0, 0, 0.04);
-  color: #000;
-  transform: none;
-  /* Removed scale for cleaner list feel */
+  color: #111827;
+  /* Gray-900 */
+  /* border: 1px solid rgba(0,0,0,0.05); <- Removed to prevent "double border" look */
 }
 
-/* 메뉴 화살표 - 작게 */
+/* 메뉴 화살표 */
 .menu-item>a>i.bi-chevron-down {
   font-size: 0.7rem;
   color: #9ca3af;
   transition: transform 0.2s ease;
-  /* Faster transition */
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .menu-item>a[aria-expanded="true"]>i.bi-chevron-down {
   transform: rotate(180deg);
-  color: #374151;
+  color: #4b5563;
   opacity: 1;
 }
 
 
 /* ===================================
-   하위 메뉴 스타일
+   하위 메뉴 스타일 (Tree Structure)
    =================================== */
 
-/* 🔥 Refined: No sliding animation, just height transition */
 .collapse {
-  transition: height 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  /* No animation on the container itself to prevent wobble */
+  position: relative;
+  margin-left: 20px;
+  /* Indent the whole block */
+  padding-left: 10px;
+  /* Space for tree lines */
 }
 
 .collapse ul {
-  padding: 2px 0 6px 0;
+  padding: 2px 0 4px 0;
   margin: 0;
+  position: relative;
+}
+
+/* 🔥 Tree Vertical Line (The Trunk) */
+.collapse ul::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 10px;
+  /* Stop before the very bottom to avoid hanging */
+  left: 0;
+  width: 1px;
+  background-color: #e5e7eb;
+  /* Light Gray Line */
 }
 
 /* 하위 메뉴 항목 */
 .collapse .menu-item {
   display: flex;
   align-items: center;
-  padding: 6px 12px 6px 36px;
-  /* 🔥 Refined: Thinner padding */
+  padding: 6px 8px 6px 12px;
+  /* Adjusted padding */
   color: #4b5563;
-  /* Gray-600 */
   font-size: 0.85rem;
   font-weight: 500;
-  transition: background-color 0.15s ease, color 0.15s ease;
-  /* No transforms */
+  transition: none;
+  /* 🔥 Stabilized: No animation on items */
   cursor: pointer;
-  border-radius: 8px;
-  margin: 0 4px 1px 4px;
-  /* Inner margin */
+  border-radius: 6px;
+  margin: 1px 0;
   background: transparent;
+  position: relative;
 }
+
+/* 🔥 Tree Horizontal Line (The Branch └) */
+.collapse .menu-item::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  /* Reach back to the trunk */
+  top: 50%;
+  width: 16px;
+  /* Length of the branch */
+  height: 1px;
+  background-color: #e5e7eb;
+}
+
+/* The curved connector removal/masking is tricky in pure CSS without strict height control.
+   Standard "Tree View" uses the vertical line + horizontal line. 
+   To make it look like └ (rounded), we need corner pieces. 
+   For now, the clean orthogonal line is the standard "Code/File Tree" look.
+*/
 
 .collapse .menu-item:hover {
   background-color: rgba(0, 122, 255, 0.08);
   /* Apple Blue Tint */
   color: #007aff;
-  /* Apple Blue */
 }
 
 /* 하위 메뉴 아이콘 */
 .collapse .menu-item i.bi {
-  margin-right: 10px;
-  font-size: 1rem;
+  margin-right: 8px;
+  font-size: 0.95rem;
+  /* Consistent size */
   color: #9ca3af;
   min-width: 20px;
   text-align: center;
-  transition: color 0.2s ease;
 }
 
 .collapse .menu-item:hover i.bi {
@@ -187,51 +209,47 @@
    활성화된 메뉴 스타일 (Active State)
    =================================== */
 
-/* 하위 메뉴 활성 - Solid Color Style */
+/* 하위 메뉴 활성 */
 .menu-item.active {
-  background: linear-gradient(135deg, #007aff 0%, #0056b3 100%);
-  /* Apple Blue Gradient */
-  color: white !important;
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
-  /* Subtle shadow */
+  background-color: #eef6ff !important;
+  /* Lighter background */
+  color: #007aff !important;
+  font-weight: 600;
 }
 
-/* 활성 상태 텍스트 & 아이콘 강제 흰색 */
+/* 활성 상태에서 텍스트는 파란색 유지 (애플 스타일 파일 트리) */
 .collapse .menu-item.active,
 .collapse .menu-item.active:hover {
-  color: white !important;
-  background: linear-gradient(135deg, #007aff 0%, #0056b3 100%);
+  color: #007aff !important;
+  background-color: #eef6ff !important;
 }
 
 .menu-item.active i.bi,
 .collapse .menu-item.active:hover i.bi {
-  color: white !important;
+  color: #007aff !important;
 }
 
 
 /* ===================================
-   접힌 상태 스타일 (Collapsed) - Clean Dock Style
+   접힌 상태 스타일 (Collapsed)
    =================================== */
 
 .nav-container.collapsed {
   width: 64px;
-  /* Slightly narrower */
-  min-width: 64px;
 }
 
 .nav-container.collapsed #navList {
   padding: 60px 4px 16px 4px;
-  /* Top padding for toggle button */
 }
 
-/* 접힌 상태의 아이템 */
 .nav-container.collapsed .menu-item>a {
   justify-content: center;
   padding: 10px 0;
   margin-bottom: 6px;
+  border: none;
 }
 
-/* Hide text elements */
+/* Hide text & tree elements */
 .nav-container.collapsed .menu-item>a>span,
 .nav-container.collapsed .menu-item>a>i.bi-chevron-down,
 .nav-container.collapsed .collapse {
@@ -245,7 +263,6 @@
   font-family: 'bootstrap-icons';
   font-size: 1.2rem;
   color: #6b7280;
-  transition: all 0.2s ease;
 }
 
 .nav-container.collapsed .menu-item>a:hover {
@@ -255,73 +272,53 @@
 
 .nav-container.collapsed .menu-item>a:hover::before {
   color: #007aff;
-  transform: scale(1.1);
 }
 
 
-
 /* ===================================
-   토글 버튼 스타일 (Floating Glass Button)
-   🔥 Refined: Top Position
+   토글 버튼 스타일 (Top Right)
    =================================== */
 
 .nav-toggle-btn {
   position: absolute;
-  top: 12px;
-  /* 🔥 Moved to Top */
-  right: 12px;
-  /* 🔥 Aligned to Right */
-  bottom: auto;
+  top: 14px;
+  right: 10px;
 
   width: 28px;
-  /* Slightly smaller */
   height: 28px;
   border-radius: 50%;
 
-  /* Glass Effect */
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: white;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
 
-  color: #4b5563;
-  border: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   z-index: 50;
-  /* High z-index */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 }
 
 .nav-toggle-btn:hover {
-  background: white;
+  background: #f9fafb;
   color: #007aff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.nav-toggle-btn:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .nav-toggle-btn i {
-  font-size: 0.9rem;
-  transition: transform 0.3s ease;
+  font-size: 0.85rem;
 }
 
 .nav-container.collapsed .nav-toggle-btn i {
   transform: rotate(180deg);
 }
 
-/* Collapsed Toggle Button Position */
 .nav-container.collapsed .nav-toggle-btn {
   left: 50%;
   transform: translateX(-50%);
   right: auto;
-  top: 12px;
-  /* Keep at top */
-  background: white;
 }
 
 
@@ -331,22 +328,11 @@
 @media (max-width: 992px) {
   .nav-container {
     width: 100%;
-    min-width: 100%;
-    height: auto;
-    max-height: 200px;
     border-right: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid #e5e7eb;
   }
 
   .nav-toggle-btn {
     display: none;
-  }
-
-  #navList {
-    padding: 10px;
-  }
-
-  .menu-item>a {
-    padding: 10px 14px;
   }
 }
