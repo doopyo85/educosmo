@@ -13,7 +13,8 @@ class TerminalInput {
     this.state = {
       waitingForInput: false,
       inputQueue: [],
-      executionContext: null
+      executionContext: null,
+      currentPrompt: '' // 🔥 프롬프트 저장용 추가
     };
 
     this.history = {
@@ -50,6 +51,7 @@ class TerminalInput {
    */
   waitForInput(prompt = '') {
     this.state.waitingForInput = true;
+    this.state.currentPrompt = prompt; // 🔥 프롬프트 상태 저장
 
     const outputElement = document.getElementById(this.options.outputId);
     if (!outputElement) return;
