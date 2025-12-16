@@ -109,7 +109,7 @@ class IDEComponent extends Component {
           onTabSelect: (name) => this.switchFile(name),
           onTabClose: (name) => this.closeFileTab(name), // 탭 닫기는 파일 삭제가 아님 (화면에서만 닫음)
           onTabRename: (oldName, newName) => this.renameFile(oldName, newName), // 🔥 Tab Rename
-          onTabAdd: () => this.createFilePrompt() // 🔥 새 파일 생성 프롬프트 호출
+          onTabAdd: () => this.createInstantFile() // 🔥 새 파일 생성 (Instant)
         });
         window.editorTabs = this.modules.editorTabs;
         await this.modules.editorTabs.init();
@@ -217,11 +217,32 @@ class IDEComponent extends Component {
   /**
    * 새 파일 생성 프롬프트
    */
+  /**
+   * 새 파일 생성 프롬프트 (deprecated in favor of instant)
+   */
   createFilePrompt() {
     // fileTree가 있으면 fileTree의 handleFileCreate를 호출해서 로직 재사용
     if (this.modules.fileTree) {
       this.modules.fileTree.handleFileCreate();
     }
+  }
+
+  /**
+   * 즉시 새 파일 생성 (이름 자동 생성) - Chrome Tab Style
+   */
+  createInstantFile() {
+    let baseName = 'new';
+    let ext = '.py';
+    let count = 0;
+    let fileName = baseName + ext;
+
+    // 중복되지 않는 이름 찾기
+    while (this.state.files.find(f => f.name === fileName)) {
+      count++;
+      fileName = `${baseName}${count}${ext}`;
+    }
+
+    this.createFile(fileName);
   }
 
   /**
@@ -392,47 +413,31 @@ class IDEComponent extends Component {
   // --- Footer Control Methods ---
 
   adjustFontSize(delta) {
-    if (this.modules.codeEditor) {
-      // CodeEditor exposes adjustFontSize method? We need to check or implement it.
-      // CodeEditor has font size logic in template.ejs script block??
-      // No, CodeEditor.js manages font size usually. 
-      // Let's check CodeEditor.js methods... 
-      // Actually, template.ejs has global adjustFontSize function for content iframe.
-      // But for IDE, CodeEditor.js should handle it.
-      // CodeEditor.js usually has increaseFontSize / decreaseFontSize
-      if (this.modules.codeEditor.increaseFontSize && delta > 0) this.modules.codeEditor.increaseFontSize();
-      else if (this.modules.codeEditor.decreaseFontSize && delta < 0) this.modules.codeEditor.decreaseFontSize();
-      else {
-        // CodeEditor.js might not expose it directly publicly or named differently.
-        // Let's try to access ace editor directly
-        const editor = this.modules.codeEditor.state.editor;
-        if (editor) {
-          const currentSize = parseInt(editor.getFontSize()) || 14;
-          editor.setFontSize(currentSize + delta);
-        }
-      }
+    if (this.modules.codeEditor && this.modules.codeEditor.changeFontSize) {
+      this.modules.codeEditor.changeFontSize(delta);
     }
   }
 
   restoreCode() {
-    if (this.modules.codeEditor) {
-      // Calls logic to restore code (reset to initial)
-      // Usually handled by a button click listener set up in CodeEditor.js
-      // We can manually trigger it if we have access or replicate logic
-      if (this.modules.codeEditor.restoreToOriginal) {
-        this.modules.codeEditor.restoreToOriginal();
-      } else {
-        // Fallback: reload problem?
-        // this.onProblemChanged(...)
-        alert('Restore function not directly available. Reloading problem...');
-        this.onProblemChanged(this.state.currentExamName, this.state.currentProblemNumber);
-      }
+    if (this.modules.codeEditor && this.modules.codeEditor.restoreExampleCode) {
+      this.modules.codeEditor.restoreExampleCode();
+    } else {
+      // Fallback
+      alert('Restore function not available.');
     }
   }
 
   downloadCode() {
-    if (this.modules.codeEditor) {
+    if (this.modules.codeEditor && this.modules.codeEditor.downloadCode) {
       this.modules.codeEditor.downloadCode();
+    } else {
+      // Fallback: simple download for single file content
+      const content = this.modules.codeEditor.getCurrentCode ? this.modules.codeEditor.getCurrentCode() : '';
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = this.state.activeFileName || "code.py";
+      a.click();
     }
   }
 }

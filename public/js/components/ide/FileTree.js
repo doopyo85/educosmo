@@ -115,7 +115,7 @@ class FileTree {
 
         if (!isCollapsed) {
             html += `
-                <div class="file-tree-footer-section" style="flex: 0 0 auto; padding: 10px; border-top: 1px solid #3e3e42; background-color: #252526;">
+                <div class="file-tree-footer-section" style="padding: 10px; border-top: 1px solid #3e3e42; background-color: #252526;">
                     <div style="font-size: 11px; color: #858585; margin-bottom: 8px; font-weight: 600; text-transform: uppercase;">Functions</div>
                     <div class="ide-footer-controls" style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <button class="footer-btn" onclick="window.fileTree.handleFontIncrease()" title="Font Size +">
