@@ -666,9 +666,10 @@ class ContentComponent extends Component {
         style.textContent = `
           h1:first-of-type, h1:first-child { display: none !important; }
           body { padding-top: 20px !important; }
+          img { max-width: 100%; height: auto; } /* 🔥 추가: 큰 이미지 자동 축소 */
         `;
         iframeDoc.head.appendChild(style);
-        console.log('ContentComponent: iframe 내부 h1 숨김 스타일 주입 완료');
+        console.log('ContentComponent: iframe 내부 h1 숨김 및 이미지 스타일 주입 완료');
       }
     } catch (e) {
       console.warn('ContentComponent: iframe 스타일 주입 실패', e);

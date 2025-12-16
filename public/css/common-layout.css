@@ -594,13 +594,13 @@ body.resizing * {
     height: 60px;
 }
 
-/* 1. 타이틀 영역: 40% */
+/* 1. 타이틀 영역: 50% (확장) */
 .problem-top-nav .problem-title,
 /* ID 선택자에 의해 생성된 부모 div 대응 */
 .problem-top-nav .problem-title-container {
-    width: 40%;
-    flex: 0 0 40%;
-    /* 고정 너비 */
+    width: 50%;
+    flex: 0 0 50%;
+    /* 고정 너비 확장 */
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -613,8 +613,8 @@ body.resizing * {
 
 /* .problem-title이 부모이고 그 안에 js로 .problem-title-container를 넣는 구조일 수 있으므로 조정 */
 #problem-title {
-    width: 40%;
-    flex: 0 0 40%;
+    width: 50%;
+    flex: 0 0 50%;
 }
 
 #problem-title .problem-title-container {
@@ -647,10 +647,10 @@ body.resizing * {
     /* 말줄임표 처리를 위해 */
 }
 
-/* 2. 문제 네비게이션 영역: 50% */
+/* 2. 문제 네비게이션 영역: 40% (축소) */
 .problem-navigation-container {
-    width: 50%;
-    flex: 0 0 50%;
+    width: 40%;
+    flex: 0 0 40%;
     display: flex;
     justify-content: center;
     /* 가운데 정렬 */
