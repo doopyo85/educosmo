@@ -1510,4 +1510,13 @@ try {
   console.error('❌ StorageRouter 로드 실패:', error);
 }
 
+// 🔥 Scratch 프로젝트 API 라우터 등록
+try {
+  const scratchRouter = require('./api/scratchRouter');
+  router.use('/scratch', scratchRouter);
+  console.log('✅ ScratchRouter 등록 완료');
+} catch (error) {
+  console.error('❌ ScratchRouter 로드 실패:', error);
+}
+
 module.exports = router;
