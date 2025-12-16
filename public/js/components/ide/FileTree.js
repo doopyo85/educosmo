@@ -58,24 +58,18 @@ class FileTree {
         const isCollapsed = this.element.classList.contains('collapsed');
 
         let html = `
-            <div class="file-tree-header" style="justify-content: ${isCollapsed ? 'center' : 'space-between'}">
+            <div class="file-tree-header" style="justify-content: ${isCollapsed ? 'center' : 'flex-start'}">
                 <div class="branding" style="display: flex; align-items: center; gap: 8px; ${isCollapsed ? 'justify-content: center; width: 100%;' : ''}">
-                    <i class="fab fa-python" style="color: #3776ab; font-size: 20px;"></i>
-                    ${isCollapsed ? '' : '<span class="title" style="font-weight: 600; color: #3776ab;">Python</span>'}
+                    <i class="fab fa-python" style="color: #3776ab; font-size: 24px;"></i>
+                    ${isCollapsed ? '' : '<span class="title" style="font-weight: 600; color: #3776ab; font-size: 16px;">Python</span>'}
                 </div>
-                <div class="header-controls" style="display: flex; gap: 4px; ${isCollapsed ? 'display: none;' : ''}">
-                    <button id="ft-add-file-btn" class="btn btn-xs btn-link" title="New File" style="color: #ccc;">
-                        <i class="bi bi-file-earmark-plus"></i>
-                    </button>
-                    <!-- Toggle button moved to bottom or specific location if needed, but keeping here for now -->
-                </div>
-                <button id="ft-toggle-btn" class="btn btn-xs btn-link" title="${isCollapsed ? 'Expand' : 'Collapse'}" style="color: #ccc; ${isCollapsed ? 'position: absolute; bottom: 10px;' : ''}">
-                    <i class="bi ${isCollapsed ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}"></i>
-                </button>
+                <!-- Header Controls Removed -->
             </div>
-            <ul class="file-list" style="display: ${isCollapsed ? 'none' : 'block'}">
+            
+            <ul class="file-list" style="display: ${isCollapsed ? 'none' : 'block'}; flex: 1;">
         `;
 
+        // File List Rendering... (same as before)
         if (!isCollapsed) {
             this.files.forEach(file => {
                 const isActive = file.name === this.activeFileName;
@@ -102,6 +96,16 @@ class FileTree {
         }
 
         html += `</ul>`;
+
+        // 🔥 Footer with Toggle Button
+        html += `
+            < div class="file-tree-footer" style = "padding: 10px; display: flex; justify-content: ${isCollapsed ? 'center' : 'flex-end'}; border-top: 1px solid #3e3e42;" >
+                <button id="ft-toggle-btn" class="btn btn-xs btn-link" title="${isCollapsed ? 'Expand' : 'Collapse'}" style="color: #ccc; padding: 0;">
+                    <i class="bi ${isCollapsed ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}" style="font-size: 16px;"></i>
+                </button>
+            </div >
+            `;
+
         this.element.innerHTML = html;
 
         // 이벤트 바인딩
@@ -157,7 +161,7 @@ class FileTree {
     }
 
     handleFileDelete(fileName) {
-        if (!confirm(`Delete '${fileName}'?`)) return;
+        if (!confirm(`Delete '${fileName}' ? `)) return;
 
         if (this.options.onFileDelete) {
             this.options.onFileDelete(fileName);

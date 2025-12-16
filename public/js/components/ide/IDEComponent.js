@@ -100,7 +100,8 @@ class IDEComponent extends Component {
         this.modules.editorTabs = new window.CodeEditorTabs({
           containerId: 'editor-tabs-container',
           onTabSelect: (name) => this.switchFile(name),
-          onTabClose: (name) => this.closeFileTab(name) // 탭 닫기는 파일 삭제가 아님 (화면에서만 닫음)
+          onTabClose: (name) => this.closeFileTab(name), // 탭 닫기는 파일 삭제가 아님 (화면에서만 닫음)
+          onTabAdd: () => this.createFilePrompt() // 🔥 새 파일 생성 프롬프트 호출
         });
         window.editorTabs = this.modules.editorTabs;
         await this.modules.editorTabs.init();
@@ -206,7 +207,17 @@ class IDEComponent extends Component {
   }
 
   /**
-   * 새 파일 생성
+   * 새 파일 생성 프롬프트
+   */
+  createFilePrompt() {
+    // fileTree가 있으면 fileTree의 handleFileCreate를 호출해서 로직 재사용
+    if (this.modules.fileTree) {
+      this.modules.fileTree.handleFileCreate();
+    }
+  }
+
+  /**
+   * 새 파일 생성 (실제 로직)
    */
   createFile(fileName) {
     if (this.state.files.find(f => f.name === fileName)) return;

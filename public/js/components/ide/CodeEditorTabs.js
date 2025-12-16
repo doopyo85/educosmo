@@ -8,6 +8,7 @@ class CodeEditorTabs {
             containerId: 'editor-tabs-container',
             onTabSelect: null, // (filename) => {}
             onTabClose: null,  // (filename) => {}
+            onTabAdd: null,    // () => {}
             ...options
         };
 
@@ -84,6 +85,13 @@ class CodeEditorTabs {
             html += `</li>`;
         });
 
+        // 🔥 Add '+' Tab
+        html += `
+            <li class="tab-item add-tab-btn" onclick="window.editorTabs.handleAddClick()" title="New File" style="min-width: 40px; justify-content: center; padding: 0;">
+                <i class="bi bi-plus" style="font-size: 18px;"></i>
+            </li>
+        `;
+
         html += `</ul>`;
         this.element.innerHTML = html;
     }
@@ -102,6 +110,12 @@ class CodeEditorTabs {
             this.options.onTabClose(fileName);
         } else {
             this.removeTab(fileName);
+        }
+    }
+
+    handleAddClick() {
+        if (this.options.onTabAdd) {
+            this.options.onTabAdd();
         }
     }
 }

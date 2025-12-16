@@ -39,7 +39,8 @@
 }
 
 .file-tree-header {
-    height: 35px;
+    height: 60px;
+    /* 🔥 Match content header height */
     padding: 0 10px;
     display: flex;
     align-items: center;
@@ -48,6 +49,7 @@
     text-transform: uppercase;
     font-size: 11px;
     background-color: #252526;
+    border-bottom: 1px solid #3e3e42;
 }
 
 .file-tree-header .actions button {
@@ -156,11 +158,29 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 35px;
+    height: 60px;
+    /* 🔥 Match content header height */
     background-color: #252526;
     /* VSCode Editor Group Header */
     border-bottom: 1px solid #252526;
     padding-right: 10px;
+}
+
+/* 추가 탭 버튼 (+) */
+.add-tab-btn {
+    min-width: 40px !important;
+    max-width: 40px !important;
+    background: transparent !important;
+    border: none !important;
+    color: #cccccc !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-tab-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
 }
 
 /* 탭 컨테이너 (왼쪽) */
