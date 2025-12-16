@@ -32,8 +32,8 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: [
-                "'self'", 
-                "'unsafe-inline'", 
+                "'self'",
+                "'unsafe-inline'",
                 "'unsafe-eval'",
                 "https://cdnjs.cloudflare.com",
                 "https://playentry.org",
@@ -44,7 +44,7 @@ app.use(helmet({
                 "data:"
             ],
             styleSrc: [
-                "'self'", 
+                "'self'",
                 "'unsafe-inline'",
                 "https://cdnjs.cloudflare.com",
                 "https://playentry.org",
@@ -74,13 +74,13 @@ app.use(cors({
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
-        'Content-Type', 
-        'Authorization', 
+        'Content-Type',
+        'Authorization',
         'X-Requested-With',
         'X-Forwarded-For',
-        'X-Forwarded-Proto', 
+        'X-Forwarded-Proto',
         'X-Real-IP',
-        'X-User-ID', 
+        'X-User-ID',
         'X-User-Role'
     ]
 }));
@@ -97,7 +97,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use('/', express.static('./', {
     setHeaders: (res, filePath) => {
         const ext = path.extname(filePath).toLowerCase();
-        
+
         switch (ext) {
             case '.js':
             case '.mjs':
@@ -113,7 +113,7 @@ app.use('/', express.static('./', {
                 res.set('Content-Type', 'image/png');
                 break;
         }
-        
+
         res.set('Cache-Control', 'public, max-age=3600');
         res.set('Access-Control-Allow-Origin', 'https://app.codingnplay.co.kr');
     }
@@ -134,7 +134,7 @@ app.use('/temp', express.static('/var/www/html/temp/ent_files/current', {
 app.use('/temp/*', (req, res, next) => {
     const requestedPath = req.path;
     const fullPath = path.join('/var/www/html/temp/ent_files/current', requestedPath.replace('/temp', ''));
-    
+
     console.log('🖼️ ENT 이미지 요청 디버깅:', {
         requestedUrl: req.originalUrl,
         requestedPath: requestedPath,
@@ -142,7 +142,7 @@ app.use('/temp/*', (req, res, next) => {
         fileExists: fs.existsSync(fullPath),
         timestamp: new Date().toISOString()
     });
-    
+
     // 파일이 존재하지 않는 경우 상세 로그
     if (!fs.existsSync(fullPath)) {
         console.error('❌ ENT 이미지 파일 없음:', {
@@ -150,7 +150,7 @@ app.use('/temp/*', (req, res, next) => {
             fullPath,
             currentDir: fs.existsSync('/var/www/html/temp/ent_files/current') ? 'exists' : 'missing'
         });
-        
+
         // current 디렉토리 내용 확인
         try {
             const currentDirContents = fs.readdirSync('/var/www/html/temp/ent_files/current');
@@ -159,7 +159,7 @@ app.use('/temp/*', (req, res, next) => {
             console.error('❌ current 디렉토리 읽기 오류:', err.message);
         }
     }
-    
+
     next();
 });
 
@@ -176,13 +176,13 @@ function decodeUserInfo(req, res, next) {
         'x-user-id': req.headers['x-user-id'],
         'x-user-role': req.headers['x-user-role']
     });
-    
+
     const authParam = req.query.auth;
-    
+
     if (authParam) {
         try {
             const decodedInfo = JSON.parse(Buffer.from(authParam, 'base64').toString());
-            
+
             const now = Date.now();
             if (now - decodedInfo.timestamp > 10 * 60 * 1000) {
                 console.warn('⚠️ 만료된 인증 토큰');
@@ -204,14 +204,14 @@ function decodeUserInfo(req, res, next) {
             sessionID: req.query.sessionID || '',
             s3Url: req.query.s3Url || ''
         };
-        
+
         console.log('✅ URL 파라미터/헤더에서 사용자 정보 추출:', req.userInfo);
     }
-    
+
     console.log('🔍 === 최종 사용자 정보 ===');
     console.log(JSON.stringify(req.userInfo, null, 2));
     console.log('========================\n');
-    
+
     next();
 }
 
@@ -235,18 +235,18 @@ app.get('/health', (req, res) => {
 app.get(['/', '//'], decodeUserInfo, (req, res) => {
     console.log('\n📋 === EntryJS Base 워크스페이스 렌더링 ===');
     console.log('사용자 정보:', req.userInfo);
-    
+
     const indexPath = path.join(__dirname, 'index.html');
-    
+
     if (!fs.existsSync(indexPath)) {
         return res.status(404).send(`
             <h1>EntryJS Base 서버</h1>
             <p>index.html 파일을 찾을 수 없습니다.</p>
         `);
     }
-    
+
     let htmlContent = fs.readFileSync(indexPath, 'utf8');
-    
+
     const userScript = `
     <script>
         console.log('🔥 EDUCODINGNPLAY_USER 설정 시작');
@@ -262,12 +262,12 @@ app.get(['/', '//'], decodeUserInfo, (req, res) => {
         console.log('✅ EDUCODINGNPLAY_USER 설정 완료:', window.EDUCODINGNPLAY_USER);
     </script>
     `;
-    
+
     htmlContent = htmlContent.replace('</head>', userScript + '\n</head>');
-    
+
     console.log('✅ HTML 전송 (사용자 정보 포함)');
     console.log('========================\n');
-    
+
     res.send(htmlContent);
 });
 
@@ -284,9 +284,9 @@ const http = require('http');
 
 app.post('/api/picture/paint', (req, res) => {
     console.log('🎨 [8070] Paint Editor API 프록시 요청');
-    
+
     const postData = JSON.stringify(req.body);
-    
+
     const options = {
         hostname: 'localhost',
         port: 3000,
@@ -298,7 +298,7 @@ app.post('/api/picture/paint', (req, res) => {
             'Cookie': req.headers.cookie || ''
         }
     };
-    
+
     const proxyReq = http.request(options, (proxyRes) => {
         let data = '';
         proxyRes.on('data', (chunk) => { data += chunk; });
@@ -313,12 +313,12 @@ app.post('/api/picture/paint', (req, res) => {
             }
         });
     });
-    
+
     proxyReq.on('error', (e) => {
         console.error('❌ [8070] 프록시 요청 오류:', e);
         res.status(500).json({ error: 'Proxy request failed' });
     });
-    
+
     proxyReq.write(postData);
     proxyReq.end();
 });
@@ -348,3 +348,21 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 });
 
 server.timeout = 30000;
+
+// 🔥 Graceful Shutdown
+const shutdown = (signal) => {
+    console.log(`${signal} received: closing HTTP server`);
+    server.close(() => {
+        console.log('HTTP server closed');
+        process.exit(0);
+    });
+
+    // Force close after timeout
+    setTimeout(() => {
+        console.error('Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+    }, 5000);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

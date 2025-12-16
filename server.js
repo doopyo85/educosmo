@@ -23,8 +23,6 @@ const { updatePermissionCache } = require('./lib_login/permissions');
 const { checkPageAccess, checkRole, checkAdminRole } = require('./lib_login/authMiddleware');
 const { logUserActivity, logMenuAccess, logLearningActivity } = require('./lib_login/logging');
 
-const { logUserActivity, logMenuAccess, logLearningActivity } = require('./lib_login/logging');
-
 const app = express();
 const SERVICE_TYPE = process.env.SERVICE_TYPE || 'main';
 const isMain = SERVICE_TYPE === 'main';
