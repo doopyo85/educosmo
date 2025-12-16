@@ -9,6 +9,7 @@ const router = express.Router();
 const db = require('../../lib_login/db');
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { fromEnv } = require('@aws-sdk/credential-provider-env');
 const config = require('../../config');
 
 // quotaChecker 모듈 (용량 관리)
@@ -20,13 +21,10 @@ const {
     markFileDeleted
 } = require('../../lib_storage/quotaChecker');
 
-// S3 클라이언트 설정
+// S3 클라이언트 설정 (fromEnv 사용)
 const s3Client = new S3Client({
     region: config.S3.REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    }
+    credentials: fromEnv()
 });
 
 // S3 버킷 및 경로 설정

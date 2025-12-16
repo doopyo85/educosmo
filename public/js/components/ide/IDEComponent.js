@@ -190,16 +190,18 @@ class IDEComponent extends Component {
     const currentContent = this.modules.codeEditor.getCurrentCode();
     this.updateFileContent(this.state.activeFileName, currentContent);
 
-    // 2. 대상 파일 찾기
+    // 3. 대상 파일 찾기
     const targetFile = this.state.files.find(f => f.name === fileName);
     if (!targetFile) return;
 
-    // 3. 에디터 내용 교체 (이벤트 발생 없이 값만 변경)
-    // setValue의 두 번째 인자 -1은 커서를 처음으로, 1은 끝으로
-    // 여기서는 그냥 값만 바꿈.
+    // 4. activeFileName 업데이트 (순서 중요: setCode보다 먼저 변경해야 함)
+    // setCode()가 change 이벤트를 발생시키는데, 이때 activeFileName이 변경되어 있어야
+    // 대상 파일(targetFile)에 변경사항이 반영됨 (혹은 의도치 않은 old file 덮어쓰기 방지)
+    this.state.activeFileName = fileName;
+
+    // 5. 에디터 내용 교체 (이벤트 발생 -> activeFileName인 새 파일에 업데이트됨 - 안전함)
     this.modules.codeEditor.setCode(targetFile.content);
 
-    this.state.activeFileName = fileName;
     this.refreshUI();
   }
 

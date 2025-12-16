@@ -14,6 +14,10 @@ credentials
 # Docker
 docker/
 
+# Scratch Temp
+scratch/
+
+
 # AppInventor
 appinventor-sources/
 
