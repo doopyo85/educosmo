@@ -147,6 +147,8 @@
     gap: 10px;
     background-color: #252526;
     overflow-y: auto;
+    justify-content: flex-end;
+    /* 🔥 Align content to bottom */
 }
 
 .file-tree-container.collapsed .file-tree-footer-section {

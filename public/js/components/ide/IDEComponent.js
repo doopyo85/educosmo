@@ -93,9 +93,14 @@ class IDEComponent extends Component {
           // 🔥 Footer Actions Handlers (mapped to IDE methods)
           onFontIncrease: () => this.adjustFontSize(1),
           onFontDecrease: () => this.adjustFontSize(-1),
-          onRestore: () => this.restoreCode(), // Need to implement
+          onRestore: () => this.restoreCode(),
           onDownload: () => this.downloadCode(),
-          onRefresh: () => this.onProblemChanged(this.state.currentExamName, this.state.currentProblemNumber) // Refresh = Reset Problem? Or Reset Code? check meaning.
+          onRefresh: () => {
+            // 🔥 Refresh = Force reload example code (Reset)
+            if (this.modules.codeEditor) {
+              this.modules.codeEditor.loadExampleCodeFromAPI(this.state.currentExamName, this.state.currentProblemNumber);
+            }
+          }
         });
         // 전역 참조 (onclick용)
         window.fileTree = this.modules.fileTree;
