@@ -888,6 +888,13 @@ class ContentComponent extends Component {
       // iframe에 렌더링
       this.elements.iframe.srcdoc = this.getEnhancedHtml(htmlContent);
 
+      // 🔥 NEW: 로드 완료 후 스타일 주입
+      this.elements.iframe.onload = () => {
+        this.injectHideTitleStyle();
+      };
+      // 즉시 시도 (동기적 렌더링 대비)
+      setTimeout(() => this.injectHideTitleStyle(), 100);
+
       // 이벤트 발행 및 상태 업데이트
       this.publishProblemChangedEvent(problemNumber, pythonFileUrl);
       this.updateExplanationButton(problemInfo, problemNumber);
