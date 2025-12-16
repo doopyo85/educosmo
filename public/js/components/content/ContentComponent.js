@@ -522,11 +522,46 @@ class ContentComponent extends Component {
   updateProblemTitle(problemNumber) {
     if (!this.elements.problemTitle) return;
 
+    // 🔥 수정: 파일명과 타이틀 분리 표시
     const examNameModified = this.state.currentExamName.substring(0, 3).toUpperCase() +
       this.state.currentExamName.substring(3);
 
-    const problemTitle = `${examNameModified} - 문제 ${problemNumber}`;
-    this.elements.problemTitle.textContent = problemTitle;
+    const mainTitle = `${examNameModified} - 문제 ${problemNumber}`;
+
+    // 현재 문제 데이터 찾기
+    let fileName = '';
+    if (this.state.problemData && Array.isArray(this.state.problemData)) {
+      const problemCode = `p${problemNumber.toString().padStart(2, '0')}`;
+      const problemInfo = this.state.problemData.find(p =>
+        Array.isArray(p) && p.length >= 3 &&
+        p[1].toLowerCase() === this.state.currentExamName.toLowerCase() &&
+        p[2].toLowerCase() === problemCode.toLowerCase()
+      );
+
+      if (problemInfo && problemInfo[0]) {
+        fileName = problemInfo[0];
+      }
+    }
+
+    // HTML 구조 생성
+    this.elements.problemTitle.innerHTML = '';
+
+    const container = document.createElement('div');
+    container.className = 'problem-title-container';
+
+    if (fileName) {
+      const fileSpan = document.createElement('div');
+      fileSpan.className = 'problem-filename';
+      fileSpan.textContent = fileName;
+      container.appendChild(fileSpan);
+    }
+
+    const titleSpan = document.createElement('div');
+    titleSpan.className = 'problem-main-title';
+    titleSpan.textContent = mainTitle;
+    container.appendChild(titleSpan);
+
+    this.elements.problemTitle.appendChild(container);
   }
 
   // 🔥 NEW: 파일 타입에 따른 콘텐츠 로드 처리
@@ -568,6 +603,9 @@ class ContentComponent extends Component {
       // HTML 파일 처리 (기존 로직)
       console.log('ContentComponent: HTML 파일 로드 시작:', fileUrl);
       this.loadHtmlContent(fileUrl, problemInfo, problemNumber, pythonFileUrl);
+
+      // HTML 로드 시에도 스타일 주입 시도
+      setTimeout(() => this.injectHideTitleStyle(), 500); // HTML 로드는 비동기일 수 있으므로 딜레이
     }
 
 
@@ -613,6 +651,26 @@ class ContentComponent extends Component {
     }
   }
 
+  // 🔥 NEW: iframe 내부의 h1 태그 숨기기 스타일 주입
+  injectHideTitleStyle() {
+    if (!this.elements.iframe) return;
+
+    try {
+      const iframeDoc = this.elements.iframe.contentDocument || this.elements.iframe.contentWindow.document;
+      if (iframeDoc && iframeDoc.head) {
+        const style = iframeDoc.createElement('style');
+        style.textContent = `
+          h1:first-of-type, h1:first-child { display: none !important; }
+          body { padding-top: 20px !important; }
+        `;
+        iframeDoc.head.appendChild(style);
+        console.log('ContentComponent: iframe 내부 h1 숨김 스타일 주입 완료');
+      }
+    } catch (e) {
+      console.warn('ContentComponent: iframe 스타일 주입 실패', e);
+    }
+  }
+
   // 🔥 NEW: 마크다운 파일 로드 및 렌더링
   async loadMarkdownContent(markdownUrl, problemInfo, problemNumber, pythonFileUrl) {
     console.log('ContentComponent: 마크다운 파일 로드 시작:', markdownUrl);
@@ -632,8 +690,15 @@ class ContentComponent extends Component {
       const htmlContent = this.convertMarkdownToHtml(markdownText);
       console.log('ContentComponent: 마크다운 → HTML 변환 완료');
 
-      // iframe에 렌더링
       this.elements.iframe.srcdoc = this.getEnhancedMarkdownHtml(htmlContent);
+
+      // iframe 로드 완료 후 스타일 주입
+      this.elements.iframe.onload = () => {
+        this.injectHideTitleStyle();
+      };
+
+      // 이미 로드되었을 경우를 대비해 즉시 시도
+      setTimeout(() => this.injectHideTitleStyle(), 100);
 
       // 이벤트 발행 및 상태 업데이트
       this.publishProblemChangedEvent(problemNumber, pythonFileUrl);
@@ -849,9 +914,10 @@ class ContentComponent extends Component {
   }
 
   // 🔥 NEW: 고급 스타일 마크다운용 HTML 템플릿
+  // 🔥 NEW: 표준화된 마크다운용 HTML 템플릿
   getEnhancedMarkdownHtml(markdownHtml) {
     const h1Match = markdownHtml.match(/<h1[^>]*>(.*?)<\/h1>/);
-    const headerTitle = h1Match ? h1Match[1].replace(/<[^>]*>/g, '').trim() : '데이터 분석 학습';
+    const headerTitle = h1Match ? h1Match[1].replace(/<[^>]*>/g, '').trim() : '';
 
     return `
     <!DOCTYPE html>
@@ -859,173 +925,83 @@ class ContentComponent extends Component {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${headerTitle}</title>
       <base target="_parent">
-
-      <!-- Fonts & Icons -->
-      <link href="https://fonts.googleapis.com/css2?family=Fira+Mono&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-      <link href="/resource/bootstrap-icons/bootstrap-icons.css" rel="stylesheet" />
-
+      <link rel="stylesheet" href="/css/common-content.css">
+      
       <!-- Highlight.js -->
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
       <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
       <style>
-        body {
-          font-family: 'Roboto', sans-serif;
-          background: #f8fafc;
-          color: #222;
-          margin: 0;
-          padding: 0;
-        }
-
-        header {
-          text-align: center;
-          padding: 2rem 1rem 1rem;
-          font-size: 2rem;
-          font-weight: 700;
-          border-bottom: 1px solid #e0e0e0;
-        }
-
-        .container {
-          max-width: 960px;
+        /* Markdown Specific Overrides for common-content.css */
+        body { 
+          padding: 30px 40px !important;
+          max-width: 900px;
           margin: 0 auto;
-          padding: 2rem 1rem;
         }
 
-        main {
-          background: #fff;
-          padding: 2rem;
-          border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        }
+        /* 헤더 스타일 조정 */
+        h1 { font-size: 2.2em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; margin-bottom: 30px; }
+        h2 { font-size: 1.8em; margin-top: 40px; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+        h3 { font-size: 1.5em; margin-top: 30px; }
+        
+        /* 테이블 스타일 */
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; }
+        th { background-color: #f8f9fa; }
+        
+        /* 인용구 */
+        blockquote { border-left: 4px solid #0d6efd; margin: 0; padding-left: 15px; color: #555; background: #f8f9fa; padding: 10px 15px; border-radius: 4px; }
+        
+        /* 코드 블록 */
+        pre { background: #f6f8fa; padding: 15px; border-radius: 6px; position: relative; }
+        code { font-family: 'Consolas', monospace; }
+        p code { background: #f0f0f0; padding: 2px 5px; border-radius: 4px; color: #d63384; }
 
-        h1, h2, h3, h4 {
-          font-weight: bold;
-          margin-top: 2rem;
-          margin-bottom: 1rem;
+        .copy-btn {
+          position: absolute; top: 5px; right: 5px;
+          background: #fff; border: 1px solid #ddd; border-radius: 4px;
+          padding: 3px 8px; font-size: 12px; cursor: pointer; color: #666;
         }
-
-        h1 { font-size: 2rem; display: none; }
-        h2 { font-size: 1.5rem; }
-        h3 { font-size: 1.2rem; }
-        h4 { font-size: 1rem; }
-
-        p, ul, ol {
-          line-height: 1.7;
-          margin-bottom: 1.2rem;
-        }
-
-        /* 🔥 코드 블록 GPT 스타일 */
-        .code-block {
-          background: #f8f9fb;
-          border-radius: 8px;
-          margin-bottom: 1.5rem;
-          overflow: hidden;
-          font-family: 'Fira Mono', monospace;
-          border: 1px solid #e0e0e0;
-        }
-
-        .code-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 6px 12px;
-          background: #f8f9fb;
-          color: #aaa;
-          font-size: 0.85rem;
-        }
-
-        .copy-button {
-          background: transparent;
-          border: none;
-          color: #888;
-          cursor: pointer;
-          font-size: 1rem;
-          padding: 2px;
-        }
-
-        .copy-button:hover {
-          color: #3a86ff;
-        }
-
-        pre {
-          margin: 0;
-          padding: 1rem;
-          overflow-x: auto;
-          font-size: 1rem;
-          background: #f8f9fb;
-          border: none;
-        }
-
-        code {
-          font-family: 'Fira Mono', monospace;
-        }
-
-        /* 반응형 */
-        @media (max-width: 600px) {
-          header {
-            font-size: 1.5rem;
-            padding: 1.5rem 1rem 1rem;
-          }
-          main {
-            padding: 1rem;
-          }
-        }
+        .copy-btn:hover { background: #f0f0f0; color: #333; }
       </style>
     </head>
-    <body>
-      <header>${headerTitle}</header>
-      <div class="container">
-        <main>
-          <div id="content">
-            ${markdownHtml}
-          </div>
-        </main>
-      </div>
-
+    <body class="markdown-body">
+      ${markdownHtml}
+      
       <script>
         document.addEventListener("DOMContentLoaded", function () {
           if (typeof hljs !== "undefined") {
             hljs.highlightAll();
           }
-
-          // 코드 블록 wrapper 추가
-          document.querySelectorAll("pre > code").forEach((codeBlock) => {
-            const pre = codeBlock.parentElement;
-
-            // code-block wrapper
-            const wrapper = document.createElement("div");
-            wrapper.className = "code-block";
-            pre.parentNode.insertBefore(wrapper, pre);
-            wrapper.appendChild(pre);
-
-            // header bar
-            const header = document.createElement("div");
-            header.className = "code-header";
-            header.innerHTML = \`
-              <span>python</span>
-              <button class="copy-button" title="복사"><i class="bi bi-copy"></i></button>
-            \`;
-
-            wrapper.insertBefore(header, pre);
-
-            // 복사 버튼 기능
-            const copyBtn = header.querySelector("button");
-            copyBtn.addEventListener("click", () => {
-              navigator.clipboard.writeText(codeBlock.textContent).then(() => {
-                copyBtn.innerHTML = '<i class="bi bi-check-lg"></i>';
-                setTimeout(() => {
-                  copyBtn.innerHTML = '<i class="bi bi-copy"></i>';
-                }, 1500);
-              });
-            });
+          
+          // 코드 복사 버튼 추가
+          document.querySelectorAll('pre').forEach(pre => {
+             const btn = document.createElement('button');
+             btn.className = 'copy-btn';
+             btn.innerText = '복사';
+             btn.onclick = () => {
+                const code = pre.querySelector('code');
+                if(code) {
+                    navigator.clipboard.writeText(code.innerText);
+                    btn.innerText = '완료!';
+                    setTimeout(() => btn.innerText = '복사', 2000);
+                }
+             };
+             pre.appendChild(btn);
+          });
+          
+          // 외부 링크 새창 열기
+          document.querySelectorAll('a').forEach(a => {
+            if(a.href && a.href.startsWith('http')) {
+                a.target = '_blank';
+            }
           });
         });
       </script>
     </body>
     </html>
-  `;
+    `;
   }
 
 

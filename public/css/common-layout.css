@@ -584,15 +584,32 @@ body.resizing * {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    padding: 8px 16px;
     background: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
     gap: 16px;
+    height: 60px;
+    /* 고정 높이 */
 }
 
-.problem-top-nav .problem-title {
+.problem-top-nav .problem-title-container {
     flex: 1;
-    font-size: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
+}
+
+.problem-top-nav .problem-filename {
+    font-size: 11px;
+    color: #6c757d;
+    margin-bottom: 2px;
+    font-family: monospace;
+}
+
+.problem-top-nav .problem-main-title {
+    font-size: 16px;
     font-weight: 600;
     color: #333;
     text-align: center;
