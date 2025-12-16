@@ -23,12 +23,16 @@ class FileTree {
         this.element = null;
     }
 
-    init() {
+    async init() {
         this.element = document.getElementById(this.options.containerId);
         if (!this.element) {
             console.error(`FileTree container not found: ${this.options.containerId}`);
             return false;
         }
+
+        // 🔥 Default to Collapsed
+        this.element.classList.add('collapsed');
+
         this.render();
         return true;
     }
@@ -113,27 +117,29 @@ class FileTree {
         // If collapsed, 60px width is too small for row of buttons. Hide them or stack?
         // Let's hide controls when collapsed for now to keep it clean.
 
-        if (!isCollapsed) {
-            html += `
-                <div class="file-tree-footer-section" style="padding: 10px; border-top: 1px solid #3e3e42; background-color: #252526;">
-                    <div style="font-size: 11px; color: #858585; margin-bottom: 8px; font-weight: 600; text-transform: uppercase;">Functions</div>
-                    <div class="ide-footer-controls" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button class="footer-btn" onclick="window.fileTree.handleFontIncrease()" title="Font Size +">
-                            <i class="bi bi-plus-lg"></i>
-                        </button>
-                        <button class="footer-btn" onclick="window.fileTree.handleFontDecrease()" title="Font Size -">
-                            <i class="bi bi-dash-lg"></i>
-                        </button>
-                        <button class="footer-btn" onclick="window.fileTree.handleRefresh()" title="Refresh">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                        <button class="footer-btn" onclick="window.fileTree.handleDownload()" title="Download">
-                            <i class="bi bi-download"></i>
-                        </button>
-                    </div>
+        html += `</ul>`;
+
+        // Controls Section (Bottom of content)
+        // Always render, CSS handles layout based on .collapsed class
+        html += `
+            <div class="file-tree-footer-section" style="padding: 10px; border-top: 1px solid #3e3e42; background-color: #252526;">
+                <div class="section-title" style="font-size: 11px; color: #858585; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; ${isCollapsed ? 'display: none;' : ''}">Functions</div>
+                <div class="ide-footer-controls" style="display: flex; gap: 8px; flex-wrap: wrap; ${isCollapsed ? 'flex-direction: column; align-items: center;' : ''}">
+                    <button class="footer-btn" onclick="window.fileTree.handleFontIncrease()" title="Font Size +">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                    <button class="footer-btn" onclick="window.fileTree.handleFontDecrease()" title="Font Size -">
+                        <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <button class="footer-btn" onclick="window.fileTree.handleRefresh()" title="Refresh">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <button class="footer-btn" onclick="window.fileTree.handleDownload()" title="Download">
+                        <i class="bi bi-download"></i>
+                    </button>
                 </div>
-             `;
-        }
+            </div>
+        `;
 
         html += `</div>`; // End of file-tree-content
 
@@ -151,8 +157,7 @@ class FileTree {
         this.element.style.display = 'flex';
         this.element.style.flexDirection = 'column';
 
-        // Event Binding (Toggle is handled by global onclick or re-binding? 
-        // We need to re-bind because we replaced innerHTML)
+        // Event Binding
         const toggleBtn = this.element.querySelector('#ft-toggle-btn');
         if (toggleBtn) {
             toggleBtn.onclick = () => this.handleToggle();

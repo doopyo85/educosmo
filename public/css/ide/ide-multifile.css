@@ -152,6 +152,7 @@
 .file-tree-container.collapsed .file-tree-footer-section {
     align-items: center;
     padding: 10px 0;
+    overflow-x: hidden;
 }
 
 /* Control Buttons in Footer */
@@ -160,6 +161,10 @@
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
+}
+
+.file-tree-container.collapsed .ide-footer-controls {
+    flex-direction: column;
 }
 
 .footer-btn {
@@ -207,7 +212,8 @@
 /* 상단: 에디터 탭바 wrapper (Controls 포함) */
 .editor-header-bar {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
+    /* Align tabs to bottom */
     justify-content: space-between;
     height: 60px;
     /* 🔥 Match content header height */
@@ -215,18 +221,25 @@
     /* VSCode Editor Group Header */
     border-bottom: 1px solid #252526;
     padding-right: 10px;
+    padding-left: 10px;
+    /* Add padding for tab start */
 }
 
 /* 추가 탭 버튼 (+) */
 .add-tab-btn {
-    min-width: 40px !important;
-    max-width: 40px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    height: 36px !important;
     background: transparent !important;
     border: none !important;
     color: #cccccc !important;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 50% !important;
+    /* Circle like Chrome new tab */
+    margin-left: 5px;
+    margin-bottom: 4px;
 }
 
 .add-tab-btn:hover {
@@ -237,6 +250,7 @@
 /* 탭 컨테이너 (왼쪽) */
 .editor-tabs-container {
     height: 100%;
+    /* Full height to align items at flex-end */
     /* background-color: #2d2d2d; */
     /* Removed to match header bar */
     background-color: transparent;
@@ -254,6 +268,9 @@
     align-items: center;
     gap: 6px;
     height: 100%;
+    margin-bottom: auto;
+    /* Push to top or center? Center is fine */
+    align-self: center;
 }
 
 .ide-control-btn {
@@ -279,30 +296,36 @@
     padding: 0;
     margin: 0;
     display: flex;
+    align-items: flex-end;
+    /* Tabs stay at bottom */
     height: 100%;
 }
 
 .tab-item {
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    min-width: 80px;
-    max-width: 150px;
-    height: 100%;
+    padding: 0 15px;
+    /* More roomy */
+    min-width: 100px;
+    max-width: 200px;
+    height: 40px;
+    /* 🔥 2/3 of 60px approx */
     background-color: #2d2d2d;
     /* Inactive Tab Bg */
     color: #969696;
-    border-right: 1px solid #252526;
     cursor: pointer;
     font-size: 13px;
     user-select: none;
-    border-top: 1px solid transparent;
-    /* Prevent layout shift on active */
+    border-radius: 8px 8px 0 0;
+    /* 🔥 Rounded Top Corners */
+    margin-right: 2px;
+    /* Gap between tabs */
+    position: relative;
+    border: none;
 }
 
 .tab-item:hover {
-    background-color: #2d2d2d;
-    /* Slightly lighter? */
+    background-color: #383838;
     color: #cfcfcf;
 }
 
@@ -310,10 +333,15 @@
     background-color: #1e1e1e;
     /* Editor Bg */
     color: #ffffff;
-    border-top: 2px solid #007acc;
-    /* Active Indicator */
-    border-bottom: 1px solid #1e1e1e;
-    /* Cover parent border-bottom if possible, or match editor bg */
+    /* border-top: 2px solid #007acc; Remove colored top border for Chrome style */
+    font-weight: 500;
+    /* box-shadow: 0 0 5px rgba(0,0,0,0.2); Optional depth */
+    z-index: 10;
+}
+
+.tab-item.active::before,
+.tab-item.active::after {
+    /* Optional: Complex corner curves like Chrome - keeping simple radius for now */
 }
 
 .tab-item .name {
@@ -325,15 +353,20 @@
 }
 
 .tab-item .close-btn {
-    font-size: 14px;
+    font-size: 12px;
     padding: 2px;
-    border-radius: 3px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
     color: #969696;
 }
 
 .tab-item .close-btn:hover {
-    background-color: #4d4d4d;
-    color: #ffffff;
+    background-color: #bdc3c7;
+    color: #2c3e50;
 }
 
 /* Code Editor Container 조정 */
