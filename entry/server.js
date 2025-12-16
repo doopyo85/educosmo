@@ -349,19 +349,38 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 
 server.timeout = 30000;
 
+// 활성 소켓 추적
+const sockets = new Set();
+server.on('connection', (socket) => {
+    sockets.add(socket);
+    socket.on('close', () => {
+        sockets.delete(socket);
+    });
+});
+
 // 🔥 Graceful Shutdown
 const shutdown = (signal) => {
     console.log(`${signal} received: closing HTTP server`);
+
     server.close(() => {
         console.log('HTTP server closed');
         process.exit(0);
     });
 
+    // 소켓 강제 종료
+    if (sockets.size > 0) {
+        console.log(`Destroying ${sockets.size} active sockets...`);
+        for (const socket of sockets) {
+            socket.destroy();
+            sockets.delete(socket);
+        }
+    }
+
     // Force close after timeout
     setTimeout(() => {
         console.error('Could not close connections in time, forcefully shutting down');
         process.exit(1);
-    }, 5000);
+    }, 4000); // 5초보다 약간 짧게 설정
 };
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));

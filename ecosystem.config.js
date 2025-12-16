@@ -13,7 +13,7 @@ module.exports = {
         PORT: 3000,
         SERVICE_TYPE: 'main'
       },
-      kill_timeout: 5000
+      kill_timeout: 10000
     },
     {
       name: 'scratch',
@@ -27,7 +27,7 @@ module.exports = {
         PORT: 8601,
         SERVICE_TYPE: 'scratch'
       },
-      kill_timeout: 5000
+      kill_timeout: 10000
     },
     {
       name: 'entry-server',
@@ -41,7 +41,7 @@ module.exports = {
         PORT: 8070,
         SERVICE_TYPE: 'entry'
       },
-      kill_timeout: 5000
+      kill_timeout: 10000
     },
     {
       name: 'appinventor-server',
@@ -55,7 +55,7 @@ module.exports = {
         PORT: 8300,
         SERVICE_TYPE: 'appinventor'
       },
-      kill_timeout: 5000
+      kill_timeout: 10000
     },
     {
       name: 'jupyter-server',

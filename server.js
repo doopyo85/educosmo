@@ -1177,8 +1177,20 @@ const server = app.listen(PORT, () => {
 });
 
 // 🔥 우아한 종료 (Graceful Shutdown) - PM2 재시작 시 포트 점유 문제 예방
+// 활성 소켓 추적
+const sockets = new Set();
+
+server.on('connection', (socket) => {
+  sockets.add(socket);
+  socket.on('close', () => {
+    sockets.delete(socket);
+  });
+});
+
 const shutdown = (signal) => {
   console.log(`${signal} 시그널 수신: 서버를 안전하게 종료합니다...`);
+
+  // 1. 더 이상 새로운 연결을 받지 않음
   server.close(() => {
     console.log('⚡ 모든 HTTP 연결이 닫혔습니다.');
 
@@ -1191,11 +1203,20 @@ const shutdown = (signal) => {
     process.exit(0);
   });
 
-  // 10초 후 강제 종료
+  // 2. 기존 연결 강제 종료 (빠른 재시작을 위해)
+  if (sockets.size > 0) {
+    console.log(`🔌 남은 소켓 ${sockets.size}개 강제 종료 중...`);
+    for (const socket of sockets) {
+      socket.destroy();
+      sockets.delete(socket);
+    }
+  }
+
+  // 10초 후 강제 종료 (타임아웃은 PM2 kill_timeout보다 짧아야 안전함)
   setTimeout(() => {
     console.error('⚠️ 강제 종료: 연결 종료 시간 초과');
     process.exit(1);
-  }, 10000);
+  }, 8000);
 };
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
