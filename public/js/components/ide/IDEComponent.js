@@ -1,421 +1,372 @@
 /**
- * IDEComponent.js - 메인 IDE 컴포넌트 (리팩토링 버전)
- * CodeEditor와 Terminal 모듈을 통합 관리
+ * IDEComponent.js - 메인 IDE 컴포넌트 (Multi-file 지원 버전)
+ * FileTree, EditorTabs, CodeEditor, Terminal 통합 관리
  */
 
 class IDEComponent extends Component {
   constructor(options = {}) {
     super(options);
-    
+
     // 기본 옵션 설정
     this.options = {
       elementId: 'ide-component',
       ...options
     };
-    
+
     // 상태 관리
     this.state = {
       currentExamName: '',
       currentProblemNumber: 1,
-      isInitialized: false
+      isInitialized: false,
+
+      // 🔥 Multi-file State
+      files: [], // Array of { name, content, isReadOnly }
+      activeFileName: null
     };
-    
+
     // 하위 모듈들
     this.modules = {
+      fileTree: null,
+      editorTabs: null,
       codeEditor: null,
       terminal: null
     };
   }
-  
+
   /**
    * IDE 컴포넌트 초기화
    */
   async init() {
-    console.log('IDEComponent 초기화 시작');
-    
+    console.log('IDEComponent (Multi-file) 초기화 시작');
+
     try {
       await super.init();
-      
+
       if (!this.element) {
         throw new Error(`IDE 컴포넌트 요소를 찾을 수 없습니다: ${this.options.elementId}`);
       }
-      
+
       // 하위 모듈 초기화
       await this.initializeModules();
-      
+
+      // 초기 파일 설정 (main.py)
+      this.initDefaultFiles();
+
       // EventBus 설정
       this.setupEventBusListeners();
-      
-      // 🔥 추가: 다운로드 버튼 이벤트 설정
+
+      // 다운로드 버튼 이벤트 설정
       this.setupDownloadButton();
-      
+
       this.state.isInitialized = true;
       console.log('IDEComponent 초기화 완료');
       return true;
-      
+
     } catch (error) {
       console.error('IDEComponent 초기화 오류:', error);
       return false;
     }
   }
-  
+
+  initDefaultFiles() {
+    // 초기 상태: main.py 하나만 존재
+    this.state.files = [
+      { name: 'main.py', content: '# Write your code here\nprint("Hello World")', isReadOnly: false }
+    ];
+    this.state.activeFileName = 'main.py';
+    this.refreshUI();
+  }
+
   /**
    * 하위 모듈 초기화
    */
   async initializeModules() {
     try {
-      // CodeEditor 모듈 초기화
+      // 1. FileTree
+      if (window.FileTree) {
+        this.modules.fileTree = new window.FileTree({
+          containerId: 'file-tree-container',
+          onFileSelect: (file) => this.switchFile(file.name),
+          onFileCreate: (name) => this.createFile(name),
+          onFileDelete: (name) => this.deleteFile(name)
+        });
+        // 전역 참조 (onclick용)
+        window.fileTree = this.modules.fileTree;
+        await this.modules.fileTree.init();
+      }
+
+      // 2. EditorTabs
+      if (window.CodeEditorTabs) {
+        this.modules.editorTabs = new window.CodeEditorTabs({
+          containerId: 'editor-tabs-container',
+          onTabSelect: (name) => this.switchFile(name),
+          onTabClose: (name) => this.closeFileTab(name) // 탭 닫기는 파일 삭제가 아님 (화면에서만 닫음)
+        });
+        window.editorTabs = this.modules.editorTabs;
+        await this.modules.editorTabs.init();
+      }
+
+      // 3. CodeEditor
       if (window.CodeEditor) {
         this.modules.codeEditor = new window.CodeEditor({
           editorId: 'editor',
           showAnswerButtonId: 'showAnswerBtn',
           aceButtonId: 'ace-btn',
           jupyterButtonId: 'jupyter-btn',
-          loadExampleButtonId: 'loadExampleBtn' // 🔥 추가: 기본 코드 불러오기 버튼
+          loadExampleButtonId: 'loadExampleBtn'
         });
-        
+
+        // 에디터 내용 변경 감지 -> state 업데이트
+        // CodeEditor에 onChange 이벤트를 주입하거나, 주기적으로 가져와야 함.
+        // 여기서는 saveCurrentFile() 메서드를 이용해 전환 직전에 저장.
+
         const codeEditorInit = await this.modules.codeEditor.init();
-        if (!codeEditorInit) {
-          throw new Error('CodeEditor 모듈 초기화 실패');
+        if (!codeEditorInit) throw new Error('CodeEditor 모듈 초기화 실패');
+
+        // 에디터 내용 변경 시 실시간 상태 동기화 (간단한 구현)
+        const editorInstance = this.modules.codeEditor.state.editor;
+        if (editorInstance) {
+          editorInstance.on('change', () => {
+            const content = editorInstance.getValue();
+            this.updateFileContent(this.state.activeFileName, content);
+          });
         }
-        
-        // 전역 참조 설정 (임시로 EventBus 대신 사용)
+
         window.codeEditor = this.modules.codeEditor;
-        
-        console.log('✅ CodeEditor 모듈 초기화 완료');
-      } else {
-        console.error('❌ CodeEditor 클래스를 찾을 수 없습니다');
       }
-      
-      // Terminal 모듈 초기화 (TerminalInput 포함)
+
+      // 4. Terminal
       if (window.Terminal) {
         this.modules.terminal = new window.Terminal({
           outputId: 'output-content',
           runButtonId: 'runCodeBtn',
           clearButtonId: 'clearOutputBtn'
         });
-        
-        const terminalInit = await this.modules.terminal.init();
-        if (!terminalInit) {
-          throw new Error('Terminal 모듈 초기화 실패');
-        }
-        
-        console.log('✅ Terminal 모듈 초기화 완료');
-      } else {
-        console.error('❌ Terminal 클래스를 찾을 수 없습니다');
+
+        await this.modules.terminal.init();
+
+        // 터미널 실행 버튼 오버라이드 -> 멀티 파일 전송 로직
+        // Terminal.js가 runCode()를 호출할 때, IDEComponent의 runCode()가 호출되도록 연결
+        // 현재 구조상 Terminal.js 내부에서 runCode를 호출하므로, 
+        // Terminal 인스턴스의 runCode 메서드를 여기서 덮어쓰거나, 
+        // Terminal이 IDEComponent.runCode를 호출하게 해야 함.
+        // 가장 깔끔한 건 Terminal.js의 onRun 설정을 사용하는 것이지만, 
+        // 지금은 IDEComponent.runCode() 메서드를 직접 호출하는 구조가 아니므로
+        // Terminal.js의 run 로직을 가로채야 함.
+
+        /**
+         * 🔥 중요: 기존 Terminal.js는 단일 코드 실행만 가정하고 있음.
+         * 이를 멀티 파일 실행으로 바꾸기 위해, Terminal 클래스를 수정하지 않고
+         * 여기서 runCode 동작을 재정의함.
+         */
+        this.modules.terminal.runCode = () => this.runMultiFileCode();
       }
-      
+
     } catch (error) {
       console.error('모듈 초기화 오류:', error);
       throw error;
     }
   }
-  
+
+  // --- Multi-file Logic ---
+
   /**
-   * EventBus 리스너 설정
+   * 파일 내용 업데이트 (State 동기화)
    */
-  setupEventBusListeners() {
-    if (window.EventBus) {
-      // 에디터 크기 조정 요청 처리
-      window.EventBus.subscribe('editor:resize', () => {
-        if (this.modules.codeEditor && typeof this.modules.codeEditor.resizeEditor === 'function') {
-          this.modules.codeEditor.resizeEditor();
-        }
-      });
-      
-      // 코드 가져오기 요청 처리
-      window.EventBus.subscribe('editor:getCode', () => {
-        if (this.modules.codeEditor && typeof this.modules.codeEditor.getCurrentCode === 'function') {
-          const code = this.modules.codeEditor.getCurrentCode();
-          window.EventBus.publish('editor:codeResponse', { code: code });
-        }
-      });
-      
-      console.log('✅ EventBus 리스너 설정 완료');
+  updateFileContent(fileName, content) {
+    const file = this.state.files.find(f => f.name === fileName);
+    if (file) {
+      file.content = content;
     }
   }
-  
+
   /**
-   * 컴포넌트 활성화
+   * 파일 전환 (Switching)
    */
-  activate() {
-    super.activate();
-    
-    // 요소 표시
-    this.element.classList.add('component-visible');
-    this.element.classList.remove('component-hidden');
-    
-    // 하위 모듈 활성화
-    if (this.modules.codeEditor && typeof this.modules.codeEditor.activate === 'function') {
-      this.modules.codeEditor.activate();
-    }
-    
-    if (this.modules.terminal && typeof this.modules.terminal.activate === 'function') {
-      this.modules.terminal.activate();
-    }
-    
-    console.log('IDEComponent 활성화 완료');
+  switchFile(fileName) {
+    if (this.state.activeFileName === fileName) return;
+
+    // 1. 현재 파일 내용 저장 (이미 change 리스너로 되지만 안전장치)
+    const currentContent = this.modules.codeEditor.getCurrentCode();
+    this.updateFileContent(this.state.activeFileName, currentContent);
+
+    // 2. 대상 파일 찾기
+    const targetFile = this.state.files.find(f => f.name === fileName);
+    if (!targetFile) return;
+
+    // 3. 에디터 내용 교체 (이벤트 발생 없이 값만 변경)
+    // setValue의 두 번째 인자 -1은 커서를 처음으로, 1은 끝으로
+    // 여기서는 그냥 값만 바꿈.
+    this.modules.codeEditor.setCode(targetFile.content);
+
+    this.state.activeFileName = fileName;
+    this.refreshUI();
   }
-  
+
   /**
-   * 컴포넌트 비활성화
+   * 새 파일 생성
    */
-  deactivate() {
-    super.deactivate();
-    
-    // 요소 숨기기
-    this.element.classList.add('component-hidden');
-    this.element.classList.remove('component-visible');
-    
-    // 하위 모듈 비활성화
-    if (this.modules.codeEditor && typeof this.modules.codeEditor.deactivate === 'function') {
-      this.modules.codeEditor.deactivate();
+  createFile(fileName) {
+    if (this.state.files.find(f => f.name === fileName)) return;
+
+    const newFile = {
+      name: fileName,
+      content: '# New File\n',
+      isReadOnly: false
+    };
+    this.state.files.push(newFile);
+
+    // 새 파일을 열고 탭에도 추가
+    if (window.editorTabs) {
+      window.editorTabs.addTab(fileName);
     }
-    
-    if (this.modules.terminal && typeof this.modules.terminal.deactivate === 'function') {
-      this.modules.terminal.deactivate();
-    }
-    
-    console.log('IDEComponent 비활성화 완료');
+    this.switchFile(fileName);
   }
-  
+
   /**
-   * 문제 변경 시 호출
+   * 파일 삭제
    */
-  onProblemChanged(examName, problemNumber) {
-    this.state.currentExamName = examName;
-    this.state.currentProblemNumber = problemNumber;
-    this.clearOutput();
-    
-    // 하위 모듈에 전달
-    if (this.modules.codeEditor && typeof this.modules.codeEditor.onProblemChanged === 'function') {
-      this.modules.codeEditor.onProblemChanged(examName, problemNumber);
+  deleteFile(fileName) {
+    this.state.files = this.state.files.filter(f => f.name !== fileName);
+
+    if (window.editorTabs) {
+      window.editorTabs.removeTab(fileName);
     }
-    
-    // 🔥 추가: 해설 버튼 상태 업데이트
-    this.updateExplanationButton();
-    
-    console.log(`IDEComponent - 문제 변경: ${examName}, 문제 ${problemNumber}`);
-  }
-  
-  /**
-   * 현재 코드 가져오기
-   */
-  getCurrentCode() {
-    if (this.modules.codeEditor && typeof this.modules.codeEditor.getCurrentCode === 'function') {
-      return this.modules.codeEditor.getCurrentCode();
-    }
-    return '';
-  }
-  
-  /**
-   * 코드 설정하기
-   */
-  setCode(code) {
-    if (this.modules.codeEditor && typeof this.modules.codeEditor.setCode === 'function') {
-      return this.modules.codeEditor.setCode(code);
-    }
-    return false;
-  }
-  
-  /**
-   * 터미널 출력
-   */
-  appendToOutput(text, type = 'normal') {
-    if (this.modules.terminal && typeof this.modules.terminal.appendToOutput === 'function') {
-      this.modules.terminal.appendToOutput(text, type);
+
+    // 만약 보고 있던 파일을 삭제했다면 main.py 등으로 이동
+    if (this.state.activeFileName === fileName) {
+      this.switchFile(this.state.files[0].name);
+    } else {
+      this.refreshUI();
     }
   }
-  
+
   /**
-   * 터미널 지우기
+   * 탭 닫기 (파일은 유지하지만 탭바에서만 제거 - 실제로는 파일이 닫히는 개념이 아님)
+   * 여기서는 탭을 닫으면 자동으로 다른 탭을 보여주는 UI 로직만 수행
    */
-  clearOutput() {
-    if (this.modules.terminal && typeof this.modules.terminal.clearOutput === 'function') {
-      this.modules.terminal.clearOutput();
+  closeFileTab(fileName) {
+    if (window.editorTabs) {
+      window.editorTabs.removeTab(fileName);
     }
-  }
-  
-  /**
-   * 코드 실행
-   */
-  runCode() {
-    if (this.modules.terminal && typeof this.modules.terminal.runCode === 'function') {
-      this.modules.terminal.runCode();
-    }
-  }
-  
-  /**
-   * 🔥 추가: 기본 코드 불러오기
-   */
-  loadExampleCode() {
-    if (this.modules.codeEditor && typeof this.modules.codeEditor.loadExampleCode === 'function') {
-      return this.modules.codeEditor.loadExampleCode();
-    }
-    return false;
-  }
-  
-  /**
-   * 정답 코드 표시
-   */
-  showAnswer() {
-    if (this.modules.codeEditor && typeof this.modules.codeEditor.showAnswer === 'function') {
-      this.modules.codeEditor.showAnswer();
-    }
-  }
-  
-  /**
-   * 에디터 크기 조정
-   */
-  resizeEditor() {
-    if (this.modules.codeEditor && typeof this.modules.codeEditor.resizeEditor === 'function') {
-      this.modules.codeEditor.resizeEditor();
-    }
-  }
-  
-  /**
-   * 🔥 추가: 해설 버튼 상태 업데이트
-   */
-  updateExplanationButton() {
-    const explanationBtn = document.getElementById('ide-explanation-btn');
-    if (explanationBtn) {
-      // 현재 문제가 있을 때만 해설 버튼 표시
-      if (this.state.currentExamName && this.state.currentProblemNumber) {
-        explanationBtn.style.display = 'inline-block';
-        explanationBtn.onclick = () => {
-          window.EventBus.publish('explanation-request', {
-            examName: this.state.currentExamName,
-            problemNumber: this.state.currentProblemNumber
-          });
-        };
-      } else {
-        explanationBtn.style.display = 'none';
+    // 탭을 닫았는데 그게 활성 탭이었다면? EditorTabs.removeTab이 activeTabName을 업데이트해줌.
+    // 우리는 업데이트된 activeTabName으로 에디터를 갱신해야 함.
+    if (window.editorTabs) {
+      const nextActive = window.editorTabs.activeTabName;
+      if (nextActive && nextActive !== this.state.activeFileName) {
+        this.switchFile(nextActive);
       }
     }
   }
-  
+
   /**
-   * 🔥 추가: 다운로드 버튼 이벤트 설정
+   * UI 갱신 (FileTree Highlight, Tabs Highlight)
    */
-  setupDownloadButton() {
-    const downloadBtn = document.getElementById('download-code-btn');
-    if (downloadBtn) {
-      downloadBtn.addEventListener('click', () => {
-        this.downloadCurrentCode();
-      });
-      console.log('IDEComponent: 다운로드 버튼 이벤트 설정 완료');
-    } else {
-      console.warn('IDEComponent: 다운로드 버튼을 찾을 수 없습니다.');
+  refreshUI() {
+    if (this.modules.fileTree) {
+      this.modules.fileTree.setFiles(this.state.files);
+      this.modules.fileTree.setActiveFile(this.state.activeFileName);
+    }
+    if (this.modules.editorTabs) {
+      // 모든 파일을 탭으로? 혹은 열린 파일만?
+      // 편의상 모든 파일을 탭에 띄우거나, FileTree에서 더블클릭 시 탭 추가 방식
+      // 여기서는 간단하게 "모든 사용자 파일 = 탭"으로 동기화 (VSCode 스타일은 복잡함)
+      // 아니면 FileTree 목록과 Tabs 목록을 별도로 관리해야 함.
+      // 사용자 경험상, 파일을 생성하면 탭에 추가.
+      // 여기서 setTabs는 현재 열려있는 탭 목록이어야 하는데, state.files 전체를 넣으면 너무 많을 수 있음.
+      // -> 단순화를 위해 "FileTree에 있는 모든 파일이 Tabs에 뜸"으로 시작 (추후 개선)
+      this.modules.editorTabs.setTabs(this.state.files.map(f => f.name));
+      this.modules.editorTabs.setActiveTab(this.state.activeFileName);
     }
   }
-  
+
   /**
-   * 🔥 추가: 현재 코드 다운로드 기능
+   * 🔥 멀티 파일 실행 로직
    */
-  downloadCurrentCode() {
-    console.log('IDEComponent: 코드 다운로드 시작');
-    
-    // 현재 코드 가져오기
-    const currentCode = this.getCurrentCode();
-    
-    if (!currentCode || currentCode.trim() === '') {
-      alert('다운로드할 코드가 없습니다.');
-      return;
-    }
-    
-    // 파일명 생성
-    const fileName = this.generateFileName();
-    
-    // 다운로드 실행
-    this.downloadFile(currentCode, fileName);
-    
-    console.log(`IDEComponent: 코드 다운로드 완료 - 파일명: ${fileName}`);
-  }
-  
-  /**
-   * 🔥 추가: 다운로드 파일명 생성
-   */
-  generateFileName() {
-    // 날짜 시간 형식으로 기본 파일명 생성
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    let fileName = `my_python_code_${year}${month}${day}_${hours}${minutes}${seconds}.py`;
-    
-    // 현재 문제 정보가 있으면 파일명에 포함
-    if (this.state.currentExamName && this.state.currentProblemNumber) {
-      const examName = this.state.currentExamName.replace(/[^a-zA-Z0-9]/g, '_');
-      const problemNum = String(this.state.currentProblemNumber).padStart(2, '0');
-      fileName = `${examName}_p${problemNum}_${year}${month}${day}_${hours}${minutes}${seconds}.py`;
-    }
-    
-    return fileName;
-  }
-  
-  /**
-   * 🔥 추가: 파일 다운로드 실행
-   */
-  downloadFile(content, fileName) {
+  async runMultiFileCode() {
+    console.log('🚀 멀티 파일 코드 실행 중...');
+
+    // 1. 현재 에디터 내용 저장
+    const currentContent = this.modules.codeEditor.getCurrentCode();
+    this.updateFileContent(this.state.activeFileName, currentContent);
+
+    // 2. 실행 요청 준비
+    // 파일 배열 생성: [{ path: 'main.py', content: '...' }]
+    const filesPayload = this.state.files.map(f => ({
+      path: f.name,
+      content: f.content
+    }));
+
+    // 3. 서버 전송
     try {
-      // Blob 생성 (UTF-8 인코딩)
-      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-      
-      // URL 생성
-      const url = URL.createObjectURL(blob);
-      
-      // 임시 a 태그 생성
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      a.style.display = 'none';
-      
-      // DOM에 추가 후 클릭
-      document.body.appendChild(a);
-      a.click();
-      
-      // 정리
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      console.log(`IDEComponent: 파일 다운로드 성공 - ${fileName}`);
-      
+      // Terminal UI 초기화
+      this.modules.terminal.clearOutput();
+      this.modules.terminal.appendToOutput('Running...\n', 'info');
+
+      // TerminalInput 상태 초기화
+      if (this.modules.terminal.terminalInput) {
+        this.modules.terminal.terminalInput.clearInputQueue();
+        this.modules.terminal.terminalInput.setExecutionContext(null);
+      }
+
+      // API 호출
+      const response = await fetch('/api/python-problems/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          files: filesPayload,
+          entryPoint: 'main.py' // 항상 main.py 실행
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // 결과 출력
+        if (result.result.stdout) {
+          this.modules.terminal.appendToOutput(result.result.stdout + '\n');
+        }
+        if (result.result.stderr) {
+          this.modules.terminal.appendToOutput(result.result.stderr + '\n', 'error');
+        }
+
+        // 프로세스 정보가 있다면(대화형) 별도 처리 필요하지만, 
+        // 현재 /run API는 단발성 실행(exec)임.
+        // 대화형(interactive)을 지원하려면 /run-interactive API를 멀티파일 지원하도록 수정해야 함.
+        // Phase 1 기본 실행은 여기까지.
+
+      } else {
+        this.modules.terminal.appendToOutput(`Error: ${result.error}\n`, 'error');
+      }
+
     } catch (error) {
-      console.error('IDEComponent: 파일 다운로드 오류:', error);
-      alert('파일 다운로드 중 오류가 발생했습니다.');
+      console.error('Execution error:', error);
+      this.modules.terminal.appendToOutput(`Client Error: ${error.message}\n`, 'error');
     }
   }
-  
-  /**
-   * 정리
-   */
-  destroy() {
-    console.log('IDEComponent 정리 시작');
-    
-    // 하위 모듈 정리
-    if (this.modules.codeEditor && typeof this.modules.codeEditor.destroy === 'function') {
-      this.modules.codeEditor.destroy();
-      this.modules.codeEditor = null;
-    }
-    
-    if (this.modules.terminal && typeof this.modules.terminal.destroy === 'function') {
-      this.modules.terminal.destroy();
-      this.modules.terminal = null;
-    }
-    
-    // 전역 참조 제거
-    if (window.codeEditor) {
-      window.codeEditor = null;
-    }
-    
-    // 상태 초기화
-    this.state.isInitialized = false;
-    
-    console.log('IDEComponent 정리 완료');
+
+  // --- 기존 메서드 호환 (onProblemChanged 등) ---
+
+  onProblemChanged(examName, problemNumber) {
+    // 문제 로드 시 파일 목록 초기화 로직 필요
+    // (API에서 문제의 starter_code 등을 가져와서 main.py에 세팅)
+    super.onProblemChanged(examName, problemNumber);
+
+    // 예시: 문제 변경 시 main.py 리셋
+    // 실제로는 loadExampleCodeFromAPI 등이 호출되면서 codeEditor 값을 바꿈.
+    // 그 값을 잡아서 main.py content로 업데이트해야 함.
+  }
+
+  // EventBus 처리 등 기존 로직 유지...
+  setupEventBusListeners() {
+    super.setupEventBusListeners();
+  }
+
+  // 다운로드 등...
+  setupDownloadButton() {
+    // 전체 파일 압축 다운로드? 아니면 현재 파일만?
+    // 우선 현재 파일만 다운로드하도록 유지
+    super.setupDownloadButton();
   }
 }
 

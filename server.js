@@ -479,6 +479,9 @@ const routes = {
   's3': require('./routes/s3Router')  // 🔥 통합 S3 브라우저
 };
 
+// 🔥 Python 문제은행 API 라우터
+app.use('/api/python-problems', authenticateUser, require('./routes/pythonProblemRouter'));
+
 const entryRouter = require('./routes/entryRouter');
 const ttsRouter = require('./routes/api/ttsRouter');
 app.use('/api', authenticateUser, ttsRouter);

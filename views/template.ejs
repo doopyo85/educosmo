@@ -38,6 +38,8 @@
             <% } %>
 
                 <!-- 🔥 IDE 관련 스크립트 - 컴포넌트 시스템보다 먼저 로드 -->
+                <script src="/js/components/ide/FileTree.js"></script>
+                <script src="/js/components/ide/CodeEditorTabs.js"></script>
                 <script src="/js/components/ide/CodeEditor.js"></script>
                 <script src="/js/components/ide/Terminal.js"></script>
                 <script src="/js/components/ide/TerminalInput.js"></script>
@@ -119,104 +121,130 @@
                         <div class="width-resize-handle-line"></div>
                     </div>
 
-                    <div class="code-editor-container">
-                        <div class="code-editor-top-bar">
-                            <div class="code-editor-title">
-                                <!-- Font Awesome Python 브랜드 아이콘 -->
-                                <i class="fab fa-python"
-                                    style="color: #3776ab; font-size: 24px; margin-right: 8px; vertical-align: middle;"></i>
-                                <span style="font-weight: 600;">Python</span>
+                    <!-- 🔥 IDE 메인 레이아웃 (FileTree + Editor) -->
+                    <div class="ide-main-layout">
+                        <!-- 좌측 사이드바: 파일 트리 -->
+                        <div id="file-tree-container" class="file-tree-container">
+                            <!-- FileTree content rendered by JS -->
+                        </div>
+
+                        <!-- 리사이즈 핸들 (FileTree와 Editor 사이) -->
+                        <!-- (일단 생략, 추후 추가 가능) -->
+
+                        <!-- 우측 패널: 에디터 + 탭 + 터미널 -->
+                        <div class="ide-right-panel">
+                            <!-- 상단 탭바 -->
+                            <div id="editor-tabs-container" class="editor-tabs-container">
+                                <!-- Tabs rendered by JS -->
                             </div>
-                            <div class="code-editor-controls" style="display: flex; align-items: center; gap: 8px;">
-                                <!-- 🔥 IDE 폰트 크기 조절 버튼 그룹 수정 -->
-                                <div class="ide-font-controls d-flex align-items-center me-3">
-                                    <div class="btn-group" role="group" aria-label="IDE 컨트롤">
-                                        <button id="font-decrease"
-                                            class="btn btn-sm btn-outline-secondary ide-control-btn" title="폰트 크기 줄이기">
-                                            <i class="bi bi-dash"></i>
-                                        </button>
-                                        <button id="font-increase"
-                                            class="btn btn-sm btn-outline-secondary ide-control-btn" title="폰트 크기 늘리기">
-                                            <i class="bi bi-plus"></i>
-                                        </button>
-                                        <!-- 원본 복원 버튼 위치 (CodeEditor.js에서 동적 생성) -->
-                                        <div id="restore-button-slot" class="restore-button-slot"></div>
-                                        <button id="download-code-btn"
-                                            class="btn btn-sm btn-outline-secondary ide-control-btn" title="코드 다운로드">
-                                            <i class="bi bi-download"></i>
-                                        </button>
+
+                            <!-- 기존 에디터 컨테이너 -->
+                            <div class="code-editor-container">
+                                <div class="code-editor-top-bar">
+                                    <div class="code-editor-title">
+                                        <!-- Font Awesome Python 브랜드 아이콘 -->
+                                        <i class="fab fa-python"
+                                            style="color: #3776ab; font-size: 24px; margin-right: 8px; vertical-align: middle;"></i>
+                                        <span style="font-weight: 600;">Python</span>
                                     </div>
-                                </div>
-
-
-                                <!-- 🔥 복원 버튼 그룹 (정답보기 버튼 왼쪽에 배치) -->
-                                <div class="editor-button-group" style="display: flex; align-items: center; gap: 8px;">
-                                    <!-- 복원 버튼은 CodeEditor.js의 createRestoreButton()에서 동적으로 생성됨 -->
-                                </div>
-
-                                <!-- 🔥 추가: 해설 버튼 -->
-                                <button id="ide-explanation-btn">
-                                    힌트
-                                </button>
-
-                                <!-- 교사/관리자용 정답보기 버튼 -->
-                                <% if (role==='teacher' || role==='admin' || role==='manager' ) { %>
-                                    <button id="showAnswerBtn">
-                                        정답
-                                    </button>
-                                    <% } %>
-
-                                        <button id="runCodeBtn" class="btn btn-success btn-sm">
-                                            <i class="bi bi-play-fill"></i> 코드 실행
-                                        </button>
-
-                                        <div class="ide-selector ms-2">
-                                            <div class="btn-group btn-group-sm" role="group" aria-label="IDE 선택">
-                                                <button type="button" class="btn btn-outline-primary active"
-                                                    id="ace-btn">ACE Editor</button>
-                                                <button type="button" class="btn btn-outline-primary"
-                                                    id="jupyter-btn">Jupyter</button>
+                                    <div class="code-editor-controls"
+                                        style="display: flex; align-items: center; gap: 8px;">
+                                        <!-- 🔥 IDE 폰트 크기 조절 버튼 그룹 수정 -->
+                                        <div class="ide-font-controls d-flex align-items-center me-3">
+                                            <div class="btn-group" role="group" aria-label="IDE 컨트롤">
+                                                <button id="font-decrease"
+                                                    class="btn btn-sm btn-outline-secondary ide-control-btn"
+                                                    title="폰트 크기 줄이기">
+                                                    <i class="bi bi-dash"></i>
+                                                </button>
+                                                <button id="font-increase"
+                                                    class="btn btn-sm btn-outline-secondary ide-control-btn"
+                                                    title="폰트 크기 늘리기">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                                <!-- 원본 복원 버튼 위치 (CodeEditor.js에서 동적 생성) -->
+                                                <div id="restore-button-slot" class="restore-button-slot"></div>
+                                                <button id="download-code-btn"
+                                                    class="btn btn-sm btn-outline-secondary ide-control-btn"
+                                                    title="코드 다운로드">
+                                                    <i class="bi bi-download"></i>
+                                                </button>
                                             </div>
                                         </div>
-                            </div>
-                        </div>
 
-                        <!-- ACE 에디터 컨테이너 -->
-                        <div id="ace-editor-inner" class="ide-container-inner active">
-                            <!-- 에디터 영역 -->
-                            <div class="editor-area">
-                                <div id="editor" class="code-editor"></div>
-                            </div>
 
-                            <!-- 리사이즈 핸들 -->
-                            <div id="ide-resize-handle" class="resize-handle" title="드래그하여 터미널 크기 조정">
-                                <div class="resize-handle-line"></div>
-                            </div>
+                                        <!-- 🔥 복원 버튼 그룹 (정답보기 버튼 왼쪽에 배치) -->
+                                        <div class="editor-button-group"
+                                            style="display: flex; align-items: center; gap: 8px;">
+                                            <!-- 복원 버튼은 CodeEditor.js의 createRestoreButton()에서 동적으로 생성됨 -->
+                                        </div>
 
-                            <!-- 터미널 영역 -->
-                            <div class="output-container" style="flex: 0 0 200px; min-height: 200px;">
-                                <div class="output-title">
-                                    <div>실행 결과</div>
-                                    <div class="terminal-controls">
-                                        <button id="terminal-maximize-btn" class="btn btn-outline-secondary btn-sm me-2"
-                                            title="최대화">
-                                            <i class="bi bi-arrows-expand"></i>
+                                        <!-- 🔥 추가: 해설 버튼 -->
+                                        <button id="ide-explanation-btn">
+                                            힌트
                                         </button>
-                                        <button id="clearOutputBtn" class="btn btn-outline-secondary btn-sm">
-                                            <i class="bi bi-trash"></i> 결과 지우기
-                                        </button>
+
+                                        <!-- 교사/관리자용 정답보기 버튼 -->
+                                        <% if (role==='teacher' || role==='admin' || role==='manager' ) { %>
+                                            <button id="showAnswerBtn">
+                                                정답
+                                            </button>
+                                            <% } %>
+
+                                                <button id="runCodeBtn" class="btn btn-success btn-sm">
+                                                    <i class="bi bi-play-fill"></i> 코드 실행
+                                                </button>
+
+                                                <div class="ide-selector ms-2">
+                                                    <div class="btn-group btn-group-sm" role="group"
+                                                        aria-label="IDE 선택">
+                                                        <button type="button" class="btn btn-outline-primary active"
+                                                            id="ace-btn">ACE Editor</button>
+                                                        <button type="button" class="btn btn-outline-primary"
+                                                            id="jupyter-btn">Jupyter</button>
+                                                    </div>
+                                                </div>
                                     </div>
                                 </div>
-                                <div id="output-content" class="output-content">
-                                    <!-- 실행 결과가 여기에 표시됩니다 -->
+
+                                <!-- ACE 에디터 컨테이너 -->
+                                <div id="ace-editor-inner" class="ide-container-inner active">
+                                    <!-- 에디터 영역 -->
+                                    <div class="editor-area">
+                                        <div id="editor" class="code-editor"></div>
+                                    </div>
+
+                                    <!-- 리사이즈 핸들 -->
+                                    <div id="ide-resize-handle" class="resize-handle" title="드래그하여 터미널 크기 조정">
+                                        <div class="resize-handle-line"></div>
+                                    </div>
+
+                                    <!-- 터미널 영역 -->
+                                    <div class="output-container" style="flex: 0 0 200px; min-height: 200px;">
+                                        <div class="output-title">
+                                            <div>실행 결과</div>
+                                            <div class="terminal-controls">
+                                                <button id="terminal-maximize-btn"
+                                                    class="btn btn-outline-secondary btn-sm me-2" title="최대화">
+                                                    <i class="bi bi-arrows-expand"></i>
+                                                </button>
+                                                <button id="clearOutputBtn" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="bi bi-trash"></i> 결과 지우기
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="output-content" class="output-content">
+                                            <!-- 실행 결과가 여기에 표시됩니다 -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Jupyter 컨테이너 (필요시) -->
+                                <div id="jupyter-ide-container">
+                                    <div id="jupyter-auth-message" style="display: none;"></div>
+                                    <iframe id="jupyter-frame" style="display: none;"></iframe>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Jupyter 컨테이너 (필요시) -->
-                        <div id="jupyter-ide-container">
-                            <div id="jupyter-auth-message" style="display: none;"></div>
-                            <iframe id="jupyter-frame" style="display: none;"></iframe>
                         </div>
                     </div>
                 </div>

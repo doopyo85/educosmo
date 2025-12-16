@@ -299,8 +299,9 @@ router.put('/save-project/:fileId', requireAuth, async (req, res) => {
 router.get('/projects', requireAuth, async (req, res) => {
     try {
         const userID = req.session.userID;
-        const { page = 1, limit = 20 } = req.query;
-        const offset = (page - 1) * limit;
+        const pageNum = Number(req.query.page) || 1;
+        const limitNum = Number(req.query.limit) || 20;
+        const offsetNum = (pageNum - 1) * limitNum;
 
         // DB user.id 조회
         const user = await getUserDbId(userID);
@@ -312,6 +313,7 @@ router.get('/projects', requireAuth, async (req, res) => {
         }
 
         // 프로젝트 목록 조회 (UserFiles에서 scratch 카테고리)
+        // MySQL prepared statement에서 LIMIT/OFFSET은 직접 삽입
         const projects = await db.queryDatabase(`
             SELECT 
                 id AS fileId,
@@ -323,8 +325,8 @@ router.get('/projects', requireAuth, async (req, res) => {
             FROM UserFiles 
             WHERE user_id = ? AND file_category = 'scratch' AND is_deleted = FALSE
             ORDER BY created_at DESC
-            LIMIT ? OFFSET ?
-        `, [user.id, parseInt(limit), parseInt(offset)]);
+            LIMIT ${limitNum} OFFSET ${offsetNum}
+        `, [user.id]);
 
         // 전체 개수 조회
         const [countResult] = await db.queryDatabase(
@@ -342,10 +344,10 @@ router.get('/projects', requireAuth, async (req, res) => {
             success: true,
             projects: formattedProjects,
             pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
+                page: pageNum,
+                limit: limitNum,
                 total: countResult.total,
-                totalPages: Math.ceil(countResult.total / limit)
+                totalPages: Math.ceil(countResult.total / limitNum)
             }
         });
 
