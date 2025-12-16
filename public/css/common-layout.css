@@ -580,29 +580,47 @@ body.resizing * {
 }
 
 /* 🔥 추가: 문제 상단 네비게이션 레이아웃 개선 */
+/* 🔥 추가: 문제 상단 네비게이션 레이아웃 개선 */
 .problem-top-nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 24px;
+    padding: 0 16px;
+    /* 좌우 패딩 줄임 */
     background: #ffffff;
-    /* 흰색 배경으로 변경 요청 가능성 대비, 현재 유지 */
     border-bottom: 1px solid #f0f0f0;
-    gap: 16px;
+    gap: 0;
+    /* 갭 제거 및 각 요소 너비로 제어 */
     height: 60px;
-    /* 고정 높이 */
 }
 
-/* 왼쪽 정렬 및 여백 확보 */
+/* 1. 타이틀 영역: 40% */
+.problem-top-nav .problem-title,
+/* ID 선택자에 의해 생성된 부모 div 대응 */
 .problem-top-nav .problem-title-container {
-    flex: 1;
+    width: 40%;
+    flex: 0 0 40%;
+    /* 고정 너비 */
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    /* 왼쪽 정렬 */
     justify-content: center;
     line-height: 1.2;
     padding-left: 4px;
+    overflow: hidden;
+    /* 넘치는 내용 숨김 */
+}
+
+/* .problem-title이 부모이고 그 안에 js로 .problem-title-container를 넣는 구조일 수 있으므로 조정 */
+#problem-title {
+    width: 40%;
+    flex: 0 0 40%;
+}
+
+#problem-title .problem-title-container {
+    width: 100%;
+    /* 내부 컨테이너 꽉 채우기 */
+    flex: 1;
 }
 
 .problem-top-nav .problem-filename {
@@ -610,7 +628,11 @@ body.resizing * {
     color: #999;
     margin-bottom: 4px;
     font-family: 'Consolas', 'Monaco', monospace;
-    /* 고정폭 폰트 추천 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    /* 말줄임표 처리를 위해 */
 }
 
 .problem-top-nav .problem-main-title {
@@ -618,28 +640,39 @@ body.resizing * {
     font-weight: 700;
     color: #111;
     text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    /* 말줄임표 처리를 위해 */
 }
 
-/* 오른쪽 정렬 */
+/* 2. 문제 네비게이션 영역: 50% */
 .problem-navigation-container {
+    width: 50%;
+    flex: 0 0 50%;
     display: flex;
+    justify-content: center;
+    /* 가운데 정렬 */
     align-items: center;
     gap: 8px;
-    /* 간격 줄임 */
-    margin-left: auto;
-    /* 우측 끝으로 밀기 */
+    margin-left: 0;
+    /* 기존 auto 제거 */
 }
 
-/* 🔥 추가: 레이아웃 토글 버튼 스타일 (투명 아이콘) */
+/* 3. 레이아웃 토글 버튼: 10% */
 #layout-toggle-btn {
+    width: 10%;
+    flex: 0 0 10%;
     background: transparent;
     border: none;
-    padding: 8px;
+    padding: 0;
     color: #999;
     transition: color 0.2s ease;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
+    /* 오른쪽 정렬 */
     cursor: pointer;
 }
 
