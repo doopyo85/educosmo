@@ -96,12 +96,7 @@ class Terminal {
       runButton.addEventListener('click', this.boundRunCode);
     }
 
-    const clearButton = document.getElementById(this.options.clearButtonId);
-    if (clearButton) {
-      clearButton.removeEventListener('click', this.boundClearOutput);
-      this.boundClearOutput = () => this.clearOutput();
-      clearButton.addEventListener('click', this.boundClearOutput);
-    }
+    // Clear button functionality removed
   }
 
   /**

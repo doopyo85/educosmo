@@ -54,42 +54,52 @@ class FileTree {
     render() {
         if (!this.element) return;
 
+        // 접힘 상태 확인
+        const isCollapsed = this.element.classList.contains('collapsed');
+
         let html = `
-            <div class="file-tree-header">
-                <span class="title">FILES</span>
-                <div class="actions">
-                    <button id="ft-add-file-btn" class="btn btn-xs btn-link" title="New File">
-                        <i class="bi bi-file-earmark-plus"></i>
+            <div class="file-tree-header" style="justify-content: ${isCollapsed ? 'center' : 'space-between'}">
+                ${isCollapsed ? '' : '<span class="title">FILES</span>'}
+                <div class="header-controls" style="display: flex; gap: 4px;">
+                    ${!isCollapsed ? `
+                    <div class="actions">
+                        <button id="ft-add-file-btn" class="btn btn-xs btn-link" title="New File" style="color: #ccc;">
+                            <i class="bi bi-file-earmark-plus"></i>
+                        </button>
+                    </div>` : ''}
+                    
+                    <button id="ft-toggle-btn" class="btn btn-xs btn-link" title="${isCollapsed ? 'Expand' : 'Collapse'}" style="color: #ccc;">
+                        <i class="bi ${isCollapsed ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}"></i>
                     </button>
                 </div>
             </div>
-            <ul class="file-list">
+            <ul class="file-list" style="display: ${isCollapsed ? 'none' : 'block'}">
         `;
 
-        this.files.forEach(file => {
-            const isActive = file.name === this.activeFileName;
-            const iconClass = this.getFileIcon(file.name);
+        if (!isCollapsed) {
+            this.files.forEach(file => {
+                const isActive = file.name === this.activeFileName;
+                const iconClass = this.getFileIcon(file.name);
 
-            html += `
+                html += `
                 <li class="file-item ${isActive ? 'active' : ''}" data-filename="${file.name}">
                     <div class="file-info" onclick="window.fileTree.handleFileClick('${file.name}')">
                         <i class="${iconClass}"></i>
                         <span class="name">${file.name}</span>
                     </div>
-            `;
+                `;
 
-            // 삭제 버튼 (readOnly가 아니고, active 상태일 때 표시 옵션 등)
-            // 메인 파일 보호 로직: main.py는 삭제 불가
-            if (!file.isReadOnly && file.name !== 'main.py') {
-                html += `
+                if (!file.isReadOnly && file.name !== 'main.py') {
+                    html += `
                     <button class="delete-btn" onclick="event.stopPropagation(); window.fileTree.handleFileDelete('${file.name}')">
                         <i class="bi bi-x"></i>
                     </button>
-                 `;
-            }
+                    `;
+                }
 
-            html += `</li>`;
-        });
+                html += `</li>`;
+            });
+        }
 
         html += `</ul>`;
         this.element.innerHTML = html;
@@ -99,6 +109,17 @@ class FileTree {
         if (addBtn) {
             addBtn.onclick = () => this.handleFileCreate();
         }
+
+        const toggleBtn = this.element.querySelector('#ft-toggle-btn');
+        if (toggleBtn) {
+            toggleBtn.onclick = () => this.handleToggle();
+        }
+    }
+
+    handleToggle() {
+        if (!this.element) return;
+        this.element.classList.toggle('collapsed');
+        this.render();
     }
 
     getFileIcon(filename) {
