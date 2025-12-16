@@ -584,41 +584,114 @@ body.resizing * {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 16px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
+    padding: 0 24px;
+    background: #ffffff;
+    /* 흰색 배경으로 변경 요청 가능성 대비, 현재 유지 */
+    border-bottom: 1px solid #f0f0f0;
     gap: 16px;
     height: 60px;
     /* 고정 높이 */
 }
 
+/* 왼쪽 정렬 및 여백 확보 */
 .problem-top-nav .problem-title-container {
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    /* 왼쪽 정렬 */
     justify-content: center;
     line-height: 1.2;
+    padding-left: 4px;
 }
 
 .problem-top-nav .problem-filename {
     font-size: 11px;
-    color: #6c757d;
-    margin-bottom: 2px;
-    font-family: monospace;
+    color: #999;
+    margin-bottom: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    /* 고정폭 폰트 추천 */
 }
 
 .problem-top-nav .problem-main-title {
     font-size: 16px;
-    font-weight: 600;
-    color: #333;
-    text-align: center;
+    font-weight: 700;
+    color: #111;
+    text-align: left;
 }
 
+/* 오른쪽 정렬 */
 .problem-navigation-container {
     display: flex;
     align-items: center;
+    gap: 8px;
+    /* 간격 줄임 */
+    margin-left: auto;
+    /* 우측 끝으로 밀기 */
+}
+
+/* 🔥 추가: 레이아웃 토글 버튼 스타일 (투명 아이콘) */
+#layout-toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 8px;
+    color: #999;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+#layout-toggle-btn:hover {
+    color: #333;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 4px;
+}
+
+#layout-toggle-btn i {
+    font-size: 18px;
+}
+
+/* 🔥 추가: 플로팅 폰트 컨트롤 스타일 */
+.content-floating-controls {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    z-index: 100;
+    display: flex;
     gap: 12px;
+}
+
+.floating-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* 부드러운 그림자 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.2s ease;
+}
+
+.floating-btn:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    color: #000;
+}
+
+.floating-btn:active {
+    transform: translateY(0);
+}
+
+.floating-btn i {
+    font-size: 18px;
 }
 
 /* 컴포넌트 전환 애니메이션 */
