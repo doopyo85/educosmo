@@ -1090,7 +1090,7 @@ class ContentComponent extends Component {
         <body>
           <div class="loading">
             <div class="spinner"></div>
-            <p>문제를 불러오는 중입니다...</p>
+            <p></p> <!-- 🔥 수정: 로딩 텍스트 제거 -->
           </div>
         </body>
       </html>

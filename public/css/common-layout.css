@@ -594,13 +594,13 @@ body.resizing * {
     height: 60px;
 }
 
-/* 1. 타이틀 영역: 50% (확장) */
+/* 1. 타이틀 영역: 유동적 너비 (남는 공간 모두 차지) */
 .problem-top-nav .problem-title,
 /* ID 선택자에 의해 생성된 부모 div 대응 */
 .problem-top-nav .problem-title-container {
-    width: 50%;
-    flex: 0 0 50%;
-    /* 고정 너비 확장 */
+    width: auto;
+    flex: 1 1 auto;
+    /* 유동적 확장 */
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -609,12 +609,15 @@ body.resizing * {
     padding-left: 4px;
     overflow: hidden;
     /* 넘치는 내용 숨김 */
+    min-width: 0;
+    /* Flexbox 말줄임 필수 설정 */
 }
 
 /* .problem-title이 부모이고 그 안에 js로 .problem-title-container를 넣는 구조일 수 있으므로 조정 */
 #problem-title {
-    width: 50%;
-    flex: 0 0 50%;
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 #problem-title .problem-title-container {
@@ -647,23 +650,26 @@ body.resizing * {
     /* 말줄임표 처리를 위해 */
 }
 
-/* 2. 문제 네비게이션 영역: 40% (축소) */
+/* 2. 문제 네비게이션 영역: 컨텐츠 크기에 맞춤 (축소) */
 .problem-navigation-container {
-    width: 40%;
-    flex: 0 0 40%;
+    width: auto;
+    flex: 0 0 auto;
+    /* 컨텐츠 크기만큼만 차지 */
     display: flex;
     justify-content: center;
     /* 가운데 정렬 */
     align-items: center;
     gap: 8px;
     margin-left: 0;
-    /* 기존 auto 제거 */
+    padding: 0 8px;
+    /* 최소 여백 확보 */
 }
 
-/* 3. 레이아웃 토글 버튼: 10% */
+/* 3. 레이아웃 토글 버튼: 고정 크기 */
 #layout-toggle-btn {
-    width: 10%;
-    flex: 0 0 10%;
+    width: 40px;
+    /* 아이콘 크기 정도만 확보 */
+    flex: 0 0 40px;
     background: transparent;
     border: none;
     padding: 0;

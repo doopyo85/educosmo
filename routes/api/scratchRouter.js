@@ -91,12 +91,26 @@ router.post('/scratch/save-project', requireAuth, async (req, res) => {
         const projectId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const fileName = `${S3_SCRATCH_PATH}/${userID}/${projectId}.sb3`;
 
+        // Base64를 Buffer로 변환 (sb3 바이너리 파일)
+        let fileBuffer;
+        if (typeof projectData === 'string' && projectData.length > 100) {
+            // Base64 인코딩된 데이터로 간주
+            try {
+                fileBuffer = Buffer.from(projectData, 'base64');
+            } catch (e) {
+                // Base64가 아니면 문자열 그대로
+                fileBuffer = Buffer.from(projectData);
+            }
+        } else {
+            fileBuffer = Buffer.from(JSON.stringify(projectData));
+        }
+
         // S3에 프로젝트 파일 업로드
         const uploadParams = {
             Bucket: S3_BUCKET,
             Key: fileName,
-            Body: typeof projectData === 'string' ? projectData : JSON.stringify(projectData),
-            ContentType: 'application/json'
+            Body: fileBuffer,
+            ContentType: 'application/x-scratch'
         };
 
         await s3Client.send(new PutObjectCommand(uploadParams));
