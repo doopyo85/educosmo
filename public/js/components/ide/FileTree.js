@@ -59,19 +59,19 @@ class FileTree {
 
         let html = `
             <div class="file-tree-header" style="justify-content: ${isCollapsed ? 'center' : 'space-between'}">
-                ${isCollapsed ? '' : '<span class="title">FILES</span>'}
-                <div class="header-controls" style="display: flex; gap: 4px;">
-                    ${!isCollapsed ? `
-                    <div class="actions">
-                        <button id="ft-add-file-btn" class="btn btn-xs btn-link" title="New File" style="color: #ccc;">
-                            <i class="bi bi-file-earmark-plus"></i>
-                        </button>
-                    </div>` : ''}
-                    
-                    <button id="ft-toggle-btn" class="btn btn-xs btn-link" title="${isCollapsed ? 'Expand' : 'Collapse'}" style="color: #ccc;">
-                        <i class="bi ${isCollapsed ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}"></i>
-                    </button>
+                <div class="branding" style="display: flex; align-items: center; gap: 8px; ${isCollapsed ? 'justify-content: center; width: 100%;' : ''}">
+                    <i class="fab fa-python" style="color: #3776ab; font-size: 20px;"></i>
+                    ${isCollapsed ? '' : '<span class="title" style="font-weight: 600; color: #3776ab;">Python</span>'}
                 </div>
+                <div class="header-controls" style="display: flex; gap: 4px; ${isCollapsed ? 'display: none;' : ''}">
+                    <button id="ft-add-file-btn" class="btn btn-xs btn-link" title="New File" style="color: #ccc;">
+                        <i class="bi bi-file-earmark-plus"></i>
+                    </button>
+                    <!-- Toggle button moved to bottom or specific location if needed, but keeping here for now -->
+                </div>
+                <button id="ft-toggle-btn" class="btn btn-xs btn-link" title="${isCollapsed ? 'Expand' : 'Collapse'}" style="color: #ccc; ${isCollapsed ? 'position: absolute; bottom: 10px;' : ''}">
+                    <i class="bi ${isCollapsed ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}"></i>
+                </button>
             </div>
             <ul class="file-list" style="display: ${isCollapsed ? 'none' : 'block'}">
         `;

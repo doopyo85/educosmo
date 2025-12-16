@@ -133,79 +133,69 @@
 
                         <!-- 우측 패널: 에디터 + 탭 + 터미널 -->
                         <div class="ide-right-panel">
-                            <!-- 상단 탭바 -->
-                            <div id="editor-tabs-container" class="editor-tabs-container">
-                                <!-- Tabs rendered by JS -->
+                            <!-- 상단 탭바 + 컨트롤 통합 -->
+                            <div class="editor-header-bar"
+                                style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #3c3c3c; background-color: #252526; height: 35px; padding: 0 10px;">
+                                <!-- 왼쪽: 탭 -->
+                                <div id="editor-tabs-container" class="editor-tabs-container"
+                                    style="flex: 1; overflow-x: auto; display: flex;">
+                                    <!-- Tabs rendered by JS -->
+                                </div>
+
+                                <!-- 오른쪽: 컨트롤 버튼 -->
+                                <div class="code-editor-controls" style="display: flex; align-items: center; gap: 6px;">
+                                    <!-- 폰트 컨트롤 -->
+                                    <div class="ide-font-controls d-flex align-items-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button id="font-decrease" class="btn btn-outline-secondary ide-control-btn"
+                                                title="폰트 축소" style="padding: 2px 6px; font-size: 12px;">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                            <button id="font-increase" class="btn btn-outline-secondary ide-control-btn"
+                                                title="폰트 확대" style="padding: 2px 6px; font-size: 12px;">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                            <div id="restore-button-slot" class="restore-button-slot"></div>
+                                            <button id="download-code-btn"
+                                                class="btn btn-outline-secondary ide-control-btn" title="다운로드"
+                                                style="padding: 2px 6px; font-size: 12px;">
+                                                <i class="bi bi-download"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="editor-button-group"
+                                        style="display: flex; align-items: center; gap: 4px;"></div>
+
+                                    <button id="ide-explanation-btn" class="btn btn-outline-info btn-sm"
+                                        style="padding: 2px 8px; font-size: 12px;">힌트</button>
+
+                                    <% if (role==='teacher' || role==='admin' || role==='manager' ) { %>
+                                        <button id="showAnswerBtn" class="btn btn-outline-danger btn-sm"
+                                            style="padding: 2px 8px; font-size: 12px;">정답</button>
+                                        <% } %>
+
+                                            <button id="runCodeBtn" class="btn btn-success btn-sm"
+                                                style="padding: 2px 10px; font-size: 12px;">
+                                                <i class="bi bi-play-fill"></i> 실행
+                                            </button>
+
+                                            <div class="ide-selector ms-2">
+                                                <div class="btn-group btn-group-sm" role="group" aria-label="IDE 선택">
+                                                    <button type="button" class="btn btn-outline-primary active"
+                                                        id="ace-btn"
+                                                        style="padding: 2px 6px; font-size: 11px;">ACE</button>
+                                                    <button type="button" class="btn btn-outline-primary"
+                                                        id="jupyter-btn"
+                                                        style="padding: 2px 6px; font-size: 11px;">Jupyter</button>
+                                                </div>
+                                            </div>
+                                </div>
                             </div>
 
-                            <!-- 기존 에디터 컨테이너 -->
+                            <!-- 기존 에디터 컨테이너 (헤더 제거됨) -->
                             <div class="code-editor-container">
-                                <div class="code-editor-top-bar">
-                                    <div class="code-editor-title">
-                                        <!-- Font Awesome Python 브랜드 아이콘 -->
-                                        <i class="fab fa-python"
-                                            style="color: #3776ab; font-size: 24px; margin-right: 8px; vertical-align: middle;"></i>
-                                        <span style="font-weight: 600;">Python</span>
-                                    </div>
-                                    <div class="code-editor-controls"
-                                        style="display: flex; align-items: center; gap: 8px;">
-                                        <!-- 🔥 IDE 폰트 크기 조절 버튼 그룹 수정 -->
-                                        <div class="ide-font-controls d-flex align-items-center me-3">
-                                            <div class="btn-group" role="group" aria-label="IDE 컨트롤">
-                                                <button id="font-decrease"
-                                                    class="btn btn-sm btn-outline-secondary ide-control-btn"
-                                                    title="폰트 크기 줄이기">
-                                                    <i class="bi bi-dash"></i>
-                                                </button>
-                                                <button id="font-increase"
-                                                    class="btn btn-sm btn-outline-secondary ide-control-btn"
-                                                    title="폰트 크기 늘리기">
-                                                    <i class="bi bi-plus"></i>
-                                                </button>
-                                                <!-- 원본 복원 버튼 위치 (CodeEditor.js에서 동적 생성) -->
-                                                <div id="restore-button-slot" class="restore-button-slot"></div>
-                                                <button id="download-code-btn"
-                                                    class="btn btn-sm btn-outline-secondary ide-control-btn"
-                                                    title="코드 다운로드">
-                                                    <i class="bi bi-download"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-
-
-                                        <!-- 🔥 복원 버튼 그룹 (정답보기 버튼 왼쪽에 배치) -->
-                                        <div class="editor-button-group"
-                                            style="display: flex; align-items: center; gap: 8px;">
-                                            <!-- 복원 버튼은 CodeEditor.js의 createRestoreButton()에서 동적으로 생성됨 -->
-                                        </div>
-
-                                        <!-- 🔥 추가: 해설 버튼 -->
-                                        <button id="ide-explanation-btn">
-                                            힌트
-                                        </button>
-
-                                        <!-- 교사/관리자용 정답보기 버튼 -->
-                                        <% if (role==='teacher' || role==='admin' || role==='manager' ) { %>
-                                            <button id="showAnswerBtn">
-                                                정답
-                                            </button>
-                                            <% } %>
-
-                                                <button id="runCodeBtn" class="btn btn-success btn-sm">
-                                                    <i class="bi bi-play-fill"></i> 코드 실행
-                                                </button>
-
-                                                <div class="ide-selector ms-2">
-                                                    <div class="btn-group btn-group-sm" role="group"
-                                                        aria-label="IDE 선택">
-                                                        <button type="button" class="btn btn-outline-primary active"
-                                                            id="ace-btn">ACE Editor</button>
-                                                        <button type="button" class="btn btn-outline-primary"
-                                                            id="jupyter-btn">Jupyter</button>
-                                                    </div>
-                                                </div>
-                                    </div>
-                                </div>
+                                <!-- Top Bar Removed -->
 
                                 <!-- ACE 에디터 컨테이너 -->
                                 <div id="ace-editor-inner" class="ide-container-inner active">

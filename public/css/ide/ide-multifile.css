@@ -151,15 +151,48 @@
 }
 
 /* 상단: 에디터 탭 */
-.editor-tabs-container {
+/* 상단: 에디터 탭바 wrapper (Controls 포함) */
+.editor-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     height: 35px;
-    background-color: #2d2d2d;
-    /* VSCode Title Bar Bg ? or Tab Bg */
+    background-color: #252526;
+    /* VSCode Editor Group Header */
+    border-bottom: 1px solid #252526;
+    padding-right: 10px;
+}
+
+/* 탭 컨테이너 (왼쪽) */
+.editor-tabs-container {
+    height: 100%;
+    /* background-color: #2d2d2d; */
+    /* Removed to match header bar */
+    background-color: transparent;
     display: flex;
     align-items: flex-end;
-    /* Tabs stick to bottom */
     overflow-x: auto;
-    border-bottom: 1px solid #252526;
+    /* border-bottom: 1px solid #252526; */
+    /* Handled by parent */
+    flex: 1;
+}
+
+/* 우측 컨트롤 영역 */
+.code-editor-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+}
+
+.ide-control-btn {
+    border: none;
+    color: #cccccc;
+}
+
+.ide-control-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
 }
 
 .editor-tabs-container::-webkit-scrollbar {
@@ -186,11 +219,14 @@
     max-width: 150px;
     height: 100%;
     background-color: #2d2d2d;
+    /* Inactive Tab Bg */
     color: #969696;
     border-right: 1px solid #252526;
     cursor: pointer;
     font-size: 13px;
     user-select: none;
+    border-top: 1px solid transparent;
+    /* Prevent layout shift on active */
 }
 
 .tab-item:hover {
@@ -205,6 +241,8 @@
     color: #ffffff;
     border-top: 2px solid #007acc;
     /* Active Indicator */
+    border-bottom: 1px solid #1e1e1e;
+    /* Cover parent border-bottom if possible, or match editor bg */
 }
 
 .tab-item .name {
