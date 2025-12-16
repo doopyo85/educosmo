@@ -99,10 +99,77 @@ class CodeEditorTabs {
     // --- Event Handlers ---
 
     handleTabClick(fileName) {
+        if (this.activeTabName === fileName) {
+            // Already active -> Inline Rename
+            this.startInlineRename(fileName);
+            return;
+        }
+
         this.setActiveTab(fileName);
         if (this.options.onTabSelect) {
             this.options.onTabSelect(fileName);
         }
+    }
+
+    startInlineRename(fileName) {
+        // Find tab element
+        // Note: fileName might need escaping if it has special chars, but for now simple selector
+        // We iterate because we didn't store refs or unique IDs other than index or onclick content
+        // Let's find by text content or add data attribute in render
+
+        // In render(), we added onclick="...handleTabClick('name')" which is not a DOM selector.
+        // But we re-render often.
+        // Let's modify render to add data-filename to LI
+
+        const tabEl = Array.from(this.element.querySelectorAll('.tab-item')).find(el => {
+            const nameEl = el.querySelector('.name');
+            return nameEl && nameEl.textContent === fileName;
+        });
+
+        if (!tabEl) return;
+        if (tabEl.classList.contains('renaming')) return;
+
+        const nameSpan = tabEl.querySelector('.name');
+        const oldName = fileName;
+        const currentName = nameSpan.textContent;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentName;
+        input.className = 'rename-input'; // Re-use same css class
+        input.style.width = '100px'; // Initial width
+        input.style.height = '20px';
+        input.style.padding = '0 4px';
+
+        nameSpan.style.display = 'none';
+        tabEl.insertBefore(input, nameSpan);
+        tabEl.classList.add('renaming');
+
+        input.focus();
+        input.select();
+
+        const commit = () => {
+            const newName = input.value.trim();
+            if (newName && newName !== oldName) {
+                if (this.options.onTabRename) {
+                    this.options.onTabRename(oldName, newName);
+                }
+                // If success, IDEComponent calls refreshUI -> re-renders
+            } else {
+                this.render(); // Revert
+            }
+        };
+
+        input.onblur = commit;
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                input.blur();
+            } else if (e.key === 'Escape') {
+                this.render();
+            }
+        };
+
+        input.onclick = (e) => e.stopPropagation();
     }
 
     handleTabClose(fileName) {

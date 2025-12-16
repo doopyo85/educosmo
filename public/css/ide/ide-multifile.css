@@ -23,7 +23,8 @@
 }
 
 .file-tree-container.collapsed {
-    width: 35px;
+    width: 60px;
+    /* 🔥 Match header height for square logo */
     /* 헤더 아이콘만 보일 정도 */
 }
 
@@ -133,12 +134,60 @@
     /* Hover시에만 표시 */
 }
 
-.file-item:hover .delete-btn {
-    display: block;
+/* File Tree Footer (Bottom 40%) */
+.file-tree-footer-section {
+    flex: 0 0 40%;
+    /* Fixed 40% height */
+    border-top: 1px solid #3e3e42;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #252526;
+    overflow-y: auto;
 }
 
-.file-item .delete-btn:hover {
+.file-tree-container.collapsed .file-tree-footer-section {
+    align-items: center;
+    padding: 10px 0;
+}
+
+/* Control Buttons in Footer */
+.ide-footer-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.footer-btn {
+    background: transparent;
+    border: 1px solid #3e3e42;
+    color: #cccccc;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.footer-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
+}
+
+/* In-place Rename Input */
+.rename-input {
+    background-color: #3c3c3c;
+    color: #ffffff;
+    border: 1px solid #007acc;
+    padding: 2px 4px;
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
 }
 
 

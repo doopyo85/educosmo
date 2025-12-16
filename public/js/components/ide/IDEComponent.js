@@ -87,8 +87,15 @@ class IDEComponent extends Component {
         this.modules.fileTree = new window.FileTree({
           containerId: 'file-tree-container',
           onFileSelect: (file) => this.switchFile(file.name),
-          onFileCreate: (name) => this.createFile(name),
-          onFileDelete: (name) => this.deleteFile(name)
+          onFileRename: (oldName, newName) => this.renameFile(oldName, newName), // 🔥 Rename Handler
+          onFileDelete: (name) => this.deleteFile(name),
+
+          // 🔥 Footer Actions Handlers (mapped to IDE methods)
+          onFontIncrease: () => this.adjustFontSize(1),
+          onFontDecrease: () => this.adjustFontSize(-1),
+          onRestore: () => this.restoreCode(), // Need to implement
+          onDownload: () => this.downloadCode(),
+          onRefresh: () => this.onProblemChanged(this.state.currentExamName, this.state.currentProblemNumber) // Refresh = Reset Problem? Or Reset Code? check meaning.
         });
         // 전역 참조 (onclick용)
         window.fileTree = this.modules.fileTree;
@@ -101,6 +108,7 @@ class IDEComponent extends Component {
           containerId: 'editor-tabs-container',
           onTabSelect: (name) => this.switchFile(name),
           onTabClose: (name) => this.closeFileTab(name), // 탭 닫기는 파일 삭제가 아님 (화면에서만 닫음)
+          onTabRename: (oldName, newName) => this.renameFile(oldName, newName), // 🔥 Tab Rename
           onTabAdd: () => this.createFilePrompt() // 🔥 새 파일 생성 프롬프트 호출
         });
         window.editorTabs = this.modules.editorTabs;
@@ -380,6 +388,52 @@ class IDEComponent extends Component {
     // 전체 파일 압축 다운로드? 아니면 현재 파일만?
     // 우선 현재 파일만 다운로드하도록 유지
     super.setupDownloadButton();
+  }
+  // --- Footer Control Methods ---
+
+  adjustFontSize(delta) {
+    if (this.modules.codeEditor) {
+      // CodeEditor exposes adjustFontSize method? We need to check or implement it.
+      // CodeEditor has font size logic in template.ejs script block??
+      // No, CodeEditor.js manages font size usually. 
+      // Let's check CodeEditor.js methods... 
+      // Actually, template.ejs has global adjustFontSize function for content iframe.
+      // But for IDE, CodeEditor.js should handle it.
+      // CodeEditor.js usually has increaseFontSize / decreaseFontSize
+      if (this.modules.codeEditor.increaseFontSize && delta > 0) this.modules.codeEditor.increaseFontSize();
+      else if (this.modules.codeEditor.decreaseFontSize && delta < 0) this.modules.codeEditor.decreaseFontSize();
+      else {
+        // CodeEditor.js might not expose it directly publicly or named differently.
+        // Let's try to access ace editor directly
+        const editor = this.modules.codeEditor.state.editor;
+        if (editor) {
+          const currentSize = parseInt(editor.getFontSize()) || 14;
+          editor.setFontSize(currentSize + delta);
+        }
+      }
+    }
+  }
+
+  restoreCode() {
+    if (this.modules.codeEditor) {
+      // Calls logic to restore code (reset to initial)
+      // Usually handled by a button click listener set up in CodeEditor.js
+      // We can manually trigger it if we have access or replicate logic
+      if (this.modules.codeEditor.restoreToOriginal) {
+        this.modules.codeEditor.restoreToOriginal();
+      } else {
+        // Fallback: reload problem?
+        // this.onProblemChanged(...)
+        alert('Restore function not directly available. Reloading problem...');
+        this.onProblemChanged(this.state.currentExamName, this.state.currentProblemNumber);
+      }
+    }
+  }
+
+  downloadCode() {
+    if (this.modules.codeEditor) {
+      this.modules.codeEditor.downloadCode();
+    }
   }
 }
 

@@ -8,7 +8,13 @@ class FileTree {
             containerId: 'file-tree-container',
             onFileSelect: null,  // (file) => {}
             onFileCreate: null,  // (filename) => {}
+            onFileRename: null,  // (old, new) => {}
             onFileDelete: null,  // (filename) => {}
+            onFontIncrease: null,
+            onFontDecrease: null,
+            onRestore: null,
+            onDownload: null,
+            onRefresh: null,
             ...options
         };
 
@@ -167,6 +173,98 @@ class FileTree {
             this.options.onFileDelete(fileName);
         }
     }
+
+    // --- Control Handlers ---
+    handleFontIncrease() { if (this.options.onFontIncrease) this.options.onFontIncrease(); }
+    handleFontDecrease() { if (this.options.onFontDecrease) this.options.onFontDecrease(); }
+    handleRefresh() { if (this.options.onRefresh) this.options.onRefresh(); }
+    handleDownload() { if (this.options.onDownload) this.options.onDownload(); }
+
+    // --- Rename Logic ---
+    // Double click or similar to rename? 
+    // User requested: "Click active item to rename".
+    // We update handleFileClick to detect second click on active item.
+
+    handleFileClick(fileName) {
+        console.log('File clicked:', fileName);
+
+        if (this.activeFileName === fileName) {
+            // Already active, this is a second click -> Rename?
+            // But we need to distinguish simple focus click vs intent to rename.
+            // Let's use a small timeout or state check? 
+            // Better: If it's already active, we check if we should switch to edit mode.
+            // For now, let's just trigger rename prompt for simplicity as "MVP". 
+            // Real in-place edit is complex (DOM replacement).
+            // Let's stick to prompt for now, or build a simple in-place input replacement.
+
+            // To prevent accidental trigger on first load/selection, maybe ensure some delay?
+            // Actually, "main.py를 클릭하고 한번더 클릭하면" implies intention.
+
+            // Simple approach: Check if element is currently in "view mode".
+            // Let's implement full In-Place Edit.
+            this.startInlineRename(fileName);
+            return;
+        }
+
+        this.setActiveFile(fileName);
+        if (this.options.onFileSelect) {
+            const file = this.files.find(f => f.name === fileName);
+            this.options.onFileSelect(file);
+        }
+    }
+
+    startInlineRename(fileName) {
+        // Find the file item element
+        const item = this.element.querySelector(`.file-item[data-filename="${fileName}"]`);
+        if (!item) return;
+
+        const fileInfo = item.querySelector('.file-info');
+        const nameSpan = item.querySelector('.name');
+
+        if (item.classList.contains('renaming')) return; // Already renaming
+
+        const oldName = fileName;
+        const currentName = nameSpan.textContent;
+
+        // Create input
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentName;
+        input.className = 'rename-input'; // Styled in CSS
+
+        // Replace span with input
+        nameSpan.style.display = 'none';
+        fileInfo.insertBefore(input, nameSpan);
+        item.classList.add('renaming');
+
+        input.focus();
+        input.select();
+
+        // Handle commit
+        const commit = () => {
+            const newName = input.value.trim();
+            if (newName && newName !== oldName) {
+                if (this.options.onFileRename) {
+                    this.options.onFileRename(oldName, newName);
+                }
+            } else {
+                // Revert
+                this.render(); // Simple revert
+            }
+        };
+
+        input.onblur = commit;
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                input.blur();
+            } else if (e.key === 'Escape') {
+                this.render(); // Cancel
+            }
+        };
+
+        input.onclick = (e) => e.stopPropagation(); // Prevent re-triggering click handlers
+    }
+
 }
 
 // 전역 인스턴스 접근 (HTML onclick 핸들러용)
