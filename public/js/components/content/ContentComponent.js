@@ -539,7 +539,11 @@ class ContentComponent extends Component {
       );
 
       if (problemInfo && problemInfo[0]) {
-        fileName = problemInfo[0];
+        // 🔥 수정: 전체 경로가 아닌 파일명만 추출
+        const fullPath = problemInfo[0];
+        // 경로 구분자(슬래시)로 분리하여 마지막 요소(파일명)만 사용
+        const pathParts = fullPath.split(/[/\\]/);
+        fileName = pathParts.pop();
       }
     }
 
