@@ -19,7 +19,11 @@ module.exports = {
       cwd: '/var/www/html/scratch',
       instances: 1,
       exec_mode: 'fork',
-      watch: false
+      watch: false,
+      env: {
+        NODE_ENV: 'production',
+        PORT: 8601
+      }
     },
     {
       name: 'entry-server',
@@ -27,7 +31,11 @@ module.exports = {
       cwd: '/var/www/html/entry',
       instances: 1,
       exec_mode: 'fork',
-      watch: false
+      watch: false,
+      env: {
+        NODE_ENV: 'production',
+        PORT: 8070
+      }
     },
     {
       name: 'appinventor-server',
@@ -35,9 +43,13 @@ module.exports = {
       cwd: '/var/www/html/appinventor',
       instances: 1,
       exec_mode: 'fork',
-      watch: false
+      watch: false,
+      env: {
+        NODE_ENV: 'production',
+        PORT: 8300
+      }
     },
-   {
+    {
       name: 'jupyter-server',
       script: '/var/www/html/jupyter_env_ubuntu/bin/python',
       args: [
@@ -69,4 +81,3 @@ module.exports = {
     }
   ]
 };
-
