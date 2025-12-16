@@ -10,8 +10,10 @@ module.exports = {
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000
-      }
+        PORT: 3000,
+        SERVICE_TYPE: 'main'
+      },
+      kill_timeout: 5000
     },
     {
       name: 'scratch',
@@ -22,8 +24,10 @@ module.exports = {
       watch: false,
       env: {
         NODE_ENV: 'production',
-        PORT: 8601
-      }
+        PORT: 8601,
+        SERVICE_TYPE: 'scratch'
+      },
+      kill_timeout: 5000
     },
     {
       name: 'entry-server',
@@ -34,8 +38,10 @@ module.exports = {
       watch: false,
       env: {
         NODE_ENV: 'production',
-        PORT: 8070
-      }
+        PORT: 8070,
+        SERVICE_TYPE: 'entry'
+      },
+      kill_timeout: 5000
     },
     {
       name: 'appinventor-server',
@@ -46,8 +52,10 @@ module.exports = {
       watch: false,
       env: {
         NODE_ENV: 'production',
-        PORT: 8300
-      }
+        PORT: 8300,
+        SERVICE_TYPE: 'appinventor'
+      },
+      kill_timeout: 5000
     },
     {
       name: 'jupyter-server',

@@ -23,7 +23,11 @@ const { updatePermissionCache } = require('./lib_login/permissions');
 const { checkPageAccess, checkRole, checkAdminRole } = require('./lib_login/authMiddleware');
 const { logUserActivity, logMenuAccess, logLearningActivity } = require('./lib_login/logging');
 
+const { logUserActivity, logMenuAccess, logLearningActivity } = require('./lib_login/logging');
+
 const app = express();
+const SERVICE_TYPE = process.env.SERVICE_TYPE || 'main';
+const isMain = SERVICE_TYPE === 'main';
 
 // 서버 시작 시 권한 캐시 초기화
 const permissionsPath = path.join(__dirname, './lib_login/permissions.json');
@@ -442,11 +446,15 @@ app.use('/api/board', require('./routes/api/boardApiRouter'));
 app.use('/api/jupyter', require('./routes/api/jupyterRouter'));
 
 // 🔥 스크래치 API 라우터 (8601 스크래치 GUI 계정 연동용)
-app.use('/api', require('./routes/api/scratchRouter'));
+if (isMain || SERVICE_TYPE === 'scratch') {
+  app.use('/api', require('./routes/api/scratchRouter'));
+}
 // app.use('/api/entry-project', authenticateUser, require('./routes/api/entryProjectAPI')); // ❌ deprecated - 통합 projectRouter 사용
 
 // 🔥 Entry 데이터 API 라우터 (업로드 포함)
-app.use('/entry/data', require('./routes/api/entryDataRouter'));
+if (isMain || SERVICE_TYPE === 'entry') {
+  app.use('/entry/data', require('./routes/api/entryDataRouter'));
+}
 
 // 🔥 통합 프로젝트 저장 시스템 라우터
 app.use('/api/projects', authenticateUser, require('./routes/api/projectRouter'));
@@ -476,17 +484,22 @@ const routes = {
 const entryRouter = require('./routes/entryRouter');
 const ttsRouter = require('./routes/api/ttsRouter');
 app.use('/api', authenticateUser, ttsRouter);
-app.use('/entry', authenticateUser, entryRouter);
+
+if (isMain || SERVICE_TYPE === 'entry') {
+  app.use('/entry', authenticateUser, entryRouter);
+}
 
 const entDebugRouter = require('./routes/api/debug/entDebugRouter');
 app.use('/api/debug/ent', entDebugRouter);
 
 const { createProxyMiddleware } = require('http-proxy-middleware');
-app.use('/appinventor/editor', createProxyMiddleware({
-  target: 'http://localhost:8888',
-  changeOrigin: true,
-  pathRewrite: { '^/appinventor/editor': '/' },
-}));
+if (isMain || SERVICE_TYPE === 'appinventor') {
+  app.use('/appinventor/editor', createProxyMiddleware({
+    target: 'http://localhost:8888',
+    changeOrigin: true,
+    pathRewrite: { '^/appinventor/editor': '/' },
+  }));
+}
 
 // 🔥 디버깅: null 라우터 체크
 Object.entries(routes).forEach(([path, router]) => {
@@ -887,55 +900,61 @@ app.get('/debug-session', (req, res) => {
 // Cron Jobs
 // =====================================================================
 
-cron.schedule(config.CRON.SUBSCRIPTION_UPDATE, async () => {
-  try {
-    await db.queryDatabase(
-      `UPDATE Users SET subscription_status = 'expired' 
+if (isMain) {
+  cron.schedule(config.CRON.SUBSCRIPTION_UPDATE, async () => {
+    try {
+      await db.queryDatabase(
+        `UPDATE Users SET subscription_status = 'expired' 
        WHERE subscription_expiry < CURDATE() AND subscription_status = 'active'`
-    );
-  } catch (error) {
-    console.error('구독 만료 상태 업데이트 중 오류:', error);
-  }
-});
+      );
+    } catch (error) {
+      console.error('구독 만료 상태 업데이트 중 오류:', error);
+    }
+  });
+}
 
-cron.schedule('0 0 * * *', async () => {
-  try {
-    const entryAssetsDir = path.join(__dirname, 'public', 'entry-assets');
-    if (fs.existsSync(entryAssetsDir)) {
-      const sessionDirs = fs.readdirSync(entryAssetsDir);
-      const now = Date.now();
-      let cleanedCount = 0;
+if (isMain) {
+  cron.schedule('0 0 * * *', async () => {
+    try {
+      const entryAssetsDir = path.join(__dirname, 'public', 'entry-assets');
+      if (fs.existsSync(entryAssetsDir)) {
+        const sessionDirs = fs.readdirSync(entryAssetsDir);
+        const now = Date.now();
+        let cleanedCount = 0;
 
-      for (const sessionDir of sessionDirs) {
-        const sessionPath = path.join(entryAssetsDir, sessionDir);
-        const stats = fs.statSync(sessionPath);
+        for (const sessionDir of sessionDirs) {
+          const sessionPath = path.join(entryAssetsDir, sessionDir);
+          const stats = fs.statSync(sessionPath);
 
-        if (now - stats.mtime.getTime() > 60 * 60 * 1000) {
-          await fs.promises.rm(sessionPath, { recursive: true, force: true });
-          cleanedCount++;
+          if (now - stats.mtime.getTime() > 60 * 60 * 1000) {
+            await fs.promises.rm(sessionPath, { recursive: true, force: true });
+            cleanedCount++;
+          }
+        }
+
+        if (cleanedCount > 0 && process.env.NODE_ENV === 'development') {
+          console.log(`Entry 에셋 정리 완료: ${cleanedCount}개 세션 디렉토리 삭제`);
         }
       }
-
-      if (cleanedCount > 0 && process.env.NODE_ENV === 'development') {
-        console.log(`Entry 에셋 정리 완료: ${cleanedCount}개 세션 디렉토리 삭제`);
-      }
+    } catch (error) {
+      console.error('Entry 에셋 정리 중 오류:', error);
     }
-  } catch (error) {
-    console.error('Entry 에셋 정리 중 오류:', error);
-  }
-});
+  });
+}
 
 const { scheduledCleanup } = require('./scripts/cleanup-ent-files');
-cron.schedule('*/5 * * * *', async () => {
-  try {
-    const result = await scheduledCleanup();
-    if (result.success && result.deletedFiles > 0 && process.env.NODE_ENV === 'development') {
-      console.log(`ENT 파일 정리 완료: ${result.deletedFiles}개 파일 삭제`);
+if (isMain) {
+  cron.schedule('*/5 * * * *', async () => {
+    try {
+      const result = await scheduledCleanup();
+      if (result.success && result.deletedFiles > 0 && process.env.NODE_ENV === 'development') {
+        console.log(`ENT 파일 정리 완료: ${result.deletedFiles}개 파일 삭제`);
+      }
+    } catch (error) {
+      console.error('ENT 파일 정리 cron 오류:', error);
     }
-  } catch (error) {
-    console.error('ENT 파일 정리 cron 오류:', error);
-  }
-});
+  });
+}
 
 app.get('/api/ws/proxy/:port', (req, res) => {
   res.status(200).send('WebSocket 프록시 엔드포인트');
@@ -1135,14 +1154,16 @@ app.post('/api/admin/temp-files/cleanup', checkAdminRole, async (req, res) => {
   }
 });
 
-cron.schedule('0 2 * * *', async () => {
-  try {
-    const { cleanupTemporaryFiles } = require('./lib_board/attachmentService');
-    await cleanupTemporaryFiles();
-  } catch (error) {
-    console.error('S3 임시 파일 정리 오류:', error);
-  }
-});
+if (isMain) {
+  cron.schedule('0 2 * * *', async () => {
+    try {
+      const { cleanupTemporaryFiles } = require('./lib_board/attachmentService');
+      await cleanupTemporaryFiles();
+    } catch (error) {
+      console.error('S3 임시 파일 정리 오류:', error);
+    }
+  });
+}
 // 서버 시작
 const PORT = Number(process.env.PORT);
 
