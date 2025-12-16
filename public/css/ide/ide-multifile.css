@@ -10,7 +10,8 @@
 
 /* 좌측 사이드바: 파일 트리 */
 .file-tree-container {
-    width: 220px;
+    width: 160px;
+    /* 🔥 Reduced from 220px */
     background-color: #252526;
     /* VSCode Side Bar Bg */
     border-right: 1px solid #3e3e42;

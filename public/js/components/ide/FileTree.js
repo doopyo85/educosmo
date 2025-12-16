@@ -138,9 +138,9 @@ class FileTree {
         html += `</div>`; // End of file-tree-content
 
         // Toggle Button Footer (Absolute Bottom)
-        // Fixed syntax error here: Removed spaces in tags
+        // 🔥 Added padding-bottom to lift it up slightly as requested
         html += `
-            <div class="file-tree-footer" style="padding: 0; min-height: 40px; display: flex; align-items: center; justify-content: ${isCollapsed ? 'center' : 'flex-end'}; border-top: 1px solid #3e3e42; background-color: #252526;">
+            <div class="file-tree-footer" style="padding: 10px 0 15px 0; min-height: 50px; display: flex; align-items: center; justify-content: ${isCollapsed ? 'center' : 'flex-end'}; border-top: 1px solid #3e3e42; background-color: #252526;">
                 <button id="ft-toggle-btn" class="btn btn-xs btn-link" title="${isCollapsed ? 'Expand' : 'Collapse'}" style="color: #ccc; width: 60px; height: 40px; display: flex; align-items: center; justify-content: center; padding: 0;">
                     <i class="bi ${isCollapsed ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}" style="font-size: 16px;"></i>
                 </button>
