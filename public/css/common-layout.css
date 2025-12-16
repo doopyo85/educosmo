@@ -618,6 +618,8 @@ body.resizing * {
     width: auto;
     flex: 1 1 auto;
     min-width: 0;
+    padding-right: 10px;
+    /* Add some spacing between title and nav */
 }
 
 #problem-title .problem-title-container {
@@ -659,10 +661,17 @@ body.resizing * {
     justify-content: center;
     /* 가운데 정렬 */
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+    /* 🔥 Reduced gap */
     margin-left: 0;
-    padding: 0 8px;
-    /* 최소 여백 확보 */
+    padding: 0 4px;
+    /* 🔥 Reduced padding */
+}
+
+/* 🔥 Compact Problem Dropdown/Text */
+#problem-navigation {
+    font-size: 13px;
+    padding: 2px 4px;
 }
 
 /* 3. 레이아웃 토글 버튼: 고정 크기 */

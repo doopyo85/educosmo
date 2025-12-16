@@ -1213,6 +1213,12 @@ window.ComponentSystem = {
 
   // 메시지 표시 함수들
   showLoadingMessage: function (message) {
+    // 🔥 사용자 요청: 불러오는 중 메시지는 표시하지 않음
+    if (message && message.includes('불러오는 중')) {
+      console.log('로딩 메시지 생략:', message);
+      return;
+    }
+
     if (typeof window.showSystemMessage === 'function') {
       window.showSystemMessage(message, 'info');
     } else {

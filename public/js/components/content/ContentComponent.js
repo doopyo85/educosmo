@@ -665,8 +665,19 @@ class ContentComponent extends Component {
         const style = iframeDoc.createElement('style');
         style.textContent = `
           h1:first-of-type, h1:first-child { display: none !important; }
-          body { padding-top: 20px !important; }
-          img { max-width: 100%; height: auto; } /* 🔥 추가: 큰 이미지 자동 축소 */
+          html, body { 
+              width: 100% !important; 
+              max-width: 100% !important;
+              margin: 0 !important; 
+              padding: 20px !important; 
+              box-sizing: border-box !important;
+              overflow-x: hidden !important; /* Prevent horizontal scroll */
+          }
+          img { 
+              max-width: 100% !important; 
+              height: auto !important; 
+              display: block; /* Remove bottom space */
+          }
         `;
         iframeDoc.head.appendChild(style);
         console.log('ContentComponent: iframe 내부 h1 숨김 및 이미지 스타일 주입 완료');
@@ -685,7 +696,7 @@ class ContentComponent extends Component {
       const response = await fetch(markdownUrl);
 
       if (!response.ok) {
-        throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
+        throw new Error(`HTTP 오류! 상태 코드: ${response.status} `);
       }
 
       const markdownText = await response.text();
@@ -758,7 +769,7 @@ class ContentComponent extends Component {
       .replace(/^# (.*$)/gim, '<h1>$1</h1>')
       .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-      .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+      .replace(/```([\s\S] *?)```/gim, '<pre><code>$1</code></pre>')
       .replace(/`(.*?)`/gim, '<code>$1</code>')
       .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
       .replace(/\n\n/gim, '</p><p>')
@@ -788,7 +799,7 @@ class ContentComponent extends Component {
       const response = await fetch(markdownUrl);
 
       if (!response.ok) {
-        throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
+        throw new Error(`HTTP 오류! 상태 코드: ${response.status} `);
       }
 
       const markdownContent = await response.text();
@@ -815,7 +826,7 @@ class ContentComponent extends Component {
       if (!jupyterResponse.ok) {
         const errorText = await jupyterResponse.text();
         console.error('Jupyter 세션 생성 실패:', jupyterResponse.status, errorText);
-        throw new Error(`Jupyter 세션 생성 실패: ${jupyterResponse.status}`);
+        throw new Error(`Jupyter 세션 생성 실패: ${jupyterResponse.status} `);
       }
 
       const jupyterData = await jupyterResponse.json();
@@ -879,7 +890,7 @@ class ContentComponent extends Component {
       const response = await fetch(htmlUrl);
 
       if (!response.ok) {
-        throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
+        throw new Error(`HTTP 오류! 상태 코드: ${response.status} `);
       }
 
       const htmlContent = await response.text();
@@ -932,88 +943,88 @@ class ContentComponent extends Component {
     const headerTitle = h1Match ? h1Match[1].replace(/<[^>]*>/g, '').trim() : '';
 
     return `
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <base target="_parent">
-      <link rel="stylesheet" href="/css/common-content.css">
-      
-      <!-- Highlight.js -->
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+          < !DOCTYPE html >
+            <html lang="ko">
+              <head>
+                <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <base target="_parent">
+                      <link rel="stylesheet" href="/css/common-content.css">
 
-      <style>
+                        <!-- Highlight.js -->
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+                          <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+                          <style>
         /* Markdown Specific Overrides for common-content.css */
-        body { 
-          padding: 30px 40px !important;
-          max-width: 900px;
-          margin: 0 auto;
+                            body {
+                              padding: 30px 40px !important;
+                            max-width: 900px;
+                            margin: 0 auto;
         }
 
-        /* 헤더 스타일 조정 */
-        h1 { font-size: 2.2em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; margin-bottom: 30px; }
-        h2 { font-size: 1.8em; margin-top: 40px; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
-        h3 { font-size: 1.5em; margin-top: 30px; }
-        
-        /* 테이블 스타일 */
-        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-        th, td { border: 1px solid #ddd; padding: 10px; }
-        th { background-color: #f8f9fa; }
-        
-        /* 인용구 */
-        blockquote { border-left: 4px solid #0d6efd; margin: 0; padding-left: 15px; color: #555; background: #f8f9fa; padding: 10px 15px; border-radius: 4px; }
-        
-        /* 코드 블록 */
-        pre { background: #f6f8fa; padding: 15px; border-radius: 6px; position: relative; }
-        code { font-family: 'Consolas', monospace; }
-        p code { background: #f0f0f0; padding: 2px 5px; border-radius: 4px; color: #d63384; }
+                            /* 헤더 스타일 조정 */
+                            h1 {font - size: 2.2em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; margin-bottom: 30px; }
+                            h2 {font - size: 1.8em; margin-top: 40px; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+                            h3 {font - size: 1.5em; margin-top: 30px; }
 
-        .copy-btn {
-          position: absolute; top: 5px; right: 5px;
-          background: #fff; border: 1px solid #ddd; border-radius: 4px;
-          padding: 3px 8px; font-size: 12px; cursor: pointer; color: #666;
+                            /* 테이블 스타일 */
+                            table {border - collapse: collapse; width: 100%; margin: 20px 0; }
+                            th, td {border: 1px solid #ddd; padding: 10px; }
+                            th {background - color: #f8f9fa; }
+
+                            /* 인용구 */
+                            blockquote {border - left: 4px solid #0d6efd; margin: 0; padding-left: 15px; color: #555; background: #f8f9fa; padding: 10px 15px; border-radius: 4px; }
+
+                            /* 코드 블록 */
+                            pre {background: #f6f8fa; padding: 15px; border-radius: 6px; position: relative; }
+                            code {font - family: 'Consolas', monospace; }
+                            p code {background: #f0f0f0; padding: 2px 5px; border-radius: 4px; color: #d63384; }
+
+                            .copy-btn {
+                              position: absolute; top: 5px; right: 5px;
+                            background: #fff; border: 1px solid #ddd; border-radius: 4px;
+                            padding: 3px 8px; font-size: 12px; cursor: pointer; color: #666;
         }
-        .copy-btn:hover { background: #f0f0f0; color: #333; }
-      </style>
-    </head>
-    <body class="markdown-body">
-      ${markdownHtml}
-      
-      <script>
-        document.addEventListener("DOMContentLoaded", function () {
+                            .copy-btn:hover {background: #f0f0f0; color: #333; }
+                          </style>
+                        </head>
+                        <body class="markdown-body">
+                          ${markdownHtml}
+
+                          <script>
+                            document.addEventListener("DOMContentLoaded", function () {
           if (typeof hljs !== "undefined") {
-            hljs.highlightAll();
+                              hljs.highlightAll();
           }
-          
+
           // 코드 복사 버튼 추가
           document.querySelectorAll('pre').forEach(pre => {
              const btn = document.createElement('button');
-             btn.className = 'copy-btn';
-             btn.innerText = '복사';
+                            btn.className = 'copy-btn';
+                            btn.innerText = '복사';
              btn.onclick = () => {
                 const code = pre.querySelector('code');
-                if(code) {
-                    navigator.clipboard.writeText(code.innerText);
-                    btn.innerText = '완료!';
+                            if(code) {
+                              navigator.clipboard.writeText(code.innerText);
+                            btn.innerText = '완료!';
                     setTimeout(() => btn.innerText = '복사', 2000);
                 }
              };
-             pre.appendChild(btn);
+                            pre.appendChild(btn);
           });
-          
+
           // 외부 링크 새창 열기
           document.querySelectorAll('a').forEach(a => {
             if(a.href && a.href.startsWith('http')) {
-                a.target = '_blank';
+                              a.target = '_blank';
             }
           });
         });
-      </script>
-    </body>
-    </html>
-    `;
+                          </script>
+                        </body>
+                      </html>
+                      `;
   }
 
 
@@ -1021,172 +1032,172 @@ class ContentComponent extends Component {
     if (!this.elements.iframe) return;
 
     this.elements.iframe.srcdoc = `
-      <html>
-        <head>
-          <style>
-            body {
-              font-family: 'Noto Sans KR', Arial, sans-serif;
-              padding: 20px;
-              text-align: center;
-              color: #666;
-              line-height: 1.6;
+                      <html>
+                        <head>
+                          <style>
+                            body {
+                              font - family: 'Noto Sans KR', Arial, sans-serif;
+                            padding: 20px;
+                            text-align: center;
+                            color: #666;
+                            line-height: 1.6;
             }
-            .error {
-              color: #dc3545;
-              margin: 20px 0;
+                            .error {
+                              color: #dc3545;
+                            margin: 20px 0;
             }
-            .debug-info {
-              background-color: #f8f9fa;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              padding: 10px;
-              margin: 20px 0;
-              text-align: left;
-              font-size: 12px;
-              color: #666;
+                            .debug-info {
+                              background - color: #f8f9fa;
+                            border: 1px solid #ddd;
+                            border-radius: 4px;
+                            padding: 10px;
+                            margin: 20px 0;
+                            text-align: left;
+                            font-size: 12px;
+                            color: #666;
             }
-          </style>
-        </head>
-        <body>
-          <h3 class="error">콘텐츠를 불러올 수 없습니다</h3>
-          <div class="debug-info">${message}</div>
-          <p>다른 메뉴를 선택하거나 페이지를 새로고침해 주세요.</p>
-        </body>
-      </html>
-    `;
+                          </style>
+                        </head>
+                        <body>
+                          <h3 class="error">콘텐츠를 불러올 수 없습니다</h3>
+                          <div class="debug-info">${message}</div>
+                          <p>다른 메뉴를 선택하거나 페이지를 새로고침해 주세요.</p>
+                        </body>
+                      </html>
+                      `;
   }
 
   getLoadingHtml() {
     return `
-      <html>
-        <head>
-          <style>
-            body {
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              margin: 0;
-              font-family: 'Noto Sans KR', Arial, sans-serif;
+                      <html>
+                        <head>
+                          <style>
+                            body {
+                              display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100vh;
+                            margin: 0;
+                            font-family: 'Noto Sans KR', Arial, sans-serif;
             }
-            .loading {
-              text-align: center;
+                            .loading {
+                              text - align: center;
             }
-            .spinner {
-              border: 5px solid #f3f3f3;
-              border-top: 5px solid #3498db;
-              border-radius: 50%;
-              width: 40px;
-              height: 40px;
-              animation: spin 1s linear infinite;
-              margin: 0 auto 20px;
+                            .spinner {
+                              border: 5px solid #f3f3f3;
+                            border-top: 5px solid #3498db;
+                            border-radius: 50%;
+                            width: 40px;
+                            height: 40px;
+                            animation: spin 1s linear infinite;
+                            margin: 0 auto 20px;
             }
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
+                            @keyframes spin {
+                              0 % { transform: rotate(0deg); }
+              100% {transform: rotate(360deg); }
             }
-          </style>
-        </head>
-        <body>
-          <div class="loading">
-            <div class="spinner"></div>
-            <p></p> <!-- 🔥 수정: 로딩 텍스트 제거 -->
-          </div>
-        </body>
-      </html>
-    `;
+                          </style>
+                        </head>
+                        <body>
+                          <div class="loading">
+                            <div class="spinner"></div>
+                            <p></p> <!-- 🔥 수정: 로딩 텍스트 제거 -->
+                          </div>
+                        </body>
+                      </html>
+                      `;
   }
 
   getEnhancedHtml(originalHtml) {
     return `
-      <html>
-        <head>
-          <base target="_parent">
-          <link rel="stylesheet" href="/css/common-content.css">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            body { 
-              font-family: 'Noto Sans KR', Arial, sans-serif;
-              padding: 15px;
-              padding-bottom: 120px !important;
-              line-height: 1.6;
-              color: #333;
+                      <html>
+                        <head>
+                          <base target="_parent">
+                            <link rel="stylesheet" href="/css/common-content.css">
+                              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <style>
+                                  body {
+                                    font - family: 'Noto Sans KR', Arial, sans-serif;
+                                  padding: 15px;
+                                  padding-bottom: 120px !important;
+                                  line-height: 1.6;
+                                  color: #333;
             }
-            body::after {
-              content: '';
-              display: block;
-              height: 150px;
-              width: 100%;
+                                  body::after {
+                                    content: '';
+                                  display: block;
+                                  height: 150px;
+                                  width: 100%;
             }
-            ::-webkit-scrollbar { width: 10px; }
-            ::-webkit-scrollbar-track { background: #f1f1f1; }
-            ::-webkit-scrollbar-thumb { background: #888; border-radius: 5px; }
-            ::-webkit-scrollbar-thumb:hover { background: #555; }
-            img { max-width: 100%; height: auto; }
-            pre, code {
-              background-color: #f5f5f5;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              padding: 10px;
-              font-family: 'Consolas', 'Monaco', monospace;
-              overflow-x: auto;
+                                  ::-webkit-scrollbar {width: 10px; }
+                                  ::-webkit-scrollbar-track {background: #f1f1f1; }
+                                  ::-webkit-scrollbar-thumb {background: #888; border-radius: 5px; }
+                                  ::-webkit-scrollbar-thumb:hover {background: #555; }
+                                  img {max - width: 100%; height: auto; }
+                                  pre, code {
+                                    background - color: #f5f5f5;
+                                  border: 1px solid #ddd;
+                                  border-radius: 4px;
+                                  padding: 10px;
+                                  font-family: 'Consolas', 'Monaco', monospace;
+                                  overflow-x: auto;
             }
-          </style>
-        </head>
-        <body>
-          ${originalHtml}
-        </body>
-      </html>
-    `;
+                                </style>
+                              </head>
+                              <body>
+                                ${originalHtml}
+                              </body>
+                            </html>
+                            `;
   }
 
   getErrorHtml(errorMessage, url) {
     return `
-      <html>
-        <head>
-          <style>
-            body {
-              font-family: 'Noto Sans KR', Arial, sans-serif;
-              padding: 20px;
-              text-align: center;
-              color: #666;
+                            <html>
+                              <head>
+                                <style>
+                                  body {
+                                    font - family: 'Noto Sans KR', Arial, sans-serif;
+                                  padding: 20px;
+                                  text-align: center;
+                                  color: #666;
             }
-            .error { color: #dc3545; margin: 20px 0; }
-            .error-details {
-              background-color: #f8f9fa;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              padding: 10px;
-              margin: 20px 0;
-              text-align: left;
-              font-family: monospace;
-              max-width: 600px;
-              margin: 20px auto;
+                                  .error {color: #dc3545; margin: 20px 0; }
+                                  .error-details {
+                                    background - color: #f8f9fa;
+                                  border: 1px solid #ddd;
+                                  border-radius: 4px;
+                                  padding: 10px;
+                                  margin: 20px 0;
+                                  text-align: left;
+                                  font-family: monospace;
+                                  max-width: 600px;
+                                  margin: 20px auto;
             }
-            button {
-              background-color: #0d6efd;
-              color: white;
-              border: none;
-              padding: 10px 15px;
-              border-radius: 4px;
-              cursor: pointer;
-              margin: 10px;
+                                  button {
+                                    background - color: #0d6efd;
+                                  color: white;
+                                  border: none;
+                                  padding: 10px 15px;
+                                  border-radius: 4px;
+                                  cursor: pointer;
+                                  margin: 10px;
             }
-          </style>
-        </head>
-        <body>
-          <h3 class="error">문제 콘텐츠를 불러올 수 없습니다</h3>
-          <p>요청한 문제 파일을 서버에서 찾을 수 없습니다.</p>
-          <div class="error-details">
-            <p>오류 메시지: ${errorMessage}</p>
-            <p>문제 URL: ${url}</p>
-          </div>
-          <div>
-            <button onclick="window.parent.location.reload()">페이지 새로고침</button>
-          </div>
-        </body>
-      </html>
-    `;
+                                </style>
+                              </head>
+                              <body>
+                                <h3 class="error">문제 콘텐츠를 불러올 수 없습니다</h3>
+                                <p>요청한 문제 파일을 서버에서 찾을 수 없습니다.</p>
+                                <div class="error-details">
+                                  <p>오류 메시지: ${errorMessage}</p>
+                                  <p>문제 URL: ${url}</p>
+                                </div>
+                                <div>
+                                  <button onclick="window.parent.location.reload()">페이지 새로고침</button>
+                                </div>
+                              </body>
+                            </html>
+                            `;
   }
 
   // 🔥 NEW: Jupyter 오류 표시 함수
