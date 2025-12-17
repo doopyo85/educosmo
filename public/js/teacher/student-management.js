@@ -661,6 +661,11 @@ const StudentManagement = {
             const isToday = today.getFullYear() === year && (today.getMonth() + 1) === month && today.getDate() === d;
             const todayClass = isToday ? 'today' : '';
 
+            // Holiday Check
+            const holidayName = this.getHoliday(year, month, d);
+            const holidayHtml = holidayName ? `<span class="holiday-badge">${holidayName}</span>` : '';
+            if (holidayName) dayClass += ' holiday-text';
+
             // Attendance List
             const attendees = attendanceMap[d] || [];
             let attendeesHtml = '';
@@ -670,13 +675,50 @@ const StudentManagement = {
 
             $calendar.append(`
                 <div class="calendar-day ${todayClass}">
-                    <div class="${dayClass}">${d}</div>
+                    <div class="${dayClass}">${d} ${holidayHtml}</div>
                     <div class="attendance-list">
                         ${attendeesHtml}
                     </div>
                 </div>
             `);
         }
+    },
+
+    getHoliday(year, month, day) {
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const solarDate = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+        // 1. Fixed Solar Holidays
+        const solarHolidays = {
+            '01-01': '신정',
+            '03-01': '삼일절',
+            '05-05': '어린이날',
+            '06-06': '현충일',
+            '08-15': '광복절',
+            '10-03': '개천절',
+            '10-09': '한글날',
+            '12-25': '크리스마스'
+        };
+        if (solarHolidays[solarDate]) return solarHolidays[solarDate];
+
+        // 2. Variable Holidays (Lunar/Substitute) - 2024, 2025
+        const variableHolidays = {
+            // 2024
+            '2024-02-09': '설날 연휴', '2024-02-10': '설날', '2024-02-11': '설날 연휴', '2024-02-12': '대체공휴일',
+            '2024-04-10': '국회의원 선거',
+            '2024-05-06': '대체공휴일',
+            '2024-05-15': '부처님오신날',
+            '2024-09-16': '추석 연휴', '2024-09-17': '추석', '2024-09-18': '추석 연휴',
+
+            // 2025
+            '2025-01-28': '설날 연휴', '2025-01-29': '설날', '2025-01-30': '설날 연휴',
+            '2025-03-03': '대체공휴일',
+            '2025-05-05': '어린이날/부처님오신날',
+            '2025-05-06': '대체공휴일',
+            '2025-10-05': '추석 연휴', '2025-10-06': '추석', '2025-10-07': '추석 연휴', '2025-10-08': '대체공휴일'
+        };
+
+        return variableHolidays[dateStr] || null;
     },
 
     showAlert(message, type = 'info') {
