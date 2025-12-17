@@ -85,6 +85,15 @@ const StudentManagement = {
         $('.apple-toggle-btn').removeClass('active');
         $(`#btn-${viewName}`).addClass('active');
 
+        // 타이틀 업데이트
+        if (viewName === 'progress') {
+            $('#page-subtitle').text('학생 관리 > 학습 진도');
+            $('#page-main-title').text('학습 진도');
+        } else {
+            $('#page-subtitle').text('학생 관리 > 학생 목록');
+            $('#page-main-title').text('학생 목록');
+        }
+
         // 컨텐츠 표시 전환
         $('.tab-pane').removeClass('show active');
         $(`#student-${viewName}`).addClass('show active');
