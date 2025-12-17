@@ -317,16 +317,16 @@ html {
     overflow: hidden !important;
 }
 
-/* IDE 레이아웃: 콘텐츠 + IDE */
+/* IDE 레이아웃: 콘텐츠 + IDE (변수 기반 동적 너비) */
 .layout-ide .content-container {
-    width: 50% !important;
-    flex: 0 0 50% !important;
+    width: var(--content-width) !important;
+    flex: 0 0 var(--content-width) !important;
 }
 
 .layout-ide .ide-container {
     display: flex !important;
-    width: 50% !important;
-    flex: 0 0 50% !important;
+    width: var(--ide-width) !important;
+    flex: 0 0 var(--ide-width) !important;
 }
 
 .layout-ide .quiz-container,
@@ -336,16 +336,17 @@ html {
     flex: 0 !important;
 }
 
-/* 퀴즈 레이아웃: 콘텐츠 + 퀴즈 */
+/* 퀴즈 레이아웃: 콘텐츠 + 퀴즈 (변수 기반 동적 너비) */
 .layout-quiz .content-container {
-    width: 50% !important;
-    flex: 0 0 50% !important;
+    width: var(--content-width) !important;
+    flex: 0 0 var(--content-width) !important;
 }
 
 .layout-quiz .quiz-container {
     display: flex !important;
-    width: 50% !important;
-    flex: 0 0 50% !important;
+    width: var(--ide-width) !important;
+    /* 퀴즈도 IDE와 같은 우측 패널 변수 공유 */
+    flex: 0 0 var(--ide-width) !important;
 }
 
 .layout-quiz .ide-container,
@@ -494,16 +495,8 @@ html {
     --ide-width: 50%;
 }
 
-/* 🔥 추가: 커스텀 레이아웃 - 동적 너비 조절 (IDE 레이아웃일 때만 적용) */
-.layout-ide .custom-layout .content-container {
-    width: var(--content-width) !important;
-    flex: 0 0 var(--content-width) !important;
-}
-
-.layout-ide .custom-layout .ide-container {
-    width: var(--ide-width) !important;
-    flex: 0 0 var(--ide-width) !important;
-}
+/* 🔥 Legacy: custom-layout class is no longer strictly needed but kept for compatibility logic */
+/* .layout-ide .custom-layout ... rules removed as they are now default behavior */
 
 /* 🔥 추가: IDE 토글 버튼 스타일 */
 .ide-toggle-btn {
