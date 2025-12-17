@@ -393,7 +393,7 @@
 }
 
 /* =============================================
-   Apple-Style Toolbar & Components (White & Clean)
+   Apple-Style Toolbar & Components (White & Clean & Unified Animation)
    ============================================= */
 
 /* 메인 툴바 컨테이너 (Transparent & Clean) */
@@ -419,6 +419,11 @@
   margin: 0 8px;
 }
 
+/* Shared Animation Variables / Mixin Concept */
+/* Transition: Smooth Apple Style */
+/* Hover: Lift Up (-2px) */
+/* Active: Press Down (scale 0.96) */
+
 /* Apple Primary Button (White Tone) */
 .apple-btn-primary {
   background: white;
@@ -429,7 +434,11 @@
   border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+
+  /* Unified Animation */
   transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform: translateY(0);
+
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -439,17 +448,20 @@
 .apple-btn-primary:hover {
   background: #fbfbfd;
   border-color: rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
   color: #0071e3 !important;
+
+  /* Unified Hover Action */
+  transform: translateY(-2px);
 }
 
 .apple-btn-primary:active {
-  transform: scale(0.98);
+  /* Unified Click Action */
+  transform: scale(0.96);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* Apple Outline Button (Green/Success) - White Base */
+/* Apple Outline Button (Green/Success) */
 .apple-btn-outline-success {
   background-color: white !important;
   color: #28cd41 !important;
@@ -458,7 +470,11 @@
   font-size: 0.95rem !important;
   padding: 10px 24px !important;
   border-radius: 999px !important;
+
+  /* Unified Animation */
   transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform: translateY(0);
+
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -470,11 +486,17 @@
   background-color: #28cd41 !important;
   color: white !important;
   border-color: #28cd41 !important;
-  transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(40, 205, 65, 0.25);
+
+  /* Unified Hover Action */
+  transform: translateY(-2px);
 }
 
-/* Apple Nav Pills (Clean Text / Soft Active) */
+.apple-btn-outline-success:active {
+  transform: scale(0.96);
+}
+
+/* Apple Nav Pills (Tabs) */
 .apple-nav-pills {
   display: inline-flex;
   gap: 8px;
@@ -493,15 +515,27 @@
   color: #6e6e73 !important;
   font-weight: 500;
   font-size: 0.95rem;
-  padding: 8px 20px !important;
-  transition: all 0.2s ease;
+  padding: 8px 24px !important;
+  /* Unified padding with buttons */
   border: none !important;
   background: transparent;
+
+  /* Unified Animation matching Buttons */
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform: translateY(0);
 }
 
 .apple-nav-pills .nav-link:hover {
   color: #1d1d1f !important;
   background-color: rgba(0, 0, 0, 0.04);
+
+  /* Unified Hover Action */
+  transform: translateY(-2px);
+}
+
+.apple-nav-pills .nav-link:active {
+  /* Unified Click Action */
+  transform: scale(0.96);
 }
 
 .apple-nav-pills .nav-link.active {
@@ -509,5 +543,13 @@
   color: #1d1d1f !important;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  transform: scale(1.05);
+
+  /* Reset transform for active state so it doesn't float permanently or look different */
+  /* User wants unification. Since a button isn't permanently hovered/active, the TAB state strictly indicates selection */
+  /* To keep it unified, we DO NOT scale it permanently. */
+  transform: translateY(0);
 }
+
+/* If the user wants the active tab to ALSO feel like it's "lifted" or "active", we'd add it. 
+   But "different animation" usually implies the transition behavior. 
+   By removing the permanent scale(1.05) and adding the hover -2px, they will feel identical during interaction. */
