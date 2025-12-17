@@ -60,7 +60,7 @@ const StudentManagement = {
     // ============================================
     switchView(viewName) {
         // 버튼 활성화 상태 업데이트
-        $('.toggle-btn').removeClass('active');
+        $('.apple-toggle-btn').removeClass('active');
         $(`#btn-${viewName}`).addClass('active');
 
         // 컨텐츠 표시 전환
