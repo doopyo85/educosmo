@@ -1,45 +1,65 @@
 /* Teacher Student Management Premium UI */
 
-/* Override Board Layout for Full Screen */
-.board-layout-container {
-    max-width: none !important;
-    margin: 0 !important;
+/* Global Layout Resets for Teacher Shell */
+.main-container,
+#content-container,
+.student-management-page {
     padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    transform: none !important;
+    overflow: visible !important;
+}
+
+/* Override Board Layout for Flexible Sticky Layout */
+.board-layout-container {
+    max-width: 1600px !important;
+    /* Limit max width for readability */
+    margin: 0 auto !important;
+    padding: 20px !important;
+    /* Outer gap */
     display: flex;
+    gap: 20px;
+    /* Gap between sidebar and content */
     width: 100%;
+    box-sizing: border-box;
+    align-items: flex-start;
+    /* Prevent sidebar stretching */
 }
 
-/* Sidebar Fixed Left */
+/* Sidebar Sticky & Floating */
 .board-sidebar {
-    position: fixed;
-    top: 70px;
-    /* Adjust based on actual header height */
-    left: 0;
+    position: sticky;
+    top: 80px;
+    /* Header height offset */
+    left: auto;
     width: 250px;
-    height: calc(100vh - 70px);
-    overflow-y: auto;
-    border-radius: 0 !important;
-    border: none !important;
-    border-right: 1px solid #e0e0e0 !important;
-    box-shadow: none !important;
-    z-index: 1000;
+    height: fit-content;
+    overflow-y: visible;
+    border-radius: 8px !important;
+    border: 1px solid #e0e0e0 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+    z-index: 100;
+    background-color: #fff;
+    flex-shrink: 0;
 }
 
-/* Main Content Stretched */
+/* Main Content Flexible */
 .board-main-content {
-    margin-left: 250px !important;
-    /* Sidebar width */
-    width: calc(100% - 250px) !important;
+    margin-left: 0 !important;
+    /* Reset inherited margin */
+    width: auto !important;
+    flex: 1;
+    /* Stretch to fill remaining space */
     max-width: none !important;
     min-width: 0 !important;
-    flex: none !important;
-    /* Disable flex shrinking/growing based on content */
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    background-color: #f5f7fa;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+    background-color: #fff;
     /* Match background */
-    min-height: calc(100vh - 70px);
+    min-height: calc(100vh - 120px);
+    /* Adjust min-height */
 }
 
 .student-management-page {
