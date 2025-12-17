@@ -86,8 +86,8 @@ class S3Explorer {
         <div class="breadcrumb-container">
           <div id="s3-breadcrumb" class="breadcrumb"></div>
           <div class="breadcrumb-actions">
-            <button onclick="window.s3Explorer.refresh()" title="새로고침" class="btn-icon">🔄</button>
-            <button onclick="window.s3Explorer.closePage()" title="창 닫기" class="btn-icon btn-close-page">❌</button>
+            <button onclick="window.s3Explorer.refresh()" title="새로고침" class="btn-icon-white"><i class="bi bi-arrow-clockwise"></i></button>
+            <button onclick="window.s3Explorer.closePage()" title="창 닫기" class="btn-icon-white"><i class="bi bi-x-lg"></i></button>
           </div>
         </div>
         
@@ -402,6 +402,7 @@ class S3Explorer {
 
     // 정렬 적용
     const sortedFiles = this.sortFiles(files);
+    const imagesToLoad = []; // 썸네일 로드할 이미지들
 
     gridContainer.innerHTML = sortedFiles.map(file => {
       const displayName = file.name;
@@ -410,9 +411,11 @@ class S3Explorer {
 
       let thumbnailHtml = `<span class="grid-icon">${file.icon}</span>`;
 
-      // 이미지인 경우 썸네일 표시
+      // 이미지인 경우: ID를 부여하고 로딩 큐에 추가
+      const imgId = `thumb-${Math.random().toString(36).substr(2, 9)}`;
       if (isImage) {
-        thumbnailHtml = `<img src="/api/s3/preview?key=${encodeURIComponent(file.key)}" class="grid-thumbnail" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\\'grid-icon\\'>${file.icon}</span>'">`;
+        thumbnailHtml = `<div class="grid-thumbnail-placeholder" id="${imgId}"><span class="grid-icon">${file.icon}</span></div>`;
+        imagesToLoad.push({ id: imgId, key: file.key });
       }
 
       // 클릭 이벤트
@@ -441,6 +444,33 @@ class S3Explorer {
         </div>
       `;
     }).join('');
+
+    // 🔥 썸네일 비동기 로드 시작
+    this.loadGridThumbnails(imagesToLoad);
+  }
+
+  /**
+   * 🔥 그리드 뷰 썸네일 비동기 로드
+   */
+  async loadGridThumbnails(images) {
+    if (!images || images.length === 0) return;
+
+    for (const item of images) {
+      try {
+        const el = document.getElementById(item.id);
+        if (!el) continue;
+
+        const response = await fetch(`/api/s3/preview?key=${encodeURIComponent(item.key)}`);
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          // data.data는 base64 또는 URL
+          el.innerHTML = `<img src="${data.data}" class="grid-thumbnail" loading="lazy" alt="thumb">`;
+        }
+      } catch (e) {
+        console.warn('썸네일 로드 실패:', item.key);
+      }
+    }
   }
 
   /**
