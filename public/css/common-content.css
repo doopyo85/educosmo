@@ -53,12 +53,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    flex: 0 0 20%;
-    /* 🔥 15%에서 20%로 증가 */
+    /* 🔥 FIX: 고정 20% -> 가변 너비 (남는 공간 모두 차지) */
+    flex: 1 1 auto;
     min-width: 0;
     box-sizing: border-box;
     padding: 0;
     margin: 0;
+    margin-right: 15px;
+    /* 네비게이션과 간격 */
 }
 
 /* 문제 네비게이션 컨테이너 */
@@ -68,8 +70,8 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    flex: 0 0 60%;
-    /* 🔥 85%를 60%로 되돌리기 */
+    /* 🔥 FIX: 고정 60% -> 콘텐츠 크기에 맞춤 (flex-shrink 방지) */
+    flex: 0 0 auto;
     box-sizing: border-box;
     padding: 0;
     margin: 0;
@@ -80,10 +82,13 @@
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    flex: 0 0 20% !important;
+    /* 🔥 FIX: 고정 20% -> 필요한 만큼만 차지 */
+    flex: 0 0 auto !important;
     box-sizing: border-box !important;
     padding: 0 !important;
     margin: 0 !important;
+    margin-left: auto !important;
+    /* 오른쪽 정렬 보장 */
     min-width: 0 !important;
     visibility: visible !important;
     opacity: 1 !important;
