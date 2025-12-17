@@ -359,8 +359,16 @@ app.use(async (req, res, next) => {
     }
 
     // 🔥 센터명 설정
-    if (res.locals.is_logined && res.locals.centerID && global.centerMap) {
-      res.locals.centerName = global.centerMap.get(res.locals.centerID) || '';
+    if (res.locals.is_logined && res.locals.centerID) {
+      if (global.centerMap) {
+        res.locals.centerName = global.centerMap.get(res.locals.centerID) || '';
+        if (!res.locals.centerName) {
+          console.log(`[DEBUG] CenterID '${res.locals.centerID}' not found in centerMap. Keys:`, [...global.centerMap.keys()]);
+        }
+      } else {
+        console.log('[DEBUG] global.centerMap is undefined or empty');
+        res.locals.centerName = '';
+      }
     } else {
       res.locals.centerName = '';
     }

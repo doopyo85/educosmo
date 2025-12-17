@@ -1519,4 +1519,13 @@ try {
   console.error('❌ ScratchRouter 로드 실패:', error);
 }
 
+// 🔥 Entry 스토리지 API 라우터 등록 (스크래치와 동일한 패턴)
+try {
+  const entryStorageRouter = require('./api/entryStorageRouter');
+  router.use('/entry-storage', entryStorageRouter);
+  console.log('✅ EntryStorageRouter 등록 완료');
+} catch (error) {
+  console.error('❌ EntryStorageRouter 로드 실패:', error);
+}
+
 module.exports = router;
