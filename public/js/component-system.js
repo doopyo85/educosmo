@@ -1270,7 +1270,7 @@ window.ComponentSystem = {
       if (toggleIcon) toggleIcon.style.display = 'none';
       if (toggleIconAlt) toggleIconAlt.style.display = 'inline-block';
       if (toggleBtn) toggleBtn.title = '전체화면 종료';
-      if (exitFloatingBtn) exitFloatingBtn.style.display = 'flex'; // 플로팅 버튼 표시
+      // if (exitFloatingBtn) exitFloatingBtn.style.display = 'flex'; // 🔥 해더가 보이므로 불필요
     } else {
       if (toggleIcon) toggleIcon.style.display = 'inline-block';
       if (toggleIconAlt) toggleIconAlt.style.display = 'none';
