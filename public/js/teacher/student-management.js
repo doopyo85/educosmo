@@ -763,10 +763,18 @@ const StudentManagement = {
         if (studentData.length === 0) {
             list.append('<div class="text-center text-muted py-3">이번 달 출석 기록이 없습니다.</div>');
         } else {
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
             studentData.forEach(item => {
+                let dateStr = `${item.day}일`;
+                if (this.currentYear && this.currentMonth) {
+                    const date = new Date(this.currentYear, this.currentMonth - 1, parseInt(item.day));
+                    const ddd = dayNames[date.getDay()];
+                    dateStr = `${String(this.currentMonth).padStart(2, '0')}/${String(item.day).padStart(2, '0')}(${ddd})`;
+                }
+
                 list.append(`
                     <div class="d-flex justify-content-between align-items-center p-2 border rounded bg-light">
-                        <span class="fw-bold"><i class="bi bi-calendar-check me-2"></i>${item.day}일</span>
+                        <span class="fw-bold"><i class="bi bi-calendar-check me-2"></i>${dateStr}</span>
                         <span class="badge bg-success">${item.time} 등원</span>
                     </div>
                 `);

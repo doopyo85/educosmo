@@ -579,6 +579,42 @@ body.resizing * {
     user-select: none !important;
 }
 
+/* 🔥 추가: IDE 측 너비 조절 핸들 (왼쪽) */
+.width-resize-handle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 10px;
+    height: 100%;
+    background: transparent;
+    cursor: col-resize;
+    z-index: 20;
+    margin-left: -5px; /* 중앙 정렬 보정 */
+    transition: background-color 0.2s ease;
+}
+
+.width-resize-handle:hover {
+    background: rgba(0, 123, 255, 0.1);
+}
+
+.width-resize-handle .width-resize-handle-line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 3px;
+    height: 40px;
+    background: #007bff;
+    border-radius: 2px;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.width-resize-handle:hover .width-resize-handle-line {
+    opacity: 1;
+    transform: translate(-50%, -50%) scaleY(1.2);
+}
+
 /* 🔥 추가: 문제 상단 네비게이션 레이아웃 개선 */
 /* 🔥 추가: 문제 상단 네비게이션 레이아웃 개선 */
 .problem-top-nav {
