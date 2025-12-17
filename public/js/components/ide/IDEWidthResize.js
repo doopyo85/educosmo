@@ -27,10 +27,21 @@ class IDEWidthResize {
     }
 
     init() {
-        console.log('IDE Width Resize Initializing...');
+        console.log('IDE Width Resize Initializing (V3 Debug)...');
+
+        // Ensure mainArea has custom-layout class for variables to work
+        if (this.mainArea) {
+            this.mainArea.classList.add('custom-layout');
+        }
+
         // Register listeners for both handles if they exist
         if (this.handle) {
-            console.log('Handle found (ide-width-resize-handle), attaching mousedown');
+            console.log('Handle found (ide-width-resize-handle)');
+            // Check visibility
+            if (this.handle.offsetWidth === 0) {
+                console.warn('Handle exists but looks hidden (width 0). Constraints might be applied.');
+            }
+
             this.handle.removeEventListener('mousedown', this.handleResizeStart); // Prevent duplicate
             this.handle.addEventListener('mousedown', this.handleResizeStart);
         } else {
@@ -38,7 +49,7 @@ class IDEWidthResize {
         }
 
         if (this.contentHandle) {
-            console.log('Content Handle found, attaching mousedown');
+            console.log('Content Handle found');
             this.contentHandle.addEventListener('mousedown', this.handleResizeStart);
         }
 
@@ -53,6 +64,7 @@ class IDEWidthResize {
         }
 
         event.preventDefault();
+        event.stopPropagation(); // Stop event bubbling
 
         this.state.isResizing = true;
         this.state.containerWidth = this.mainArea.getBoundingClientRect().width;

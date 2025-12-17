@@ -1239,45 +1239,43 @@ window.ComponentSystem = {
   },
 
   // 🔥 추가: 전체화면 토글 버튼 설정
+
   setupFullscreenToggle: function () {
-    console.log('전체화면 토글 버튼 설정 시작');
-
     const toggleBtn = document.getElementById('fullscreen-toggle-btn');
-    const toggleIcon = document.getElementById('fullscreen-toggle-icon');
-    const toggleIconAlt = document.getElementById('fullscreen-toggle-icon-alt');
+    const exitFloatingBtn = document.getElementById('fullscreen-exit-floating-btn');
 
-    if (!toggleBtn || !toggleIcon || !toggleIconAlt) {
-      console.warn('전체화면 토글 버튼 요소들을 찾을 수 없습니다.');
-      return;
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => this.toggleFullscreen());
     }
 
-    // 클릭 이벤트
-    toggleBtn.addEventListener('click', () => {
-      console.log('전체화면 토글 버튼 클릭 이벤트');
-      this.toggleFullscreen();
-    });
-
-    console.log('전체화면 토글 버튼 설정 완료');
+    // 플로팅 종료 버튼 이벤트 연결
+    if (exitFloatingBtn) {
+      exitFloatingBtn.addEventListener('click', () => this.toggleFullscreen());
+    }
   },
 
-  // 🔥 추가: 전체화면 토글 기능
   toggleFullscreen: function () {
     const isFullscreen = document.body.classList.toggle('fullscreen-mode');
     console.log('전체화면 모드:', isFullscreen ? 'ON' : 'OFF');
 
-    // 아이콘 업데이트
+    // 기존 버튼 아이콘 업데이트 (헤더가 보일 때를 대비)
     const toggleIcon = document.getElementById('fullscreen-toggle-icon');
     const toggleIconAlt = document.getElementById('fullscreen-toggle-icon-alt');
     const toggleBtn = document.getElementById('fullscreen-toggle-btn');
+
+    // 플로팅 종료 버튼 제어
+    const exitFloatingBtn = document.getElementById('fullscreen-exit-floating-btn');
 
     if (isFullscreen) {
       if (toggleIcon) toggleIcon.style.display = 'none';
       if (toggleIconAlt) toggleIconAlt.style.display = 'inline-block';
       if (toggleBtn) toggleBtn.title = '전체화면 종료';
+      if (exitFloatingBtn) exitFloatingBtn.style.display = 'flex'; // 플로팅 버튼 표시
     } else {
       if (toggleIcon) toggleIcon.style.display = 'inline-block';
       if (toggleIconAlt) toggleIconAlt.style.display = 'none';
       if (toggleBtn) toggleBtn.title = '전체화면';
+      if (exitFloatingBtn) exitFloatingBtn.style.display = 'none'; // 플로팅 버튼 숨김
     }
 
     // 리사이즈 이벤트 트리거 (레이아웃 변경 반영)
