@@ -9,179 +9,338 @@
         <link rel="stylesheet" href="/css/board-layout.css">
         <link rel="stylesheet" href="/css/dashboard.css">
         <style>
-            /* Admin Specific Overrides */
-            .board-main-content {
-                padding: 0 !important;
-                /* Remove default padding to handle sections internally */
-                background-color: #f8f9fa;
+            /* =========================================
+           Apple UI Style & Layout Overrides
+           ========================================= */
+            body {
+                background-color: #f5f5f7;
+                /* Apple Light Gray */
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                color: #1d1d1f;
             }
 
-            .section {
-                padding: 24px;
-                height: 100%;
-                overflow-y: auto;
+            /* 1. Layout Overrides (Full Stretch) */
+            .board-layout-container {
+                max-width: none !important;
+                /* Remove constraints */
+                width: 100%;
+                margin: 0 !important;
+                padding: 20px 40px;
+                /* Outer spacing */
+                gap: 30px;
             }
 
-            .stat-card {
-                transition: transform 0.2s;
+            .board-sidebar {
+                width: 260px;
+                min-width: 260px;
+                position: sticky;
+                top: 20px;
+                height: calc(100vh - 40px);
                 border: none;
-                border-radius: 12px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+                box-shadow: none;
+                background: transparent;
             }
 
-            .stat-card:hover {
-                transform: translateY(-5px);
+            /* Sidebar Styling (Apple Style) */
+            .board-sidebar-header {
+                background: transparent;
+                color: #86868b;
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                padding: 10px 15px;
+                font-weight: 600;
             }
 
-            /* Board Sidebar Item Overrides for consistency with nav-link behavior */
-            .board-category-item.active {
-                background-color: #e7f5ff;
-                color: #1c7ed6;
-                border-right: 3px solid #1c7ed6;
+            .board-sidebar .board-nav-group {
+                margin-bottom: 24px;
             }
 
             .board-category-item {
-                cursor: pointer;
+                border-radius: 12px !important;
+                margin-bottom: 4px;
+                padding: 10px 16px;
+                color: #424245;
+                font-weight: 500;
+                font-size: 0.95rem;
+                transition: all 0.2s ease;
+                border: none !important;
+            }
+
+            .board-category-item:hover {
+                background-color: rgba(0, 0, 0, 0.04);
+                color: #1d1d1f;
+            }
+
+            .board-category-item.active {
+                background-color: #0071e3 !important;
+                /* Apple Blue */
+                color: white !important;
+                box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+            }
+
+            .board-category-item.text-dark.fw-bold {
+                padding-left: 10px;
+                font-size: 1.1rem;
+                margin-bottom: 15px;
+                color: #1d1d1f !important;
+            }
+
+            .board-main-content {
+                flex: 1;
+                max-width: none !important;
+                border: none;
+                box-shadow: none;
+                background: transparent;
+                padding: 0;
+            }
+
+            /* 2. Content Sections (Apple Card Style) */
+            .page-header-bar {
+                margin-bottom: 24px;
+                padding-bottom: 0;
+                border-bottom: none !important;
+            }
+
+            .section-header-title {
+                font-size: 28px;
+                font-weight: 700;
+                letter-spacing: -0.01em;
+            }
+
+            /* Stats Cards */
+            .stat-card {
+                background: white;
+                border-radius: 20px;
+                padding: 24px;
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+                border: 1px solid rgba(0, 0, 0, 0.02);
+                height: 100%;
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                position: relative;
+                overflow: hidden;
+            }
+
+            .stat-card:hover {
+                transform: translateY(-4px) scale(1.01);
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+            }
+
+            .stat-card .card-label {
+                color: #86868b;
+                font-size: 0.9rem;
+                font-weight: 500;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .stat-card .card-value {
+                font-size: 36px;
+                font-weight: 700;
+                color: #1d1d1f;
+                letter-spacing: -0.02em;
+                line-height: 1.1;
+            }
+
+            /* Colorful Accents for Cards */
+            .stat-card.accent-blue::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 6px;
+                height: 100%;
+                background: #0071e3;
+            }
+
+            .stat-card.accent-green::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 6px;
+                height: 100%;
+                background: #34c759;
+            }
+
+            .stat-card.accent-purple::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 6px;
+                height: 100%;
+                background: #5856d6;
+            }
+
+            .stat-card.accent-orange::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 6px;
+                height: 100%;
+                background: #ff9500;
+            }
+
+            /* Chart Cards */
+            .chart-card {
+                background: white;
+                border-radius: 20px;
+                padding: 24px;
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+                border: 1px solid rgba(0, 0, 0, 0.02);
+                margin-bottom: 24px;
+            }
+
+            .chart-card h5 {
+                font-size: 1.1rem;
+                font-weight: 600;
+                margin-bottom: 20px;
+                color: #1d1d1f;
+            }
+
+            /* Tables */
+            .table-container {
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+                overflow: hidden;
+                padding: 20px;
+            }
+
+            .table thead th {
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                color: #86868b;
+                font-weight: 600;
+                border-bottom: 1px solid #e5e5ea;
+                padding: 12px 16px;
+            }
+
+            .table tbody td {
+                font-size: 0.95rem;
+                padding: 16px;
+                vertical-align: middle;
+                color: #1d1d1f;
+                border-bottom: 1px solid #f5f5f7;
+            }
+
+            .table-hover tbody tr:hover {
+                background-color: #f5f5f7;
             }
         </style>
 </head>
 
 <body>
     <div class="board-layout-container">
-        <!-- 🔥 왼쪽 네비게이션 (Board Style) -->
+        <!-- 🔥 왼쪽 네비게이션 (Fixed Sidebar) -->
         <div class="board-sidebar">
-            <div class="board-sidebar-header">
-                <i class="bi bi-shield-lock"></i> 관리자 페이지
+            <div class="mb-4 px-3 d-flex align-items-center gap-2">
+                <i class="bi bi-apple fs-4 text-dark"></i>
+                <span class="fw-bold fs-5 text-dark">Admin</span>
             </div>
 
             <!-- 대시보드 그룹 -->
-            <div class="board-nav-group mb-2">
-                <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">
-                    <i class="bi bi-speedometer2 me-2"></i> 모니터링
-                </div>
+            <div class="board-nav-group">
+                <div class="board-sidebar-header">Monitoring</div>
                 <div class="d-flex flex-column gap-1">
-                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="overview"
-                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                        대시보드 개요
+                    <a class="board-category-item nav-link active" href="#" data-section="overview">
+                        <i class="bi bi-speedometer2 me-2"></i> 대시보드 개요
                     </a>
-                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="learning"
-                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                        학습 현황
+                    <a class="board-category-item nav-link" href="#" data-section="learning">
+                        <i class="bi bi-bar-chart-line me-2"></i> 학습 현황
                     </a>
-                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="centers"
-                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                        센터별 통계
+                    <a class="board-category-item nav-link" href="#" data-section="centers">
+                        <i class="bi bi-building me-2"></i> 센터별 통계
                     </a>
                 </div>
             </div>
 
             <!-- 관리 그룹 -->
-            <div class="board-nav-group mb-2">
-                <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">
-                    <i class="bi bi-gear me-2"></i> 시스템 관리
-                </div>
+            <div class="board-nav-group">
+                <div class="board-sidebar-header">System</div>
                 <div class="d-flex flex-column gap-1">
-                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="users"
-                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                        사용자 관리
+                    <a class="board-category-item nav-link" href="#" data-section="users">
+                        <i class="bi bi-people me-2"></i> 사용자 관리
                     </a>
-                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="permissions"
-                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                        권한 설정
+                    <a class="board-category-item nav-link" href="#" data-section="permissions">
+                        <i class="bi bi-shield-lock me-2"></i> 권한 설정
                     </a>
-                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="sql-manager"
-                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                        SQL 관리
+                    <a class="board-category-item nav-link" href="#" data-section="sql-manager">
+                        <i class="bi bi-database me-2"></i> SQL 관리
                     </a>
-                    <a class="board-category-item ps-5 py-2 external-link" href="/s3/browser"
-                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                        S3 파일 관리
+                    <a class="board-category-item external-link" href="/s3/browser">
+                        <i class="bi bi-cloud me-2"></i> S3 파일 관리
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- 🔥 메인 콘텐츠 -->
+        <!-- 🔥 메인 콘텐츠 (Stretched) -->
         <div class="board-main-content">
             <!-- 개요 섹션 -->
-            <div id="overview-section" class="section">
-                <!-- Header Bar -->
-                <div class="page-header-bar mb-4 pb-3 border-bottom">
-                    <div class="d-flex align-items-end justify-content-between w-100">
-                        <div class="d-flex flex-column">
-                            <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 대시보드</small>
-                            <h4 class="mb-0 fw-bold">대시보드 개요</h4>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3"
-                            onclick="refreshStats()">
-                            <i class="bi bi-arrow-clockwise me-1"></i> 새로고침
-                        </button>
+            <div id="overview-section" class="section" style="display: block;">
+                <!-- Header -->
+                <div class="page-header-bar d-flex justify-content-between align-items-end">
+                    <div>
+                        <small class="text-muted fw-bold">Overview</small>
+                        <h1 class="section-header-title mb-0">대시보드</h1>
                     </div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3"
+                        onclick="refreshStats()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> 업데이트
+                    </button>
                 </div>
 
-                <!-- 통계 카드 -->
-                <div class="row mb-4">
+                <!-- 통계 카드 (Apple Style) -->
+                <!-- Data Mapping: totalUsers, studentCount, teacherCount activeCenters (Available in correct API) -->
+                <div class="row g-4 mb-5">
                     <div class="col-md-3">
-                        <div class="card stat-card bg-primary text-white h-100">
-                            <div class="card-body">
-                                <h6 class="card-title opacity-75">전체 사용자</h6>
-                                <h2 class="card-text fw-bold mt-2" id="totalUsers">-</h2>
-                                <small class="opacity-75"><i class="bi bi-people-fill me-1"></i> 누적 가입자</small>
-                            </div>
+                        <div class="stat-card accent-blue">
+                            <div class="card-label"><i class="bi bi-people-fill"></i> 전체 사용자</div>
+                            <div class="card-value" id="totalUsers">-</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card stat-card bg-success text-white h-100">
-                            <div class="card-body">
-                                <h6 class="card-title opacity-75">총 활동수</h6>
-                                <h2 class="card-text fw-bold mt-2" id="totalActivities">-</h2>
-                                <small class="opacity-75"><i class="bi bi-activity me-1"></i> 지난 30일 활동</small>
-                            </div>
+                        <div class="stat-card accent-green">
+                            <div class="card-label"><i class="bi bi-backpack-fill"></i> 학생 수</div>
+                            <!-- studentCount로 수정 (기존 totalActivities는 데이터 없음) -->
+                            <div class="card-value" id="studentCount">-</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card stat-card bg-info text-white h-100">
-                            <div class="card-body">
-                                <h6 class="card-title opacity-75">활성 센터</h6>
-                                <h2 class="card-text fw-bold mt-2" id="activeCenters">-</h2>
-                                <small class="opacity-75"><i class="bi bi-building me-1"></i> 이번 주 활동</small>
-                            </div>
+                        <div class="stat-card accent-purple">
+                            <div class="card-label"><i class="bi bi-person-video3"></i> 강사 수</div>
+                            <!-- teacherCount로 수정 (기존 avgDailyActivities는 데이터 없음) -->
+                            <div class="card-value" id="teacherCount">-</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card stat-card bg-warning text-dark h-100">
-                            <div class="card-body">
-                                <h6 class="card-title opacity-75">일 평균 활동</h6>
-                                <h2 class="card-text fw-bold mt-2" id="avgDailyActivities">-</h2>
-                                <small class="opacity-75"><i class="bi bi-graph-up me-1"></i> 지난 7일 평균</small>
-                            </div>
+                        <div class="stat-card accent-orange">
+                            <div class="card-label"><i class="bi bi-geo-alt-fill"></i> 활성 센터</div>
+                            <div class="card-value" id="activeCenters">-</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 차트 영역 -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-header bg-white border-0 pt-4 px-4">
-                                <h5 class="card-title fw-bold mb-0">일별 활동량</h5>
-                            </div>
-                            <div class="card-body px-4 pb-4">
-                                <div class="chart-container">
-                                    <canvas id="dailyActivityChart"></canvas>
-                                </div>
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <div class="chart-card h-100">
+                            <h5>일별 활동량</h5>
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="dailyActivityChart"></canvas>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-header bg-white border-0 pt-4 px-4">
-                                <h5 class="card-title fw-bold mb-0">메뉴별 접속 통계</h5>
-                            </div>
-                            <div class="card-body px-4 pb-4">
-                                <div class="chart-container">
-                                    <canvas id="menuAccessChart"></canvas>
-                                </div>
+                    <div class="col-md-4">
+                        <div class="chart-card h-100">
+                            <h5>메뉴별 접속 통계</h5>
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="menuAccessChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -190,94 +349,71 @@
 
             <!-- 사용자 관리 섹션 -->
             <div id="users-section" class="section" style="display: none;">
-                <div class="page-header-bar mb-4 pb-3 border-bottom">
-                    <div class="d-flex flex-column">
-                        <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 사용자 관리</small>
-                        <h4 class="mb-0 fw-bold">사용자 관리</h4>
-                    </div>
+                <div class="page-header-bar">
+                    <small class="text-muted fw-bold">System</small>
+                    <h1 class="section-header-title">사용자 관리</h1>
                 </div>
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table id="usersTable" class="table table-hover mb-0" style="vertical-align: middle;">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th class="py-3 ps-4" data-sort="no">NO <i
-                                                class="bi bi-arrow-down-up small text-muted"></i></th>
-                                        <th class="py-3" data-sort="userID">ID <i
-                                                class="bi bi-arrow-down-up small text-muted"></i></th>
-                                        <th class="py-3" data-sort="name">이름 <i
-                                                class="bi bi-arrow-down-up small text-muted"></i></th>
-                                        <th class="py-3" data-sort="role">역할 <i
-                                                class="bi bi-arrow-down-up small text-muted"></i></th>
-                                        <th class="py-3" data-sort="centerID">센터 <i
-                                                class="bi bi-arrow-down-up small text-muted"></i></th>
-                                        <th class="py-3" data-sort="last_activity">최근활동 <i
-                                                class="bi bi-arrow-down-up small text-muted"></i></th>
-                                        <th class="py-3" data-sort="activity_count">활동수 <i
-                                                class="bi bi-arrow-down-up small text-muted"></i></th>
-                                        <th class="py-3" data-sort="email">이메일 <i
-                                                class="bi bi-arrow-down-up small text-muted"></i></th>
-                                        <th class="py-3" data-sort="created_at">가입일 <i
-                                                class="bi bi-arrow-down-up small text-muted"></i></th>
-                                        <th class="py-3 text-end pe-4">작업</th>
-                                    </tr>
-                                    <tr>
-                                        <th class="ps-4"><input type="text"
-                                                class="form-control form-control-sm column-filter" data-field="no"
-                                                placeholder="검색"></th>
-                                        <th><input type="text" class="form-control form-control-sm column-filter"
-                                                data-field="userID" placeholder="ID"></th>
-                                        <th><input type="text" class="form-control form-control-sm column-filter"
-                                                data-field="name" placeholder="이름"></th>
-                                        <th>
-                                            <select class="form-select form-select-sm column-filter" data-field="role">
-                                                <option value="">전체</option>
-                                                <option value="student">학생</option>
-                                                <option value="teacher">강사</option>
-                                                <option value="manager">매니저</option>
-                                            </select>
-                                        </th>
-                                        <th><input type="text" class="form-control form-control-sm column-filter"
-                                                data-field="centerID" placeholder="센터"></th>
-                                        <th></th>
-                                        <th></th>
-                                        <th><input type="text" class="form-control form-control-sm column-filter"
-                                                data-field="email" placeholder="이메일"></th>
-                                        <th></th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="usersTableBody"></tbody>
-                            </table>
-                        </div>
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table id="usersTable" class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th data-sort="no">NO</th>
+                                    <th data-sort="userID">ID</th>
+                                    <th data-sort="name">이름</th>
+                                    <th data-sort="role">역할</th>
+                                    <th data-sort="centerID">센터</th>
+                                    <th data-sort="last_activity">최근활동</th>
+                                    <th data-sort="activity_count">활동수</th>
+                                    <th data-sort="created_at">가입일</th>
+                                    <th class="text-end">작업</th>
+                                </tr>
+                                <tr>
+                                    <th><input type="text" class="form-control form-control-sm column-filter"
+                                            data-field="no"></th>
+                                    <th><input type="text" class="form-control form-control-sm column-filter"
+                                            data-field="userID" placeholder="ID검색"></th>
+                                    <th><input type="text" class="form-control form-control-sm column-filter"
+                                            data-field="name" placeholder="이름검색"></th>
+                                    <th>
+                                        <select class="form-select form-select-sm column-filter" data-field="role">
+                                            <option value="">전체</option>
+                                            <option value="student">학생</option>
+                                            <option value="teacher">강사</option>
+                                            <option value="manager">매니저</option>
+                                        </select>
+                                    </th>
+                                    <th><input type="text" class="form-control form-control-sm column-filter"
+                                            data-field="centerID"></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
             <!-- 학습 현황 섹션 -->
             <div id="learning-section" class="section" style="display: none;">
-                <div class="page-header-bar mb-4 pb-3 border-bottom">
-                    <div class="d-flex flex-column">
-                        <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 학습 현황</small>
-                        <h4 class="mb-0 fw-bold">학습 현황 상세</h4>
-                    </div>
+                <div class="page-header-bar">
+                    <small class="text-muted fw-bold">Monitoring</small>
+                    <h1 class="section-header-title">학습 현황</h1>
                 </div>
-                <div class="row">
+                <div class="row g-4">
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm mb-4">
-                            <div class="card-body">
-                                <h5 class="card-title fw-bold mb-4">콘텐츠별 학습 현황</h5>
-                                <canvas id="learningContentChart"></canvas>
-                            </div>
+                        <div class="chart-card h-100">
+                            <h5>콘텐츠별 학습 현황</h5>
+                            <canvas id="learningContentChart"></canvas>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm mb-4">
-                            <div class="card-body">
-                                <h5 class="card-title fw-bold mb-4">시간대별 학습 분포</h5>
-                                <canvas id="learningTimeChart"></canvas>
-                            </div>
+                        <div class="chart-card h-100">
+                            <h5>시간대별 학습 분포</h5>
+                            <canvas id="learningTimeChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -285,108 +421,96 @@
 
             <!-- 센터별 통계 섹션 -->
             <div id="centers-section" class="section" style="display: none;">
-                <div class="page-header-bar mb-4 pb-3 border-bottom">
-                    <div class="d-flex flex-column">
-                        <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 센터별 통계</small>
-                        <h4 class="mb-0 fw-bold">센터별 통계</h4>
-                    </div>
+                <div class="page-header-bar">
+                    <small class="text-muted fw-bold">Monitoring</small>
+                    <h1 class="section-header-title">센터별 통계</h1>
                 </div>
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0" style="vertical-align: middle;">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th class="py-3 ps-4">센터명 (ID)</th>
-                                        <th class="py-3">전체 사용자</th>
-                                        <th class="py-3">학생 수</th>
-                                        <th class="py-3">매니저 수</th>
-                                        <th class="py-3">강사 수</th>
-                                        <th class="py-3 text-end pe-4">상세보기</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="centersTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
+                <div class="table-container">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>센터명 (ID)</th>
+                                <th>전체 사용자</th>
+                                <th>학생 수</th>
+                                <th>매니저 수</th>
+                                <th>강사 수</th>
+                                <th class="text-end">상세보기</th>
+                            </tr>
+                        </thead>
+                        <tbody id="centersTableBody"></tbody>
+                    </table>
                 </div>
             </div>
 
             <!-- 권한 설정 섹션 -->
             <div id="permissions-section" class="section" style="display: none;">
-                <div class="page-header-bar mb-4 pb-3 border-bottom">
-                    <div class="d-flex align-items-end justify-content-between w-100">
-                        <div class="d-flex flex-column">
-                            <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 권한 설정</small>
-                            <h4 class="mb-0 fw-bold">권한 매트릭스 설정</h4>
-                        </div>
-                        <button class="btn btn-primary rounded-pill px-4" id="savePermissions">
-                            <i class="bi bi-check2 me-1"></i> 변경사항 저장
-                        </button>
+                <div class="page-header-bar d-flex justify-content-between align-items-end">
+                    <div>
+                        <small class="text-muted fw-bold">System</small>
+                        <h1 class="section-header-title mb-0">권한 설정</h1>
                     </div>
+                    <button class="btn btn-primary rounded-pill px-4" id="savePermissions">
+                        <i class="bi bi-check2 me-1"></i> 변경사항 저장
+                    </button>
                 </div>
 
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0" style="vertical-align: middle;">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th class="py-3 ps-4">페이지/기능</th>
-                                        <th class="text-center py-3">Admin</th>
-                                        <th class="text-center py-3">Kinder</th>
-                                        <th class="text-center py-3">School</th>
-                                        <th class="text-center py-3">Manager</th>
-                                        <th class="text-center py-3">Teacher</th>
-                                        <th class="text-center py-3">Student</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="permissionsTableBody">
-                                    <!-- 동적으로 채워질 내용 -->
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>페이지/기능</th>
+                                    <th class="text-center">Admin</th>
+                                    <th class="text-center">Kinder</th>
+                                    <th class="text-center">School</th>
+                                    <th class="text-center">Manager</th>
+                                    <th class="text-center">Teacher</th>
+                                    <th class="text-center">Student</th>
+                                </tr>
+                            </thead>
+                            <tbody id="permissionsTableBody">
+                                <!-- 동적으로 채워질 내용 -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
             <!-- SQL 관리 섹션 -->
             <div id="sql-manager-section" class="section" style="display: none;">
-                <div class="page-header-bar mb-4 pb-3 border-bottom">
-                    <div class="d-flex align-items-end justify-content-between w-100">
-                        <div class="d-flex flex-column">
-                            <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 시스템 관리</small>
-                            <h4 class="mb-0 fw-bold">SQL 테이블 관리</h4>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" id="refreshTableBtn">
-                                <i class="bi bi-arrow-clockwise me-1"></i> 새로고침
-                            </button>
-                            <button class="btn btn-sm btn-success rounded-pill px-3" data-bs-toggle="modal"
-                                data-bs-target="#csvUploadModal">
-                                <i class="bi bi-upload me-1"></i> CSV 업로드
-                            </button>
-                        </div>
+                <div class="page-header-bar d-flex justify-content-between align-items-end">
+                    <div>
+                        <small class="text-muted fw-bold">System</small>
+                        <h1 class="section-header-title mb-0">SQL 테이블 관리</h1>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" id="refreshTableBtn">
+                            <i class="bi bi-arrow-clockwise me-1"></i> 새로고침
+                        </button>
+                        <button class="btn btn-sm btn-success rounded-pill px-3" data-bs-toggle="modal"
+                            data-bs-target="#csvUploadModal">
+                            <i class="bi bi-upload me-1"></i> CSV 업로드
+                        </button>
                     </div>
                 </div>
 
                 <div class="row g-4">
                     <!-- 좌측: 테이블 목록 -->
                     <div class="col-md-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-header bg-white border-bottom pt-3 pb-3">
-                                <h6 class="mb-0 fw-bold text-secondary">테이블 목록</h6>
+                        <div class="table-container h-100 p-0">
+                            <div class="p-3 border-bottom bg-light">
+                                <h6 class="mb-0 fw-bold text-muted">테이블 목록</h6>
                             </div>
                             <div class="list-group list-group-flush" id="tableList"
-                                style="height: calc(100vh - 350px); overflow-y: auto;"> <!-- 동적으로 채워짐 -->
+                                style="height: calc(100vh - 400px); overflow-y: auto;">
                             </div>
                         </div>
                     </div>
 
                     <!-- 우측: 데이터 표시 -->
                     <div class="col-md-9">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-header bg-white border-bottom pt-3 pb-3">
+                        <div class="table-container h-100 p-0">
+                            <div class="p-3 border-bottom bg-light">
                                 <h6 class="mb-0 fw-bold text-primary" id="currentTableName">테이블을 선택하세요</h6>
                             </div>
                             <div class="card-body p-0">
@@ -438,7 +562,7 @@
     <!-- 활동 상세 모달 -->
     <div class="modal fade" id="activityModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
                 <div class="modal-header border-bottom-0">
                     <h5 class="modal-title fw-bold">사용자 활동 상세</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -466,7 +590,7 @@
     <!-- CSV 업로드 모달 -->
     <div class="modal fade" id="csvUploadModal" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
                 <div class="modal-header border-bottom-0">
                     <h5 class="modal-title fw-bold">CSV 업로드</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

@@ -21,7 +21,7 @@ function updateDashboardStats(data) {
         const elements = {
             'totalUsers': data.totalStats.total_users || 0,
             'studentCount': data.totalStats.student_count || 0,
-            'managerCount': data.totalStats.manager_count || 0,
+            'teacherCount': data.totalStats.teacher_count || 0, // Updated to Teacher
             'activeCenters': data.totalStats.active_centers || 0
         };
 
