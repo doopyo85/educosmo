@@ -608,19 +608,38 @@ const StudentManagement = {
         this.renderCalendar(year, month);
     },
 
-    renderCalendar(year, month) {
+    async renderCalendar(year, month) {
         $('#currentMonthLabel').text(`${year}. ${String(month).padStart(2, '0')}`);
 
         const $calendar = $('#attendance-calendar');
         $calendar.empty();
 
-        // 1. Header (Sun ~ Sat)
+        // 1. Fetch Data
+        let attendanceMap = {};
+        try {
+            const response = await fetch(`/teacher/api/attendance/monthly?year=${year}&month=${month}`);
+            const result = await response.json();
+            if (result.success) {
+                // Group by day (1~31)
+                result.data.forEach(item => {
+                    const day = parseInt(item.day);
+                    if (!attendanceMap[day]) attendanceMap[day] = [];
+                    attendanceMap[day].push(item);
+                });
+            } else {
+                console.error('출석 데이터 로드 실패:', result.message);
+            }
+        } catch (error) {
+            console.error('출석 데이터 API 오류:', error);
+        }
+
+        // 2. Header (Sun ~ Sat)
         const days = ['일', '월', '화', '수', '목', '금', '토'];
         days.forEach(day => {
             $calendar.append(`<div class="calendar-header">${day}</div>`);
         });
 
-        // 2. Days
+        // 3. Days
         const firstDay = new Date(year, month - 1, 1).getDay();
         const lastDate = new Date(year, month, 0).getDate();
 
@@ -629,12 +648,8 @@ const StudentManagement = {
             $calendar.append(`<div class="calendar-day empty" style="background:none; border:none;"></div>`);
         }
 
-        // Mock Data Generation
-        const mockData = this.getMockAttendanceData(year, month, lastDate);
-
         // Days
         for (let d = 1; d <= lastDate; d++) {
-            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const dayOfWeek = new Date(year, month - 1, d).getDay();
 
             let dayClass = 'day-number';
@@ -647,7 +662,7 @@ const StudentManagement = {
             const todayClass = isToday ? 'today' : '';
 
             // Attendance List
-            const attendees = mockData[d] || [];
+            const attendees = attendanceMap[d] || [];
             let attendeesHtml = '';
             attendees.forEach(att => {
                 attendeesHtml += `<div class="attendance-item" title="${att.name} (${att.time})">${att.name} <span style="font-size:0.7em; color:#888;">${att.time}</span></div>`;
@@ -662,32 +677,6 @@ const StudentManagement = {
                 </div>
             `);
         }
-    },
-
-    getMockAttendanceData(year, month, lastDate) {
-        const data = {};
-        if (this.students.length === 0) return data;
-
-        for (let d = 1; d <= lastDate; d++) {
-            // Randomly select 0 to 4 students
-            const count = Math.floor(Math.random() * 5);
-            const dailyAttendees = [];
-            const shuffled = [...this.students].sort(() => 0.5 - Math.random());
-
-            for (let i = 0; i < count && i < shuffled.length; i++) {
-                const hour = 13 + Math.floor(Math.random() * 6); // 13:00 ~ 18:00
-                const min = Math.floor(Math.random() * 60);
-                const time = `${hour}:${String(min).padStart(2, '0')}`;
-                dailyAttendees.push({
-                    name: shuffled[i].name,
-                    time: time
-                });
-            }
-            if (dailyAttendees.length > 0) {
-                data[d] = dailyAttendees;
-            }
-        }
-        return data;
     },
 
     showAlert(message, type = 'info') {

@@ -7,6 +7,21 @@
         <!-- 학생 관리 페이지 (Button Toggle Layout) -->
         <link rel="stylesheet" href="/css/board-layout.css">
         <link rel="stylesheet" href="/css/teacher/student-management.css?v=6">
+        <style>
+            /* Thinner Calendar Header */
+            .attendance-calendar {
+                grid-template-rows: 40px !important;
+                grid-auto-rows: minmax(100px, auto) !important;
+            }
+
+            .calendar-header {
+                padding: 0 !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+            }
+        </style>
 
         <div class="board-layout-container">
             <!-- 🔥 왼쪽 네비게이션 (Board Style) -->

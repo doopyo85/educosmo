@@ -437,6 +437,51 @@ router.get('/api/students/:id/quiz-results', requireTeacher, checkSameCenter, as
 });
 
 // ============================================
+// API: 월별 출석 현황 (캘린더용)
+// ============================================
+router.get('/api/attendance/monthly', requireTeacher, async (req, res) => {
+    try {
+        const teacherCenterId = req.session.centerID;
+        const year = parseInt(req.query.year);
+        const month = parseInt(req.query.month);
+
+        if (!year || !month) {
+            return res.status(400).json({ success: false, message: '연도와 월을 지정해주세요.' });
+        }
+
+        const query = `
+            SELECT 
+                u.id, 
+                u.name, 
+                DATE_FORMAT(ual.created_at, '%e') as day,
+                DATE_FORMAT(MIN(ual.created_at), '%H:%i') as time
+            FROM UserActivityLogs ual
+            JOIN Users u ON ual.user_id = u.id
+            WHERE u.centerID = ? 
+              AND YEAR(ual.created_at) = ? 
+              AND MONTH(ual.created_at) = ?
+              AND u.role = 'student'
+            GROUP BY u.id, DATE(ual.created_at)
+            ORDER BY DATE(ual.created_at) ASC, MIN(ual.created_at) ASC
+        `;
+
+        const attendanceData = await db.queryDatabase(query, [teacherCenterId, year, month]);
+
+        res.json({
+            success: true,
+            data: attendanceData
+        });
+
+    } catch (error) {
+        console.error('출석 현황 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '출석 데이터를 불러올 수 없습니다.'
+        });
+    }
+});
+
+// ============================================
 // 페이지 라우트
 // ============================================
 
