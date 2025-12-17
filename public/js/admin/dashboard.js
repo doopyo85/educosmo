@@ -15,7 +15,7 @@ async function fetchWithAuth(url) {
 
 function updateDashboardStats(data) {
     if (!data?.totalStats) return;
-    
+
     try {
         // 기본 통계 업데이트
         const elements = {
@@ -41,7 +41,7 @@ async function loadStats() {
         console.log('Fetching dashboard stats...');
         const result = await fetchWithAuth('/admin/api/stats');
         console.log('Received stats:', result);
-        
+
         if (result.success && result.data) {
             updateDashboardStats(result.data);
         }
@@ -185,7 +185,7 @@ async function loadPermissionsMatrix() {
 
         // 전체 선택 행 추가
         addSelectAllRow(roles);
-        
+
         // 이벤트 리스너 추가
         initializeEventListeners();
 
@@ -207,19 +207,19 @@ async function savePermissionChanges() {
     try {
         const permissions = {};
         const checkboxes = document.querySelectorAll('.permission-checkbox');
-        
+
         // 페이지별로 권한 수집
         checkboxes.forEach(checkbox => {
             const page = checkbox.dataset.page;
             const role = checkbox.dataset.role;
-            
+
             if (!permissions[page]) {
                 permissions[page] = {
                     name: checkbox.closest('tr').querySelector('div.fw-bold').textContent,
                     roles: []
                 };
             }
-            
+
             if (checkbox.checked) {
                 permissions[page].roles.push(role);
             }
@@ -249,19 +249,19 @@ async function savePermissionChanges() {
 
 function showSection(sectionName) {
     console.log('Showing section:', sectionName);
-    
+
     // 모든 섹션 숨기기
     document.querySelectorAll('.section').forEach(section => {
         section.style.display = 'none';
     });
-    
+
     // 선택된 섹션 보이기
     const selectedSection = document.getElementById(`${sectionName}-section`);
     console.log('Selected section element:', selectedSection);
     if (selectedSection) {
         selectedSection.style.display = 'block';
     }
-    
+
     // 메뉴 활성화 상태 변경
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
@@ -273,7 +273,7 @@ function showSection(sectionName) {
     }
 
     // 섹션별 데이터 로드
-    switch(sectionName) {
+    switch (sectionName) {
         case 'overview':
             loadStats();
             break;
@@ -300,7 +300,7 @@ function initTableSorting() {
             const field = header.dataset.sort;
             const currentOrder = header.dataset.order || 'asc';
             const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
-            
+
             // 모든 헤더의 정렬 표시 초기화
             headers.forEach(h => {
                 h.dataset.order = '';
@@ -424,7 +424,7 @@ async function loadTableData(tableName, page = 1) {
         if (!result.success) throw new Error('데이터 조회 실패');
 
         const table = document.getElementById('sqlDataTable');
-        
+
         // 헤더 생성
         if (result.data.length > 0) {
             const columns = Object.keys(result.data[0]);
@@ -440,13 +440,13 @@ async function loadTableData(tableName, page = 1) {
             tbody.innerHTML = result.data.map(row => `
                 <tr>
                     ${columns.map(col => {
-                        let value = row[col];
-                        // 날짜 형식 처리
-                        if (value instanceof Date || (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/))) {
-                            value = new Date(value).toLocaleString('ko-KR');
-                        }
-                        return `<td>${value !== null ? value : '-'}</td>`;
-                    }).join('')}
+                let value = row[col];
+                // 날짜 형식 처리
+                if (value instanceof Date || (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/))) {
+                    value = new Date(value).toLocaleString('ko-KR');
+                }
+                return `<td>${value !== null ? value : '-'}</td>`;
+            }).join('')}
                 </tr>
             `).join('');
 
@@ -467,16 +467,16 @@ async function loadTableData(tableName, page = 1) {
 function renderPagination(currentPage, totalPages) {
     const pagination = document.getElementById('sqlPagination');
     const ul = pagination.querySelector('.pagination');
-    
+
     if (totalPages <= 1) {
         pagination.style.display = 'none';
         return;
     }
 
     pagination.style.display = 'block';
-    
+
     let html = '';
-    
+
     // 이전 버튼
     html += `
         <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
@@ -527,7 +527,7 @@ function changePage(page) {
 async function uploadCSV() {
     const fileInput = document.getElementById('csvFileInput');
     const file = fileInput.files[0];
-    
+
     if (!file) {
         alert('CSV 파일을 선택해주세요.');
         return;
@@ -549,7 +549,7 @@ async function uploadCSV() {
         });
 
         const result = await response.json();
-        
+
         if (result.success) {
             alert(result.message);
             // 모달 닫기
@@ -576,13 +576,99 @@ function refreshTable() {
 }
 
 
+
+// ========================================
+// Helper Functions (Permissions & UI)
+// ========================================
+
+function addSelectAllRow(roles) {
+    const tbody = document.getElementById('permissionsTableBody');
+    const tr = document.createElement('tr');
+    tr.className = 'table-light fw-bold';
+
+    let html = `
+        <td class="align-middle">
+            <div class="fw-bold">전체 선택</div>
+        </td>
+    `;
+
+    roles.forEach(role => {
+        html += `
+            <td class="text-center">
+                <div class="form-check d-flex justify-content-center">
+                    <input class="form-check-input select-all-role" 
+                           type="checkbox" 
+                           data-role="${role}"
+                           id="select_all_${role}">
+                </div>
+            </td>
+        `;
+    });
+
+    tr.innerHTML = html;
+    tbody.insertBefore(tr, tbody.firstChild);
+}
+
+function initializeEventListeners() {
+    // Role별 전체 선택
+    document.querySelectorAll('.select-all-role').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const role = e.target.dataset.role;
+            const isChecked = e.target.checked;
+
+            document.querySelectorAll(`.permission-checkbox[data-role="${role}"]`).forEach(permCheckbox => {
+                permCheckbox.checked = isChecked;
+            });
+        });
+    });
+
+    // Save Permissions Button
+    const saveBtn = document.getElementById('savePermissions');
+    if (saveBtn) {
+        saveBtn.removeEventListener('click', savePermissionChanges); // Prevent duplicate
+        saveBtn.addEventListener('click', savePermissionChanges);
+    }
+}
+
+function showToast(title, message, type = 'info') {
+    // Create toast container if not exists
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(container);
+    }
+
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type === 'error' ? 'danger' : type}" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${title}</strong>: ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+
+    const range = document.createRange();
+    const toastElement = range.createContextualFragment(toastHtml).firstElementChild;
+    container.appendChild(toastElement);
+
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded');
 
     // 메뉴 클릭 이벤트 리스너 추가 (페이지 이동이 아닌 내부 섹션만)
     const navLinks = document.querySelectorAll('.nav-link:not(.external-link)');
     console.log('Found nav links:', navLinks.length);
-    
+
     navLinks.forEach(link => {
         console.log('Adding click listener to:', link.dataset.section);
         link.addEventListener('click', (e) => {

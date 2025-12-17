@@ -1,355 +1,457 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>코딩앤플레이 관리자 대시보드</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/dashboard.css">
+    <%- include('../partials/header') %>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+        <!-- Board Layout Style (Teacher Style) -->
+        <link rel="stylesheet" href="/css/board-layout.css">
+        <link rel="stylesheet" href="/css/dashboard.css">
+        <style>
+            /* Admin Specific Overrides */
+            .board-main-content {
+                padding: 0 !important;
+                /* Remove default padding to handle sections internally */
+                background-color: #f8f9fa;
+            }
+
+            .section {
+                padding: 24px;
+                height: 100%;
+                overflow-y: auto;
+            }
+
+            .stat-card {
+                transition: transform 0.2s;
+                border: none;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+            }
+
+            /* Board Sidebar Item Overrides for consistency with nav-link behavior */
+            .board-category-item.active {
+                background-color: #e7f5ff;
+                color: #1c7ed6;
+                border-right: 3px solid #1c7ed6;
+            }
+
+            .board-category-item {
+                cursor: pointer;
+            }
+        </style>
 </head>
+
 <body>
-    <%- include('../partials/header') %> 
-    <div class="container-fluid">
-        <div class="row">
-            <!-- 사이드바 -->
-            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-                <div class="position-sticky pt-3">
-                    <div class="mb-4 px-3">
-                        <h5 class="text-muted">관리자 페이지</h5>
-                    </div>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" data-section="overview">
-                                <i class="bi bi-house-door"></i> 대시보드 개요
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" data-section="users">
-                                <i class="bi bi-people"></i> 사용자 관리
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" data-section="learning">
-                                <i class="bi bi-book"></i> 학습 현황
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" data-section="centers">
-                                <i class="bi bi-building"></i> 센터별 통계
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" data-section="permissions">
-                                <i class="bi bi-shield-lock"></i> 권한 설정
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" data-section="sql-manager">
-                                <i class="bi bi-database"></i> SQL 관리
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link external-link" href="/s3/browser">
-                                <i class="bi bi-folder2-open"></i> S3 파일 관리
-                            </a>
-                        </li>
-                    </ul>
+    <div class="board-layout-container">
+        <!-- 🔥 왼쪽 네비게이션 (Board Style) -->
+        <div class="board-sidebar">
+            <div class="board-sidebar-header">
+                <i class="bi bi-shield-lock"></i> 관리자 페이지
+            </div>
+
+            <!-- 대시보드 그룹 -->
+            <div class="board-nav-group mb-2">
+                <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">
+                    <i class="bi bi-speedometer2 me-2"></i> 모니터링
                 </div>
-            </nav>
-
-            <!-- 메인 콘텐츠 -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <!-- 개요 섹션 -->
-                <div id="overview-section" class="section">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">대시보드</h1>
-                        <div class="btn-toolbar mb-2 mb-md-0">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshStats()">
-                                <i class="bi bi-arrow-clockwise"></i> 새로고침
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 통계 카드 -->
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="card stat-card bg-primary text-white">
-                                <div class="card-body">
-                                    <h5 class="card-title">전체 사용자</h5>
-                                    <h2 class="card-text" id="totalUsers">-</h2>
-                                    <small>지난 30일 동안의 활성 사용자</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card stat-card bg-success text-white">
-                                <div class="card-body">
-                                    <h5 class="card-title">총 활동수</h5>
-                                    <h2 class="card-text" id="totalActivities">-</h2>
-                                    <small>지난 30일 동안의 활동</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card stat-card bg-info text-white">
-                                <div class="card-body">
-                                    <h5 class="card-title">활성 센터</h5>
-                                    <h2 class="card-text" id="activeCenters">-</h2>
-                                    <small>이번 주 활동 센터 수</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card stat-card bg-warning text-white">
-                                <div class="card-body">
-                                    <h5 class="card-title">일 평균 활동</h5>
-                                    <h2 class="card-text" id="avgDailyActivities">-</h2>
-                                    <small>지난 7일 평균</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 차트 영역 -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">일별 활동량</h5>
-                                    <div class="chart-container">
-                                        <canvas id="dailyActivityChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">메뉴별 접속 통계</h5>
-                                    <div class="chart-container">
-                                        <canvas id="menuAccessChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="d-flex flex-column gap-1">
+                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="overview"
+                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                        대시보드 개요
+                    </a>
+                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="learning"
+                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                        학습 현황
+                    </a>
+                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="centers"
+                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                        센터별 통계
+                    </a>
                 </div>
+            </div>
 
-                <!-- 사용자 관리 섹션 -->
-                <div id="users-section" class="section" style="display: none;">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">사용자 관리</h1>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="usersTable" class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th data-sort="no">NO <i class="bi bi-arrow-down-up"></i></th>
-                                    <th data-sort="userID">ID <i class="bi bi-arrow-down-up"></i></th>
-                                    <th data-sort="name">이름 <i class="bi bi-arrow-down-up"></i></th>
-                                    <th data-sort="role">역할 <i class="bi bi-arrow-down-up"></i></th>
-                                    <th data-sort="centerID">센터ID <i class="bi bi-arrow-down-up"></i></th>
-                                    <th data-sort="last_activity">최근활동 <i class="bi bi-arrow-down-up"></i></th>
-                                    <th data-sort="activity_count">활동수 <i class="bi bi-arrow-down-up"></i></th>
-                                    <th data-sort="email">이메일 <i class="bi bi-arrow-down-up"></i></th>
-                                    <th data-sort="created_at">가입일 <i class="bi bi-arrow-down-up"></i></th>
-                                    <th>작업</th>
-                                </tr>
-                                <tr>
-                                    <th><input type="text" class="form-control form-control-sm column-filter" data-field="no"></th>
-                                    <th><input type="text" class="form-control form-control-sm column-filter" data-field="userID"></th>
-                                    <th><input type="text" class="form-control form-control-sm column-filter" data-field="name"></th>
-                                    <th>
-                                        <select class="form-control form-control-sm column-filter" data-field="role">
-                                            <option value="">전체</option>
-                                            <option value="student">학생</option>
-                                            <option value="teacher">강사</option>
-                                            <option value="manager">매니저</option>
-                                        </select>
-                                    </th>
-                                    <th><input type="text" class="form-control form-control-sm column-filter" data-field="centerID"></th>
-                                    <th></th>
-                                    <th></th>
-                                    <th><input type="text" class="form-control form-control-sm column-filter" data-field="email"></th>
-                                    <th></th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTableBody">
-                            </tbody>
-                        </table>
-                    </div>
+            <!-- 관리 그룹 -->
+            <div class="board-nav-group mb-2">
+                <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">
+                    <i class="bi bi-gear me-2"></i> 시스템 관리
                 </div>
-
-                <!-- 학습 현황 섹션 -->
-                <div id="learning-section" class="section" style="display: none;">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">학습 현황</h1>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <h5 class="card-title">콘텐츠별 학습 현황</h5>
-                                    <canvas id="learningContentChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <h5 class="card-title">시간대별 학습 분포</h5>
-                                    <canvas id="learningTimeChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="d-flex flex-column gap-1">
+                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="users"
+                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                        사용자 관리
+                    </a>
+                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="permissions"
+                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                        권한 설정
+                    </a>
+                    <a class="board-category-item ps-5 py-2 nav-link" href="#" data-section="sql-manager"
+                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                        SQL 관리
+                    </a>
+                    <a class="board-category-item ps-5 py-2 external-link" href="/s3/browser"
+                        style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                        S3 파일 관리
+                    </a>
                 </div>
+            </div>
+        </div>
 
-                <!-- 센터별 통계 섹션 -->
-                <div id="centers-section" class="section" style="display: none;">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">센터별 통계</h1>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>센터ID</th>
-                                    <th>전체 사용자</th>
-                                    <th>학생 수</th>
-                                    <th>매니저 수</th>
-                                    <th>강사 수</th>
-                                    <th>상세보기</th>
-                                </tr>
-                            </thead>
-                            <tbody id="centersTableBody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>     
-                <!-- 권한 설정 섹션 -->
-                <div id="permissions-section" class="section" style="display: none;">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">권한 설정</h1>
-                        <button class="btn btn-primary" id="savePermissions">
-                            <i class="bi bi-check2"></i> 권한 변경사항 저장
+        <!-- 🔥 메인 콘텐츠 -->
+        <div class="board-main-content">
+            <!-- 개요 섹션 -->
+            <div id="overview-section" class="section">
+                <!-- Header Bar -->
+                <div class="page-header-bar mb-4 pb-3 border-bottom">
+                    <div class="d-flex align-items-end justify-content-between w-100">
+                        <div class="d-flex flex-column">
+                            <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 대시보드</small>
+                            <h4 class="mb-0 fw-bold">대시보드 개요</h4>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                            onclick="refreshStats()">
+                            <i class="bi bi-arrow-clockwise me-1"></i> 새로고침
                         </button>
                     </div>
+                </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>페이지/기능</th>
-                                    <th>Admin</th>
-                                    <th>Kinder</th>
-                                    <th>School</th>
-                                    <th>Manager</th>
-                                    <th>Teacher</th>
-                                    <th>Student</th>
-                                </tr>
-                            </thead>
-                            <tbody id="permissionsTableBody">
-                                <!-- 동적으로 채워질 내용 -->
-                            </tbody>
-                        </table>
+                <!-- 통계 카드 -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-primary text-white h-100">
+                            <div class="card-body">
+                                <h6 class="card-title opacity-75">전체 사용자</h6>
+                                <h2 class="card-text fw-bold mt-2" id="totalUsers">-</h2>
+                                <small class="opacity-75"><i class="bi bi-people-fill me-1"></i> 누적 가입자</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-success text-white h-100">
+                            <div class="card-body">
+                                <h6 class="card-title opacity-75">총 활동수</h6>
+                                <h2 class="card-text fw-bold mt-2" id="totalActivities">-</h2>
+                                <small class="opacity-75"><i class="bi bi-activity me-1"></i> 지난 30일 활동</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-info text-white h-100">
+                            <div class="card-body">
+                                <h6 class="card-title opacity-75">활성 센터</h6>
+                                <h2 class="card-text fw-bold mt-2" id="activeCenters">-</h2>
+                                <small class="opacity-75"><i class="bi bi-building me-1"></i> 이번 주 활동</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-warning text-dark h-100">
+                            <div class="card-body">
+                                <h6 class="card-title opacity-75">일 평균 활동</h6>
+                                <h2 class="card-text fw-bold mt-2" id="avgDailyActivities">-</h2>
+                                <small class="opacity-75"><i class="bi bi-graph-up me-1"></i> 지난 7일 평균</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- SQL 관리 섹션 -->
-                <div id="sql-manager-section" class="section" style="display: none;">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">SQL 테이블 관리</h1>
-                        <div>
-                            <button class="btn btn-sm btn-primary" id="refreshTableBtn">
-                                <i class="bi bi-arrow-clockwise"></i> 새로고침
-                            </button>
-                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#csvUploadModal">
-                                <i class="bi bi-upload"></i> CSV 업로드
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <!-- 좌측: 테이블 목록 -->
-                        <div class="col-md-3">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">테이블 목록</h6>
-                                </div>
-                                <div class="list-group list-group-flush" id="tableList" style="height: calc(100vh - 300px); overflow-y: auto;">    <!-- 동적으로 채워짐 -->
+                <!-- 차트 영역 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white border-0 pt-4 px-4">
+                                <h5 class="card-title fw-bold mb-0">일별 활동량</h5>
+                            </div>
+                            <div class="card-body px-4 pb-4">
+                                <div class="chart-container">
+                                    <canvas id="dailyActivityChart"></canvas>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- 우측: 데이터 표시 -->
-                        <div class="col-md-9">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0" id="currentTableName">테이블을 선택하세요</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white border-0 pt-4 px-4">
+                                <h5 class="card-title fw-bold mb-0">메뉴별 접속 통계</h5>
+                            </div>
+                            <div class="card-body px-4 pb-4">
+                                <div class="chart-container">
+                                    <canvas id="menuAccessChart"></canvas>
                                 </div>
-                                <div class="card-body">
-                                    <!-- 테이블 구조 -->
-                                    <div id="tableStructureDiv" style="display: none;">
-                                        <h6>테이블 구조</h6>
-                                        <div class="table-responsive mb-3">
-                                            <table class="table table-sm table-bordered" id="structureTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th>필드</th>
-                                                        <th>타입</th>
-                                                        <th>Null</th>
-                                                        <th>Key</th>
-                                                        <th>Default</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody></tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- 데이터 테이블 -->
-                                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                                        <table class="table table-hover table-sm" id="sqlDataTable">
-                                            <thead></thead>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 사용자 관리 섹션 -->
+            <div id="users-section" class="section" style="display: none;">
+                <div class="page-header-bar mb-4 pb-3 border-bottom">
+                    <div class="d-flex flex-column">
+                        <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 사용자 관리</small>
+                        <h4 class="mb-0 fw-bold">사용자 관리</h4>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table id="usersTable" class="table table-hover mb-0" style="vertical-align: middle;">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="py-3 ps-4" data-sort="no">NO <i
+                                                class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th class="py-3" data-sort="userID">ID <i
+                                                class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th class="py-3" data-sort="name">이름 <i
+                                                class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th class="py-3" data-sort="role">역할 <i
+                                                class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th class="py-3" data-sort="centerID">센터 <i
+                                                class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th class="py-3" data-sort="last_activity">최근활동 <i
+                                                class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th class="py-3" data-sort="activity_count">활동수 <i
+                                                class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th class="py-3" data-sort="email">이메일 <i
+                                                class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th class="py-3" data-sort="created_at">가입일 <i
+                                                class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th class="py-3 text-end pe-4">작업</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="ps-4"><input type="text"
+                                                class="form-control form-control-sm column-filter" data-field="no"
+                                                placeholder="검색"></th>
+                                        <th><input type="text" class="form-control form-control-sm column-filter"
+                                                data-field="userID" placeholder="ID"></th>
+                                        <th><input type="text" class="form-control form-control-sm column-filter"
+                                                data-field="name" placeholder="이름"></th>
+                                        <th>
+                                            <select class="form-select form-select-sm column-filter" data-field="role">
+                                                <option value="">전체</option>
+                                                <option value="student">학생</option>
+                                                <option value="teacher">강사</option>
+                                                <option value="manager">매니저</option>
+                                            </select>
+                                        </th>
+                                        <th><input type="text" class="form-control form-control-sm column-filter"
+                                                data-field="centerID" placeholder="센터"></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th><input type="text" class="form-control form-control-sm column-filter"
+                                                data-field="email" placeholder="이메일"></th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 학습 현황 섹션 -->
+            <div id="learning-section" class="section" style="display: none;">
+                <div class="page-header-bar mb-4 pb-3 border-bottom">
+                    <div class="d-flex flex-column">
+                        <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 학습 현황</small>
+                        <h4 class="mb-0 fw-bold">학습 현황 상세</h4>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-4">콘텐츠별 학습 현황</h5>
+                                <canvas id="learningContentChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-4">시간대별 학습 분포</h5>
+                                <canvas id="learningTimeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 센터별 통계 섹션 -->
+            <div id="centers-section" class="section" style="display: none;">
+                <div class="page-header-bar mb-4 pb-3 border-bottom">
+                    <div class="d-flex flex-column">
+                        <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 센터별 통계</small>
+                        <h4 class="mb-0 fw-bold">센터별 통계</h4>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" style="vertical-align: middle;">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="py-3 ps-4">센터명 (ID)</th>
+                                        <th class="py-3">전체 사용자</th>
+                                        <th class="py-3">학생 수</th>
+                                        <th class="py-3">매니저 수</th>
+                                        <th class="py-3">강사 수</th>
+                                        <th class="py-3 text-end pe-4">상세보기</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="centersTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 권한 설정 섹션 -->
+            <div id="permissions-section" class="section" style="display: none;">
+                <div class="page-header-bar mb-4 pb-3 border-bottom">
+                    <div class="d-flex align-items-end justify-content-between w-100">
+                        <div class="d-flex flex-column">
+                            <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 권한 설정</small>
+                            <h4 class="mb-0 fw-bold">권한 매트릭스 설정</h4>
+                        </div>
+                        <button class="btn btn-primary rounded-pill px-4" id="savePermissions">
+                            <i class="bi bi-check2 me-1"></i> 변경사항 저장
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" style="vertical-align: middle;">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="py-3 ps-4">페이지/기능</th>
+                                        <th class="text-center py-3">Admin</th>
+                                        <th class="text-center py-3">Kinder</th>
+                                        <th class="text-center py-3">School</th>
+                                        <th class="text-center py-3">Manager</th>
+                                        <th class="text-center py-3">Teacher</th>
+                                        <th class="text-center py-3">Student</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="permissionsTableBody">
+                                    <!-- 동적으로 채워질 내용 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SQL 관리 섹션 -->
+            <div id="sql-manager-section" class="section" style="display: none;">
+                <div class="page-header-bar mb-4 pb-3 border-bottom">
+                    <div class="d-flex align-items-end justify-content-between w-100">
+                        <div class="d-flex flex-column">
+                            <small class="text-muted fw-bold mb-1" style="font-size: 0.85rem;">관리자 > 시스템 관리</small>
+                            <h4 class="mb-0 fw-bold">SQL 테이블 관리</h4>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" id="refreshTableBtn">
+                                <i class="bi bi-arrow-clockwise me-1"></i> 새로고침
+                            </button>
+                            <button class="btn btn-sm btn-success rounded-pill px-3" data-bs-toggle="modal"
+                                data-bs-target="#csvUploadModal">
+                                <i class="bi bi-upload me-1"></i> CSV 업로드
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- 좌측: 테이블 목록 -->
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white border-bottom pt-3 pb-3">
+                                <h6 class="mb-0 fw-bold text-secondary">테이블 목록</h6>
+                            </div>
+                            <div class="list-group list-group-flush" id="tableList"
+                                style="height: calc(100vh - 350px); overflow-y: auto;"> <!-- 동적으로 채워짐 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 우측: 데이터 표시 -->
+                    <div class="col-md-9">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white border-bottom pt-3 pb-3">
+                                <h6 class="mb-0 fw-bold text-primary" id="currentTableName">테이블을 선택하세요</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <!-- 테이블 구조 -->
+                                <div id="tableStructureDiv" class="p-3 bg-light border-bottom" style="display: none;">
+                                    <h6 class="fw-bold text-muted mb-2" style="font-size: 0.8rem;">테이블 구조</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered bg-white mb-0" id="structureTable"
+                                            style="font-size: 0.85rem;">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th>필드</th>
+                                                    <th>타입</th>
+                                                    <th>Null</th>
+                                                    <th>Key</th>
+                                                    <th>Default</th>
+                                                </tr>
+                                            </thead>
                                             <tbody></tbody>
                                         </table>
                                     </div>
-                                    
-                                    <!-- 페이지네이션 -->
+                                </div>
+
+                                <!-- 데이터 테이블 -->
+                                <div class="table-responsive" style="height: 500px; overflow-y: auto;">
+                                    <table class="table table-hover table-sm mb-0 text-nowrap" id="sqlDataTable"
+                                        style="font-size: 0.9rem;">
+                                        <thead style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+
+                                <!-- 페이지네이션 -->
+                                <div class="p-3 border-top bg-light">
                                     <nav id="sqlPagination" style="display: none;">
-                                        <ul class="pagination justify-content-center"></ul>
+                                        <ul class="pagination pagination-sm justify-content-center mb-0"></ul>
                                     </nav>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-            </main>
         </div>
     </div>
 
     <!-- 활동 상세 모달 -->
     <div class="modal fade" id="activityModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">사용자 활동 상세</h5>
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">사용자 활동 상세</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
                                 <tr>
-                                    <th>시간</th>
+                                    <th class="ps-4">시간</th>
                                     <th>활동</th>
                                     <th>URL</th>
-                                    <th>IP</th>
+                                    <th class="pe-4">IP</th>
                                 </tr>
                             </thead>
                             <tbody id="activityModalBody">
@@ -364,28 +466,28 @@
     <!-- CSV 업로드 모달 -->
     <div class="modal fade" id="csvUploadModal" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">CSV 업로드</h5>
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">CSV 업로드</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">업로드할 테이블</label>
+                        <label class="form-label fw-bold small text-muted">업로드할 테이블</label>
                         <input type="text" class="form-control" id="uploadTableName" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">CSV 파일</label>
+                        <label class="form-label fw-bold small text-muted">CSV 파일</label>
                         <input type="file" class="form-control" id="csvFileInput" accept=".csv">
                     </div>
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        주의: 기존 데이터는 유지되고 새 데이터가 추가됩니다.
+                    <div class="alert alert-warning border-0 bg-warning-subtle text-warning-emphasis">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        기존 데이터는 유지되고 새 데이터가 추가됩니다.
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-                    <button type="button" class="btn btn-primary" id="uploadCsvBtn">업로드</button>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" id="uploadCsvBtn">업로드</button>
                 </div>
             </div>
         </div>
@@ -396,4 +498,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/admin/dashboard.js"></script>
 </body>
+
 </html>
