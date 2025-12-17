@@ -357,6 +357,14 @@ app.use(async (req, res, next) => {
     } else {
       res.locals.profileImage = '/resource/profiles/default.webp';
     }
+
+    // 🔥 센터명 설정
+    if (res.locals.is_logined && res.locals.centerID && global.centerMap) {
+      res.locals.centerName = global.centerMap.get(res.locals.centerID) || '';
+    } else {
+      res.locals.centerName = '';
+    }
+
   } catch (err) {
     console.error('템플릿 변수 설정 오류:', err);
   }
@@ -408,13 +416,34 @@ async function getSheetData(range) {
   }
 }
 
-initGoogleSheets()
-  .then(() => {
-    app.set('getSheetData', getSheetData);
   })
-  .catch(error => {
-    console.error('Google Sheets API 초기화 실패:', error);
-  });
+  .catch (error => {
+  console.error('Google Sheets API 초기화 실패:', error);
+});
+
+// 🔥 센터 목록 로드 및 캐싱
+global.centerMap = new Map();
+
+async function loadCenterData() {
+  try {
+    const rows = await getSheetData('센터목록!A2:B'); // A: ID, B: Name
+    if (rows && rows.length > 0) {
+      global.centerMap.clear();
+      rows.forEach(([id, name]) => {
+        if (id && name) global.centerMap.set(id, name);
+      });
+      console.log(`🏫 센터 목록 로드 완료: ${global.centerMap.size}개`);
+    }
+  } catch (error) {
+    console.error('센터 목록 로드 실패:', error);
+  }
+}
+
+// 초기화 후 센터 목록 로드 (1시간마다 갱신)
+initGoogleSheets().then(() => {
+  loadCenterData();
+  setInterval(loadCenterData, 3600000);
+});
 
 module.exports = { getSheetData };
 
