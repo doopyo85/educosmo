@@ -28,19 +28,29 @@
 
         <div class="container-fluid mt-5" style="max-width: 1700px;">
             <!-- 🔥 카테고리별 탭 + 새 프로젝트 버튼 (Toolbar Layout) -->
-            <div id="edu-content">
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 border-bottom">
-                    <!-- 탭 영역 (JS에서 동적 생성) -->
-                    <ul class="nav nav-tabs border-bottom-0" id="categoryTabs" role="tablist"></ul>
+            <div class="text-center mb-4">
+                <h1 class="fw-bold">Scratch 프로젝트</h1>
+                <p class="text-muted">CPS / COS 교육과정을 위한 Scratch 콘텐츠를 선택하세요.</p>
 
-                    <!-- 버튼 영역 (우측 정렬) -->
-                    <div class="action-buttons pb-1">
-                        <a href="/scratch" class="btn btn-primary btn-sm rounded-pill px-3" target="_blank">
+                <!-- 🔥 버튼 및 탭 통합 그룹 -->
+                <div
+                    class="d-inline-flex justify-content-center align-items-center gap-2 mt-3 p-2 bg-light rounded-pill border shadow-sm">
+                    <!-- 고정 버튼 (왼쪽) -->
+                    <div class="d-flex align-items-center">
+                        <a href="/scratch" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" target="_blank">
                             <i class="bi bi-plus-lg"></i> 새로 시작하기
                         </a>
+                        <div class="vr mx-3 text-secondary" style="height: 1.5rem; opacity: 0.2;"></div>
                     </div>
+
+                    <!-- 동적 탭 (오른쪽) -->
+                    <ul class="nav nav-pills" id="categoryTabs" role="tablist" style="border: none;"></ul>
                 </div>
-                <div id="content-container" class="tab-content mt-4"></div>
+            </div>
+
+            <!-- 🔥 카테고리별 콘텐츠 -->
+            <div id="edu-content">
+                <div id="content-container" class="tab-content mt-3"></div>
             </div>
         </div>
 

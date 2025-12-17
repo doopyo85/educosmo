@@ -28,19 +28,29 @@
 
         <div class="container-fluid mt-5" style="max-width: 1700px;">
             <!-- 카테고리 탭 + 새로 시작하기 버튼 toolbar -->
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 border-bottom">
-                <ul class="nav nav-tabs border-bottom-0" id="categoryTabs" role="tablist"></ul>
+            <div class="text-center mb-4">
+                <h1 class="fw-bold">앱인벤터 프로젝트</h1>
+                <p class="text-muted">블록 코딩을 통해 나만의 모바일 앱을 만들고 공유해보세요!</p>
 
-                <div class="action-buttons pb-1">
-                    <a href="https://appinventor.mit.edu/" target="_blank"
-                        class="btn btn-primary btn-sm rounded-pill px-3">
-                        <i class="bi bi-plus-lg"></i> 새로 시작하기
-                    </a>
+                <!-- 🔥 버튼 및 탭 통합 그룹 -->
+                <div
+                    class="d-inline-flex justify-content-center align-items-center gap-2 mt-3 p-2 bg-light rounded-pill border shadow-sm">
+                    <!-- 고정 버튼 (왼쪽) -->
+                    <div class="d-flex align-items-center">
+                        <a href="https://appinventor.mit.edu/" target="_blank"
+                            class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                            <i class="bi bi-plus-lg"></i> 새로 시작하기
+                        </a>
+                        <div class="vr mx-3 text-secondary" style="height: 1.5rem; opacity: 0.2;"></div>
+                    </div>
+
+                    <!-- 동적 탭 (오른쪽) -->
+                    <ul class="nav nav-pills" id="categoryTabs" role="tablist" style="border: none;"></ul>
                 </div>
             </div>
 
             <!-- 콘텐츠 컨테이너 -->
-            <div id="content-container" class="tab-content"></div>
+            <div id="content-container" class="tab-content mt-3"></div>
         </div>
 
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
