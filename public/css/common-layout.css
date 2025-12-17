@@ -758,6 +758,31 @@ body.resizing iframe {
     font-size: 18px;
 }
 
+/* 🔥 추가: 전체화면 토글 버튼 스타일 (테두리 없음, 회색) */
+#fullscreen-toggle-btn {
+    background: transparent;
+    border: none;
+    color: #6c757d;
+    /* 회색톤 */
+    padding: 6px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#fullscreen-toggle-btn:hover {
+    color: #343a40;
+    /* 호버 시 약간 진하게 */
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+#fullscreen-toggle-btn i {
+    font-size: 16px;
+}
+
 /* 🔥 추가: 플로팅 폰트 컨트롤 스타일 */
 .content-floating-controls {
     position: absolute;
