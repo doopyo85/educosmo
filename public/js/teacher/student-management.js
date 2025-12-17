@@ -616,10 +616,12 @@ const StudentManagement = {
 
         // 1. Fetch Data
         let attendanceMap = {};
+        this.currentMonthData = []; // Store for Modals
         try {
             const response = await fetch(`/teacher/api/attendance/monthly?year=${year}&month=${month}`);
             const result = await response.json();
             if (result.success) {
+                this.currentMonthData = result.data;
                 // Group by day (1~31)
                 result.data.forEach(item => {
                     const day = parseInt(item.day);
@@ -670,11 +672,11 @@ const StudentManagement = {
             const attendees = attendanceMap[d] || [];
             let attendeesHtml = '';
             attendees.forEach(att => {
-                attendeesHtml += `<div class="attendance-item" title="${att.name} (${att.time})">${att.name} <span style="font-size:0.7em; color:#888;">${att.time}</span></div>`;
+                attendeesHtml += `<div class="attendance-item" onclick="event.stopPropagation(); StudentManagement.openStudentModal('${att.id}', '${att.name}')" title="${att.name} (${att.time})">${att.name} <span style="font-size:0.7em; color:#888;">${att.time}</span></div>`;
             });
 
             $calendar.append(`
-                <div class="calendar-day ${todayClass}">
+                <div class="calendar-day ${todayClass}" onclick="StudentManagement.openDailyModal(${year}, ${month}, ${d})" style="cursor: pointer;">
                     <div class="${dayClass}">${d} ${holidayHtml}</div>
                     <div class="attendance-list">
                         ${attendeesHtml}
