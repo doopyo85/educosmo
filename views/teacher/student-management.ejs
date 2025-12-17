@@ -84,23 +84,23 @@
                                 </button>
 
                                 <!-- Search Inputs -->
-                                <div class="search-wrapper" id="progressSearchWrapper"
-                                    style="<%= typeof currentView !== 'undefined' && currentView === 'progress' ? '' : 'display: none;' %>">
+                                <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'progress' ? '' : 'd-none' %>"
+                                    id="progressSearchWrapper">
                                     <i class="bi bi-search search-icon"></i>
                                     <input type="text" id="progressSearch" class="form-control"
                                         placeholder="학생 이름/아이디 검색..." />
                                 </div>
 
-                                <div class="search-wrapper" id="studentSearchWrapper"
-                                    style="<%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'display: none;' %>">
+                                <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'd-none' %>"
+                                    id="studentSearchWrapper">
                                     <i class="bi bi-search search-icon"></i>
                                     <input type="text" id="studentSearch" class="form-control"
                                         placeholder="학생 이름/아이디 검색..." />
                                 </div>
 
                                 <!-- Attendance Controls (Attendance Only) -->
-                                <div class="attendance-controls d-flex align-items-center" id="attendanceControls"
-                                    style="<%= typeof currentView !== 'undefined' && currentView === 'attendance' ? '' : 'display: none;' %>">
+                                <div class="attendance-controls align-items-center <%= typeof currentView !== 'undefined' && currentView === 'attendance' ? 'd-flex' : 'd-none' %>"
+                                    id="attendanceControls">
                                     <button class="btn btn-outline-secondary btn-sm"
                                         onclick="StudentManagement.prevMonth()">
                                         <i class="bi bi-chevron-left"></i>
