@@ -1271,13 +1271,13 @@ window.ComponentSystem = {
     const toggleBtn = document.getElementById('fullscreen-toggle-btn');
 
     if (isFullscreen) {
-      toggleIcon.style.display = 'none';
-      toggleIconAlt.style.display = 'inline-block';
-      toggleBtn.title = '전체화면 종료';
+      if (toggleIcon) toggleIcon.style.display = 'none';
+      if (toggleIconAlt) toggleIconAlt.style.display = 'inline-block';
+      if (toggleBtn) toggleBtn.title = '전체화면 종료';
     } else {
-      toggleIcon.style.display = 'inline-block';
-      toggleIconAlt.style.display = 'none';
-      toggleBtn.title = '전체화면';
+      if (toggleIcon) toggleIcon.style.display = 'inline-block';
+      if (toggleIconAlt) toggleIconAlt.style.display = 'none';
+      if (toggleBtn) toggleBtn.title = '전체화면';
     }
 
     // 리사이즈 이벤트 트리거 (레이아웃 변경 반영)
@@ -1286,7 +1286,7 @@ window.ComponentSystem = {
       if (window.EventBus) {
         window.EventBus.publish('layout:resize', {});
       }
-    }, 300); // CSS transition time consideration
+    }, 100);
   },
 
   // 🔥 추가: 폰트사이즈 조절 기능 설정

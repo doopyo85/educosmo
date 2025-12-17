@@ -868,6 +868,12 @@ body.resizing iframe {
     box-shadow: inset -3px 0 0 #ff6b6b;
 }
 
+/* 🔥 수정: IDE 리사이즈 핸들 z-index 상향 조정 */
+.width-resize-handle {
+    z-index: 1000 !important;
+    /* 다른 요소에 가려지지 않도록 확실하게 높임 */
+}
+
 /* 🔥 추가: 전체화면 모드 스타일 */
 body.fullscreen-mode header.navbar {
     display: none !important;
@@ -877,12 +883,32 @@ body.fullscreen-mode .nav-container {
     display: none !important;
 }
 
+/* 🔥 추가: 전체화면 시 마진 제거 및 높이 설정 */
 body.fullscreen-mode .main-container {
     max-height: 100vh !important;
     height: 100vh !important;
     margin-top: 0 !important;
+    padding: 0 !important;
+}
+
+/* 🔥 추가: 전체화면 시 IDE 숨김 및 콘텐츠 확장 */
+body.fullscreen-mode .ide-container {
+    display: none !important;
+}
+
+body.fullscreen-mode .content-container {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* 🔥 추가: 전체화면 시 문제 컨테이너 확장 */
+body.fullscreen-mode .problem-container {
+    height: calc(100vh - 60px) !important;
+    /* 상단 네비 높이 제외 */
 }
 
 body.fullscreen-mode .mainArea {
     width: 100% !important;
+    padding: 0 !important;
 }

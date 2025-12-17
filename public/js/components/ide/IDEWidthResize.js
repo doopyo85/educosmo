@@ -27,12 +27,18 @@ class IDEWidthResize {
     }
 
     init() {
+        console.log('IDE Width Resize Initializing...');
         // Register listeners for both handles if they exist
         if (this.handle) {
+            console.log('Handle found (ide-width-resize-handle), attaching mousedown');
+            this.handle.removeEventListener('mousedown', this.handleResizeStart); // Prevent duplicate
             this.handle.addEventListener('mousedown', this.handleResizeStart);
+        } else {
+            console.error('IDE Width Resize Handle NOT found');
         }
 
         if (this.contentHandle) {
+            console.log('Content Handle found, attaching mousedown');
             this.contentHandle.addEventListener('mousedown', this.handleResizeStart);
         }
 
@@ -40,7 +46,11 @@ class IDEWidthResize {
     }
 
     handleResizeStart(event) {
-        if (!this.mainArea) return;
+        console.log('IDEWidthResize: Resize started', event);
+        if (!this.mainArea) {
+            console.error('IDEWidthResize: mainArea not found');
+            return;
+        }
 
         event.preventDefault();
 
@@ -60,8 +70,11 @@ class IDEWidthResize {
         // Ensure custom-layout class is active so CSS variables take effect
         this.mainArea.classList.add('custom-layout');
 
+        // 🔥 Attach events to document to catch moves outside
+        console.log('Attaching global mousemove/up listeners');
         document.addEventListener('mousemove', this.throttledResizeMove);
         document.addEventListener('mouseup', this.handleResizeEnd);
+        // preventDefault to stop text selection
         document.addEventListener('selectstart', this.preventDefault);
 
         // Publish resize start event
