@@ -5,19 +5,22 @@ body {
     font-family: 'Noto Sans KR', sans-serif;
     margin: 0;
     padding: 0;
-    padding-top: 70px; /* 🔥 전역 헤더 여백 - header.css의 헤더 높이 */
+    padding-top: 70px;
+    /* 🔥 전역 헤더 여백 - header.css의 헤더 높이 */
     background-color: #f8f9fa;
     min-height: 100vh;
 }
 
 /* 🔥 Jupyter 레이아웃 전용 - 헤더 여백 추가 */
 body.layout-jupyter {
-    padding-top: 70px !important; /* 🔥 수정: 70px로 통일 */
+    padding-top: 70px !important;
+    /* 🔥 수정: 70px로 통일 */
 }
 
 body.layout-jupyter .jupyter-container {
     margin-top: 0 !important;
-    height: calc(100vh - 70px) !important; /* 🔥 수정: 70px로 통일 */
+    height: calc(100vh - 70px) !important;
+    /* 🔥 수정: 70px로 통일 */
 }
 
 body.layout-jupyter #content-component {
@@ -25,7 +28,8 @@ body.layout-jupyter #content-component {
     padding-top: 0;
 }
 
-html, body {
+html,
+body {
     height: 100%;
     margin: 0;
     display: flex;
@@ -59,7 +63,7 @@ main {
     border-radius: 25px;
     font-weight: bold;
     font-size: 1.2rem;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     display: inline-block;
     margin-right: 15px;
     text-align: center;
@@ -74,7 +78,7 @@ main {
 .card {
     border: none;
     border-radius: 15px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease;
     width: 100%;
     height: 380px;
@@ -214,7 +218,7 @@ main {
 }
 
 /* 캐러셀 컨트롤 버튼 */
-.carousel-control-prev, 
+.carousel-control-prev,
 .carousel-control-next,
 .carousel-btn-outer.carousel-control-prev,
 .carousel-btn-outer.carousel-control-next {
@@ -230,27 +234,25 @@ main {
     display: block;
 }
 
-.carousel-control-prev, 
+.carousel-control-prev,
 .carousel-btn-outer.carousel-control-prev {
     left: -10px;
 }
 
-.carousel-control-next, 
+.carousel-control-next,
 .carousel-btn-outer.carousel-control-next {
     right: 10px;
 }
 
 /* 캐러셀 화살표 아이콘 */
-.carousel-control-prev-icon, 
+.carousel-control-prev-icon,
 .carousel-control-next-icon {
     width: 84px;
     height: 84px;
     background-size: 35%;
     background-position: center;
     background-repeat: no-repeat;
-    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.4)) 
-            drop-shadow(0 0 6px rgba(0, 0, 0, 0.3))
-            drop-shadow(0 0 2px #fff);
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 6px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 2px #fff);
 }
 
 .carousel-control-prev-icon {
@@ -261,11 +263,10 @@ main {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 16 16'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
 }
 
-.carousel-control-prev:hover, 
+.carousel-control-prev:hover,
 .carousel-control-next:hover {
     opacity: 1;
-    filter: drop-shadow(0 0 10px rgba(0, 123, 255, 0.6))
-            drop-shadow(0 0 5px #fff);
+    filter: drop-shadow(0 0 10px rgba(0, 123, 255, 0.6)) drop-shadow(0 0 5px #fff);
 }
 
 /* =============================================
@@ -277,14 +278,14 @@ main {
     /* 기존 스타일 상속 차단 */
     all: unset;
     display: block;
-    
+
     /* 기본 텍스트 스타일 재설정 */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 16px;
     line-height: 1.6;
     color: #333;
     background: transparent;
-    
+
     /* 박스 모델 재설정 */
     box-sizing: border-box;
     margin: 0;
@@ -548,19 +549,19 @@ main {
         padding: 16px !important;
         font-size: 15px !important;
     }
-    
+
     .markdown-content h1 {
         font-size: 24px !important;
     }
-    
+
     .markdown-content h2 {
         font-size: 20px !important;
     }
-    
+
     .markdown-content h3 {
         font-size: 18px !important;
     }
-    
+
     .markdown-content pre {
         padding: 12px !important;
         font-size: 13px !important;
@@ -613,6 +614,7 @@ footer {
    ============================================= */
 
 @media (max-width: 768px) {
+
     /* 모바일 카드 조정 */
     .carousel-item .col-md-3 {
         padding-left: 10px;
@@ -620,78 +622,78 @@ footer {
         width: 100%;
         flex: 0 0 100%;
     }
-    
+
     .card {
         height: 320px;
     }
-    
+
     .card-img-box {
         min-height: 150px;
     }
-    
+
     .card-title {
         font-size: 1.1rem;
     }
-    
+
     .card-text {
         font-size: 0.9rem;
         margin-bottom: 50px;
     }
-    
+
     .btn-primary {
         min-width: 180px;
         padding: 8px 20px;
         font-size: 0.95rem;
     }
-    
+
     /* 모바일 캐러셀 조정 */
     #categoriesCarousel {
         padding: 0 30px;
     }
-    
-    .carousel-control-prev, 
+
+    .carousel-control-prev,
     .carousel-btn-outer.carousel-control-prev {
         left: -25px;
     }
-    
-    .carousel-control-next, 
+
+    .carousel-control-next,
     .carousel-btn-outer.carousel-control-next {
         right: -25px;
     }
-    
-    .carousel-control-prev, 
+
+    .carousel-control-prev,
     .carousel-control-next {
         width: 40px;
         height: 40px;
     }
-    
-    .carousel-control-prev-icon, 
+
+    .carousel-control-prev-icon,
     .carousel-control-next-icon {
         width: 30px;
         height: 30px;
     }
-    
+
     /* 모바일 타이포그래피 */
     .multicolor-text {
         font-size: 2rem;
     }
-    
+
     .education-level {
         font-size: 1rem;
         min-width: 150px;
         padding: 8px 20px;
     }
-    
+
     .container {
         margin-top: 30px;
         padding-left: 10px;
         padding-right: 10px;
     }
-    
+
     h1 {
         font-size: 2rem;
     }
-    
+
     p {
         font-size: 1rem;
     }
@@ -703,11 +705,11 @@ footer {
         width: 280px;
         flex: 0 0 280px;
     }
-    
+
     .card {
         height: 350px;
     }
-    
+
     .multicolor-text {
         font-size: 2.2rem;
     }
@@ -718,7 +720,7 @@ footer {
     .carousel-item .row {
         max-width: 1600px;
     }
-    
+
     .container {
         max-width: 1800px;
     }
@@ -868,38 +870,187 @@ footer {
     .cos-table-container {
         padding: 10px 0;
     }
-    
+
     .cos-grade-section {
         padding: 12px;
         margin-bottom: 16px;
         border-radius: 8px;
     }
-    
+
     .cos-grade-header {
         font-size: 1.1rem;
         margin-bottom: 12px;
     }
-    
+
     .cos-table {
         display: block;
         overflow-x: auto;
         white-space: nowrap;
     }
-    
+
     .cos-table thead th,
     .cos-table tbody td {
         padding: 8px 4px;
         font-size: 0.8rem;
     }
-    
+
     .cos-btn {
         font-size: 0.65rem;
         padding: 3px 5px;
     }
-    
+
     .cos-th-label,
     .cos-td-label {
         width: 60px;
         padding-left: 8px !important;
     }
+}
+
+/* =============================================
+   🍎 Apple-Style Global UI Components 🍎
+   (Unified Animation & Visuals)
+   ============================================= */
+
+/* 1. Animation Mixin (Class-based) */
+.apple-animated {
+    transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+    transform: translateY(0);
+}
+
+.apple-animated:hover {
+    transform: translateY(-2px);
+}
+
+.apple-animated:active {
+    transform: scale(0.96);
+}
+
+/* 2. Apple Primary Button (White Tone) */
+.apple-btn-primary {
+    background: white;
+    color: #1d1d1f !important;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+
+    /* Animation */
+    transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+    transform: translateY(0);
+}
+
+.apple-btn-primary:hover {
+    background: #fbfbfd;
+    border-color: rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    color: #0071e3 !important;
+    transform: translateY(-2px);
+}
+
+.apple-btn-primary:active {
+    transform: scale(0.96);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.apple-btn-primary.active {
+    background-color: #0071e3 !important;
+    color: white !important;
+    border-color: #0071e3 !important;
+}
+
+.apple-btn-primary.active:hover {
+    color: white !important;
+}
+
+/* 3. Apple Nav Pills (Clean Text / Soft Active) */
+.apple-nav-pills {
+    display: inline-flex;
+    gap: 8px;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent;
+}
+
+.apple-nav-pills .nav-link,
+.apple-toggle-btn {
+    /* Alias for generic usage */
+    border-radius: 999px !important;
+    color: #6e6e73 !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 8px 24px !important;
+    border: none !important;
+    background: transparent;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Animation */
+    transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+    transform: translateY(0);
+}
+
+.apple-nav-pills .nav-link:hover,
+.apple-toggle-btn:hover {
+    color: #1d1d1f !important;
+    background-color: rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+}
+
+.apple-nav-pills .nav-link:active,
+.apple-toggle-btn:active {
+    transform: scale(0.96);
+}
+
+.apple-nav-pills .nav-link.active,
+.apple-toggle-btn.active {
+    background-color: white !important;
+    color: #1d1d1f !important;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    /* No permanent transform for basic state */
+    transform: translateY(0);
+}
+
+/* 4. Apple Outline Button (Green/Success) */
+.apple-btn-outline-success {
+    background-color: white !important;
+    color: #28cd41 !important;
+    border: 1px solid #28cd41 !important;
+    font-weight: 600;
+    font-size: 0.95rem !important;
+    padding: 10px 24px !important;
+    border-radius: 999px !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 5px rgba(40, 205, 65, 0.1);
+    text-decoration: none;
+    cursor: pointer;
+
+    /* Animation */
+    transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+    transform: translateY(0);
+}
+
+.apple-btn-outline-success:hover {
+    background-color: #28cd41 !important;
+    color: white !important;
+    border-color: #28cd41 !important;
+    box-shadow: 0 6px 15px rgba(40, 205, 65, 0.25);
+    transform: translateY(-2px);
+}
+
+.apple-btn-outline-success:active {
+    transform: scale(0.96);
 }
