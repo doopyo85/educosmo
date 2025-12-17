@@ -12,14 +12,15 @@
             </div>
         </div>
 
-        <!-- 2. Center: Toggle Buttons -->
+        <!-- 2. Center: Toggle Buttons (Apple Style) -->
         <div class="header-toggle">
-            <div class="toggle-group">
-                <button class="toggle-btn active" id="btn-progress" onclick="StudentManagement.switchView('progress')">
-                    <i class="bi bi-graph-up-arrow"></i>학습 진도
+            <div class="d-flex gap-2">
+                <button class="apple-toggle-btn active" id="btn-progress"
+                    onclick="StudentManagement.switchView('progress')">
+                    <i class="bi bi-graph-up-arrow me-2"></i>학습 진도
                 </button>
-                <button class="toggle-btn" id="btn-list" onclick="StudentManagement.switchView('list')">
-                    <i class="bi bi-people-fill"></i>학생 목록
+                <button class="apple-toggle-btn" id="btn-list" onclick="StudentManagement.switchView('list')">
+                    <i class="bi bi-people-fill me-2"></i>학생 목록
                 </button>
             </div>
         </div>
