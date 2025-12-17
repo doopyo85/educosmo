@@ -11,7 +11,8 @@
             /* Thinner Calendar Header */
             .attendance-calendar {
                 grid-template-rows: 40px !important;
-                grid-auto-rows: minmax(100px, auto) !important;
+                grid-auto-rows: minmax(calc((100vh - 350px) / 6), 1fr) !important;
+                min-height: calc(100vh - 250px);
             }
 
             .calendar-header {
@@ -87,7 +88,8 @@
                         (currentView==='class-materials' ) { pageTitle='수업 자료' ; pageSubtitle='교사 전용 > 수업 자료' ; } else
                         if (currentView==='career-info' ) { pageTitle='진로 진학' ; pageSubtitle='교사 전용 > 진로 진학' ; } } %>
                         <!-- Header Bar -->
-                        <div class="page-header-bar d-flex justify-content-between align-items-end mb-0 pb-3">
+                        <!-- Header Bar -->
+                        <div class="page-header-bar mb-0 pb-3">
                             <!-- Left Group: Title -->
                             <div class="d-flex align-items-end gap-5">
                                 <div class="brand-section">
@@ -103,6 +105,23 @@
                                     <div class="page-description mt-2">
                                         우리 센터 학생들의 목록과 학습 진도를 관리할 수 있습니다.
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Center Group: Attendance Controls -->
+                            <div class="d-flex justify-content-center align-items-center">
+                                <div class="attendance-controls align-items-center <%= typeof currentView !== 'undefined' && currentView === 'attendance' ? 'd-flex' : 'd-none' %>"
+                                    id="attendanceControls">
+                                    <button class="btn btn-outline-secondary btn-sm"
+                                        onclick="StudentManagement.prevMonth()">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </button>
+                                    <span class="fw-bold mx-3" id="currentMonthLabel"
+                                        style="font-size: 1.1rem; min-width: 80px; text-align: center;">2024. 12</span>
+                                    <button class="btn btn-outline-secondary btn-sm"
+                                        onclick="StudentManagement.nextMonth()">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </button>
                                 </div>
                             </div>
 
@@ -127,21 +146,6 @@
                                     <i class="bi bi-search search-icon"></i>
                                     <input type="text" id="studentSearch" class="form-control"
                                         placeholder="학생 이름/아이디 검색..." />
-                                </div>
-
-                                <!-- Attendance Controls (Attendance Only) -->
-                                <div class="attendance-controls align-items-center <%= typeof currentView !== 'undefined' && currentView === 'attendance' ? 'd-flex' : 'd-none' %>"
-                                    id="attendanceControls">
-                                    <button class="btn btn-outline-secondary btn-sm"
-                                        onclick="StudentManagement.prevMonth()">
-                                        <i class="bi bi-chevron-left"></i>
-                                    </button>
-                                    <span class="fw-bold mx-3" id="currentMonthLabel"
-                                        style="font-size: 1.1rem; min-width: 80px; text-align: center;">2024. 12</span>
-                                    <button class="btn btn-outline-secondary btn-sm"
-                                        onclick="StudentManagement.nextMonth()">
-                                        <i class="bi bi-chevron-right"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -362,6 +366,55 @@
         <script src="/js/teacher/student-management.js?v=6"></script>
         <%- include('../partials/footer') %>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <!-- Daily Attendance Modal -->
+            <div class="modal fade" id="dailyAttendanceModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold" id="dailyModalTitle">출석 현황</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>프로필</th>
+                                            <th>이름</th>
+                                            <th>등원 시간</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dailyModalBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Detail Modal -->
+            <div class="modal fade" id="studentDetailModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold" id="studentDetailTitle">학생 상세 정보</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center mb-4">
+                                <img src="/resource/profiles/default.webp" id="studentDetailImage"
+                                    class="rounded-circle mb-2" style="width: 80px; height: 80px; object-fit: cover;">
+                                <h4 id="studentDetailName" class="fw-bold mb-0"></h4>
+                                <p id="studentDetailId" class="text-muted"></p>
+                            </div>
+                            <h6 class="fw-bold border-bottom pb-2 mb-3">이번 달 출석 기록</h6>
+                            <div id="studentDetailList" class="d-flex flex-column gap-2"
+                                style="max-height: 300px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
     </body>
 
 </html>
+```
