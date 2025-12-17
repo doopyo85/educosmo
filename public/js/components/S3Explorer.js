@@ -25,6 +25,7 @@ class S3Explorer {
     this.setInitialPath();
     this.selectedFiles = [];
     this.sortOptions = { field: 'name', order: 'asc' };
+    this.viewMode = 'list'; // 🔥 기본 보기 모드 (list | grid)
 
     this.init();
   }
@@ -85,7 +86,8 @@ class S3Explorer {
         <div class="breadcrumb-container">
           <div id="s3-breadcrumb" class="breadcrumb"></div>
           <div class="breadcrumb-actions">
-            <button onclick="window.s3Explorer.refresh()" title="새로고침">🔄</button>
+            <button onclick="window.s3Explorer.refresh()" title="새로고침" class="btn-icon">🔄</button>
+            <button onclick="window.s3Explorer.closePage()" title="창 닫기" class="btn-icon btn-close-page">❌</button>
           </div>
         </div>
         
@@ -108,29 +110,45 @@ class S3Explorer {
                 <span id="file-count">0개 항목</span>
               </div>
               <div class="toolbar-right">
+                <!-- 🔥 보기 모드 토글 -->
+                <div class="view-mode-group">
+                  <button class="btn-icon ${this.viewMode === 'list' ? 'active' : ''}" onclick="window.s3Explorer.setViewMode('list')" title="목록형">
+                    <i class="bi bi-list-ul"></i>
+                  </button>
+                  <button class="btn-icon ${this.viewMode === 'grid' ? 'active' : ''}" onclick="window.s3Explorer.setViewMode('grid')" title="갤러리형">
+                    <i class="bi bi-grid-fill"></i>
+                  </button>
+                </div>
                 ${this.renderToolbar()}
               </div>
             </div>
             
-            <!-- 파일 테이블 -->
-            <table id="s3-file-list" class="file-list-table">
-              <thead>
-                <tr>
-                  ${this.config.enableDelete ? '<th width="5%"><input type="checkbox" id="selectAllCheckbox" onclick="window.s3Explorer.toggleSelectAll(this)" title="전체 선택"></th>' : ''}
-                  <th width="${this.config.enableDelete ? '45%' : '50%'}" class="sortable" onclick="window.s3Explorer.sortBy('name')">
-                    이름 <span class="sort-indicator">▼</span>
-                  </th>
-                  <th width="15%" class="sortable" onclick="window.s3Explorer.sortBy('size')">
-                    크기 <span class="sort-indicator"></span>
-                  </th>
-                  <th width="20%" class="sortable" onclick="window.s3Explorer.sortBy('date')">
-                    수정일 <span class="sort-indicator"></span>
-                  </th>
-                  <th width="15%">삭제</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+          
+            <!-- 🔥 파일 리스트 영역 (List/Grid 분기) -->
+            <div id="file-list-view" class="file-list-view ${this.viewMode}">
+                <table id="s3-file-list" class="file-list-table" style="display: ${this.viewMode === 'list' ? 'table' : 'none'}">
+                  <thead>
+                    <tr>
+                      ${this.config.enableDelete ? '<th width="5%"><input type="checkbox" id="selectAllCheckbox" onclick="window.s3Explorer.toggleSelectAll(this)" title="전체 선택"></th>' : ''}
+                      <th width="${this.config.enableDelete ? '45%' : '50%'}" class="sortable" onclick="window.s3Explorer.sortBy('name')">
+                        이름 <span class="sort-indicator">▼</span>
+                      </th>
+                      <th width="15%" class="sortable" onclick="window.s3Explorer.sortBy('size')">
+                        크기 <span class="sort-indicator"></span>
+                      </th>
+                      <th width="20%" class="sortable" onclick="window.s3Explorer.sortBy('date')">
+                        수정일 <span class="sort-indicator"></span>
+                      </th>
+                      <th width="15%">삭제</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+
+                <!-- 갤러리형 뷰 -->
+                <div id="s3-file-grid" class="file-grid-container" style="display: ${this.viewMode === 'grid' ? 'grid' : 'none'}"></div>
+            </div>
+
           </div>
         </div>
         
@@ -365,6 +383,84 @@ class S3Explorer {
         </tr>
       `;
     }).join('');
+
+    // 🔥 그리드 뷰 렌더링
+    this.renderFileGrid(files);
+  }
+
+  /**
+   * 🔥 그리드 뷰 렌더링 (갤러리)
+   */
+  renderFileGrid(files) {
+    const gridContainer = document.getElementById('s3-file-grid');
+    if (!gridContainer) return;
+
+    if (files.length === 0) {
+      gridContainer.innerHTML = '<div class="empty-message">파일이 없습니다.</div>';
+      return;
+    }
+
+    // 정렬 적용
+    const sortedFiles = this.sortFiles(files);
+
+    gridContainer.innerHTML = sortedFiles.map(file => {
+      const displayName = file.name;
+      const ext = displayName.split('.').pop().toLowerCase();
+      const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext);
+
+      let thumbnailHtml = `<span class="grid-icon">${file.icon}</span>`;
+
+      // 이미지인 경우 썸네일 표시
+      if (isImage) {
+        thumbnailHtml = `<img src="/api/s3/preview?key=${encodeURIComponent(file.key)}" class="grid-thumbnail" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\\'grid-icon\\'>${file.icon}</span>'">`;
+      }
+
+      // 클릭 이벤트
+      let onClickEvent = '';
+      if (ext === 'ent') {
+        onClickEvent = `onclick="window.s3Explorer.openInEntry('${file.key}')"`;
+      } else if (ext === 'sb2' || ext === 'sb3') {
+        onClickEvent = `onclick="window.s3Explorer.openInScratch('${file.key}')"`;
+      } else {
+        onClickEvent = `onclick="window.s3Explorer.preview('${file.key}')"`;
+      }
+
+      return `
+        <div class="grid-item" title="${displayName}">
+          <div class="grid-preview" ${onClickEvent}>
+            ${thumbnailHtml}
+          </div>
+          <div class="grid-info">
+             <div class="grid-name-row">
+                <span class="grid-name">${displayName}</span>
+             </div>
+             <span class="grid-size">${file.sizeFormatted}</span>
+          </div>
+          ${this.config.enableDelete ?
+          `<button class="grid-delete-btn" onclick="window.s3Explorer.deleteFile('${file.key}')" title="삭제">&times;</button>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  /**
+   * 🔥 보기 모드 변경
+   */
+  setViewMode(mode) {
+    this.viewMode = mode;
+    this.renderLayout(); // UI 갱신 (툴바 상태 및 리스트/그리드 전환)
+    this.loadFolder(this.currentPath); // 데이터 재바인딩
+  }
+
+  /**
+   * 🔥 페이지 닫기
+   */
+  closePage() {
+    if (typeof closeS3Browser === 'function') {
+      closeS3Browser();
+    } else {
+      window.history.back();
+    }
   }
 
   /**
