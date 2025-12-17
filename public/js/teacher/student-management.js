@@ -723,6 +723,60 @@ const StudentManagement = {
         return variableHolidays[dateStr] || null;
     },
 
+    openDailyModal(year, month, day) {
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        $('#dailyModalTitle').text(`${dateStr} 출석 현황`);
+
+        const tbody = $('#dailyModalBody');
+        tbody.empty();
+
+        const dailyData = (this.currentMonthData || []).filter(item => parseInt(item.day) === day);
+
+        if (dailyData.length === 0) {
+            tbody.append('<tr><td colspan="3" class="text-center text-muted py-4">출석 기록이 없습니다.</td></tr>');
+        } else {
+            dailyData.forEach(item => {
+                tbody.append(`
+                    <tr>
+                        <td class="text-center"><img src="/resource/profiles/default.webp" class="rounded-circle" width="32" height="32"></td>
+                        <td class="fw-bold">${item.name}</td>
+                        <td>${item.time}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        const myModal = new bootstrap.Modal(document.getElementById('dailyAttendanceModal'));
+        myModal.show();
+    },
+
+    openStudentModal(studentId, studentName) {
+        $('#studentDetailName').text(studentName);
+        $('#studentDetailId').text('');
+
+        const list = $('#studentDetailList');
+        list.empty();
+
+        const studentData = (this.currentMonthData || []).filter(item => String(item.id) === String(studentId));
+        studentData.sort((a, b) => parseInt(b.day) - parseInt(a.day));
+
+        if (studentData.length === 0) {
+            list.append('<div class="text-center text-muted py-3">이번 달 출석 기록이 없습니다.</div>');
+        } else {
+            studentData.forEach(item => {
+                list.append(`
+                    <div class="d-flex justify-content-between align-items-center p-2 border rounded bg-light">
+                        <span class="fw-bold"><i class="bi bi-calendar-check me-2"></i>${item.day}일</span>
+                        <span class="badge bg-success">${item.time} 등원</span>
+                    </div>
+                `);
+            });
+        }
+
+        const myModal = new bootstrap.Modal(document.getElementById('studentDetailModal'));
+        myModal.show();
+    },
+
     showAlert(message, type = 'info') {
         $('.student-management-alert').remove();
         const alertHtml = `
