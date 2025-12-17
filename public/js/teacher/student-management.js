@@ -56,7 +56,25 @@ const StudentManagement = {
     },
 
     // ============================================
-    // 뷰 전환 (Button Toggle)
+    // 메인 뷰 전환 (사이드바 메뉴)
+    // ============================================
+    switchMainView(viewType) {
+        // 사이드바 활성화 상태 업데이트
+        $('.board-category-item').removeClass('active');
+        $(`#nav-${viewType}`).addClass('active');
+
+        // 메인 컨텐츠 전환
+        if (viewType === 'class-materials') {
+            $('#student-management-view').hide();
+            $('#class-materials-view').show();
+        } else {
+            $('#class-materials-view').hide();
+            $('#student-management-view').show();
+        }
+    },
+
+    // ============================================
+    // 탭 뷰 전환 (학생관리 내부 탭)
     // ============================================
     switchView(viewName) {
         // 버튼 활성화 상태 업데이트
