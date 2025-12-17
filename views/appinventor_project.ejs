@@ -27,16 +27,17 @@
         <input type="hidden" id="center-id" value="<%= centerID %>">
 
         <div class="container-fluid mt-5" style="max-width: 1700px;">
-            <div class="text-center mb-5">
-                <h1 class="fw-bold">앱인벤터 프로젝트</h1>
-                <p class="text-muted">블록 코딩을 통해 나만의 모바일 앱을 만들고 공유해보세요!</p>
-                <a href="https://appinventor.mit.edu/" target="_blank" class="btn btn-primary btn-sm rounded-pill px-3">
-                    <i class="bi bi-plus-lg"></i> 새로 시작하기
-                </a>
-            </div>
+            <!-- 카테고리 탭 + 새로 시작하기 버튼 toolbar -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 border-bottom">
+                <ul class="nav nav-tabs border-bottom-0" id="categoryTabs" role="tablist"></ul>
 
-            <!-- 카테고리 탭 -->
-            <ul class="nav nav-tabs" id="categoryTabs" role="tablist"></ul>
+                <div class="action-buttons pb-1">
+                    <a href="https://appinventor.mit.edu/" target="_blank"
+                        class="btn btn-primary btn-sm rounded-pill px-3">
+                        <i class="bi bi-plus-lg"></i> 새로 시작하기
+                    </a>
+                </div>
+            </div>
 
             <!-- 콘텐츠 컨테이너 -->
             <div id="content-container" class="tab-content"></div>
