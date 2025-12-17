@@ -43,4 +43,30 @@
 3.  **대시보드 표준화**: 교사 및 관리자 대시보드의 버튼/테이블 스타일을 `apple-theme.css` 기반으로 통일.
 
 ---
+## 4. Layout System Policy (V4 - System Unlock)
+
+### 4.1 Variable-Based Resizing Architecture
+The Layout System has been refactored to support native, system-wide resizing without hardcoded constraints.
+
+-   **Core Principle**: Layout widths are determined exclusively by CSS Variables (`:root`), not by static percentages in class definitions.
+-   **Variables**:
+    -   `--content-width`: Width of the left content panel (default: `50%`).
+    -   `--ide-width`: Width of the right IDE/Quiz panel (default: `50%`).
+-   **Execution**:
+    -   `common-layout.css` applies these variables to `.layout-ide`, `.layout-quiz` container classes.
+    -   **Specificity Rule**: Both Class (`.layout-ide .ide-container`) and ID (`#ide-component`) selectors MUST use these variables to prevent specificity conflicts.
+    -   `IDEWidthResize.js` updates these variables dynamically on drag events.
+
+### 4.2 Handling Specificity Conflicts
+-   **Policy**: When defining layout dimensions in specific component CSS files (e.g., `common-content.css`), **NEVER** use `flex: 1` or fixed widths with `!important` on ID selectors unless pointing to the shared variables.
+-   **Example**:
+    ```css
+    /* Correct */
+    #ide-component { flex: 0 0 var(--ide-width) !important; }
+
+    /* Incorrect (Blocking) */
+    #ide-component { flex: 1 !important; }
+    ```
+
+---
 *이 문서는 프로젝트의 CSS 구조가 변경될 때마다 갱신되어야 합니다.*

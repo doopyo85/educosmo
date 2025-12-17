@@ -702,8 +702,17 @@ class ContentComponent extends Component {
       const markdownText = await response.text();
       console.log('ContentComponent: 마크다운 텍스트 로드 완료, 길이:', markdownText.length);
 
+      // 🔥 NEW: Clean up raw content (remove HTML tags if present from legacy conversion)
+      const cleanMarkdownText = markdownText
+        .replace(/<!DOCTYPE html>/gi, '')
+        .replace(/<html[^>]*>/gi, '')
+        .replace(/<\/html>/gi, '')
+        .replace(/<head>[\s\S]*?<\/head>/gi, '')
+        .replace(/<body[^>]*>/gi, '')
+        .replace(/<\/body>/gi, '');
+
       // 마크다운을 HTML로 변환
-      const htmlContent = this.convertMarkdownToHtml(markdownText);
+      const htmlContent = this.convertMarkdownToHtml(cleanMarkdownText);
       console.log('ContentComponent: 마크다운 → HTML 변환 완료');
 
       this.elements.iframe.srcdoc = this.getEnhancedMarkdownHtml(htmlContent);
@@ -943,13 +952,15 @@ class ContentComponent extends Component {
     const headerTitle = h1Match ? h1Match[1].replace(/<[^>]*>/g, '').trim() : '';
 
     return `
-          < !DOCTYPE html >
+          <!DOCTYPE html>
             <html lang="ko">
               <head>
                 <meta charset="UTF-8">
                   <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <base target="_parent">
                       <link rel="stylesheet" href="/css/common-content.css">
+                      <!-- Bootstrap Icons -->
+                      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
                         <!-- Highlight.js -->
                         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
@@ -957,36 +968,125 @@ class ContentComponent extends Component {
 
                           <style>
         /* Markdown Specific Overrides for common-content.css */
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+
                             body {
-                              padding: 30px 40px !important;
-                            max-width: 900px;
+                               padding: 40px 50px !important;
+                            max-width: 960px;
                             margin: 0 auto;
+                            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            color: #2c3e50;
+                            line-height: 1.7;
         }
 
                             /* 헤더 스타일 조정 */
-                            h1 {font - size: 2.2em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; margin-bottom: 30px; }
-                            h2 {font - size: 1.8em; margin-top: 40px; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
-                            h3 {font - size: 1.5em; margin-top: 30px; }
+                            h1 {
+                               font - size: 2.4em;
+                            border-bottom: 2px solid #eaecef;
+                            padding-bottom: 0.3em;
+                            margin-bottom: 30px;
+                            font-weight: 700;
+                            letter-spacing: -0.5px;
+        }
+                            h2 {
+                               font - size: 1.8em;
+                            margin-top: 40px;
+                            border-bottom: 1px solid #eaecef;
+                            padding-bottom: 0.3em;
+                            font-weight: 600;
+        }
+                            h3 {
+                               font - size: 1.5em;
+                            margin-top: 30px;
+                            font-weight: 600;
+        }
+
+                            /* 본문 텍스트 */
+                            p {margin - bottom: 1.2em; font-size: 16px; }
+
+                            /* 리스트 */
+                            ul, ol {padding - left: 2em; margin-bottom: 1.2em; }
+                            li {margin - bottom: 0.5em; }
 
                             /* 테이블 스타일 */
-                            table {border - collapse: collapse; width: 100%; margin: 20px 0; }
-                            th, td {border: 1px solid #ddd; padding: 10px; }
-                            th {background - color: #f8f9fa; }
+                            table {
+                               border - collapse: collapse;
+                            width: 100%;
+                            margin: 25px 0;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+                            th, td {border: 1px solid #e1e4e8; padding: 12px 15px; }
+                            th {
+                               background - color: #f8f9fa;
+                            font-weight: 600;
+                            text-align: left;
+        }
 
                             /* 인용구 */
-                            blockquote {border - left: 4px solid #0d6efd; margin: 0; padding-left: 15px; color: #555; background: #f8f9fa; padding: 10px 15px; border-radius: 4px; }
-
-                            /* 코드 블록 */
-                            pre {background: #f6f8fa; padding: 15px; border-radius: 6px; position: relative; }
-                            code {font - family: 'Consolas', monospace; }
-                            p code {background: #f0f0f0; padding: 2px 5px; border-radius: 4px; color: #d63384; }
-
-                            .copy-btn {
-                              position: absolute; top: 5px; right: 5px;
-                            background: #fff; border: 1px solid #ddd; border-radius: 4px;
-                            padding: 3px 8px; font-size: 12px; cursor: pointer; color: #666;
+                            blockquote {
+                               border - left: 4px solid #0d6efd;
+                            margin: 20px 0;
+                            padding: 15px 20px;
+                            color: #555;
+                            background: #f8f9fa;
+                            border-radius: 4px;
+                            font-style: italic;
         }
-                            .copy-btn:hover {background: #f0f0f0; color: #333; }
+
+                            /* 코드 블록 (Notion-like) */
+                            pre {
+                               background: #f6f8fa;
+                            padding: 20px;
+                            border-radius: 8px;
+                            position: relative;
+                            margin: 20px 0;
+                            border: 1px solid #e1e4e8;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+                            code {
+                               font - family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+                            font-size: 14px;
+                            line-height: 1.5;
+        }
+                            
+                            /* 인라인 코드 */
+                            p code, li code {
+                               background: rgba(175, 184, 193, 0.2);
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            color: #c7254e;
+                            font-size: 0.9em;
+                            font-family: 'Fira Code', monospace;
+        }
+
+                            /* 복사 버튼 (Icon) */
+                            .copy-btn {
+                               position: absolute;
+                            top: 10px;
+                            right: 10px;
+                            background: transparent;
+                            border: 1px solid #d1d5db;
+                            border-radius: 6px;
+                            width: 32px;
+                            height: 32px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                            color: #6c757d;
+                            transition: all 0.2s;
+                            opacity: 0; /* 평소엔 숨김 */
+        }
+                            pre:hover .copy-btn {opacity: 1; }
+                            .copy-btn:hover {
+                               background: #ffffff;
+                            color: #0d6efd;
+                            border-color: #0d6efd;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+                            .copy-btn i {font - size: 16px; }
                           </style>
                         </head>
                         <body class="markdown-body">
@@ -995,20 +1095,32 @@ class ContentComponent extends Component {
                           <script>
                             document.addEventListener("DOMContentLoaded", function () {
           if (typeof hljs !== "undefined") {
-                              hljs.highlightAll();
+                               hljs.highlightAll();
           }
 
           // 코드 복사 버튼 추가
           document.querySelectorAll('pre').forEach(pre => {
+             // 버튼 생성
              const btn = document.createElement('button');
                             btn.className = 'copy-btn';
-                            btn.innerText = '복사';
+                            btn.title = '코드 복사';
+                            btn.innerHTML = '<i class="bi bi-clipboard"></i>'; // 아이콘 기본값
+                            
              btn.onclick = () => {
                 const code = pre.querySelector('code');
                             if(code) {
-                              navigator.clipboard.writeText(code.innerText);
-                            btn.innerText = '완료!';
-                    setTimeout(() => btn.innerText = '복사', 2000);
+                               navigator.clipboard.writeText(code.innerText);
+                            
+                    // 성공 피드백
+                    btn.innerHTML = '<i class="bi bi-check2"></i>';
+                            btn.style.color = '#198754';
+                            btn.style.borderColor = '#198754';
+                            
+                    setTimeout(() => {
+                               btn.innerHTML = '<i class="bi bi-clipboard"></i>';
+                            btn.style.color = '';
+                            btn.style.borderColor = '';
+                    }, 2000);
                 }
              };
                             pre.appendChild(btn);
@@ -1017,7 +1129,7 @@ class ContentComponent extends Component {
           // 외부 링크 새창 열기
           document.querySelectorAll('a').forEach(a => {
             if(a.href && a.href.startsWith('http')) {
-                              a.target = '_blank';
+                               a.target = '_blank';
             }
           });
         });
