@@ -485,6 +485,26 @@ router.get('/student-management/attendance', requireTeacher, (req, res) => {
     });
 });
 
+// 수업 자료 (Coming Soon)
+router.get('/class-materials', requireTeacher, (req, res) => {
+    res.render('teacher/student-management', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.session.centerID,
+        currentView: 'class-materials'
+    });
+});
+
+// 진로 진학 (Coming Soon)
+router.get('/career-info', requireTeacher, (req, res) => {
+    res.render('teacher/student-management', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.session.centerID,
+        currentView: 'career-info'
+    });
+});
+
 // 🔥 중복 제거: S3 통합 라우터로 리다이렉트
 router.get('/student-files', requireTeacher, (req, res) => {
     res.redirect('/s3/student-files');

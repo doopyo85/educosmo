@@ -11,13 +11,16 @@ const StudentManagement = {
     },
 
     init() {
+        console.log('🚀 StudentManagement initialized. Path:', window.location.pathname);
         this.bindEvents();
 
         // URL 기반 초기 데이터 로드
         const path = window.location.pathname;
         if (path.includes('/list')) {
+            console.log('📂 Loading Student List View...');
             this.loadStudents();
         } else if (path.includes('/attendance')) {
+            console.log('📅 Loading Attendance View...');
             const now = new Date();
             this.currentAttendanceDate = { year: now.getFullYear(), month: now.getMonth() + 1 };
             this.renderCalendar(this.currentAttendanceDate.year, this.currentAttendanceDate.month);
@@ -94,13 +97,17 @@ const StudentManagement = {
     // 데이터 로드
     // ============================================
     async loadStudents() {
+        console.log('🔄 Fetching student list...');
         try {
             const response = await fetch('/teacher/api/students');
             const data = await response.json();
+            console.log('✅ Student list loaded:', data.success, 'Count:', data.students ? data.students.length : 0);
 
             if (data.success) {
-                this.students = data.students;
+                this.students = data.students || [];
                 this.renderStudents();
+            } else {
+                console.error('❌ API Error:', data.message);
             }
         } catch (error) {
             console.error('학생 목록 로드 오류:', error);
@@ -184,9 +191,16 @@ const StudentManagement = {
     // ============================================
     renderStudents(listToRender = this.students) {
         const tbody = $('#studentTableBody');
+        console.log('🎨 Rendering students. Target found:', tbody.length > 0, 'Count:', listToRender ? listToRender.length : 0);
+
+        if (tbody.length === 0) {
+            console.error('❌ Critical Error: #studentTableBody not found in DOM!');
+            return;
+        }
+
         tbody.empty();
 
-        if (listToRender.length === 0) {
+        if (!listToRender || listToRender.length === 0) {
             tbody.append(`
                 <tr>
                     <td colspan="8" class="empty-state">
