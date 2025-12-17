@@ -8,7 +8,8 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    overflow: hidden; /* 내부 스크롤은 problem-container에서 처리 */
+    overflow: hidden;
+    /* 내부 스크롤은 problem-container에서 처리 */
     background-color: #ffffff;
     border-right: 1px solid #dee2e6;
     box-sizing: border-box;
@@ -38,7 +39,8 @@
     box-sizing: border-box;
     position: relative;
     z-index: var(--z-content);
-    gap: 0; /* 🔥 모든 gap 제거 */
+    gap: 0;
+    /* 🔥 모든 gap 제거 */
     flex-wrap: nowrap;
 }
 
@@ -51,7 +53,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    flex: 0 0 20%; /* 🔥 15%에서 20%로 증가 */
+    flex: 0 0 20%;
+    /* 🔥 15%에서 20%로 증가 */
     min-width: 0;
     box-sizing: border-box;
     padding: 0;
@@ -65,7 +68,8 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    flex: 0 0 60%; /* 🔥 85%를 60%로 되돌리기 */
+    flex: 0 0 60%;
+    /* 🔥 85%를 60%로 되돌리기 */
     box-sizing: border-box;
     padding: 0;
     margin: 0;
@@ -83,7 +87,8 @@
     min-width: 0 !important;
     visibility: visible !important;
     opacity: 1 !important;
-    gap: 4px !important; /* 🔥 버튼 간 간격 추가 */
+    gap: 4px !important;
+    /* 🔥 버튼 간 간격 추가 */
 }
 
 /* Bootstrap 버튼 그룹 스타일 커스터마이징 */
@@ -92,12 +97,15 @@
     align-items: center !important;
     background: none !important;
     border: none !important;
-    border-radius: 0 !important; /* 🔥 그룹 테두리 제거 */
-    overflow: visible !important; /* 🔥 개별 테두리를 위해 */
+    border-radius: 0 !important;
+    /* 🔥 그룹 테두리 제거 */
+    overflow: visible !important;
+    /* 🔥 개별 테두리를 위해 */
     box-shadow: none !important;
     visibility: visible !important;
     opacity: 1 !important;
-    gap: 4px !important; /* 🔥 버튼 간 간격 */
+    gap: 4px !important;
+    /* 🔥 버튼 간 간격 */
 }
 
 /* 버튼 그룹 내부 버튼 통일 스타일 - 개별 테두리 */
@@ -113,11 +121,13 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    border-radius: 6px !important; /* 🔥 각 버튼마다 둥근 테두리 */
+    border-radius: 6px !important;
+    /* 🔥 각 버튼마다 둥근 테두리 */
     margin: 0 !important;
     flex-shrink: 0;
     transition: all 0.2s ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important; /* 🔥 개별 그림자 */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    /* 🔥 개별 그림자 */
     visibility: visible !important;
     opacity: 1 !important;
 }
@@ -130,7 +140,8 @@
 .header-controls-group .header-control-btn:last-child,
 .header-controls-group .btn:not(:first-child):not(:last-child),
 .header-controls-group .header-control-btn:not(:first-child):not(:last-child) {
-    border-radius: 6px !important; /* 🔥 모든 버튼에 동일한 둥근 테두리 */
+    border-radius: 6px !important;
+    /* 🔥 모든 버튼에 동일한 둥근 테두리 */
     border: 1px solid #dee2e6 !important;
 }
 
@@ -175,7 +186,8 @@
 #problem-navigation {
     display: flex;
     align-items: center;
-    gap: 6px; /* 🔥 문제 번호 간격 */
+    gap: 6px;
+    /* 🔥 문제 번호 간격 */
     flex-wrap: wrap;
     justify-content: center;
 }
@@ -199,7 +211,8 @@
 .problem-icon:hover,
 #prev-problem:hover,
 #next-problem:hover {
-    color: #333; /* 🔥 파란색에서 검정색으로 변경 */
+    color: #333;
+    /* 🔥 파란색에서 검정색으로 변경 */
 }
 
 /* 문제 네비게이션 컨테이너 내부 아이콘들 */
@@ -212,7 +225,8 @@
 }
 
 .problem-navigation-container i:hover {
-    color: #333; /* 🔥 파란색에서 검정색으로 변경 */
+    color: #333;
+    /* 🔥 파란색에서 검정색으로 변경 */
 }
 
 /* 문제 컨테이너 - 메인 콘텐츠 영역 */
@@ -221,7 +235,8 @@
     flex: 1;
     position: relative;
     overflow: hidden;
-    height: calc(100% - 60px); /* 상단 네비게이션 바 제외 */
+    height: calc(100% - 60px);
+    /* 상단 네비게이션 바 제외 */
     background-color: #ffffff;
     box-sizing: border-box;
 }
@@ -264,17 +279,34 @@
 }
 
 /* 레이아웃별 컴포넌트 표시/숨김 제어 */
+/* 레이아웃별 컴포넌트 표시/숨김 제어 (변수 기반 동적 너비 적용) */
 .layout-ide #ide-component {
     display: flex !important;
-    flex: 1 !important;
+    width: var(--ide-width) !important;
+    flex: 0 0 var(--ide-width) !important;
     visibility: visible !important;
     opacity: 1 !important;
 }
 
 .layout-ide #content-component {
     display: flex !important;
-    flex: 1 !important;
+    width: var(--content-width) !important;
+    flex: 0 0 var(--content-width) !important;
 }
+
+.layout-quiz #quiz-component {
+    display: flex !important;
+    width: var(--ide-width) !important;
+    /* IDE와 동일한 너비 변수 사용 */
+    flex: 0 0 var(--ide-width) !important;
+}
+
+.layout-quiz #content-component {
+    display: flex !important;
+    width: var(--content-width) !important;
+    flex: 0 0 var(--content-width) !important;
+}
+
 
 .layout-ide #quiz-component {
     display: none !important;
@@ -295,8 +327,13 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* iframe 로딩 상태 */
@@ -363,6 +400,7 @@
 
 /* 반응형 스타일 */
 @media (max-width: 992px) {
+
     /* 태블릿에서 네비게이션 바 조정 */
     .problem-top-nav {
         flex-wrap: wrap;
@@ -371,7 +409,7 @@
         padding: 8px 12px;
         gap: 8px;
     }
-    
+
     .problem-title,
     #problem-title {
         width: 100%;
@@ -380,25 +418,25 @@
         font-size: 1.1rem;
         flex: 1 1 100%;
     }
-    
+
     .problem-navigation-container,
     #problem-navigation-container {
         flex: 1 1 70%;
         justify-content: center;
     }
-    
+
     .header-controls-group {
         flex: 1 1 30%;
         justify-content: center;
     }
-    
+
     .header-controls-group .btn {
         min-width: 28px !important;
         height: 28px !important;
         padding: 4px 8px !important;
         font-size: 12px !important;
     }
-    
+
     .problem-container,
     #problem-container {
         height: calc(100% - 80px);
@@ -406,13 +444,14 @@
 }
 
 @media (max-width: 768px) {
+
     /* 모바일에서 더 컴팩트한 네비게이션 */
     .problem-top-nav {
         padding: 6px 10px;
         min-height: 50px;
         flex-wrap: wrap;
     }
-    
+
     .problem-title,
     #problem-title {
         font-size: 1rem;
@@ -420,35 +459,35 @@
         flex: 1 1 100%;
         order: 1;
     }
-    
+
     .problem-navigation-container,
     #problem-navigation-container {
         flex: 1 1 60%;
         order: 2;
     }
-    
+
     .header-controls-group {
         flex: 1 1 40%;
         order: 3;
     }
-    
+
     .header-controls-group .btn {
         min-width: 24px !important;
         height: 24px !important;
         padding: 2px 6px !important;
         font-size: 11px !important;
     }
-    
+
     .header-controls-group .btn i {
         font-size: 12px !important;
     }
-    
+
     .problem-icon,
     #prev-problem,
     #next-problem {
         font-size: 1.25rem;
     }
-    
+
     .problem-container,
     #problem-container {
         height: calc(100% - 70px);
@@ -459,7 +498,8 @@
 .problem-icon:focus,
 #prev-problem:focus,
 #next-problem:focus {
-    outline: 2px solid #333; /* 🔥 파란색에서 검정색으로 변경 */
+    outline: 2px solid #333;
+    /* 🔥 파란색에서 검정색으로 변경 */
     outline-offset: 2px;
 }
 
@@ -468,7 +508,7 @@
     .problem-top-nav {
         display: none;
     }
-    
+
     .problem-container,
     #problem-container {
         height: 100%;
