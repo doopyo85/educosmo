@@ -615,3 +615,84 @@
 #progressTableWrapper col:nth-child(12) {
     width: 10%;
 }
+/* Attendance Calendar Styles */
+.attendance-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: minmax(120px, auto);
+    gap: 10px;
+    width: 100%;
+}
+
+.calendar-header {
+    text-align: center;
+    font-weight: 700;
+    padding: 10px 0;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    color: #495057;
+}
+
+.calendar-day {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s;
+}
+
+.calendar-day:hover {
+    border-color: #86b7fe;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.calendar-day.today {
+    background-color: #f0f7ff;
+    border-color: #cfe2ff;
+}
+
+.day-number {
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #212529;
+}
+
+.day-number.sunday { color: #dc3545; }
+.day-number.saturday { color: #0d6efd; }
+
+.attendance-list {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.attendance-item {
+    background-color: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #495057;
+    cursor: default;
+}
+
+.attendance-item:hover {
+    background-color: #dde2e6;
+}
+
+/* Scrollbar for day cell */
+.attendance-list::-webkit-scrollbar {
+    width: 4px;
+}
+.attendance-list::-webkit-scrollbar-thumb {
+    background-color: #ced4da;
+    border-radius: 2px;
+}
+

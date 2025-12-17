@@ -89,6 +89,9 @@ const StudentManagement = {
         if (viewName === 'progress') {
             $('#page-subtitle').text('학생 관리 > 학습 진도');
             $('#page-main-title').text('학습 진도');
+        } else if (viewName === 'attendance') {
+            $('#page-subtitle').text('학생 관리 > 출석부');
+            $('#page-main-title').text('출석부');
         } else {
             $('#page-subtitle').text('학생 관리 > 학생 목록');
             $('#page-main-title').text('학생 목록');
@@ -99,17 +102,26 @@ const StudentManagement = {
         $(`#student-${viewName}`).addClass('show active');
 
         // 검색창 및 버튼 상태 업데이트
+        $('#progressSearchWrapper').hide();
+        $('#studentSearchWrapper').hide();
+        $('#addStudentBtn').hide();
+        $('#attendanceControls').css('display', 'none'); // Use css display none to be sure
+
         if (viewName === 'progress') {
             $('#progressSearchWrapper').show();
-            $('#studentSearchWrapper').hide();
-            $('#addStudentBtn').hide();
-            // 활성화 시 데이터가 없으면 로드
             if (this.progressData.length === 0) this.loadProgress();
-        } else {
-            $('#progressSearchWrapper').hide();
+        } else if (viewName === 'list') {
             $('#studentSearchWrapper').show();
             $('#addStudentBtn').show();
             if (this.students.length === 0) this.loadStudents();
+        } else if (viewName === 'attendance') {
+            $('#attendanceControls').css('display', 'flex'); // Flex for alignment
+            // Initialize Calendar if needed
+            if (!this.currentAttendanceDate) {
+                const now = new Date();
+                this.currentAttendanceDate = { year: now.getFullYear(), month: now.getMonth() + 1 };
+                this.renderCalendar(this.currentAttendanceDate.year, this.currentAttendanceDate.month);
+            }
         }
     },
 
@@ -596,6 +608,107 @@ const StudentManagement = {
             console.error('학생 삭제 오류:', error);
             this.showAlert('삭제 중 오류가 발생했습니다.', 'danger');
         }
+    },
+
+    // ============================================
+    // 출석부 (캘린더)
+    // ============================================
+    prevMonth() {
+        let { year, month } = this.currentAttendanceDate;
+        month--;
+        if (month < 1) { month = 12; year--; }
+        this.currentAttendanceDate = { year, month };
+        this.renderCalendar(year, month);
+    },
+
+    nextMonth() {
+        let { year, month } = this.currentAttendanceDate;
+        month++;
+        if (month > 12) { month = 1; year++; }
+        this.currentAttendanceDate = { year, month };
+        this.renderCalendar(year, month);
+    },
+
+    renderCalendar(year, month) {
+        $('#currentMonthLabel').text(`${year}. ${String(month).padStart(2, '0')}`);
+
+        const $calendar = $('#attendance-calendar');
+        $calendar.empty();
+
+        // 1. Header (Sun ~ Sat)
+        const days = ['일', '월', '화', '수', '목', '금', '토'];
+        days.forEach(day => {
+            $calendar.append(`<div class="calendar-header">${day}</div>`);
+        });
+
+        // 2. Days
+        const firstDay = new Date(year, month - 1, 1).getDay();
+        const lastDate = new Date(year, month, 0).getDate();
+
+        // Empty cells for previous month
+        for (let i = 0; i < firstDay; i++) {
+            $calendar.append(`<div class="calendar-day empty" style="background:none; border:none;"></div>`);
+        }
+
+        // Mock Data Generation
+        const mockData = this.getMockAttendanceData(year, month, lastDate);
+
+        // Days
+        for (let d = 1; d <= lastDate; d++) {
+            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const dayOfWeek = new Date(year, month - 1, d).getDay();
+
+            let dayClass = 'day-number';
+            if (dayOfWeek === 0) dayClass += ' sunday';
+            if (dayOfWeek === 6) dayClass += ' saturday';
+
+            // Check if today
+            const today = new Date();
+            const isToday = today.getFullYear() === year && (today.getMonth() + 1) === month && today.getDate() === d;
+            const todayClass = isToday ? 'today' : '';
+
+            // Attendance List
+            const attendees = mockData[d] || [];
+            let attendeesHtml = '';
+            attendees.forEach(att => {
+                attendeesHtml += `<div class="attendance-item" title="${att.name} (${att.time})">${att.name} <span style="font-size:0.7em; color:#888;">${att.time}</span></div>`;
+            });
+
+            $calendar.append(`
+                <div class="calendar-day ${todayClass}">
+                    <div class="${dayClass}">${d}</div>
+                    <div class="attendance-list">
+                        ${attendeesHtml}
+                    </div>
+                </div>
+            `);
+        }
+    },
+
+    getMockAttendanceData(year, month, lastDate) {
+        const data = {};
+        if (this.students.length === 0) return data;
+
+        for (let d = 1; d <= lastDate; d++) {
+            // Randomly select 0 to 4 students
+            const count = Math.floor(Math.random() * 5);
+            const dailyAttendees = [];
+            const shuffled = [...this.students].sort(() => 0.5 - Math.random());
+
+            for (let i = 0; i < count && i < shuffled.length; i++) {
+                const hour = 13 + Math.floor(Math.random() * 6); // 13:00 ~ 18:00
+                const min = Math.floor(Math.random() * 60);
+                const time = `${hour}:${String(min).padStart(2, '0')}`;
+                dailyAttendees.push({
+                    name: shuffled[i].name,
+                    time: time
+                });
+            }
+            if (dailyAttendees.length > 0) {
+                data[d] = dailyAttendees;
+            }
+        }
+        return data;
     },
 
     showAlert(message, type = 'info') {
