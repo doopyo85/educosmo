@@ -53,9 +53,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    /* 🔥 FIX: 고정 20% -> 가변 너비 (남는 공간 모두 차지) */
-    flex: 1 1 auto;
-    min-width: 0;
+    /* 🔥 FIX: 사용자 요청대로 30% 고정 너비 */
+    flex: 0 0 30%;
+    max-width: 30%;
     box-sizing: border-box;
     padding: 0;
     margin: 0;
@@ -68,10 +68,10 @@
 #problem-navigation-container {
     display: flex;
     align-items: center;
+    /* 🔥 FIX: 남은 공간 모두 차지하며 내부 중앙 정렬 */
     justify-content: center;
     gap: 6px;
-    /* 🔥 FIX: 고정 60% -> 콘텐츠 크기에 맞춤 (flex-shrink 방지) */
-    flex: 0 0 auto;
+    flex: 1;
     box-sizing: border-box;
     padding: 0;
     margin: 0;
