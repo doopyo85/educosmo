@@ -582,22 +582,30 @@ body.resizing * {
     user-select: none !important;
 }
 
+body.resizing iframe {
+    pointer-events: none !important;
+    /* iframe이 마우스 이벤트를 가로채지 않도록 방지 */
+}
+
 /* 🔥 추가: IDE 측 너비 조절 핸들 (왼쪽) */
 .width-resize-handle {
     position: absolute;
     left: 0;
     top: 0;
-    width: 10px;
+    width: 14px;
+    /* 더 넓게 잡히도록 수정 */
     height: 100%;
     background: transparent;
     cursor: col-resize;
     z-index: 20;
-    margin-left: -5px;
+    margin-left: -7px;
     /* 중앙 정렬 보정 */
     transition: background-color 0.2s ease;
 }
 
-.width-resize-handle:hover {
+.width-resize-handle:hover,
+.width-resize-handle.active {
+    /* 🔥 active 클래스 추가 (드래그 중 표시) */
     background: rgba(0, 123, 255, 0.1);
 }
 
@@ -605,7 +613,8 @@ body.resizing * {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 3px;
+    width: 4px;
+    /* 라인 두께 증가 */
     height: 40px;
     background: #007bff;
     border-radius: 2px;
@@ -614,9 +623,17 @@ body.resizing * {
     transition: all 0.2s ease;
 }
 
-.width-resize-handle:hover .width-resize-handle-line {
+.width-resize-handle:hover .width-resize-handle-line,
+.width-resize-handle.active .width-resize-handle-line {
+    /* 🔥 active 시 라인 표시 */
     opacity: 1;
-    transform: translate(-50%, -50%) scaleY(1.2);
+    transform: translate(-50%, -50%) scaleY(1.5);
+    /* 길이도 강조 */
+    height: 100%;
+    /* 🔥 사용자 요청: 가이드 선처럼 길게 표시 */
+    max-height: 100%;
+    width: 2px;
+    /* 길어질 때는 얇게 */
 }
 
 /* 🔥 추가: 문제 상단 네비게이션 레이아웃 개선 */
@@ -849,4 +866,23 @@ body.resizing * {
 
 .content-container[data-width-limit="max"] {
     box-shadow: inset -3px 0 0 #ff6b6b;
+}
+
+/* 🔥 추가: 전체화면 모드 스타일 */
+body.fullscreen-mode header.navbar {
+    display: none !important;
+}
+
+body.fullscreen-mode .nav-container {
+    display: none !important;
+}
+
+body.fullscreen-mode .main-container {
+    max-height: 100vh !important;
+    height: 100vh !important;
+    margin-top: 0 !important;
+}
+
+body.fullscreen-mode .mainArea {
+    width: 100% !important;
 }

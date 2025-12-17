@@ -54,6 +54,8 @@ class IDEWidthResize {
 
         // Add resizing class for cursor
         document.body.classList.add('resizing');
+        // 🔥 Add active class to handle for visual feedback
+        if (this.handle) this.handle.classList.add('active');
 
         // Ensure custom-layout class is active so CSS variables take effect
         this.mainArea.classList.add('custom-layout');
@@ -70,6 +72,9 @@ class IDEWidthResize {
 
     handleResizeMove(event) {
         if (!this.state.isResizing) return;
+        event.preventDefault(); // Prevent text selection etc.
+
+        // ... existing logic ...
 
         event.preventDefault();
 
@@ -101,6 +106,8 @@ class IDEWidthResize {
     handleResizeEnd() {
         this.state.isResizing = false;
         document.body.classList.remove('resizing');
+        // 🔥 Remove active class from handle
+        if (this.handle) this.handle.classList.remove('active');
 
         document.removeEventListener('mousemove', this.throttledResizeMove);
         document.removeEventListener('mouseup', this.handleResizeEnd);

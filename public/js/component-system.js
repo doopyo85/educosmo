@@ -1238,86 +1238,55 @@ window.ComponentSystem = {
     }
   },
 
-  // 🔥 추가: 토글 버튼 설정
-  setupToggleButton: function () {
-    console.log('토글 버튼 설정 시작');
+  // 🔥 추가: 전체화면 토글 버튼 설정
+  setupFullscreenToggle: function () {
+    console.log('전체화면 토글 버튼 설정 시작');
 
-    const toggleBtn = document.getElementById('layout-toggle-btn');
-    const toggleIcon = document.getElementById('layout-toggle-icon');
+    const toggleBtn = document.getElementById('fullscreen-toggle-btn');
+    const toggleIcon = document.getElementById('fullscreen-toggle-icon');
+    const toggleIconAlt = document.getElementById('fullscreen-toggle-icon-alt');
 
-    if (!toggleBtn || !toggleIcon) {
-      console.warn('토글 버튼 요소들을 찾을 수 없습니다.');
+    if (!toggleBtn || !toggleIcon || !toggleIconAlt) {
+      console.warn('전체화면 토글 버튼 요소들을 찾을 수 없습니다.');
       return;
     }
 
-    // 초기 상태 설정
-    this.updateToggleButtonState(toggleIcon, null);
-
     // 클릭 이벤트
     toggleBtn.addEventListener('click', () => {
-      console.log('토글 버튼 클릭 이벤트');
-      this.toggleLayout();
-      // 버튼 상태 업데이트
-      setTimeout(() => {
-        this.updateToggleButtonState(toggleIcon, null);
-      }, 100);
+      console.log('전체화면 토글 버튼 클릭 이벤트');
+      this.toggleFullscreen();
     });
 
-    console.log('토글 버튼 설정 완료');
+    console.log('전체화면 토글 버튼 설정 완료');
   },
 
-  // 🔥 추가: 레이아웃 토글 기능
-  toggleLayout: function () {
-    const currentLayout = this.state.currentLayoutType;
-    console.log('현재 레이아웃:', currentLayout);
+  // 🔥 추가: 전체화면 토글 기능
+  toggleFullscreen: function () {
+    const isFullscreen = document.body.classList.toggle('fullscreen-mode');
+    console.log('전체화면 모드:', isFullscreen ? 'ON' : 'OFF');
 
-    let newLayout;
+    // 아이콘 업데이트
+    const toggleIcon = document.getElementById('fullscreen-toggle-icon');
+    const toggleIconAlt = document.getElementById('fullscreen-toggle-icon-alt');
+    const toggleBtn = document.getElementById('fullscreen-toggle-btn');
 
-    // 현재 레이아웃에 따라 전환
-    if (currentLayout === 'html') {
-      newLayout = 'ide';
-    } else if (currentLayout === 'ide') {
-      newLayout = 'html';
+    if (isFullscreen) {
+      toggleIcon.style.display = 'none';
+      toggleIconAlt.style.display = 'inline-block';
+      toggleBtn.title = '전체화면 종료';
     } else {
-      // quiz, ppt 등에서는 html로 전환
-      newLayout = 'html';
-    }
-
-    console.log('레이아웃 전환:', currentLayout, '->', newLayout);
-
-    // 레이아웃 적용
-    this.applyLayout(newLayout);
-
-    // 토글 버튼 UI 업데이트
-    const toggleIcon = document.getElementById('layout-toggle-icon');
-    const toggleText = document.getElementById('layout-toggle-text');
-    this.updateToggleButtonState(toggleIcon, toggleText);
-  },
-
-  // 🔥 추가: 토글 버튼 상태 업데이트
-  updateToggleButtonState: function (toggleIcon, toggleText) {
-    const currentLayout = this.state.currentLayoutType;
-    const toggleIconAlt = document.getElementById('layout-toggle-icon-alt');
-
-    // Hide alt icon as we only use the main one with class switching
-    if (toggleIconAlt) toggleIconAlt.style.display = 'none';
-
-    if (toggleIcon) {
       toggleIcon.style.display = 'inline-block';
-
-      if (currentLayout === 'html') {
-        // Current: Content Only. Action: Go to Split.
-        toggleIcon.className = 'bi bi-layout-split';
-        toggleIcon.setAttribute('title', 'IDE 펼치기 (반반 레이아웃)');
-      } else if (currentLayout === 'ide') {
-        // Current: Split. Action: Go to Content Only.
-        toggleIcon.className = 'bi bi-square';
-        toggleIcon.setAttribute('title', 'IDE 접기 (전체 레이아웃)');
-      } else {
-        // Default (e.g. ppt, quiz) -> Allow split
-        toggleIcon.className = 'bi bi-layout-split';
-      }
+      toggleIconAlt.style.display = 'none';
+      toggleBtn.title = '전체화면';
     }
+
+    // 리사이즈 이벤트 트리거 (레이아웃 변경 반영)
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+      if (window.EventBus) {
+        window.EventBus.publish('layout:resize', {});
+      }
+    }, 300); // CSS transition time consideration
   },
 
   // 🔥 추가: 폰트사이즈 조절 기능 설정
