@@ -68,11 +68,11 @@ const StudentManagement = {
         $(`#nav-${viewType}`).addClass('active');
 
         // 메인 컨텐츠 전환
-        if (viewType === 'class-materials') {
+        if (viewType === 'class-materials' || viewType === 'career-info') {
             $('#student-management-view').hide();
-            $('#class-materials-view').show();
+            $('#coming-soon-view').css('display', 'flex'); // Flex for centering
         } else {
-            $('#class-materials-view').hide();
+            $('#coming-soon-view').hide();
             $('#student-management-view').show();
         }
     },
