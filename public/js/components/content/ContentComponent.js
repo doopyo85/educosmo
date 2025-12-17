@@ -971,7 +971,7 @@ class ContentComponent extends Component {
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600&display=swap');
 
                             body {
-                               padding: 40px 50px !important;
+                               padding: 10px 50px 40px 50px !important;
                             max-width: 960px;
                             margin: 0 auto;
                             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

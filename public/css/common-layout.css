@@ -902,10 +902,17 @@ body.fullscreen-mode {
 body.fullscreen-mode header.navbar,
 body.fullscreen-mode .nav-container,
 body.fullscreen-mode .ide-container,
-body.fullscreen-mode .problem-top-nav,
 body.fullscreen-mode .quiz-container,
 body.fullscreen-mode .ppt-viewer {
     display: none !important;
+}
+
+/* Ensure Top Nav is visible and styled for Fullscreen */
+body.fullscreen-mode .problem-top-nav {
+    display: flex !important;
+    z-index: 10000 !important;
+    /* Above content */
+    border-radius: 0 !important;
 }
 
 /* 콘텐츠 컨테이너를 화면 전체로 강제 확장 */
@@ -941,6 +948,11 @@ body.fullscreen-mode #content-component {
     margin: 0 !important;
     border: none !important;
     flex: 1 1 100% !important;
+
+    /* 🔥 Flex Layout for Header + Content */
+    display: flex !important;
+    flex-direction: column !important;
+    background: white !important;
 }
 
 z-index: 9999 !important;
@@ -951,6 +963,10 @@ flex: 1 1 100% !important;
 }
 
 /* 문제 컨테이너 높이 조정 (네비게이션 없을 때) */
+/* 문제 컨테이너 높이 조정 (네비게이션 없을 때 -> 있을 때 Flex) */
 body.fullscreen-mode .problem-container {
-    height: 100% !important;
+    height: auto !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+    /* Prevent double scroll */
 }
