@@ -450,12 +450,38 @@ router.get('/', requireTeacher, (req, res) => {
     });
 });
 
-// 학생 관리 페이지
+// 학생 관리 페이지 (Redirect to default)
 router.get('/student-management', requireTeacher, (req, res) => {
+    res.redirect('/teacher/student-management/progress');
+});
+
+// 학생 관리 - 학습 진도
+router.get('/student-management/progress', requireTeacher, (req, res) => {
     res.render('teacher/student-management', {
         userID: req.session.userID,
         role: req.session.role,
-        centerID: req.session.centerID
+        centerID: req.session.centerID,
+        currentView: 'progress'
+    });
+});
+
+// 학생 관리 - 학생 목록
+router.get('/student-management/list', requireTeacher, (req, res) => {
+    res.render('teacher/student-management', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.session.centerID,
+        currentView: 'list'
+    });
+});
+
+// 학생 관리 - 출석부
+router.get('/student-management/attendance', requireTeacher, (req, res) => {
+    res.render('teacher/student-management', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.session.centerID,
+        currentView: 'attendance'
     });
 });
 

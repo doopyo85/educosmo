@@ -12,11 +12,19 @@ const StudentManagement = {
 
     init() {
         this.bindEvents();
-        this.loadStudents();
-        this.loadProgress();
 
-        // 초기 뷰 설정 (학습 진도)
-        this.switchView('progress');
+        // URL 기반 초기 데이터 로드
+        const path = window.location.pathname;
+        if (path.includes('/list')) {
+            this.loadStudents();
+        } else if (path.includes('/attendance')) {
+            const now = new Date();
+            this.currentAttendanceDate = { year: now.getFullYear(), month: now.getMonth() + 1 };
+            this.renderCalendar(this.currentAttendanceDate.year, this.currentAttendanceDate.month);
+        } else {
+            // Default to progress
+            this.loadProgress();
+        }
     },
 
     bindEvents() {
@@ -80,50 +88,7 @@ const StudentManagement = {
     // ============================================
     // 탭 뷰 전환 (학생관리 내부 탭)
     // ============================================
-    switchView(viewName) {
-        // 버튼 활성화 상태 업데이트
-        $('.apple-toggle-btn').removeClass('active');
-        $(`#btn-${viewName}`).addClass('active');
-
-        // 타이틀 업데이트
-        if (viewName === 'progress') {
-            $('#page-subtitle').text('학생 관리 > 학습 진도');
-            $('#page-main-title').text('학습 진도');
-        } else if (viewName === 'attendance') {
-            $('#page-subtitle').text('학생 관리 > 출석부');
-            $('#page-main-title').text('출석부');
-        } else {
-            $('#page-subtitle').text('학생 관리 > 학생 목록');
-            $('#page-main-title').text('학생 목록');
-        }
-
-        // 컨텐츠 표시 전환
-        $('.tab-pane').removeClass('show active');
-        $(`#student-${viewName}`).addClass('show active');
-
-        // 검색창 및 버튼 상태 업데이트
-        $('#progressSearchWrapper').hide();
-        $('#studentSearchWrapper').hide();
-        $('#addStudentBtn').hide();
-        $('#attendanceControls').css('display', 'none'); // Use css display none to be sure
-
-        if (viewName === 'progress') {
-            $('#progressSearchWrapper').show();
-            if (this.progressData.length === 0) this.loadProgress();
-        } else if (viewName === 'list') {
-            $('#studentSearchWrapper').show();
-            $('#addStudentBtn').show();
-            if (this.students.length === 0) this.loadStudents();
-        } else if (viewName === 'attendance') {
-            $('#attendanceControls').css('display', 'flex'); // Flex for alignment
-            // Initialize Calendar if needed
-            if (!this.currentAttendanceDate) {
-                const now = new Date();
-                this.currentAttendanceDate = { year: now.getFullYear(), month: now.getMonth() + 1 };
-                this.renderCalendar(this.currentAttendanceDate.year, this.currentAttendanceDate.month);
-            }
-        }
-    },
+    // switchView Removed - Handled by Server-side Routing & Init
 
     // ============================================
     // 데이터 로드
