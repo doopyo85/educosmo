@@ -1,15 +1,52 @@
 /* Teacher Student Management Premium UI */
 
-/* General Container */
+/* Override Board Layout for Full Screen */
+.board-layout-container {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex;
+    width: 100%;
+}
+
+/* Sidebar Fixed Left */
+.board-sidebar {
+    position: fixed;
+    top: 70px;
+    /* Adjust based on actual header height */
+    left: 0;
+    width: 250px;
+    height: calc(100vh - 70px);
+    overflow-y: auto;
+    border-radius: 0 !important;
+    border: none !important;
+    border-right: 1px solid #e0e0e0 !important;
+    box-shadow: none !important;
+    z-index: 1000;
+}
+
+/* Main Content Stretched */
+.board-main-content {
+    margin-left: 250px !important;
+    /* Sidebar width */
+    width: calc(100% - 250px) !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    flex: none !important;
+    /* Disable flex shrinking/growing based on content */
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background-color: #f5f7fa;
+    /* Match background */
+    min-height: calc(100vh - 70px);
+}
+
 .student-management-page {
+    /* Deprecated wrapper style, but kept for compatibility if needed */
     padding: 2rem;
     background-color: #f5f7fa;
-    height: calc(100vh - 80px);
-    /* Increased offset to ensure bottom is visible */
-    /* Limit height to viewport to force internal scroll */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    min-height: 100%;
 }
 
 /* Header (Top Bar) */

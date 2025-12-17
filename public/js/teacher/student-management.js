@@ -58,7 +58,11 @@ const StudentManagement = {
     // ============================================
     // 메인 뷰 전환 (사이드바 메뉴)
     // ============================================
+    // ============================================
+    // 메인 뷰 전환 (사이드바 메뉴)
+    // ============================================
     switchMainView(viewType) {
+        console.log('switchMainView called with:', viewType);
         // 사이드바 활성화 상태 업데이트
         $('.board-category-item').removeClass('active');
         $(`#nav-${viewType}`).addClass('active');
