@@ -1,0 +1,34 @@
+Role정책
+
+관리자: admin
+유치원: kinder
+학교: school
+센터장: manager
+강사: teacher
+학생: student
+로그인하지 않았을 때: guest
+
+Users 필드
++------------+-----------------------------------------------------------------------+------+-----+-------------------+-------------------+
+| Field      | Type                                                                  | Null | Key | Default           | Extra             |
++------------+-----------------------------------------------------------------------+------+-----+-------------------+-------------------+
+| id         | int                                                                   | NO   | PRI | NULL              | auto_increment    |
+| userID     | varchar(255)                                                          | YES  |     | NULL              |
+       |
+| password   | varchar(255)                                                          | NO   |     | NULL              |
+       |
+| email      | varchar(255)                                                          | NO   |     | NULL              |
+       |
+| name       | varchar(255)                                                          | YES  |     | NULL              |
+       |
+| phone      | varchar(20)                                                           | YES  |     | NULL              |
+       |
+| birthdate  | date                                                                  | YES  |     | NULL              |
+       |
+| role       | enum('admin','kinder','school','manager','teacher','student','guest') | NO   |     | NULL              |
+       |
+| created_at | timestamp                                                             | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
+| centerID   | int                                                                   | YES  | MUL | NULL              |
+       |
++------------+-----------------------------------------------------------------------+------+-----+-------------------+-------------------+
+10 rows in set (0.01 sec)

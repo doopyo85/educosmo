@@ -1,130 +1,168 @@
 <!-- 학생 관리 페이지 (Button Toggle Layout) -->
 <link rel="stylesheet" href="/css/teacher/student-management.css?v=6">
+<link rel="stylesheet" href="/css/board-layout.css">
 
-<div class="student-management-page">
-    <!-- Header Bar -->
-    <div class="page-header-bar">
-        <!-- 1. Left: Title & Description -->
-        <div class="brand-section">
-            <h3 class="page-title">학생 관리</h3>
-            <div class="page-description">
-                우리 센터 학생들의 목록과 학습 진도를 관리할 수 있습니다.
-            </div>
+<div class="board-layout-container">
+    <!-- 🔥 왼쪽 네비게이션 (Board Style) -->
+    <div class="board-sidebar">
+        <div class="board-sidebar-header">
+            <i class="bi bi-person-video3"></i> 교사 전용 메뉴
         </div>
 
-        <!-- 2. Center: Toggle Buttons (Apple Style) -->
-        <div class="header-toggle">
-            <div class="d-flex gap-2">
-                <button class="apple-toggle-btn active" id="btn-progress"
-                    onclick="StudentManagement.switchView('progress')">
-                    <i class="bi bi-graph-up-arrow me-2"></i>학습 진도
-                </button>
-                <button class="apple-toggle-btn" id="btn-list" onclick="StudentManagement.switchView('list')">
-                    <i class="bi bi-people-fill me-2"></i>학생 목록
-                </button>
-            </div>
-        </div>
+        <a href="/teacher/student-management" class="board-category-item active">
+            <i class="bi bi-people"></i> 학생 관리
+        </a>
 
-        <!-- 3. Right: Controls -->
-        <div class="header-controls">
-            <!-- Add Button (First) -->
-            <button class="btn btn-primary rounded-pill btn-sm px-3" id="addStudentBtn" style="display: none;">
-                <i class="bi bi-person-plus me-1"></i> 추가
-            </button>
+        <a href="#" class="board-category-item">
+            <i class="bi bi-journal-text"></i> 수업 자료
+        </a>
 
-            <!-- Search Inputs (Second) -->
-            <div class="search-wrapper" id="progressSearchWrapper">
-                <i class="bi bi-search search-icon"></i>
-                <input type="text" id="progressSearch" class="form-control" placeholder="학생 이름/아이디 검색..." />
-            </div>
-
-            <div class="search-wrapper" id="studentSearchWrapper" style="display: none;">
-                <i class="bi bi-search search-icon"></i>
-                <input type="text" id="studentSearch" class="form-control" placeholder="학생 이름/아이디 검색..." />
-            </div>
-        </div>
+        <a href="#" class="board-category-item">
+            <i class="bi bi-signpost-split"></i> 진로 진학
+        </a>
     </div>
 
-    <!-- Main Content (Tables) -->
-    <div class="tab-content" id="studentTabContent">
+    <!-- 🔥 메인 콘텐츠 -->
+    <div class="board-main-content">
+        <div style="padding: 24px;">
+            <!-- Header Bar -->
+            <div class="page-header-bar">
+                <!-- 1. Left: Title & Description -->
+                <div class="brand-section">
+                    <h3 class="page-title">학생 관리</h3>
+                    <div class="page-description">
+                        우리 센터 학생들의 목록과 학습 진도를 관리할 수 있습니다.
+                    </div>
+                </div>
 
-        <!-- 학습 진도 탭 (Default Visible) -->
-        <div class="tab-pane fade show active" id="student-progress" role="tabpanel">
-            <div class="content-card">
-                <div class="table-responsive" id="progressTableWrapper">
-                    <table class="premium-table">
-                        <colgroup>
-                            <col style="width: 3%;"> <!-- No -->
-                            <col style="width: 6%;"> <!-- Profile (Higher) -->
-                            <col style="width: 6%;"> <!-- CT (Higher) -->
-                            <col style="width: 10%;"> <!-- Name (Lower) -->
-                            <col style="width: 11%;"> <!-- ID (Lower) -->
+                <!-- 2. Center: Toggle Buttons (Apple Style) -->
+                <div class="header-toggle">
+                    <div class="d-flex gap-2">
+                        <button class="apple-toggle-btn active" id="btn-progress"
+                            onclick="StudentManagement.switchView('progress')">
+                            <i class="bi bi-graph-up-arrow me-2"></i>학습 진도
+                        </button>
+                        <button class="apple-toggle-btn" id="btn-list" onclick="StudentManagement.switchView('list')">
+                            <i class="bi bi-people-fill me-2"></i>학생 목록
+                        </button>
+                    </div>
+                </div>
 
-                            <!-- Platforms (Total 40%) -->
-                            <col style="width: 8%;"> <!-- Scratch -->
-                            <col style="width: 8%;"> <!-- Entry -->
-                            <col style="width: 8%;"> <!-- AppInv -->
-                            <col style="width: 8%;"> <!-- Python -->
-                            <col style="width: 8%;"> <!-- Data -->
+                <!-- 3. Right: Controls -->
+                <div class="header-controls">
+                    <!-- Add Button (First) -->
+                    <button class="btn btn-primary rounded-pill btn-sm px-3" id="addStudentBtn" style="display: none;">
+                        <i class="bi bi-person-plus me-1"></i> 추가
+                    </button>
 
-                            <!-- Right (Total 20%) -->
-                            <col style="width: 10%;"> <!-- Storage (Size + Mgmt) -->
-                            <col style="width: 10%;"> <!-- Last Learning -->
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th rowspan="2">No.</th>
-                                <th rowspan="2">프로필</th>
-                                <th rowspan="2" data-sort="ct_level">CT <i class="bi bi-caret-down-fill sort-icon"></i>
-                                </th>
-                                <th rowspan="2" data-sort="name">이름 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th rowspan="2" data-sort="username">아이디 <i class="bi bi-caret-down-fill sort-icon"></i>
-                                </th>
+                    <!-- Search Inputs (Second) -->
+                    <div class="search-wrapper" id="progressSearchWrapper">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="progressSearch" class="form-control" placeholder="학생 이름/아이디 검색..." />
+                    </div>
 
-                                <th colspan="5" class="text-center border-bottom">플랫폼별 진도율</th>
-
-                                <th rowspan="2" data-sort="storage_usage">스토리지 <i
-                                        class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th rowspan="2" data-sort="last_learning_at">최근학습 <i
-                                        class="bi bi-caret-down-fill sort-icon"></i></th>
-                            </tr>
-                            <tr>
-                                <th class="text-center small text-muted">스크래치</th>
-                                <th class="text-center small text-muted">엔트리</th>
-                                <th class="text-center small text-muted">앱인벤터</th>
-                                <th class="text-center small text-muted">파이썬</th>
-                                <th class="text-center small text-muted">데이터</th>
-                            </tr>
-                        </thead>
-                        <tbody id="progressTableBody">
-                            <!-- 동적으로 로드 -->
-                        </tbody>
-                    </table>
+                    <div class="search-wrapper" id="studentSearchWrapper" style="display: none;">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="studentSearch" class="form-control" placeholder="학생 이름/아이디 검색..." />
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 학생 목록 탭 -->
-        <div class="tab-pane fade" id="student-list" role="tabpanel">
-            <div class="content-card">
-                <div class="table-responsive">
-                    <table class="premium-table" id="studentTable">
-                        <thead>
-                            <tr>
-                                <th width="60px">No.</th>
-                                <th width="80px">프로필</th>
-                                <th data-sort="name">이름 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th data-sort="userID">아이디 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th data-sort="email">이메일 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th data-sort="created_at">가입일 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th data-sort="last_access">최근 접속 <i class="bi bi-caret-down-fill sort-icon"></i></th>
-                                <th width="100px">관리</th>
-                            </tr>
-                        </thead>
-                        <tbody id="studentTableBody">
-                            <!-- 동적 생성 -->
-                        </tbody>
-                    </table>
+            <!-- Main Content (Tables) -->
+            <div class="tab-content" id="studentTabContent">
+
+                <!-- 학습 진도 탭 (Default Visible) -->
+                <div class="tab-pane fade show active" id="student-progress" role="tabpanel">
+                    <div class="content-card">
+                        <div class="table-responsive" id="progressTableWrapper">
+                            <table class="premium-table">
+                                <colgroup>
+                                    <col style="width: 3%;"> <!-- No -->
+                                    <col style="width: 6%;"> <!-- Profile (Higher) -->
+                                    <col style="width: 6%;"> <!-- CT (Higher) -->
+                                    <col style="width: 10%;"> <!-- Name (Lower) -->
+                                    <col style="width: 11%;"> <!-- ID (Lower) -->
+
+                                    <!-- Platforms (Total 40%) -->
+                                    <col style="width: 8%;"> <!-- Scratch -->
+                                    <col style="width: 8%;"> <!-- Entry -->
+                                    <col style="width: 8%;"> <!-- AppInv -->
+                                    <col style="width: 8%;"> <!-- Python -->
+                                    <col style="width: 8%;"> <!-- Data -->
+
+                                    <!-- Right (Total 20%) -->
+                                    <col style="width: 10%;"> <!-- Storage (Size + Mgmt) -->
+                                    <col style="width: 10%;"> <!-- Last Learning -->
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2">No.</th>
+                                        <th rowspan="2">프로필</th>
+                                        <th rowspan="2" data-sort="ct_level">CT <i
+                                                class="bi bi-caret-down-fill sort-icon"></i>
+                                        </th>
+                                        <th rowspan="2" data-sort="name">이름 <i
+                                                class="bi bi-caret-down-fill sort-icon"></i></th>
+                                        <th rowspan="2" data-sort="username">아이디 <i
+                                                class="bi bi-caret-down-fill sort-icon"></i>
+                                        </th>
+
+                                        <th colspan="5" class="text-center border-bottom">플랫폼별 진도율</th>
+
+                                        <th rowspan="2" data-sort="storage_usage">스토리지 <i
+                                                class="bi bi-caret-down-fill sort-icon"></i></th>
+                                        <th rowspan="2" data-sort="last_learning_at">최근학습 <i
+                                                class="bi bi-caret-down-fill sort-icon"></i></th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-center small text-muted">스크래치</th>
+                                        <th class="text-center small text-muted">엔트리</th>
+                                        <th class="text-center small text-muted">앱인벤터</th>
+                                        <th class="text-center small text-muted">파이썬</th>
+                                        <th class="text-center small text-muted">데이터</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="progressTableBody">
+                                    <!-- 동적으로 로드 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 학생 목록 탭 -->
+                <div class="tab-pane fade" id="student-list" role="tabpanel">
+                    <div class="content-card">
+                        <div class="table-responsive">
+                            <table class="premium-table">
+                                <colgroup>
+                                    <col style="width: 5%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 20%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 15%;">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>No.</th>
+                                        <th data-sort="name">이름 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                        <th data-sort="username">아이디 <i class="bi bi-caret-down-fill sort-icon"></i>
+                                        </th>
+                                        <th>비밀번호 초기화</th>
+                                        <th data-sort="created_at">가입일 <i class="bi bi-caret-down-fill sort-icon"></i>
+                                        </th>
+                                        <th>상태</th>
+                                        <th>관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentTableBody">
+                                    <!-- 동적으로 로드 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
