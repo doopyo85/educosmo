@@ -416,10 +416,7 @@ async function getSheetData(range) {
   }
 }
 
-  })
-  .catch (error => {
-  console.error('Google Sheets API 초기화 실패:', error);
-});
+
 
 // 🔥 센터 목록 로드 및 캐싱
 global.centerMap = new Map();
