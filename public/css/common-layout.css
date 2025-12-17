@@ -261,7 +261,10 @@ html {
     /* 🔥 기본 표시로 변경 - ACE 에디터 초기화 문제 해결 */
     flex-direction: column;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    /* 🔥 수정: 리사이즈 핸들이 보이도록 visible로 변경 */
+    z-index: var(--z-content);
+    /* 🔥 수정: 콘텐츠보다 위에 오도록 설정 (DOM 순서상 뒤에 있으므로 동일 값이어도 위) */
     background-color: #1e1e1e;
     color: #d4d4d4;
 }
@@ -491,13 +494,13 @@ html {
     --ide-width: 50%;
 }
 
-/* 🔥 추가: 커스텀 레이아웃 - 동적 너비 조절 */
-.custom-layout .content-container {
+/* 🔥 추가: 커스텀 레이아웃 - 동적 너비 조절 (IDE 레이아웃일 때만 적용) */
+.layout-ide .custom-layout .content-container {
     width: var(--content-width) !important;
     flex: 0 0 var(--content-width) !important;
 }
 
-.custom-layout .ide-container {
+.layout-ide .custom-layout .ide-container {
     width: var(--ide-width) !important;
     flex: 0 0 var(--ide-width) !important;
 }
@@ -589,7 +592,8 @@ body.resizing * {
     background: transparent;
     cursor: col-resize;
     z-index: 20;
-    margin-left: -5px; /* 중앙 정렬 보정 */
+    margin-left: -5px;
+    /* 중앙 정렬 보정 */
     transition: background-color 0.2s ease;
 }
 
