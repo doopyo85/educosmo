@@ -57,6 +57,81 @@ router.post('/save', authenticateUser, async (req, res) => {
 });
 
 /**
+ * 🔥 프로젝트 업데이트 API (덮어쓰기)
+ * PUT /api/projects/save/:id
+ */
+router.put('/save/:id', authenticateUser, async (req, res) => {
+    try {
+        const projectId = parseInt(req.params.id);
+        const {
+            platform,
+            projectName,
+            projectData,
+            saveType,
+            metadata
+        } = req.body;
+
+        if (!projectData) {
+            return res.status(400).json({
+                success: false,
+                error: '프로젝트 데이터가 필요합니다.'
+            });
+        }
+
+        const userId = req.session.userID;
+        const centerId = req.session.centerID;
+
+        console.log(`\n📝 프로젝트 업데이트 요청: ID ${projectId} by ${userId}`);
+
+        // 기존 프로젝트 소유권 확인
+        const [existingProject] = await db.queryDatabase(
+            `SELECT ps.*, u.userID 
+             FROM ProjectSubmissions ps
+             JOIN Users u ON ps.user_id = u.id
+             WHERE ps.id = ? AND u.userID = ?`,
+            [projectId, userId]
+        );
+
+        if (!existingProject) {
+            return res.status(404).json({
+                success: false,
+                error: '프로젝트를 찾을 수 없거나 권한이 없습니다.'
+            });
+        }
+
+        // ProjectManager로 업데이트 처리
+        const projectManager = new ProjectManager();
+        const result = await projectManager.updateProject({
+            projectId,
+            platform: platform || existingProject.platform,
+            projectName: projectName || existingProject.project_name,
+            projectData,
+            saveType: saveType || existingProject.save_type,
+            userId,
+            centerId,
+            metadata: metadata || {},
+            existingS3Key: existingProject.s3_key
+        });
+
+        console.log(`✅ 업데이트 완료: submission_id=${projectId}\n`);
+
+        res.json({
+            success: true,
+            submissionId: projectId,
+            s3Url: result.s3Url,
+            message: '프로젝트가 업데이트되었습니다.'
+        });
+        
+    } catch (error) {
+        console.error('❌ 프로젝트 업데이트 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+/**
  * 🔥 프로젝트 제출 API
  * POST /api/projects/submit
  */

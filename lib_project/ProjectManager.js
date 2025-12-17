@@ -349,6 +349,116 @@ class ProjectManager {
     }
 
     /**
+     * 🔥 프로젝트 업데이트 (덮어쓰기)
+     */
+    async updateProject(options) {
+        const {
+            projectId,
+            platform,
+            projectName,
+            projectData,
+            saveType,
+            userId,
+            centerId,
+            metadata = {},
+            existingS3Key
+        } = options;
+
+        console.log(`\n=== PROJECT UPDATE START ===`);
+        console.log(`ID: ${projectId}, 플랫폼: ${platform}, 프로젝트명: ${projectName}`);
+
+        try {
+            // 1. 플랫폼별 어댑터 선택
+            const adapter = this.adapters[platform];
+            if (!adapter) {
+                throw new Error(`지원하지 않는 플랫폼: ${platform}`);
+            }
+
+            // 2. 플랫폼별 검증
+            await adapter.validate(projectData);
+
+            // 3. 플랫폼별 전처리
+            const processedData = await adapter.process(projectData);
+
+            // 4. 기존 S3 키 사용 또는 새로 생성
+            const s3Key = existingS3Key || this.generateS3Key(platform, userId, projectName, saveType);
+            console.log(`S3 키: ${s3Key}`);
+
+            // 5. S3에 업로드 (덮어쓰기)
+            const s3Url = await this.s3Manager.uploadProject(
+                s3Key,
+                processedData,
+                adapter.getContentType()
+            );
+
+            // 6. 플랫폼별 분석
+            const analysis = await adapter.analyze(projectData);
+            console.log(`프로젝트 분석:`, analysis);
+
+            // 7. userID(문자열)을 Users.id(숫자)로 변환
+            let numericUserId = userId;
+            if (typeof userId === 'string') {
+                const [user] = await db.queryDatabase(
+                    'SELECT id FROM Users WHERE userID = ?',
+                    [userId]
+                );
+                if (!user) {
+                    throw new Error(`사용자를 찾을 수 없습니다: ${userId}`);
+                }
+                numericUserId = user.id;
+            }
+
+            // 8. DB 업데이트
+            const fileSizeKb = Math.round(processedData.length / 1024);
+            await db.queryDatabase(
+                `UPDATE ProjectSubmissions 
+                 SET project_name = ?, 
+                     s3_url = ?, 
+                     s3_key = ?,
+                     file_size_kb = ?,
+                     metadata = ?,
+                     complexity_score = ?,
+                     blocks_count = ?,
+                     updated_at = NOW()
+                 WHERE id = ? AND user_id = ?`,
+                [
+                    projectName,
+                    s3Url,
+                    s3Key,
+                    fileSizeKb,
+                    JSON.stringify({ ...metadata, analysis }),
+                    analysis.complexity || 0,
+                    analysis.blocks || 0,
+                    projectId,
+                    numericUserId
+                ]
+            );
+
+            console.log(`✅ DB 업데이트 완료`);
+
+            // 9. 학습 로그 기록
+            await this.logLearningActivity(userId, centerId, platform, projectId, saveType);
+
+            console.log(`=== PROJECT UPDATE COMPLETE ===\n`);
+
+            return {
+                success: true,
+                submissionId: projectId,
+                s3Url,
+                s3Key,
+                projectName,
+                platform,
+                saveType,
+                analysis
+            };
+
+        } catch (error) {
+            console.error(`❌ 프로젝트 업데이트 실패:`, error);
+            throw error;
+        }
+    }
+
+    /**
      * 🔥 프로젝트 삭제
      */
     async deleteProject(projectId, userId) {

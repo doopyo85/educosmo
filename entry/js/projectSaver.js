@@ -9,10 +9,15 @@ class EntryProjectSaver {
     this.userID = options.userID || window.EDUCODINGNPLAY_USER?.userID || 'anonymous';
     this.role = options.role || window.EDUCODINGNPLAY_USER?.role || 'student';
     
+    // 🔥 불러온 프로젝트 ID 추적 (덮어쓰기용)
+    this.loadedFileId = null;
+    this.loadedProjectName = null;
+    
     console.log('💾 EntryProjectSaver 초기화:', {
         projectName: this.projectName,
         userID: this.userID,
-        role: this.role
+        role: this.role,
+        loadedFileId: this.loadedFileId
     });
   }
 
@@ -332,7 +337,7 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 프로젝트 저장 (draft) - 자동 생성된 기본 파일명 제공
+   * 🔥 프로젝트 저장 (draft) - 덮어쓰기/새저장 자동 분기
    */
   async saveProject() {
     if (this.saveInProgress) {
@@ -354,28 +359,47 @@ class EntryProjectSaver {
         scenes: projectData.scenes?.length || 0
       });
 
-      // 2. 🔥 자동 생성된 기본 파일명으로 입력창 표시 (수정 가능)
-      const currentProjectName = this.getCurrentProjectName();
-      const autoFileName = this.generateAutoFileName(currentProjectName);
+      // 🔥 URL에서 fileId 파라미터 확인 (페이지 새로고침 대비)
+      this.checkUrlForFileId();
       
-      console.log(`🔍 저장 시도 - 프로젝트명: ${currentProjectName}, 사용자: ${this.userID}, 자동파일명: ${autoFileName}`);
+      // 2. 불러온 프로젝트인지 확인 (POST vs PUT)
+      const isUpdate = !!this.loadedFileId;
       
-      const projectName = await this.promptProjectName(autoFileName);
+      // 3. 프로젝트명 결정
+      let projectName;
+      if (isUpdate) {
+        // 덮어쓰기: 기존 프로젝트명 사용 또는 변경
+        const defaultName = this.loadedProjectName || this.getCurrentProjectName();
+        projectName = await this.promptProjectName(defaultName);
+      } else {
+        // 새 저장: 자동 파일명 생성
+        const currentProjectName = this.getCurrentProjectName();
+        const autoFileName = this.generateAutoFileName(currentProjectName);
+        projectName = await this.promptProjectName(autoFileName);
+      }
+      
       if (!projectName) {
         console.log('❌ 저장 취소됨');
         return;
       }
 
-      // 3. 서버로 전송 (통합 API 사용)
-      console.log(`📤 서버로 전송 중: ${projectName}`);
+      console.log(`🔍 저장 시도 - 모드: ${isUpdate ? '덮어쓰기' : '새저장'}, 프로젝트명: ${projectName}, 사용자: ${this.userID}`);
+
+      // 4. 🔥 POST/PUT 분기
+      const url = isUpdate 
+        ? `/api/projects/save/${this.loadedFileId}`
+        : '/api/projects/save';
+      const method = isUpdate ? 'PUT' : 'POST';
       
-      const response = await fetch('/api/projects/save', {
-        method: 'POST',
+      console.log(`📤 서버로 전송 중 (${method}): ${url}`);
+      
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          platform: 'entry',        // 🔥 플랫폼 구분
+          platform: 'entry',
           projectName: projectName,
           projectData: projectData,
           saveType: 'draft'
@@ -386,7 +410,18 @@ class EntryProjectSaver {
 
       if (result.success) {
         console.log('✅ 저장 성공:', result);
-        this.showNotification('💾 저장 완료!', 'success');
+        
+        // 🔥 새 저장 시 반환된 fileId 저장 (다음 저장부터 덮어쓰기)
+        if (!isUpdate && result.submissionId) {
+          this.loadedFileId = result.submissionId;
+          this.loadedProjectName = projectName;
+          console.log(`📌 새 프로젝트 ID 저장: ${this.loadedFileId}`);
+          
+          // URL 업데이트 (페이지 새로고침 대비)
+          this.updateUrlWithFileId();
+        }
+        
+        this.showNotification(`💾 ${isUpdate ? '덮어쓰기' : '저장'} 완료!`, 'success');
         return result;
       } else {
         throw new Error(result.error || '저장 실패');
@@ -398,6 +433,46 @@ class EntryProjectSaver {
       throw error;
     } finally {
       this.saveInProgress = false;
+    }
+  }
+  
+  /**
+   * 🔥 URL에서 fileId 파라미터 확인 (페이지 새로고침 시 복원)
+   */
+  checkUrlForFileId() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const fileIdParam = urlParams.get('fileId');
+      const projectNameParam = urlParams.get('projectName');
+      
+      if (fileIdParam && !this.loadedFileId) {
+        this.loadedFileId = parseInt(fileIdParam, 10);
+        this.loadedProjectName = projectNameParam || null;
+        console.log(`🔄 URL에서 fileId 복원: ${this.loadedFileId}`);
+      }
+    } catch (error) {
+      console.warn('⚠️ URL fileId 확인 실패:', error);
+    }
+  }
+  
+  /**
+   * 🔥 URL에 fileId 파라미터 추가 (새로고침 대비)
+   */
+  updateUrlWithFileId() {
+    try {
+      if (!this.loadedFileId) return;
+      
+      const url = new URL(window.location.href);
+      url.searchParams.set('fileId', this.loadedFileId);
+      if (this.loadedProjectName) {
+        url.searchParams.set('projectName', this.loadedProjectName);
+      }
+      
+      // URL 변경 (페이지 새로고침 없이)
+      window.history.replaceState({}, '', url.toString());
+      console.log(`🔗 URL 업데이트: ${url.toString()}`);
+    } catch (error) {
+      console.warn('⚠️ URL 업데이트 실패:', error);
     }
   }
 
@@ -635,8 +710,13 @@ class EntryProjectSaver {
         
         console.log('🔗 S3 URL:', s3Url);
         
-        // 3. S3 Browser 방식으로 에디터 열기 (s3Url 파라미터 사용)
-        const editorUrl = `/entry/entry_editor?s3Url=${encodeURIComponent(s3Url)}`;
+        // 🔥 불러온 프로젝트 ID 저장 (덮어쓰기용)
+        this.loadedFileId = projectId;
+        this.loadedProjectName = projectName || metaData.projectName;
+        console.log(`📌 불러온 프로젝트 ID 저장: ${this.loadedFileId}, 이름: ${this.loadedProjectName}`);
+        
+        // 3. S3 Browser 방식으로 에디터 열기 (s3Url + fileId 파라미터 사용)
+        const editorUrl = `/entry/entry_editor?s3Url=${encodeURIComponent(s3Url)}&fileId=${projectId}&projectName=${encodeURIComponent(this.loadedProjectName)}`;
         
         console.log(`✅ 에디터로 이동: ${editorUrl}`);
         

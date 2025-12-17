@@ -932,7 +932,7 @@ window.ComponentSystem = {
     window.EventBus.subscribe('problemChanged', this.handleProblemChanged.bind(this));
 
     // 🔥 추가: 토글 버튼 이벤트 리스너
-    this.setupToggleButton();
+    this.setupFullscreenToggle();
 
     // 🔥 추가: 폰트사이즈 조절 버튼 이벤트 리스너
     this.setupFontSizeControls();
