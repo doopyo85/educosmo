@@ -32,20 +32,18 @@
                 <h1 class="fw-bold">앱인벤터 프로젝트</h1>
                 <p class="text-muted">블록 코딩을 통해 나만의 모바일 앱을 만들고 공유해보세요!</p>
 
-                <!-- 🔥 버튼 및 탭 통합 그룹 -->
-                <div
-                    class="d-inline-flex justify-content-center align-items-center gap-2 mt-3 p-2 bg-light rounded-pill border shadow-sm">
+                <!-- 🔥 버튼 및 탭 통합 그룹 (Apple Style) -->
+                <div class="apple-toolbar-container">
                     <!-- 고정 버튼 (왼쪽) -->
                     <div class="d-flex align-items-center">
-                        <a href="https://appinventor.mit.edu/" target="_blank"
-                            class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                        <a href="https://appinventor.mit.edu/" target="_blank" class="apple-btn-primary">
                             <i class="bi bi-plus-lg"></i> 새로 시작하기
                         </a>
-                        <div class="vr mx-3 text-secondary" style="height: 1.5rem; opacity: 0.2;"></div>
+                        <div class="apple-divider mx-3"></div>
                     </div>
 
                     <!-- 동적 탭 (오른쪽) -->
-                    <ul class="nav nav-pills" id="categoryTabs" role="tablist" style="border: none;"></ul>
+                    <ul class="nav nav-pills apple-nav-pills" id="categoryTabs" role="tablist"></ul>
                 </div>
             </div>
 

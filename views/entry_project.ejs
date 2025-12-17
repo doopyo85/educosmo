@@ -32,23 +32,21 @@
                 <h1 class="fw-bold">Entry 프로젝트</h1>
                 <p class="text-muted">CPE / CPA 교육과정을 위한 Entry 콘텐츠를 선택하세요.</p>
 
-                <!-- 🔥 버튼 및 탭 통합 그룹 -->
-                <div
-                    class="d-inline-flex justify-content-center align-items-center gap-2 mt-3 p-2 bg-light rounded-pill border shadow-sm">
+                <!-- 🔥 버튼 및 탭 통합 그룹 (Apple Style) -->
+                <div class="apple-toolbar-container">
                     <!-- 고정 버튼 (왼쪽) -->
                     <div class="d-flex align-items-center gap-2">
-                        <button id="newProjectBtn" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                        <button id="newProjectBtn" class="apple-btn-primary">
                             <i class="bi bi-plus-lg"></i> 새로 시작하기
                         </button>
-                        <a href="https://playentry.org" target="_blank"
-                            class="btn btn-outline-success rounded-pill px-3 fw-bold">
+                        <a href="https://playentry.org" target="_blank" class="apple-btn-outline-success">
                             <i class="bi bi-box-arrow-up-right"></i> playentry.org
                         </a>
-                        <div class="vr mx-3 text-secondary" style="height: 1.5rem; opacity: 0.2;"></div>
+                        <div class="apple-divider mx-3"></div>
                     </div>
 
                     <!-- 동적 탭 (오른쪽) -->
-                    <ul class="nav nav-pills" id="categoryTabs" role="tablist" style="border: none;"></ul>
+                    <ul class="nav nav-pills apple-nav-pills" id="categoryTabs" role="tablist"></ul>
                 </div>
             </div>
 
