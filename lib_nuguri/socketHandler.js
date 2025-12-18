@@ -98,14 +98,27 @@ const initSocket = (server) => {
             try {
                 // 🔥 Save to DB
                 let authorName = data.user;
-                if (socket.userData && socket.userData.name) {
-                    authorName = socket.userData.name;
+                let authorIdStr = data.user;
+
+                if (socket.userData) {
+                    authorName = socket.userData.name || data.user;
+                    authorIdStr = socket.userData.id || data.user;
                 }
+
+                // Resolve Integer ID from Users table
+                const userResult = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [authorIdStr]);
+
+                if (!userResult || userResult.length === 0) {
+                    console.error('User not found for chat insertion:', authorIdStr);
+                    return; // Cannot insert without valid FK
+                }
+
+                const userIntId = userResult[0].id;
 
                 await db.queryDatabase(`
                     INSERT INTO nuguritalk_posts (title, content, author, author_id)
                     VALUES (?, ?, ?, ?)
-                `, [data.text, data.text, authorName, data.user]);
+                `, [data.text, data.text, authorName, userIntId]);
 
                 // Broadcast
                 io.emit('chat_message', {

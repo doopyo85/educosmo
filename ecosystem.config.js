@@ -62,7 +62,7 @@ module.exports = {
       script: '/var/www/html/jupyter_env_ubuntu/bin/python',
       args: [
         '-m', 'notebook',
-        '--ip=0.0.0.0',
+        '--ip=127.0.0.1',
         '--port=8000',
         '--no-browser',
         '--allow-root',
