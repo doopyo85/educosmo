@@ -167,7 +167,7 @@
                                             <div class="me-2">
                                                 <select id="centerSelect" class="form-select form-select-sm"
                                                     style="width: 200px; border-color: #ff9f1c;"
-                                                    onchange="const url = new URL(window.location.href); if(this.value) url.searchParams.set('centerID', this.value); else url.searchParams.delete('centerID'); window.location.href = url.toString();">
+                                                    onchange="changeAdminCenter(this.value)">
                                                     <option value="">전체 센터 보기</option>
                                                     <% centers.forEach(function(center) { %>
                                                         <option value="<%= center.id %>" <%=typeof centerID
@@ -176,6 +176,22 @@
                                                         </option>
                                                         <% }); %>
                                                 </select>
+                                                <script>
+                                                    function changeAdminCenter(val) {
+                                                        try {
+                                                            const currentUrl = new window.URL(window.location.href);
+                                                            if (val) {
+                                                                currentUrl.searchParams.set('centerID', val);
+                                                            } else {
+                                                                currentUrl.searchParams.delete('centerID');
+                                                            }
+                                                            window.location.href = currentUrl.toString();
+                                                        } catch (e) {
+                                                            console.error('URL Update Error:', e);
+                                                            alert('페이지 이동 중 오류가 발생했습니다.');
+                                                        }
+                                                    }
+                                                </script>
                                             </div>
                                             <% } %>
                                                 <!-- Add Button (List Only) -->
