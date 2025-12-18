@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../lib_login/db');
 const bcrypt = require('bcrypt');
+const { getSheetData } = require('../lib_google/sheetService'); // 🔥 Google Sheet Service Import
 
 // ============================================
 // 미들웨어: 교사 권한 확인
@@ -525,16 +526,42 @@ router.get('/student-management', requireTeacher, (req, res) => {
 });
 
 // 학생 관리 - 학습 진도
+// Helper to get centers from Sheet
+async function getCenterList() {
+    try {
+        const rows = await getSheetData('센터목록!A2:B'); // ID, Name
+        if (!rows || rows.length === 0) return [];
+        return rows.map(row => ({ id: row[0], name: row[1] }));
+    } catch (e) {
+        console.error('Center fetch error:', e);
+        return [];
+    }
+}
+
 // 학생 관리 - 학습 진도
 router.get('/student-management/progress', requireTeacher, async (req, res) => {
     let centers = [];
     if (req.session.role === 'admin') {
-        try { centers = await db.queryDatabase('SELECT id, name FROM Centers ORDER BY name'); } catch (e) { }
+        centers = await getCenterList();
     }
+
+    // Default Admin Center: 0 (CodingAndPlay) if not specified
+    // But initially user wants "Default 0", meaning if query is empty, treat as center 0?
+    // Or just show all? User said "Admin default 0 CodingAndPlay".
+    // I will pass centerID as query || 0 if admin? No, let's stick to query || session.
+    // If Admin has no centerID in session, usage of '0' might be needed.
+    // Typically Admin session.centerID might be null or 0.
+
+    // Check if Admin needs default selection in UI
+    let targetCenter = req.query.centerID;
+    if (req.session.role === 'admin' && !targetCenter) {
+        targetCenter = '0'; // Default to 0 as requested
+    }
+
     res.render('teacher/student-management', {
         userID: req.session.userID,
         role: req.session.role,
-        centerID: req.query.centerID || req.session.centerID,
+        centerID: targetCenter || req.session.centerID,
         currentView: 'progress',
         centers: centers,
         ajax: req.query.ajax
@@ -545,12 +572,18 @@ router.get('/student-management/progress', requireTeacher, async (req, res) => {
 router.get('/student-management/list', requireTeacher, async (req, res) => {
     let centers = [];
     if (req.session.role === 'admin') {
-        try { centers = await db.queryDatabase('SELECT id, name FROM Centers ORDER BY name'); } catch (e) { }
+        centers = await getCenterList();
     }
+
+    let targetCenter = req.query.centerID;
+    if (req.session.role === 'admin' && !targetCenter) {
+        targetCenter = '0';
+    }
+
     res.render('teacher/student-management', {
         userID: req.session.userID,
         role: req.session.role,
-        centerID: req.query.centerID || req.session.centerID,
+        centerID: targetCenter || req.session.centerID,
         currentView: 'list',
         centers: centers,
         ajax: req.query.ajax
@@ -558,21 +591,21 @@ router.get('/student-management/list', requireTeacher, async (req, res) => {
 });
 
 // 학생 관리 - 출석부
-// 학생 관리 - 출석부
 router.get('/student-management/attendance', requireTeacher, async (req, res) => {
     let centers = [];
     if (req.session.role === 'admin') {
-        try {
-            centers = await db.queryDatabase('SELECT id, name FROM Centers ORDER BY name');
-        } catch (e) {
-            console.error('Center fetch error:', e);
-        }
+        centers = await getCenterList();
+    }
+
+    let targetCenter = req.query.centerID;
+    if (req.session.role === 'admin' && !targetCenter) {
+        targetCenter = '0';
     }
 
     res.render('teacher/student-management', {
         userID: req.session.userID,
         role: req.session.role,
-        centerID: req.query.centerID || req.session.centerID,
+        centerID: targetCenter || req.session.centerID,
         currentView: 'attendance',
         centers: centers,
         ajax: req.query.ajax
