@@ -160,7 +160,7 @@
                                     </div>
 
                                     <!-- Right Group: Controls -->
-                                    <div class="header-controls d-flex align-items-center justify-content-end">
+                                    <div class="header-controls d-flex align-items-end justify-content-end">
                                         <!-- Add Button (List Only) -->
                                         <button class="btn btn-primary rounded-pill btn-sm px-3 me-3" id="addStudentBtn"
                                             style="<%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'display: none;' %>">
@@ -172,9 +172,9 @@
                                             <!-- 🔥 Admin Center Selector -->
                                             <% if (role==='admin' && typeof centers !=='undefined' && centers.length> 0)
                                                 { %>
-                                                <div>
+                                                <div class="me-1">
                                                     <select id="centerSelect"
-                                                        class="form-select form-select-sm text-end"
+                                                        class="form-select form-select-sm text-start"
                                                         style="width: 200px; border-color: #ff9f1c;"
                                                         onchange="changeAdminCenter(this.value)">
                                                         <option value="">전체 센터 보기</option>
