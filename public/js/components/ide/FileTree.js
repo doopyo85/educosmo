@@ -117,8 +117,20 @@ class FileTree {
         // 2. Control Toolbar Area (Bottom 40%)
         // Icons fixed on left (60px center), text appears on right when expanded
         // Dynamic styles for tighter gap when expanded
-        const btnPaddingLc = isCollapsed ? "0" : "18px"; // padding-left to align icon center (18+12=30px)
-        const iconWidth = isCollapsed ? "60px" : "24px"; // 60px when collapsed, 24px when expanded
+        // Icon center target: 30px.
+        // Icon width (visual): ~16px.
+        // If expanded:
+        //   Icon container width: 20px (tight).
+        //   Padding-left: 20px (So center is 20 + 10 = 30px)
+        //   Gap: 8px.
+        // If collapsed:
+        //   Icon container width: 60px.
+        //   Padding-left: 0.
+        //   Gap: 0.
+
+        const btnPaddingLc = isCollapsed ? "0" : "20px";
+        const iconWidth = isCollapsed ? "60px" : "20px";
+        const btnGap = isCollapsed ? "0" : "8px";
 
         const btnStyle = `
             width: 100%; 
@@ -127,6 +139,7 @@ class FileTree {
             align-items: center; 
             justify-content: flex-start; 
             padding-left: ${btnPaddingLc}; 
+            gap: ${btnGap};
             border: none; 
             background: transparent; 
             color: #c5c5c5; 
@@ -137,7 +150,7 @@ class FileTree {
         // Icon container: centered icon
         const iconContainerStyle = `width: ${iconWidth}; height: 32px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;`;
         // Label with explicit overflow hidden
-        const labelStyle = isCollapsed ? "display: none;" : "display: block; font-size: 13px; margin-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
+        const labelStyle = isCollapsed ? "display: none;" : "display: block; font-size: 13px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
 
         html += `
             <div class="file-tree-toolbar" style="flex: 0.4; padding: 4px 0 14px 0; background-color: #252526; display: flex; flex-direction: column; align-items: flex-start; gap: 0px; overflow-y: auto;">

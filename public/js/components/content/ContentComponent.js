@@ -447,8 +447,15 @@ class ContentComponent extends Component {
 
     if (problemInfo) {
       console.log('🐞 디버깅: 선택된 문제 데이터:', problemInfo);
-      console.log('🐞 디버깅: 데이터 길이:', problemInfo.length);
-      console.log('🐞 디버깅: 8번째 인덱스(I열) 값:', problemInfo.length > 8 ? problemInfo[8] : 'undefined');
+      const debugMsg = `Length: ${problemInfo.length}\nCol I (Idx 8): ${problemInfo.length > 8 ? problemInfo[8] : 'undefined'}`;
+      console.log(debugMsg);
+      // Force alert for user visibility
+      // alert(`Debug Problem Data:\n${debugMsg}`); 
+      // Commenting out alert to avoid disrupting user flow too much, but relying on console. 
+      // Actually, user missed console. let's use a non-blocking toast or just log with VERY distinct arrows.
+      console.warn('>>>>>>>>>>>> CHECK HERE <<<<<<<<<<<<');
+      console.warn(debugMsg);
+      console.warn('>>>>>>>>>>>> CHECK HERE <<<<<<<<<<<<');
     }
 
     if (!problemInfo) {
