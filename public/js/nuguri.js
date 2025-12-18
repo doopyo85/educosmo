@@ -3,6 +3,13 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('nuguri-widget-container');
+
+    // 🔥 Fix Z-Index Issue: Move widget to body to avoid stacking context traps
+    if (container && container.parentElement !== document.body) {
+        document.body.appendChild(container);
+    }
+
     // --- UI Elements ---
     const floatIcon = document.getElementById('nuguriFloatIcon');
     const modal = document.getElementById('nuguriModal');
@@ -24,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const onlineIndicator = document.getElementById('nuguriOnlineIndicator');
 
     // User Data (from data attributes)
-    const container = document.getElementById('nuguri-widget-container');
+    // container is already defined at the top
     const currentUser = {
         id: container.dataset.userId || 'Guest',
         role: container.dataset.userRole || 'guest',

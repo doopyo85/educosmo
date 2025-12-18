@@ -128,9 +128,37 @@
                                             <%= pageTitle %>
                                         </h3>
                                     </div>
-                                    <div class="page-description mt-2">
-                                        우리 센터 학생들의 목록과 학습 진도를 관리할 수 있습니다.
-                                    </div>
+
+                                    <!-- 🔥 Admin Center Selection (Drop-in) -->
+                                    <% if (role==='admin' && typeof centers !=='undefined' && centers.length> 0) { %>
+                                        <div class="ms-4">
+                                            <select class="form-select form-select-sm" id="centerFilter"
+                                                style="width: 200px; border-color: #ff9f1c;">
+                                                <option value="">전체 센터 보기</option>
+                                                <% centers.forEach(center=> { %>
+                                                    <option value="<%= center.id %>" <%=(typeof centerID !=='undefined'
+                                                        && centerID==center.id) ? 'selected' : '' %>>
+                                                        <%= center.name %>
+                                                    </option>
+                                                    <% }); %>
+                                            </select>
+                                            <script>
+                                                document.getElementById('centerFilter').addEventListener('change', function () {
+                                                    const val = this.value;
+                                                    const url = new URL(window.location.href);
+                                                    if (val) {
+                                                        url.searchParams.set('centerID', val);
+                                                    } else {
+                                                        url.searchParams.delete('centerID');
+                                                    }
+                                                    window.location.href = url.toString();
+                                                });
+                                            </script>
+                                        </div>
+                                        <% } %>
+                                            <div class="page-description mt-2">
+                                                우리 센터 학생들의 목록과 학습 진도를 관리할 수 있습니다.
+                                            </div>
                                 </div>
                             </div>
 

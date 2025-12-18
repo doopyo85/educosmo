@@ -120,7 +120,7 @@ router.get('/edit/:id', checkPageAccess('/nuguritalk'), async (req, res) => {
 
         // 권한 체크
         const canEdit = (req.session.userID == message.author_id) ||
-            ['admin', 'manager'].includes(req.session.role);
+            ['admin'].includes(req.session.role);
 
         if (!canEdit) {
             return res.status(403).send('수정 권한이 없습니다.');
@@ -168,7 +168,7 @@ router.post('/edit/:id', checkPageAccess('/nuguritalk'), upload.single('image'),
 
         // 권한 체크
         const canEdit = (req.session.userID == message.author_id) ||
-            ['admin', 'manager'].includes(req.session.role);
+            ['admin'].includes(req.session.role);
 
         if (!canEdit) {
             return res.status(403).json({ error: '수정 권한이 없습니다.' });
@@ -216,7 +216,7 @@ router.get('/delete/:id', checkPageAccess('/nuguritalk'), async (req, res) => {
 
         // 권한 체크
         const canDelete = (req.session.userID == message.author_id) ||
-            ['admin', 'manager'].includes(req.session.role);
+            ['admin'].includes(req.session.role);
 
         if (!canDelete) {
             return res.status(403).json({ error: '삭제 권한이 없습니다.' });
