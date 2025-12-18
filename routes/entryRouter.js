@@ -326,23 +326,284 @@ router.get('/api/load-project', authenticateUser, async (req, res) => {
     }
 });
 
-router.post('/api/save-project', authenticateUser, async (req, res) => {
-    const { projectData, fileName } = req.body;
-    const userID = req.session.userID;
+// =============================================================================
+// 🔥 프로젝트 저장 API (quotaChecker 연동)
+// =============================================================================
 
-    if (!projectData || !fileName) {
-        return res.status(400).json({
-            success: false,
-            error: '프로젝트 데이터와 파일명이 필요합니다.'
+router.post('/api/save-project', authenticateUser, async (req, res) => {
+    try {
+        const { projectData, projectName, userID: clientUserID, centerID: clientCenterID, isUpdate, projectId, saveType } = req.body;
+        const userID = clientUserID || req.session.userID;
+        
+        if (!projectData) {
+            return res.status(400).json({
+                success: false,
+                error: '프로젝트 데이터가 필요합니다.'
+            });
+        }
+
+        console.log('💾 [Entry 저장] 요청:', {
+            userID,
+            projectName,
+            isUpdate,
+            projectId,
+            saveType: saveType || 'projects'
+        });
+
+        const db = require('../lib_login/db');
+        const quotaChecker = require('../lib_storage/quotaChecker');
+        const S3Manager = require('../lib_storage/s3Manager');
+        const s3Manager = new S3Manager();
+
+        // 1. 사용자 DB ID 조회
+        const [user] = await db.queryDatabase(
+            'SELECT id, centerID FROM Users WHERE userID = ?', 
+            [userID]
+        );
+        
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                error: '사용자를 찾을 수 없습니다.' 
+            });
+        }
+
+        const userId = user.id;
+        const centerId = clientCenterID || user.centerID || req.session.centerID;
+
+        // 2. 프로젝트 데이터 → JSON → Buffer
+        const projectJson = JSON.stringify(projectData);
+        const projectBuffer = Buffer.from(projectJson, 'utf8');
+        const fileSize = projectBuffer.length;
+
+        console.log(`📊 파일 크기: ${(fileSize / 1024).toFixed(2)} KB`);
+
+        // 3. 🔥 용량 체크 (quotaChecker)
+        let oldFileSize = 0;
+        if (isUpdate && projectId) {
+            // 덮어쓰기인 경우 기존 파일 크기 조회
+            const [oldProject] = await db.queryDatabase(
+                'SELECT file_size_kb FROM ProjectSubmissions WHERE id = ? AND user_id = ?',
+                [projectId, userId]
+            );
+            if (oldProject) {
+                oldFileSize = (oldProject.file_size_kb || 0) * 1024;
+            }
+        }
+
+        const netFileSize = fileSize - oldFileSize; // 순증가분만 체크
+        
+        if (netFileSize > 0) {
+            const canSave = await quotaChecker.canUpload(userId, centerId, netFileSize);
+            if (!canSave.allowed) {
+                return res.status(413).json({
+                    success: false,
+                    error: 'QUOTA_EXCEEDED',
+                    message: canSave.message || '저장 공간이 부족합니다.',
+                    details: {
+                        currentUsage: canSave.currentUsage,
+                        limit: canSave.limit,
+                        required: netFileSize
+                    }
+                });
+            }
+        }
+
+        // 4. S3 키 생성 (정책 준수: users/{userID}/{platform}/{saveType}/)
+        const timestamp = Date.now();
+        const actualSaveType = saveType || 'projects';
+        const safeName = (projectName || 'project').replace(/[^a-zA-Z0-9가-힣_-]/g, '_');
+        const fileName = `${safeName}_${timestamp}.ent`;
+        const s3Key = `users/${userID}/entry/${actualSaveType}/${fileName}`;
+
+        console.log(`📤 S3 업로드 시작: ${s3Key}`);
+
+        // 5. S3 업로드
+        const s3Url = await s3Manager.uploadProject(s3Key, projectBuffer, 'application/json');
+        
+        console.log(`✅ S3 업로드 완료: ${s3Url}`);
+
+        // 6. DB 저장 (ProjectSubmissions)
+        let dbProjectId;
+        
+        // 프로젝트 분석 (블록 수, 오브젝트 수 등)
+        const blocksCount = projectData.objects?.reduce((sum, obj) => {
+            return sum + (obj.script?.length || 0);
+        }, 0) || 0;
+        const spritesCount = projectData.objects?.length || 0;
+
+        if (isUpdate && projectId) {
+            // 덮어쓰기: 기존 레코드 업데이트
+            await db.queryDatabase(`
+                UPDATE ProjectSubmissions 
+                SET project_name = ?,
+                    s3_url = ?,
+                    s3_key = ?,
+                    file_size_kb = ?,
+                    blocks_count = ?,
+                    sprites_count = ?,
+                    updated_at = NOW()
+                WHERE id = ? AND user_id = ?
+            `, [
+                projectName || 'Untitled',
+                s3Url,
+                s3Key,
+                Math.ceil(fileSize / 1024),
+                blocksCount,
+                spritesCount,
+                projectId,
+                userId
+            ]);
+            
+            dbProjectId = projectId;
+            console.log(`✅ DB 업데이트 완료: ID ${dbProjectId}`);
+
+            // 용량 차이 업데이트
+            if (netFileSize !== 0) {
+                if (netFileSize > 0) {
+                    await quotaChecker.increaseUsage(userId, centerId, netFileSize, 'entry');
+                } else {
+                    await quotaChecker.decreaseUsage(userId, centerId, Math.abs(netFileSize), 'entry');
+                }
+            }
+            
+        } else {
+            // 새 저장: INSERT
+            const insertResult = await db.queryDatabase(`
+                INSERT INTO ProjectSubmissions 
+                (user_id, center_id, platform, project_name, save_type, s3_url, s3_key, file_size_kb, blocks_count, sprites_count, created_at, updated_at)
+                VALUES (?, ?, 'entry', ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            `, [
+                userId,
+                centerId,
+                projectName || 'Untitled',
+                actualSaveType,
+                s3Url,
+                s3Key,
+                Math.ceil(fileSize / 1024),
+                blocksCount,
+                spritesCount
+            ]);
+            
+            dbProjectId = insertResult.insertId;
+            console.log(`✅ DB INSERT 완료: ID ${dbProjectId}`);
+
+            // 🔥 용량 증가
+            await quotaChecker.increaseUsage(userId, centerId, fileSize, 'entry');
+        }
+
+        res.json({
+            success: true,
+            projectId: dbProjectId,
+            fileName: fileName,
+            s3Url: s3Url,
+            s3Key: s3Key,
+            fileSize: fileSize,
+            fileSizeKb: Math.ceil(fileSize / 1024),
+            message: isUpdate ? '프로젝트가 업데이트되었습니다.' : '프로젝트가 저장되었습니다.'
+        });
+
+    } catch (error) {
+        console.error('❌ [Entry 저장] 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
         });
     }
+});
 
-    res.json({
-        success: true,
-        fileName: fileName,
-        fileUrl: `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/projects/${userID}/${fileName}`,
-        message: `프로젝트 ${fileName} 저장 (구현 예정)`
-    });
+// =============================================================================
+// 🔥 프로젝트 삭제 API (quotaChecker 용량 반환)
+// =============================================================================
+
+router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const userID = req.session.userID;
+        
+        if (!projectId) {
+            return res.status(400).json({
+                success: false,
+                error: '프로젝트 ID가 필요합니다.'
+            });
+        }
+
+        console.log(`🗑️ [Entry 삭제] 요청: projectId=${projectId}, userID=${userID}`);
+
+        const db = require('../lib_login/db');
+        const quotaChecker = require('../lib_storage/quotaChecker');
+        const S3Manager = require('../lib_storage/s3Manager');
+        const s3Manager = new S3Manager();
+
+        // 1. 사용자 DB ID 조회
+        const [user] = await db.queryDatabase(
+            'SELECT id, centerID FROM Users WHERE userID = ?', 
+            [userID]
+        );
+        
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                error: '사용자를 찾을 수 없습니다.' 
+            });
+        }
+
+        const userId = user.id;
+        const centerId = user.centerID;
+
+        // 2. 프로젝트 정보 조회
+        const [project] = await db.queryDatabase(
+            'SELECT id, s3_key, file_size_kb FROM ProjectSubmissions WHERE id = ? AND user_id = ?',
+            [projectId, userId]
+        );
+
+        if (!project) {
+            return res.status(404).json({ 
+                success: false, 
+                error: '프로젝트를 찾을 수 없거나 삭제 권한이 없습니다.' 
+            });
+        }
+
+        const fileSize = (project.file_size_kb || 0) * 1024;
+
+        // 3. S3에서 파일 삭제
+        if (project.s3_key) {
+            try {
+                await s3Manager.deleteProject(project.s3_key);
+                console.log(`✅ S3 파일 삭제: ${project.s3_key}`);
+            } catch (s3Error) {
+                console.warn(`⚠️ S3 파일 삭제 실패 (무시하고 계속):`, s3Error.message);
+            }
+        }
+
+        // 4. DB에서 삭제 (소프트 삭제 또는 하드 삭제)
+        await db.queryDatabase(
+            'DELETE FROM ProjectSubmissions WHERE id = ? AND user_id = ?',
+            [projectId, userId]
+        );
+        
+        console.log(`✅ DB 삭제 완료: ID ${projectId}`);
+
+        // 5. 🔥 용량 반환
+        if (fileSize > 0) {
+            await quotaChecker.decreaseUsage(userId, centerId, fileSize, 'entry');
+            console.log(`💾 용량 반환: ${(fileSize / 1024).toFixed(2)} KB`);
+        }
+
+        res.json({
+            success: true,
+            message: '프로젝트가 삭제되었습니다.',
+            deletedId: projectId,
+            freedSpace: fileSize
+        });
+
+    } catch (error) {
+        console.error('❌ [Entry 삭제] 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
 });
 
 router.get('/api/projects', authenticateUser, async (req, res) => {
@@ -817,6 +1078,173 @@ router.post('/api/save-sound', authenticateUser, async (req, res) => {
         res.status(500).json({
             success: false,
             error: error.message
+        });
+    }
+});
+
+// =============================================================================
+// 📊 센터별 Entry 사용량 조회 API (교사/관리자용)
+// =============================================================================
+
+router.get('/api/center-usage', authenticateUser, async (req, res) => {
+    try {
+        const { role, centerID: sessionCenterId } = req.session;
+        
+        // 권한 체크
+        if (!['admin', 'manager', 'teacher'].includes(role)) {
+            return res.status(403).json({ 
+                success: false, 
+                error: '권한이 없습니다.' 
+            });
+        }
+
+        const db = require('../lib_login/db');
+        
+        // admin은 모든 센터, 나머지는 자기 센터만
+        let query, params;
+        
+        if (role === 'admin') {
+            query = `
+                SELECT 
+                    ps.center_id,
+                    COUNT(*) as project_count,
+                    SUM(ps.file_size_kb) as total_size_kb,
+                    COUNT(DISTINCT ps.user_id) as user_count,
+                    MAX(ps.created_at) as last_upload
+                FROM ProjectSubmissions ps
+                WHERE ps.platform = 'entry'
+                GROUP BY ps.center_id
+            `;
+            params = [];
+        } else {
+            query = `
+                SELECT 
+                    ps.center_id,
+                    COUNT(*) as project_count,
+                    SUM(ps.file_size_kb) as total_size_kb,
+                    COUNT(DISTINCT ps.user_id) as user_count,
+                    MAX(ps.created_at) as last_upload
+                FROM ProjectSubmissions ps
+                WHERE ps.center_id = ? AND ps.platform = 'entry'
+                GROUP BY ps.center_id
+            `;
+            params = [sessionCenterId];
+        }
+        
+        const results = await db.queryDatabase(query, params);
+        
+        // 포맷팅 함수
+        const formatSize = (bytes) => {
+            if (!bytes) return '0 B';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        };
+        
+        res.json({
+            success: true,
+            centerUsage: results.map(r => ({
+                centerId: r.center_id,
+                projectCount: r.project_count || 0,
+                totalSizeKb: r.total_size_kb || 0,
+                totalSizeFormatted: formatSize((r.total_size_kb || 0) * 1024),
+                userCount: r.user_count || 0,
+                lastUpload: r.last_upload
+            }))
+        });
+
+    } catch (error) {
+        console.error('❌ [센터별 사용량] 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// =============================================================================
+// 📊 사용자 저장공간 사용량 요약 (본인용)
+// =============================================================================
+
+router.get('/api/storage-usage', authenticateUser, async (req, res) => {
+    try {
+        const userID = req.session.userID;
+        
+        const db = require('../lib_login/db');
+        const quotaChecker = require('../lib_storage/quotaChecker');
+        
+        // 사용자 DB ID 조회
+        const [user] = await db.queryDatabase(
+            'SELECT id, centerID FROM Users WHERE userID = ?', 
+            [userID]
+        );
+        
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                error: '사용자를 찾을 수 없습니다.' 
+            });
+        }
+        
+        // Entry 프로젝트 통계
+        const [entryStats] = await db.queryDatabase(`
+            SELECT 
+                COUNT(*) as project_count,
+                COALESCE(SUM(file_size_kb), 0) as total_size_kb
+            FROM ProjectSubmissions 
+            WHERE user_id = ? AND platform = 'entry'
+        `, [user.id]);
+        
+        // 전체 사용량 (모든 플랫폼)
+        let totalUsage = { total_usage: 0 };
+        try {
+            totalUsage = await quotaChecker.getUserStorageUsage(user.id);
+        } catch (e) {
+            console.warn('용량 조회 실패:', e.message);
+        }
+        
+        // 제한 용량 조회
+        let limit = 500 * 1024 * 1024; // 기본 500MB
+        try {
+            limit = await quotaChecker.getUserStorageLimit(user.id, user.centerID);
+        } catch (e) {
+            console.warn('제한 조회 실패:', e.message);
+        }
+        
+        const formatSize = (bytes) => {
+            if (!bytes) return '0 B';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+        };
+        
+        const totalBytes = totalUsage.total_usage || 0;
+        const usagePercent = limit > 0 ? Math.round((totalBytes / limit) * 100) : 0;
+        
+        res.json({
+            success: true,
+            usage: {
+                entry: {
+                    projectCount: entryStats.project_count || 0,
+                    sizeKb: entryStats.total_size_kb || 0,
+                    sizeFormatted: formatSize((entryStats.total_size_kb || 0) * 1024)
+                },
+                total: {
+                    bytes: totalBytes,
+                    formatted: formatSize(totalBytes),
+                    limit: limit,
+                    limitFormatted: formatSize(limit),
+                    percent: usagePercent
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ [사용량 조회] 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
         });
     }
 });

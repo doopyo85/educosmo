@@ -16,6 +16,16 @@ class PythonRunner {
      * @returns {Promise<{stdout: string, stderr: string, exitCode: number}>}
      */
     async execute(files, entryPoint = 'main.py') {
+        return this.executeWithInput(files, null, entryPoint);
+    }
+
+    /**
+     * Executes code with optional input.
+     * @param {Array<{path: string, content: string}>} files
+     * @param {string|null} inputData - Input to provide context to stdin
+     * @param {string} entryPoint
+     */
+    async executeWithInput(files, inputData, entryPoint = 'main.py') {
         const runId = Math.random().toString(36).substring(7);
         const tempDir = path.join(os.tmpdir(), `py-run-${runId}`);
 
@@ -37,7 +47,7 @@ class PythonRunner {
             }
 
             // 3. Execute
-            return await this._runProcess(tempDir, entryPoint);
+            return await this._runProcess(tempDir, entryPoint, inputData);
 
         } finally {
             // 4. Cleanup
@@ -45,7 +55,50 @@ class PythonRunner {
         }
     }
 
-    _runProcess(cwd, entryPoint) {
+    /**
+     * Runs code against multiple test cases.
+     * @param {string} code - User's python code
+     * @param {Array<{input: string, output: string}>} testCases
+     * @returns {Promise<Array<{input: string, expected: string, actual: string, passed: boolean, error?: string}>>}
+     */
+    async runTestCases(code, testCases) {
+        const results = [];
+        for (const testCase of testCases) {
+            const files = [{ path: 'main.py', content: code }];
+            try {
+                const result = await this.executeWithInput(files, testCase.input, 'main.py');
+                
+                // Normalize outputs (trim whitespace)
+                const actual = result.stdout ? result.stdout.trim() : '';
+                const expected = testCase.output ? testCase.output.trim() : '';
+                
+                // Check if passed
+                // Should also check exitCode? If non-zero, it likely failed.
+                const passed = (result.exitCode === 0 || result.exitCode === null) && actual === expected;
+
+                results.push({
+                    input: testCase.input,
+                    expected: testCase.output,
+                    actual: result.stdout || '', // Raw output including newlines
+                    passed: passed,
+                    error: result.stderr,
+                    executionTime: result.executionTime // If we track it
+                });
+
+            } catch (err) {
+                 results.push({
+                    input: testCase.input,
+                    expected: testCase.output,
+                    actual: '',
+                    passed: false,
+                    error: err.message
+                });
+            }
+        }
+        return results;
+    }
+
+    _runProcess(cwd, entryPoint, inputData = null) {
         return new Promise((resolve) => {
             const childProcess = spawn(this.pythonPath, ['-u', entryPoint], {
                 cwd: cwd,
@@ -62,6 +115,11 @@ class PythonRunner {
                 stderr += '\nExecution timed out.';
             }, this.timeout);
 
+            if (inputData) {
+                childProcess.stdin.write(inputData);
+                childProcess.stdin.end();
+            }
+
             childProcess.stdout.on('data', (data) => {
                 stdout += data.toString();
             });
@@ -73,8 +131,8 @@ class PythonRunner {
             childProcess.on('close', (code) => {
                 clearTimeout(timer);
                 resolve({
-                    stdout: stdout.trim(),
-                    stderr: stderr.trim(),
+                    stdout: stdout, // Return raw for precise comparison, caller can trim
+                    stderr: stderr, // Return raw
                     exitCode: timedOut ? -1 : code
                 });
             });

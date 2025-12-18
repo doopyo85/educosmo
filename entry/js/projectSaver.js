@@ -1,6 +1,8 @@
 /**
  * 💾 Entry 프로젝트 저장 클라이언트
- * 🔥 새 API: /api/entry-storage/ 사용 (scratchRouter와 동일한 패턴)
+ * 🔄 기존 API 사용: /entry/api/ (ProjectSubmissions 테이블)
+ * 
+ * 📋 정책 문서: /docs/플랫폼_통합저장소_정책명세서.md
  */
 
 class EntryProjectSaver {
@@ -11,23 +13,23 @@ class EntryProjectSaver {
     this.role = options.role || window.EDUCODINGNPLAY_USER?.role || 'student';
     
     // 🔥 불러온 프로젝트 ID 추적 (덮어쓰기용)
-    this.loadedFileId = null;
+    this.loadedProjectId = null;
     this.loadedProjectName = null;
     
-    // 🔥 API 베이스 URL
-    this.apiBase = '/api/entry-storage';
+    // 🔥 기존 API 베이스 URL
+    this.apiBase = '/entry/api';
     
     console.log('💾 EntryProjectSaver 초기화:', {
         projectName: this.projectName,
         userID: this.userID,
         role: this.role,
-        loadedFileId: this.loadedFileId,
+        loadedProjectId: this.loadedProjectId,
         apiBase: this.apiBase
     });
   }
 
   /**
-   * 🔥 프로젝트명 설정 (외부에서 호출 가능)
+   * 프로젝트명 설정
    */
   setProjectName(name) {
     if (name && typeof name === 'string') {
@@ -45,7 +47,7 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 현재 프로젝트명 가져오기
+   * 현재 프로젝트명 가져오기
    */
   getCurrentProjectName() {
     try {
@@ -74,7 +76,7 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 자동 파일명 생성
+   * 자동 파일명 생성
    */
   generateAutoFileName(projectName) {
     try {
@@ -92,33 +94,33 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 URL에서 fileId 파라미터 확인
+   * URL에서 projectId 파라미터 확인 (새로고침 대비)
    */
-  checkUrlForFileId() {
+  checkUrlForProjectId() {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const fileIdParam = urlParams.get('fileId');
+      const projectIdParam = urlParams.get('projectId');
       const projectNameParam = urlParams.get('projectName');
       
-      if (fileIdParam && !this.loadedFileId) {
-        this.loadedFileId = parseInt(fileIdParam, 10);
+      if (projectIdParam && !this.loadedProjectId) {
+        this.loadedProjectId = parseInt(projectIdParam, 10);
         this.loadedProjectName = projectNameParam || null;
-        console.log(`🔄 URL에서 fileId 복원: ${this.loadedFileId}`);
+        console.log(`🔄 URL에서 projectId 복원: ${this.loadedProjectId}`);
       }
     } catch (error) {
-      console.warn('⚠️ URL fileId 확인 실패:', error);
+      console.warn('⚠️ URL projectId 확인 실패:', error);
     }
   }
   
   /**
-   * 🔥 URL에 fileId 파라미터 추가
+   * URL에 projectId 파라미터 추가
    */
-  updateUrlWithFileId() {
+  updateUrlWithProjectId() {
     try {
-      if (!this.loadedFileId) return;
+      if (!this.loadedProjectId) return;
       
       const url = new URL(window.location.href);
-      url.searchParams.set('fileId', this.loadedFileId);
+      url.searchParams.set('projectId', this.loadedProjectId);
       if (this.loadedProjectName) {
         url.searchParams.set('projectName', this.loadedProjectName);
       }
@@ -230,33 +232,8 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 캔버스에서 썸네일 생성
-   */
-  async generateThumbnail() {
-    try {
-      // Entry 캔버스 찾기
-      const canvas = document.querySelector('#entryCanvas') || 
-                     document.querySelector('canvas.entryCanvasWorkspace') ||
-                     document.querySelector('canvas');
-      
-      if (canvas) {
-        const thumbnailDataUrl = canvas.toDataURL('image/png', 0.8);
-        console.log('🖼️ 썸네일 생성 완료');
-        return thumbnailDataUrl;
-      }
-      
-      console.log('⚠️ 캔버스를 찾을 수 없어 썸네일 생성 실패');
-      return null;
-    } catch (error) {
-      console.warn('썸네일 생성 오류:', error);
-      return null;
-    }
-  }
-
-  /**
-   * 🔥 프로젝트 저장 (새 API 사용)
-   * POST /api/entry-storage/save-project (새 저장)
-   * PUT /api/entry-storage/save-project/:fileId (덮어쓰기)
+   * 🔥 프로젝트 저장 (기존 API 사용)
+   * POST /entry/api/save-project
    */
   async saveProject() {
     if (this.saveInProgress) {
@@ -278,51 +255,39 @@ class EntryProjectSaver {
         scenes: projectData.scenes?.length || 0
       });
 
-      // URL에서 fileId 확인 (새로고침 대비)
-      this.checkUrlForFileId();
+      // URL에서 projectId 확인 (새로고침 대비)
+      this.checkUrlForProjectId();
       
-      // 2. 덮어쓰기 vs 새저장 결정
-      const isUpdate = !!this.loadedFileId;
-      
-      // 3. 프로젝트명 결정
-      let projectName;
-      if (isUpdate) {
-        const defaultName = this.loadedProjectName || this.getCurrentProjectName();
-        projectName = await this.promptProjectName(defaultName);
-      } else {
-        const currentProjectName = this.getCurrentProjectName();
-        const autoFileName = this.generateAutoFileName(currentProjectName);
-        projectName = await this.promptProjectName(autoFileName);
-      }
+      // 2. 프로젝트명 결정
+      const currentProjectName = this.getCurrentProjectName();
+      const autoFileName = this.generateAutoFileName(currentProjectName);
+      const projectName = await this.promptProjectName(
+        this.loadedProjectName || autoFileName
+      );
       
       if (!projectName) {
         console.log('❌ 저장 취소됨');
         return;
       }
 
-      // 4. 썸네일 생성
-      const thumbnail = await this.generateThumbnail();
-
-      console.log(`🔍 저장 시도 - 모드: ${isUpdate ? '덮어쓰기' : '새저장'}, 프로젝트명: ${projectName}`);
-
-      // 5. 🔥 새 API 호출 (POST/PUT 분기)
-      const url = isUpdate 
-        ? `${this.apiBase}/save-project/${this.loadedFileId}`
-        : `${this.apiBase}/save-project`;
-      const method = isUpdate ? 'PUT' : 'POST';
+      console.log(`📤 서버로 전송 중: ${this.apiBase}/save-project`);
       
-      console.log(`📤 서버로 전송 중 (${method}): ${url}`);
-      
-      const response = await fetch(url, {
-        method: method,
+      // 3. 🔥 기존 API 호출
+      const response = await fetch(`${this.apiBase}/save-project`, {
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-User-ID': this.userID,
+          'X-User-Role': this.role
         },
         credentials: 'include',
         body: JSON.stringify({
           projectData: projectData,
-          title: projectName,
-          thumbnail: thumbnail
+          projectName: projectName,
+          userID: this.userID,
+          centerID: window.EDUCODINGNPLAY_USER?.centerID || null,
+          isUpdate: !!this.loadedProjectId,
+          projectId: this.loadedProjectId
         })
       });
 
@@ -331,19 +296,19 @@ class EntryProjectSaver {
       if (result.success) {
         console.log('✅ 저장 성공:', result);
         
-        // 새 저장 시 fileId 저장 (다음 저장부터 덮어쓰기)
-        if (!isUpdate && result.fileId) {
-          this.loadedFileId = result.fileId;
+        // 새 저장 시 projectId 저장 (다음 저장부터 덮어쓰기)
+        if (result.projectId) {
+          this.loadedProjectId = result.projectId;
           this.loadedProjectName = projectName;
-          console.log(`📌 새 프로젝트 ID 저장: ${this.loadedFileId}`);
+          console.log(`📌 프로젝트 ID 저장: ${this.loadedProjectId}`);
           
-          this.updateUrlWithFileId();
+          this.updateUrlWithProjectId();
         }
         
-        this.showNotification(`💾 ${isUpdate ? '덮어쓰기' : '저장'} 완료!`, 'success');
+        this.showNotification(`💾 저장 완료!`, 'success');
         return result;
       } else {
-        throw new Error(result.message || '저장 실패');
+        throw new Error(result.message || result.error || '저장 실패');
       }
 
     } catch (error) {
@@ -356,20 +321,20 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 프로젝트 목록 불러오기 모달
-   * GET /api/entry-storage/projects
+   * 🔥 프로젝트 목록 불러오기 모달 (기존 API 사용)
+   * GET /entry/api/user-projects
    */
   async showLoadProjectModal() {
     try {
       console.log('📂 프로젝트 목록 로딩 중...');
       
-      const response = await fetch(`${this.apiBase}/projects`, {
+      const response = await fetch(`${this.apiBase}/user-projects`, {
         credentials: 'include'
       });
       const result = await response.json();
       
       if (!result.success) {
-        throw new Error(result.message || '프로젝트 목록 불러오기 실패');
+        throw new Error(result.error || '프로젝트 목록 불러오기 실패');
       }
       
       const projects = result.projects || [];
@@ -431,8 +396,9 @@ class EntryProjectSaver {
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px;">
           ${projects.map(project => `
             <div class="project-item" 
-                 data-file-id="${project.fileId}" 
-                 data-project-name="${project.title}"
+                 data-project-id="${project.id}" 
+                 data-project-name="${project.projectName}"
+                 data-s3-url="${project.s3Url || ''}"
                  style="
               border: 2px solid #e0e0e0;
               border-radius: 8px;
@@ -449,18 +415,15 @@ class EntryProjectSaver {
                 justify-content: center;
                 overflow: hidden;
               ">
-                ${project.thumbnailUrl 
-                  ? `<img src="${project.thumbnailUrl}" style="max-width: 100%; max-height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<div style=\\'font-size: 36px; color: #00B894;\\'>📦</div>'"/>`
-                  : `<div style="font-size: 36px; color: #00B894;">📦</div>`
-                }
+                <div style="font-size: 36px; color: #00B894;">📦</div>
               </div>
               <div style="padding: 12px;">
-                <div style="font-weight: bold; font-size: 14px; color: #333; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${project.title}">
-                  ${project.title}
+                <div style="font-weight: bold; font-size: 14px; color: #333; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${project.projectName}">
+                  ${project.projectName}
                 </div>
                 <div style="font-size: 12px; color: #999;">
-                  ${new Date(project.createdAt).toLocaleDateString('ko-KR')}
-                  ${project.size ? ` · ${this.formatSize(project.size)}` : ''}
+                  ${project.createdAt ? new Date(project.createdAt).toLocaleDateString('ko-KR') : ''}
+                  ${project.fileSizeKb ? ` · ${this.formatSize(project.fileSizeKb * 1024)}` : ''}
                 </div>
               </div>
             </div>
@@ -500,9 +463,10 @@ class EntryProjectSaver {
     // 프로젝트 클릭 이벤트
     modalContent.querySelectorAll('.project-item').forEach(item => {
       item.onclick = async () => {
-        const fileId = item.getAttribute('data-file-id');
+        const projectId = item.getAttribute('data-project-id');
         const projectName = item.getAttribute('data-project-name');
-        await this.loadProject(fileId, projectName);
+        const s3Url = item.getAttribute('data-s3-url');
+        await this.loadProject(projectId, projectName, s3Url);
         document.body.removeChild(modal);
       };
     });
@@ -511,36 +475,23 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 프로젝트 불러오기
-   * GET /api/entry-storage/project/:fileId
+   * 🔥 프로젝트 불러오기 (기존 API 사용)
+   * 에디터로 이동하여 S3 URL에서 프로젝트 로드
    */
-  async loadProject(fileId, projectName) {
+  async loadProject(projectId, projectName, s3Url) {
     try {
-      console.log(`📂 프로젝트 불러오기 시작: ID ${fileId}`);
+      console.log(`📂 프로젝트 불러오기 시작: ID ${projectId}, URL: ${s3Url}`);
       
-      // API 호출하여 S3 Presigned URL 가져오기
-      const response = await fetch(`${this.apiBase}/project/${fileId}`, {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API 오류: ${response.status}`);
+      if (!s3Url) {
+        throw new Error('프로젝트 URL이 없습니다.');
       }
-      
-      const result = await response.json();
-      
-      if (!result.success || !result.url) {
-        throw new Error('프로젝트 파일을 찾을 수 없습니다');
-      }
-      
-      console.log('🔗 Presigned URL 획득:', result.url.substring(0, 50) + '...');
       
       // 불러온 프로젝트 ID 저장 (덮어쓰기용)
-      this.loadedFileId = fileId;
-      this.loadedProjectName = projectName || result.project?.title;
+      this.loadedProjectId = projectId;
+      this.loadedProjectName = projectName;
       
       // 에디터로 이동 (S3 URL 사용)
-      const editorUrl = `/entry/entry_editor?s3Url=${encodeURIComponent(result.url)}&fileId=${fileId}&projectName=${encodeURIComponent(this.loadedProjectName)}`;
+      const editorUrl = `/entry/entry_editor?s3Url=${encodeURIComponent(s3Url)}&projectId=${projectId}&projectName=${encodeURIComponent(projectName)}&userID=${this.userID}&role=${this.role}`;
       
       console.log(`✅ 에디터로 이동`);
       window.location.href = editorUrl;
@@ -548,44 +499,6 @@ class EntryProjectSaver {
     } catch (error) {
       console.error('❌ 프로젝트 불러오기 실패:', error);
       alert('프로젝트를 불러오는데 실패했습니다: ' + error.message);
-    }
-  }
-
-  /**
-   * 🔥 프로젝트 삭제
-   * DELETE /api/entry-storage/project/:fileId
-   */
-  async deleteProject(fileId) {
-    if (!confirm('정말 이 프로젝트를 삭제하시겠습니까?\n삭제된 프로젝트는 복구할 수 없습니다.')) {
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${this.apiBase}/project/${fileId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        console.log('✅ 프로젝트 삭제 완료');
-        this.showNotification('🗑️ 프로젝트가 삭제되었습니다.', 'success');
-        
-        // 현재 열린 프로젝트가 삭제된 경우 상태 초기화
-        if (this.loadedFileId === fileId) {
-          this.loadedFileId = null;
-          this.loadedProjectName = null;
-        }
-        
-        return true;
-      } else {
-        throw new Error(result.message || '삭제 실패');
-      }
-    } catch (error) {
-      console.error('❌ 삭제 실패:', error);
-      this.showNotification('❌ 삭제 실패: ' + error.message, 'error');
-      return false;
     }
   }
 
@@ -802,9 +715,61 @@ class EntryProjectSaver {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
+
+  /**
+   * 🔥 제출하기 (교사에게 제출)
+   */
+  async submitProject() {
+    try {
+      if (!window.Entry || !Entry.exportProject) {
+        throw new Error('Entry가 로드되지 않았습니다.');
+      }
+
+      const confirmed = confirm('현재 프로젝트를 제출하시겠습니까?\n제출된 작품은 선생님이 확인할 수 있습니다.');
+      if (!confirmed) {
+        return;
+      }
+
+      const projectData = Entry.exportProject();
+      const projectName = this.getCurrentProjectName();
+
+      this.showNotification('📤 제출 중...', 'info');
+
+      const response = await fetch(`${this.apiBase}/save-project`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-ID': this.userID,
+          'X-User-Role': this.role
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          projectData: projectData,
+          projectName: `[제출] ${projectName}`,
+          userID: this.userID,
+          centerID: window.EDUCODINGNPLAY_USER?.centerID || null,
+          saveType: 'submissions'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        this.showNotification('✅ 제출 완료! 선생님이 확인할 수 있습니다.', 'success');
+        return result;
+      } else {
+        throw new Error(result.message || '제출 실패');
+      }
+
+    } catch (error) {
+      console.error('❌ 제출 실패:', error);
+      this.showNotification('❌ 제출 실패: ' + error.message, 'error');
+      throw error;
+    }
+  }
 }
 
 // 전역에서 사용 가능하도록 노출
 window.EntryProjectSaver = EntryProjectSaver;
 
-console.log('✅ EntryProjectSaver 로드 완료 (새 API: /api/entry-storage/)');
+console.log('✅ EntryProjectSaver 로드 완료 (기존 API: /entry/api/)');

@@ -10,6 +10,7 @@ class IDEComponent extends Component {
     // 기본 옵션 설정
     this.options = {
       elementId: 'ide-component',
+      submitButtonId: 'submitCodeBtn',
       ...options
     };
 
@@ -174,6 +175,12 @@ class IDEComponent extends Component {
          * 여기서 runCode 동작을 재정의함.
          */
         this.modules.terminal.runCode = () => this.runMultiFileCode();
+      }
+
+      // 5. Submit Button
+      const submitBtn = document.getElementById(this.options.submitButtonId);
+      if (submitBtn) {
+        submitBtn.addEventListener('click', () => this.submitSolution());
       }
 
     } catch (error) {
@@ -390,6 +397,96 @@ class IDEComponent extends Component {
       console.error('Execution error:', error);
       this.modules.terminal.appendToOutput(`Client Error: ${error.message}\n`, 'error');
     }
+  }
+
+  /**
+   * 🔥 솔루션 제출
+   */
+  async submitSolution() {
+    console.log('📝 Submitting solution...');
+    const submitBtn = document.getElementById(this.options.submitButtonId);
+    if (submitBtn) submitBtn.disabled = true;
+
+    // Show Modal
+    const modalEl = document.getElementById('submissionResultModal');
+    const modalBody = document.getElementById('submissionResultBody');
+    if (modalEl && window.bootstrap) {
+      const modal = new window.bootstrap.Modal(modalEl);
+      modal.show();
+      // Reset modal content
+      modalBody.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">채점 중...</span>
+                </div>
+                <p class="mt-2">채점 중입니다...</p>
+            </div>
+         `;
+    }
+
+    try {
+      const code = this.modules.codeEditor.getCurrentCode();
+      // Use currentProblemNumber as problemId (assuming backend handles it)
+      const problemId = this.state.currentProblemNumber;
+
+      const response = await fetch('/api/submit-solution', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ problemId, code })
+      });
+
+      const result = await response.json();
+
+      // Render Result
+      if (result.success && result.data) {
+        this.renderSubmissionResult(result.data);
+      } else {
+        if (modalBody) {
+          modalBody.innerHTML = `<div class="alert alert-danger">${result.message || '오류가 발생했습니다.'}</div>`;
+        }
+      }
+
+    } catch (e) {
+      console.error(e);
+      if (modalBody) modalBody.innerHTML = `<div class="alert alert-danger">서버 통신 오류</div>`;
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  }
+
+  renderSubmissionResult(data) {
+    const modalBody = document.getElementById('submissionResultBody');
+    if (!modalBody) return;
+
+    let html = `<div class="mb-3 text-center">
+        <h4>${data.success ? '<span class="text-success"><i class="bi bi-check-circle"></i> 통과</span>' : '<span class="text-danger"><i class="bi bi-x-circle"></i> 실패</span>'}</h4>
+        <p>총 ${data.total}개 중 ${data.passed}개 테스트 케이스 통과</p>
+      </div>`;
+
+    html += '<ul class="list-group">';
+    data.results.forEach((r, i) => {
+      const statusClass = r.passed ? 'list-group-item-success' : 'list-group-item-danger';
+      const icon = r.passed ? 'bi-check' : 'bi-x';
+
+      let detail = '';
+      if (!r.passed) {
+        if (r.message) detail += `<br><small>${r.message}</small>`;
+        if (r.expected) detail += `<br><small>Expected: ${r.expected}</small>`;
+        if (r.actual !== undefined) detail += `<br><small>Actual: ${r.actual}</small>`;
+        if (r.error) detail += `<br><small class="text-danger">Error: ${r.error}</small>`;
+      }
+
+      html += `<li class="list-group-item ${statusClass} d-flex justify-content-between align-items-center">
+              <div>
+                  <strong>테스트 케이스 ${i + 1}</strong>: ${r.passed ? '통과' : '실패'}
+                  ${detail}
+              </div>
+              <i class="bi ${icon}" style="font-size: 1.5rem;"></i>
+          </li>`;
+    });
+    html += '</ul>';
+
+    modalBody.innerHTML = html;
   }
 
   // --- 기존 메서드 호환 (onProblemChanged 등) ---

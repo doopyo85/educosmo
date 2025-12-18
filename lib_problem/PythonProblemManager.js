@@ -1,8 +1,10 @@
 const { queryDatabase } = require('../lib_login/db');
+const PythonRunner = require('../lib_execution/PythonRunner');
 
 class PythonProblemManager {
     constructor() {
-        this.useMock = false; // Set to true if DB is unavailable
+        this.useMock = true; // Default to true since DB is unstable
+        this.runner = new PythonRunner();
         this.mockProblems = [
             {
                 id: 1,
@@ -86,6 +88,57 @@ class PythonProblemManager {
             console.error('DB Create Error:', error);
             throw error;
         }
+    }
+
+    async submitSolution(problemId, userCode) {
+        const problem = await this.getProblem(problemId);
+        if (!problem) {
+            throw new Error('Problem not found');
+        }
+
+        if (!problem.test_cases || problem.test_cases.length === 0) {
+            throw new Error('No test cases defined for this problem');
+        }
+
+        const results = await this.runner.runTestCases(userCode, problem.test_cases);
+
+        // Calculate summary
+        const totalTests = results.length;
+        const passedTests = results.filter(r => r.passed).length;
+        const isSuccess = totalTests === passedTests;
+
+        // Mask hidden test cases in the response
+        const clientResults = results.map((r, index) => {
+            const isHidden = problem.test_cases[index].is_hidden;
+            if (isHidden && !r.passed) {
+                return {
+                    status: 'failed',
+                    message: 'Hidden test case failed',
+                    passed: false
+                };
+            } else if (isHidden && r.passed) {
+                return {
+                    status: 'passed',
+                    message: 'Hidden test case passed',
+                    passed: true
+                };
+            } else {
+                return {
+                    input: r.input,
+                    expected: r.expected,
+                    actual: r.actual,
+                    passed: r.passed,
+                    error: r.error
+                };
+            }
+        });
+
+        return {
+            success: isSuccess,
+            total: totalTests,
+            passed: passedTests,
+            results: clientResults
+        };
     }
 }
 
