@@ -1,4 +1,5 @@
 const socketIo = require('socket.io');
+const db = require('../lib_login/db');
 
 let io;
 
@@ -21,17 +22,39 @@ const initSocket = (server) => {
         console.log(`[Socket.io] New connection: ${socket.id}`);
 
         // 👥 User Presence
-        socket.on('join', (userData) => {
+        socket.on('join', async (userData) => {
             if (!userData) return;
 
             // Store user info
             socket.userData = userData; // { id, name, role, centerID }
+            // Join Center Room (for future Center-based isolation)
             // Join Center Room (for future Center-based isolation)
             if (userData.centerID) {
                 socket.join(`center_${userData.centerID}`);
             }
 
             broadcastUserList();
+
+            // 🔥 Send Recent Chat History
+            try {
+                // Using existing nuguritalk_posts table structure based on router
+                const history = await db.queryDatabase(`
+                    SELECT p.*, u.name as author_name 
+                    FROM nuguritalk_posts p 
+                    LEFT JOIN Users u ON p.author_id = u.id 
+                    ORDER BY p.created_at DESC LIMIT 50
+                `);
+
+                // Reverse to show oldest first in chat flow
+                socket.emit('chat_history', history.reverse().map(msg => ({
+                    user: msg.author_id, // Use ID for comparison
+                    userName: msg.author_name || msg.author,
+                    text: msg.title, // 'title' column contains the message text based on router code
+                    time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                })));
+            } catch (err) {
+                console.error('Error fetching chat history:', err);
+            }
         });
 
         socket.on('disconnect', () => {
@@ -45,18 +68,33 @@ const initSocket = (server) => {
         });
 
         // 💬 Chat Message Handler
-        socket.on('chat_message', (data) => {
+        socket.on('chat_message', async (data) => {
             // Validate data
             if (!data || !data.text) return;
 
-            // Broadcast to all connected clients (Global for now)
-            io.emit('chat_message', {
-                user: data.user,
-                // If we have stored name, use it, otherwise fallback
-                userName: socket.userData ? socket.userData.name : data.user,
-                text: data.text,
-                time: data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
+            try {
+                // 🔥 Save to DB
+                let authorName = data.user;
+                if (socket.userData && socket.userData.name) {
+                    authorName = socket.userData.name;
+                }
+
+                await db.queryDatabase(`
+                    INSERT INTO nuguritalk_posts (title, content, author, author_id)
+                    VALUES (?, ?, ?, ?)
+                `, [data.text, data.text, authorName, data.user]);
+
+                // Broadcast
+                io.emit('chat_message', {
+                    user: data.user,
+                    userName: authorName,
+                    text: data.text,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+
+            } catch (err) {
+                console.error('Error saving chat message:', err);
+            }
         });
 
         // Helper: Broadcast User List

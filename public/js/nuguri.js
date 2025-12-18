@@ -160,6 +160,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        socket.on('chat_history', (messages) => {
+            // Clear current list to avoid duplicates if reconnecting
+            const emptyState = chatList.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+
+            // Append history
+            messages.forEach(msg => {
+                const isMine = msg.user == currentUser.id; // Loose equality
+                appendMessage(msg, isMine);
+            });
+            scrollToBottom();
+        });
+
         socket.on('chat_message', (data) => {
             const isMine = data.user === currentUser.id;
             appendMessage(data, isMine);
