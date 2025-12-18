@@ -18,11 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.getElementById('nuguriSendBtn');
     const chatList = document.getElementById('nuguriChatList');
 
-    // User Data (from hidden inputs in header or global variables)
+    // User Data (from data attributes)
+    const container = document.getElementById('nuguri-widget-container');
     const currentUser = {
-        id: document.getElementById('currentUserID')?.value || 'Guest',
-        role: document.getElementById('currentUserRole')?.value || 'guest',
-        centerID: '<%= locals.centerID %>' // Needs careful injection or fetch
+        id: container.dataset.userId || 'Guest',
+        role: container.dataset.userRole || 'guest',
+        centerID: container.dataset.centerId || ''
     };
 
     let isOpen = false;

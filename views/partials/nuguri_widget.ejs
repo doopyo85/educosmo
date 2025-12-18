@@ -1,6 +1,7 @@
 <link rel="stylesheet" href="/css/nuguri.css">
 
-<div id="nuguri-widget-container">
+<div id="nuguri-widget-container" data-user-id="<%= locals.userID || 'Guest' %>"
+    data-user-role="<%= locals.role || 'guest' %>" data-center-id="<%= locals.centerID || '' %>">
     <!-- Chat Modal -->
     <div class="nuguri-modal" id="nuguriModal">
         <div class="nuguri-header">
@@ -15,6 +16,10 @@
         <div class="nuguri-tabs">
             <button class="nuguri-tab-btn active" data-tab="chat">💬 대화창</button>
             <button class="nuguri-tab-btn" data-tab="users">👥 접속자 <span id="userCountBadge">(0)</span></button>
+            <button class="nuguri-tab-btn" data-tab="workroom">🛠 작업실</button>
+            <% if (locals.role==='teacher' || locals.role==='admin' || locals.role==='manager' ) { %>
+                <button class="nuguri-tab-btn secret-tab" data-tab="secret" style="color: #7209b7;">🔒 비밀</button>
+                <% } %>
         </div>
 
         <div class="nuguri-content">
@@ -41,11 +46,57 @@
                     <!-- Users will be injected here -->
                 </div>
             </div>
+
+            <!-- Workroom Tab -->
+            <div class="nuguri-tab-pane" id="pane-workroom">
+                <div class="workroom-container">
+                    <img src="/resource/coding_nuguri.webp" class="workroom-img" id="workroomImg">
+                    <div class="speech-bubble-sm" id="workroomStatus">열심히 코딩하는 중...</div>
+
+                    <div class="task-list-sm">
+                        <div class="task-item-sm">
+                            <div class="task-status-icon">🔄</div>
+                            <div class="task-content">
+                                <h6>게시판 시스템 고도화</h6>
+                                <p>파일 첨부 기능 개선 중</p>
+                            </div>
+                        </div>
+                        <div class="task-item-sm">
+                            <div class="task-status-icon">✅</div>
+                            <div class="task-content">
+                                <h6>너구리톡 UI 리뉴얼</h6>
+                                <p>투명 위젯 및 에어로 글래스 적용</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secret Chat Tab (Teacher Only) -->
+            <% if (locals.role==='teacher' || locals.role==='admin' || locals.role==='manager' ) { %>
+                <div class="nuguri-tab-pane secret-theme" id="pane-secret">
+                    <div class="nuguri-chat-list" id="nuguriSecretChatList">
+                        <div class="empty-state">
+                            <i class="bi bi-shield-lock" style="color: #7209b7;"></i>
+                            <p>선생님들만의 비밀 공간입니다.</p>
+                        </div>
+                    </div>
+                    <div class="nuguri-input-area">
+                        <input type="text" class="nuguri-input" id="nuguriSecretInput" placeholder="비밀 메시지..."
+                            autocomplete="off">
+                        <button class="nuguri-send-btn" id="nuguriSecretSendBtn" style="background-color: #7209b7;">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
+                <% } %>
+
         </div>
     </div>
 
     <!-- Floating Icon -->
     <div class="nuguri-icon" id="nuguriFloatIcon" title="너구리톡 열기">
+        <div class="nuguri-online-indicator" id="nuguriOnlineIndicator">✅</div>
         <img src="https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/thumbs/nuguri.png" alt="Nuguri Talk">
         <div class="nuguri-badge" id="nuguriUnreadBadge">0</div>
     </div>

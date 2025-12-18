@@ -228,6 +228,132 @@
     text-align: right;
 }
 
+/* Online Indicator (Green Exclamation) */
+.nuguri-online-indicator {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 20px;
+    display: none;
+    z-index: 15;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    animation: bounce 2s infinite;
+}
+
+.nuguri-online-indicator.show {
+    display: block;
+}
+
+@keyframes bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-5px);
+    }
+
+    60% {
+        transform: translateY(-3px);
+    }
+}
+
+/* Secret Chat Theme */
+.nuguri-tab-pane.secret-theme {
+    background: rgba(30, 30, 30, 0.95);
+}
+
+.nuguri-tab-pane.secret-theme .nuguri-chat-list {
+    background: transparent;
+}
+
+.nuguri-tab-pane.secret-theme .chat-bubble.others {
+    background: #333;
+    color: #eee;
+    border: 1px solid #444;
+}
+
+.nuguri-tab-pane.secret-theme .chat-bubble.mine {
+    background: #7209b7;
+    /* Deep Purple */
+    color: white;
+}
+
+.nuguri-tab-pane.secret-theme .nuguri-input-area {
+    background: #222;
+    border-top: 1px solid #444;
+}
+
+.nuguri-tab-pane.secret-theme .nuguri-input {
+    background: #333;
+    color: white;
+    border-color: #555;
+}
+
+/* Workroom Styles */
+.workroom-container {
+    padding: 16px;
+    text-align: center;
+}
+
+.workroom-img {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    margin-bottom: 12px;
+}
+
+.speech-bubble-sm {
+    background: white;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    font-size: 13px;
+    display: inline-block;
+    margin-bottom: 20px;
+    position: relative;
+    color: #555;
+}
+
+.task-list-sm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.task-item-sm {
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+}
+
+.task-status-icon {
+    font-size: 18px;
+}
+
+.task-content h6 {
+    margin: 0 0 2px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.task-content p {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+}
+
 /* Input Area */
 .nuguri-input-area {
     padding: 12px;
