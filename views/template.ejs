@@ -155,16 +155,16 @@
                                     <div id="problem-bank-controls"
                                         style="display: <%= typeof pageType !== 'undefined' && pageType === 'algorithm' ? 'flex' : 'none' %>; align-items: center; gap: 4px;">
                                         <button id="ide-explanation-btn" class="btn btn-outline-info btn-sm"
-                                            style="padding: 2px 8px; font-size: 12px;">힌트</button>
+                                            style="padding: 2px 8px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;">힌트</button>
 
                                         <% if (role==='teacher' || role==='admin' || role==='manager' ) { %>
                                             <button id="showAnswerBtn" class="btn btn-outline-danger btn-sm"
-                                                style="padding: 2px 8px; font-size: 12px;">정답</button>
+                                                style="padding: 2px 8px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;">정답</button>
                                             <% } %>
 
                                                 <button id="submitCodeBtn" class="btn btn-outline-secondary btn-sm"
-                                                    style="padding: 2px 8px; font-size: 12px; margin-left: 4px;">
-                                                    <i class="bi bi-check-circle-fill"></i> 제출
+                                                    style="padding: 2px 8px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-check-circle-fill me-1"></i> 제출
                                                 </button>
                                     </div>
 
