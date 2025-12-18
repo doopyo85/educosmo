@@ -216,7 +216,8 @@ async function performAutoSave(userInfo) {
                 projectName: autoSaveFileName,
                 userID: userInfo.userID,
                 centerID: userInfo.centerID,
-                isAutoSave: true  // 자동저장 플래그
+                saveType: 'autosave',  // 🔥 자동저장 타입 명시
+                isAutoSave: true
             })
         });
         

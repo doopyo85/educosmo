@@ -352,7 +352,7 @@ class EntryProjectSaver {
   }
   
   /**
-   * 불러오기 모달 생성
+   * 불러오기 모달 생성 (자동저장 표시 + 썸네일 + 삭제 버튼)
    */
   createLoadModal(projects) {
     const modal = document.createElement('div');
@@ -374,12 +374,16 @@ class EntryProjectSaver {
       background: white;
       padding: 30px;
       border-radius: 10px;
-      max-width: 700px;
+      max-width: 800px;
       width: 90%;
       max-height: 80vh;
       overflow-y: auto;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     `;
+    
+    // 🔥 자동저장과 일반 저장 분리
+    const autosaveProjects = projects.filter(p => p.saveType === 'autosave');
+    const normalProjects = projects.filter(p => p.saveType !== 'autosave');
     
     // 프로젝트 목록 HTML 생성
     let projectListHTML = '';
@@ -392,50 +396,45 @@ class EntryProjectSaver {
         </div>
       `;
     } else {
-      projectListHTML = `
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px;">
-          ${projects.map(project => `
-            <div class="project-item" 
-                 data-project-id="${project.id}" 
-                 data-project-name="${project.projectName}"
-                 data-s3-url="${project.s3Url || ''}"
-                 style="
-              border: 2px solid #e0e0e0;
-              border-radius: 8px;
-              overflow: hidden;
-              cursor: pointer;
-              transition: all 0.2s;
-            " onmouseover="this.style.borderColor='#00B894'; this.style.transform='translateY(-2px)'" 
-               onmouseout="this.style.borderColor='#e0e0e0'; this.style.transform='none'">
-              <div style="
-                height: 100px;
-                background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                overflow: hidden;
-              ">
-                <div style="font-size: 36px; color: #00B894;">📦</div>
-              </div>
-              <div style="padding: 12px;">
-                <div style="font-weight: bold; font-size: 14px; color: #333; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${project.projectName}">
-                  ${project.projectName}
-                </div>
-                <div style="font-size: 12px; color: #999;">
-                  ${project.createdAt ? new Date(project.createdAt).toLocaleDateString('ko-KR') : ''}
-                  ${project.fileSizeKb ? ` · ${this.formatSize(project.fileSizeKb * 1024)}` : ''}
-                </div>
-              </div>
+      // 🔥 자동저장 섹션
+      let autosaveHTML = '';
+      if (autosaveProjects.length > 0) {
+        autosaveHTML = `
+          <div style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+              <span style="background: #FF9800; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">🔄 자동저장</span>
+              <span style="color: #666; font-size: 12px; margin-left: 8px;">${autosaveProjects.length}개</span>
             </div>
-          `).join('')}
-        </div>
-      `;
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;">
+              ${autosaveProjects.map(project => this.createProjectCard(project, true)).join('')}
+            </div>
+          </div>
+        `;
+      }
+      
+      // 🔥 일반 저장 섹션
+      let normalHTML = '';
+      if (normalProjects.length > 0) {
+        normalHTML = `
+          <div>
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+              <span style="background: #00B894; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">💾 내 프로젝트</span>
+              <span style="color: #666; font-size: 12px; margin-left: 8px;">${normalProjects.length}개</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;">
+              ${normalProjects.map(project => this.createProjectCard(project, false)).join('')}
+            </div>
+          </div>
+        `;
+      }
+      
+      projectListHTML = autosaveHTML + normalHTML;
     }
     
     modalContent.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3 style="margin: 0; color: #333;">📂 내 프로젝트 불러오기</h3>
-        <span style="color: #666; font-size: 14px;">${projects.length}개 프로젝트</span>
+        <span style="color: #666; font-size: 14px;">총 ${projects.length}개</span>
       </div>
       <div style="margin-bottom: 20px;">
         ${projectListHTML}
@@ -460,9 +459,12 @@ class EntryProjectSaver {
       document.body.removeChild(modal);
     };
     
-    // 프로젝트 클릭 이벤트
+    // 🔥 프로젝트 카드 클릭 이벤트 (삭제 버튼 제외)
     modalContent.querySelectorAll('.project-item').forEach(item => {
-      item.onclick = async () => {
+      item.onclick = async (e) => {
+        // 삭제 버튼 클릭 시 무시
+        if (e.target.closest('.delete-btn')) return;
+        
         const projectId = item.getAttribute('data-project-id');
         const projectName = item.getAttribute('data-project-name');
         const s3Url = item.getAttribute('data-s3-url');
@@ -471,7 +473,133 @@ class EntryProjectSaver {
       };
     });
     
+    // 🔥 삭제 버튼 이벤트
+    modalContent.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.onclick = async (e) => {
+        e.stopPropagation();
+        const projectId = btn.getAttribute('data-project-id');
+        const projectName = btn.getAttribute('data-project-name');
+        await this.deleteProject(projectId, projectName, modal);
+      };
+    });
+    
     return modal;
+  }
+
+  /**
+   * 🔥 프로젝트 카드 HTML 생성 (썸네일 + 삭제 버튼)
+   */
+  createProjectCard(project, isAutosave) {
+    const borderColor = isAutosave ? '#FF9800' : '#e0e0e0';
+    const hoverColor = isAutosave ? '#FF9800' : '#00B894';
+    const iconColor = isAutosave ? '#FF9800' : '#00B894';
+    const icon = isAutosave ? '🔄' : '📦';
+    
+    // 썸네일 URL (있으면 사용, 없으면 기본 아이콘)
+    const thumbnailHtml = project.thumbnailUrl 
+      ? `<img src="${project.thumbnailUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentNode.innerHTML='<div style=font-size:36px;color:${iconColor}>${icon}</div>'">`
+      : `<div style="font-size: 36px; color: ${iconColor};">${icon}</div>`;
+    
+    return `
+      <div class="project-item" 
+           data-project-id="${project.id}" 
+           data-project-name="${project.projectName}"
+           data-s3-url="${project.s3Url || ''}"
+           style="
+        border: 2px solid ${borderColor};
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+      " onmouseover="this.style.borderColor='${hoverColor}'; this.style.transform='translateY(-2px)'; this.querySelector('.delete-btn').style.opacity='1';" 
+         onmouseout="this.style.borderColor='${borderColor}'; this.style.transform='none'; this.querySelector('.delete-btn').style.opacity='0';">
+        
+        <!-- 🔥 삭제 버튼 (hover 시 표시) -->
+        <button class="delete-btn" 
+                data-project-id="${project.id}" 
+                data-project-name="${project.projectName}"
+                style="
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: rgba(220, 53, 69, 0.9);
+          color: white;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+          line-height: 1;
+          z-index: 10;
+          opacity: 0;
+          transition: opacity 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        " title="삭제">✕</button>
+        
+        <!-- 썸네일 영역 -->
+        <div style="
+          height: 100px;
+          background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        ">
+          ${thumbnailHtml}
+        </div>
+        
+        <!-- 정보 영역 -->
+        <div style="padding: 10px;">
+          <div style="font-weight: bold; font-size: 13px; color: #333; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${project.projectName}">
+            ${project.projectName}
+          </div>
+          <div style="font-size: 11px; color: #999;">
+            ${project.updatedAt ? new Date(project.updatedAt).toLocaleDateString('ko-KR') : (project.createdAt ? new Date(project.createdAt).toLocaleDateString('ko-KR') : '')}
+            ${project.fileSizeKb ? ` · ${this.formatSize(project.fileSizeKb * 1024)}` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * 🔥 프로젝트 삭제
+   */
+  async deleteProject(projectId, projectName, modal) {
+    const confirmed = confirm(`"${projectName}" 프로젝트를 삭제하시겠습니까?\n\n삭제된 프로젝트는 휴지통으로 이동됩니다.`);
+    if (!confirmed) return;
+    
+    try {
+      const response = await fetch(`${this.apiBase}/project/${projectId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'X-User-ID': this.userID,
+          'X-User-Role': this.role
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        this.showNotification(`🗑️ "${projectName}" 삭제됨`, 'success');
+        
+        // 모달 새로고침
+        if (modal && modal.parentNode) {
+          document.body.removeChild(modal);
+        }
+        await this.showLoadProjectModal(); // 목록 다시 로드
+      } else {
+        throw new Error(result.error || '삭제 실패');
+      }
+    } catch (error) {
+      console.error('❌ 프로젝트 삭제 실패:', error);
+      this.showNotification('❌ 삭제 실패: ' + error.message, 'error');
+    }
   }
 
   /**
