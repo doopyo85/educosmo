@@ -12,7 +12,7 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 3000,
         SERVICE_TYPE: 'main',
-        JUPYTER_HOST: 'localhost',
+        JUPYTER_HOST: '127.0.0.1',
         JUPYTER_PORT: 8888,
         JUDGE0_API_URL: 'http://localhost:2358'
       },
