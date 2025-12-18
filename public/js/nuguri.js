@@ -111,6 +111,37 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleModal(show) {
         isOpen = show;
         if (show) {
+            // Smart Positioning Logic
+            const iconRect = floatIcon.getBoundingClientRect();
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+
+            // Thresholds (mid-points)
+            const isLeft = iconRect.left < screenW / 2;
+            const isTop = iconRect.top < screenH / 2;
+
+            // Reset styles
+            modal.style.top = 'auto';
+            modal.style.bottom = 'auto';
+            modal.style.left = 'auto';
+            modal.style.right = 'auto';
+            modal.style.transformOrigin = ''; // Reset
+
+            // Apply direction
+            if (isTop) {
+                modal.style.top = '90px'; // Open Downwards
+                modal.style.transformOrigin = isLeft ? 'top left' : 'top right';
+            } else {
+                modal.style.bottom = '90px'; // Open Upwards (Default)
+                modal.style.transformOrigin = isLeft ? 'bottom left' : 'bottom right';
+            }
+
+            if (isLeft) {
+                modal.style.left = '0px'; // Open Rightwards
+            } else {
+                modal.style.right = '0px'; // Open Leftwards (Default)
+            }
+
             modal.classList.add('open');
             unreadCount = 0;
             updateBadge();
