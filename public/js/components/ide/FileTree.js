@@ -116,13 +116,17 @@ class FileTree {
 
         // 2. Control Toolbar Area (Bottom 40%)
         // Icons fixed on left (60px center), text appears on right when expanded
+        // Dynamic styles for tighter gap when expanded
+        const btnPaddingLc = isCollapsed ? "0" : "18px"; // padding-left to align icon center (18+12=30px)
+        const iconWidth = isCollapsed ? "60px" : "24px"; // 60px when collapsed, 24px when expanded
+
         const btnStyle = `
             width: 100%; 
             height: 32px; 
             display: flex; 
             align-items: center; 
             justify-content: flex-start; 
-            padding: 0; 
+            padding-left: ${btnPaddingLc}; 
             border: none; 
             background: transparent; 
             color: #c5c5c5; 
@@ -130,10 +134,10 @@ class FileTree {
             text-align: left;
             overflow: hidden; /* Prevent layout shift */
         `;
-        // Icon container fixed width 60px to match logo, centered icon
-        const iconContainerStyle = "width: 60px; height: 32px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;";
-        // Label with explicit overflow hidden to prevent pushing
-        const labelStyle = isCollapsed ? "display: none;" : "display: block; font-size: 13px; margin-left: 0px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
+        // Icon container: centered icon
+        const iconContainerStyle = `width: ${iconWidth}; height: 32px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;`;
+        // Label with explicit overflow hidden
+        const labelStyle = isCollapsed ? "display: none;" : "display: block; font-size: 13px; margin-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
 
         html += `
             <div class="file-tree-toolbar" style="flex: 0.4; padding: 4px 0 14px 0; background-color: #252526; display: flex; flex-direction: column; align-items: flex-start; gap: 0px; overflow-y: auto;">

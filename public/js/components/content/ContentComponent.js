@@ -445,6 +445,12 @@ class ContentComponent extends Component {
         problem[2].toLowerCase() === problemCode.toLowerCase();
     });
 
+    if (problemInfo) {
+      console.log('🐞 디버깅: 선택된 문제 데이터:', problemInfo);
+      console.log('🐞 디버깅: 데이터 길이:', problemInfo.length);
+      console.log('🐞 디버깅: 8번째 인덱스(I열) 값:', problemInfo.length > 8 ? problemInfo[8] : 'undefined');
+    }
+
     if (!problemInfo) {
       console.error('문제를 찾을 수 없습니다:', this.state.currentExamName, problemCode);
       this.showErrorInIframe(`
