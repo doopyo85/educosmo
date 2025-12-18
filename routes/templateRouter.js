@@ -45,7 +45,7 @@ router.get('/api/data', authenticateUser, async (req, res) => {
     console.log(`Template API - 사용할 시트: ${sheetName}`);
 
     // 선택된 시트에서 데이터 로드
-    const data = await getSheetData(`${sheetName}!A2:L100`);
+    const data = await getSheetData(`${sheetName}!A2:L`);
     console.log(`Template API - 메뉴 데이터 로드 완료: ${data.length}개 항목`);
 
     res.json({

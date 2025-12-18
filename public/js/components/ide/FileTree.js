@@ -136,7 +136,7 @@ class FileTree {
         const labelStyle = isCollapsed ? "display: none;" : "display: block; font-size: 13px; margin-left: 0px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
 
         html += `
-            <div class="file-tree-toolbar" style="flex: 0.4; padding: 4px 0; background-color: #252526; display: flex; flex-direction: column; align-items: flex-start; gap: 0px; overflow-y: auto;">
+            <div class="file-tree-toolbar" style="flex: 0.4; padding: 4px 0 14px 0; background-color: #252526; display: flex; flex-direction: column; align-items: flex-start; gap: 0px; overflow-y: auto;">
                 
                 <button class="footer-btn" onclick="window.fileTree.handleFontIncrease()" title="확대" style="${btnStyle}">
                     <div style="${iconContainerStyle}"><i class="bi bi-plus-lg"></i></div>

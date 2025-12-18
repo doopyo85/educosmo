@@ -762,7 +762,7 @@ router.get('/get-problem-data', async (req, res) => {
     }
 
     // 🔥 수정: 새로운 구조로 N열까지 데이터 가져오기 (예제파일URL 추가)
-    const data = await getSheetData('problems!A2:N500');
+    const data = await getSheetData('problems!A2:N');
     console.log(`공통 문제 데이터 로드 완료: ${data.length}개 항목 (N열까지 포함)`);
 
     // 🔥 추가: 데이터 구조 검증 및 로깅
