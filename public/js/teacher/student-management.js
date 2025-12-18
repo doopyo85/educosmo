@@ -608,6 +608,16 @@ const StudentManagement = {
         this.renderCalendar(year, month);
     },
 
+    // ============================================
+    // Center Selection (Admin Only)
+    // ============================================
+    changeCenter(centerId) {
+        if (!centerId) return;
+        const url = new URL(window.location.href);
+        url.searchParams.set('centerID', centerId);
+        window.location.href = url.toString();
+    },
+
     async renderCalendar(year, month) {
         $('#currentMonthLabel').text(`${year}. ${String(month).padStart(2, '0')}`);
 
@@ -618,7 +628,16 @@ const StudentManagement = {
         let attendanceMap = {};
         this.currentMonthData = []; // Store for Modals
         try {
-            const response = await fetch(`/teacher/api/attendance/monthly?year=${year}&month=${month}`);
+            // Check for centerID in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const centerID = urlParams.get('centerID');
+
+            let fetchUrl = `/teacher/api/attendance/monthly?year=${year}&month=${month}`;
+            if (centerID) {
+                fetchUrl += `&centerID=${centerID}`;
+            }
+
+            const response = await fetch(fetchUrl);
             const result = await response.json();
             if (result.success) {
                 this.currentMonthData = result.data;

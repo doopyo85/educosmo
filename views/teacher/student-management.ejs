@@ -21,6 +21,21 @@
                 align-items: center;
                 justify-content: center;
                 height: 100%;
+                /* Larger Month Title (Affects header row text, actually user meant the date label likely? No user said 'Calendar Year/Month font size') */
+            }
+
+            /* User Request: Calendar Year/Month Label Size */
+            #currentMonthLabel {
+                font-size: 2.2rem !important;
+                min-width: 150px !important;
+                /* Adjust width for larger text */
+            }
+
+            /* User Request: Move Day Row Higher */
+            .calendar-header {
+                align-items: flex-start !important;
+                /* Move text to top */
+                padding-top: 5px !important;
             }
 
             /* Holiday Styles */
@@ -34,6 +49,17 @@
                 color: #e03131;
                 margin-left: 4px;
                 font-weight: normal;
+            }
+
+            /* User Request: Reduce Title Spacing */
+            .page-header-bar {
+                padding-bottom: 5px !important;
+                margin-bottom: 0 !important;
+            }
+
+            .page-description {
+                margin-top: 4px !important;
+                margin-bottom: 0 !important;
             }
         </style>
 
@@ -122,6 +148,22 @@
                                         onclick="StudentManagement.nextMonth()">
                                         <i class="bi bi-chevron-right"></i>
                                     </button>
+
+                                    <!-- 🔥 Admin Center Selector -->
+                                    <% if (role==='admin' && typeof centers !=='undefined' && centers.length> 0) { %>
+                                        <div class="ms-3">
+                                            <select id="centerSelect" class="form-select form-select-sm"
+                                                style="width: 150px;"
+                                                onchange="StudentManagement.changeCenter(this.value)">
+                                                <% centers.forEach(function(center) { %>
+                                                    <option value="<%= center.id %>" <%=typeof centerID !=='undefined'
+                                                        && center.id==centerID ? 'selected' : '' %>>
+                                                        <%= center.name %>
+                                                    </option>
+                                                    <% }); %>
+                                            </select>
+                                        </div>
+                                        <% } %>
                                 </div>
                             </div>
 
