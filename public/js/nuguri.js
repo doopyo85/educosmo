@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const payload = {
                 text: text,
                 user: currentUser.id,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true }),
                 type: isSecret ? 'secret' : 'public'
             };
 
