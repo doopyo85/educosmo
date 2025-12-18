@@ -415,6 +415,47 @@ router.post('/submit-solution', authenticateUser, async (req, res) => {
   }
 });
 
+
+// 🔥 CT Connectome 데이터 API (Observatory용)
+router.get('/connectome-data', authenticateUser, async (req, res) => {
+  try {
+    const userId = req.session.userID;
+
+    // 1. Fetch Nodes with User Progress
+    const nodes = await db.queryDatabase(`
+      SELECT 
+        n.id, n.name, n.type, 
+        n.position_x, n.position_y, n.position_z,
+        COALESCE(uc.activation_level, 0) as activation,
+        COALESCE(uc.total_exp, 0) as exp
+      FROM CT_Nodes n
+      LEFT JOIN User_Connectome uc ON n.id = uc.ct_node_id AND uc.user_id = ?
+    `, [userId]);
+
+    // 2. Fetch Edges
+    const edges = await db.queryDatabase(`
+      SELECT source_node_id as 'from', target_node_id as 'to', relationship_type, strength
+      FROM CT_Edges
+    `);
+
+    // 3. (Optional) Fetch User Persona for visual styling
+    const persona = await db.queryDatabase(`
+      SELECT primary_archetype FROM User_Personality WHERE user_id = ?
+    `, [userId]);
+
+    res.json({
+      success: true,
+      nodes,
+      edges,
+      persona: persona.length > 0 ? persona[0].primary_archetype : 'EXPLORER'
+    });
+
+  } catch (error) {
+    console.error('❌ Connectome Data Error:', error);
+    res.status(500).json({ success: false, message: 'Connectome data load failed' });
+  }
+});
+
 // getSheetData 함수 가져오기
 const { getSheetData } = require('../lib_google/sheetService');
 

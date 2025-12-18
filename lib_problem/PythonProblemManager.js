@@ -1,10 +1,14 @@
 const { queryDatabase } = require('../lib_login/db');
 const PythonRunner = require('../lib_execution/PythonRunner');
+const ConnectomeService = require('./ConnectomeService');
+const EvaluationService = require('./EvaluationService');
 
 class PythonProblemManager {
     constructor() {
         this.useMock = true; // Default to true since DB is unstable
         this.runner = new PythonRunner();
+        this.connectomeService = new ConnectomeService();
+        this.evaluationService = new EvaluationService();
         this.mockProblems = [
             {
                 id: 1,
@@ -128,7 +132,19 @@ class PythonProblemManager {
 
                 console.log(`✅ Submission saved for User ${userId}, Problem ${problemId}`);
 
-                // TODO: Trigger Evaluation Engine & CT Update here (Event / Queue)
+                // Trigger Score Propagation (Connectome Update)
+                if (status === 'PASS') {
+                    // Fire and forget (don't await to keep response fast)
+                    this.connectomeService.updateUserConnectome(userId, problemId, score)
+                        .catch(err => console.error('Connectome update background error:', err));
+                }
+
+                // Trigger Evaluation Engine (The Auditor) - 10% chance or every Nth time
+                // This updates Pass Rate, Discrimination Index, etc.
+                if (Math.random() < 0.1) {
+                    this.evaluationService.evaluateProblem(problemId)
+                        .catch(err => console.error('Evaluation background error:', err));
+                }
 
             } catch (dbError) {
                 console.error('❌ Failed to save submission to DB:', dbError);

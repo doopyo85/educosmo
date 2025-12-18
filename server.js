@@ -209,9 +209,9 @@ app.use((req, res, next) => {
 
   let scriptSrcIndex = cspParts.findIndex(part => part.startsWith('script-src'));
   if (scriptSrcIndex !== -1) {
-    cspParts[scriptSrcIndex] += " https://polyfill.io https://entry-cdn.pstatic.net";
+    cspParts[scriptSrcIndex] += " https://polyfill.io https://entry-cdn.pstatic.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net";
   } else {
-    cspParts.push("script-src 'self' 'unsafe-inline' 'unsafe-eval' https://polyfill.io https://entry-cdn.pstatic.net");
+    cspParts.push("script-src 'self' 'unsafe-inline' 'unsafe-eval' https://polyfill.io https://entry-cdn.pstatic.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net");
   }
 
   let connectSrcIndex = cspParts.findIndex(part => part.startsWith('connect-src'));
@@ -249,6 +249,15 @@ app.use((req, res, next) => {
   res.setHeader("Content-Security-Policy", cspParts.join('; '));
   next();
 });
+
+// 🔥 Observatory 3D Dashboard Route
+app.get('/observatory', checkPageAccess, (req, res) => {
+  res.render('observatory', {
+    user: req.session.userID,
+    role: req.session.role
+  });
+});
+
 
 app.set('trust proxy', 1);
 
