@@ -524,8 +524,9 @@ class IDEComponent extends Component {
 
     // Check if answerType exists and is not empty (Problem Bank Mode)
     // answerType can be 'io', 'function.solution', etc.
-    if (answerType && typeof answerType === 'string' && answerType.trim() !== '') {
-      console.log('IDEComponent: Problem Bank Mode activated (' + answerType + ')');
+    // 🔥 FORCED: If PAGE_TYPE is 'algorithm', assume Problem Bank Mode
+    if ((window.PAGE_TYPE === 'algorithm') || (answerType && typeof answerType === 'string' && answerType.trim() !== '')) {
+      console.log('IDEComponent: Problem Bank Mode activated (' + (answerType || 'algorithm') + ')');
       controls.style.display = 'flex';
     } else {
       console.log('IDEComponent: Problem Bank Mode deactivated');
