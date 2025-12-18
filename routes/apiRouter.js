@@ -765,13 +765,23 @@ router.get('/get-problem-data', async (req, res) => {
     const data = await getSheetData('problems!A2:N');
     console.log(`공통 문제 데이터 로드 완료: ${data.length}개 항목 (N열까지 포함)`);
 
+    // 🔥 추가: 데이터 정규화 (빈 컬럼이 잘리지 않도록 14열(A~N)까지 강제 패딩)
+    if (data && data.length > 0) {
+      data.forEach(row => {
+        while (row.length < 14) {
+          row.push(''); // 빈 문자열로 채움
+        }
+      });
+    }
+
     // 🔥 추가: 데이터 구조 검증 및 로깅
     if (data.length > 0) {
-      console.log('첫 번째 데이터 샘플:', {
+      console.log('첫 번째 데이터 샘플 (Padding Applied):', {
         filename: data[0][0],
         examName: data[0][1],
         problemNumber: data[0][2],
-        pythonFileUrl: data[0][3] || '(없음)'
+        pythonFileUrl: data[0][3] || '(없음)',
+        answerType: data[0][8] || '(없음/빈칸)'
       });
     }
 
