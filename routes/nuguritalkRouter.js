@@ -35,39 +35,9 @@ function formatDate(date) {
     return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
 }
 
-// 너구리톡 메인 페이지
-router.get('/', checkPageAccess('/nuguritalk'), async (req, res) => {
-    try {
-        // 너구리톡 메시지들 가져오기 (최신순)
-        const messagesQuery = `
-            SELECT p.*, u.name as author_name
-            FROM nuguritalk_posts p
-            LEFT JOIN Users u ON p.author_id = u.id
-            ORDER BY p.created_at DESC
-            LIMIT 100
-        `;
-
-        const messages = await db.queryDatabase(messagesQuery);
-
-        const formattedMessages = messages.map(msg => ({
-            ...msg,
-            created_at: formatDate(msg.created_at),
-            canDelete: (req.session.userID == msg.author_id) ||
-                ['admin', 'manager'].includes(req.session.role)
-        }));
-
-        res.render('nuguritalk', {
-            messages: formattedMessages,
-            userID: req.session.userID,
-            role: req.session.role,
-            is_logined: req.session.is_logined,
-            centerID: req.session.centerID
-        });
-
-    } catch (error) {
-        console.error('너구리톡 페이지 오류:', error);
-        res.status(500).send('서버 오류가 발생했습니다.');
-    }
+// 너구리톡 메인 페이지 (Deprecated - Widget replaces this)
+router.get('/', (req, res) => {
+    res.redirect('/');
 });
 
 // 메시지 작성 처리
