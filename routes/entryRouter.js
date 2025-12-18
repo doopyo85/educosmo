@@ -852,7 +852,7 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
 
         const userId = user.id;
 
-        // 🔥 수정: 파라미터 3개 모두 제공 (user_id, platform, LIMIT) + 소프트 삭제 필터
+        // 🔥 수정: LIMIT은 하드코딩 (prepared statement 호환성)
         const query = `
             SELECT 
                 id,
@@ -865,6 +865,7 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
                 file_size_kb,
                 complexity_score,
                 blocks_count,
+                sprites_count,
                 metadata,
                 created_at,
                 updated_at
@@ -873,14 +874,13 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
               AND platform = ?
               AND (is_deleted = FALSE OR is_deleted IS NULL)
             ORDER BY created_at DESC 
-            LIMIT ?
+            LIMIT 50
         `;
 
-        // 🔥 중요: 파라미터 배열에 3개 값 모두 전달
+        // 🔥 파라미터 2개만 전달 (LIMIT은 하드코딩)
         const projects = await db.queryDatabase(query, [
             userId,           // user_id
-            'entry',          // platform (Entry 프로젝트만 조회)
-            50                // LIMIT (최대 50개)
+            'entry'           // platform (Entry 프로젝트만 조회)
         ]);
 
         console.log(`✅ [불러오기] ${projects.length}개 프로젝트 조회 성공`);
@@ -895,9 +895,10 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
                 s3Key: p.s3_key,
                 fileSizeKb: p.file_size_kb,
                 blocksCount: p.blocks_count,
+                spritesCount: p.sprites_count,
                 createdAt: p.created_at,
                 updatedAt: p.updated_at,
-                metadata: p.metadata ? JSON.parse(p.metadata) : null
+                metadata: p.metadata ? (typeof p.metadata === 'string' ? JSON.parse(p.metadata) : p.metadata) : null
             }))
         });
 
