@@ -501,9 +501,36 @@ class IDEComponent extends Component {
     // 그 값을 잡아서 main.py content로 업데이트해야 함.
   }
 
-  // EventBus 처리 등 기존 로직 유지...
+  setupEventBindings() {
+    super.setupEventBusListeners(); // Assuming Component class has this, or use super.setupEventBindings() if it exists? Wait, the original code had setupEventBusListeners calling super.setupEventBusListeners(). 
+    // Let's stick to modifying setupEventBusListeners method which is at line 505.
+  }
+
+  // Override setupEventBusListeners to add our custom listener
   setupEventBusListeners() {
     super.setupEventBusListeners();
+
+    if (window.EventBus) {
+      window.EventBus.subscribe('problemChanged', (data) => {
+        console.log('IDEComponent: Problem changed', data);
+        this.updateProblemBankUI(data.answerType);
+      });
+    }
+  }
+
+  updateProblemBankUI(answerType) {
+    const controls = document.getElementById('problem-bank-controls');
+    if (!controls) return;
+
+    // Check if answerType exists and is not empty (Problem Bank Mode)
+    // answerType can be 'io', 'function.solution', etc.
+    if (answerType && typeof answerType === 'string' && answerType.trim() !== '') {
+      console.log('IDEComponent: Problem Bank Mode activated (' + answerType + ')');
+      controls.style.display = 'flex';
+    } else {
+      console.log('IDEComponent: Problem Bank Mode deactivated');
+      controls.style.display = 'none';
+    }
   }
 
   // 다운로드 등...

@@ -81,6 +81,25 @@ class FileTree {
                 </div>
             </div>
             
+            <!-- Control Toolbar (Moved to Top) -->
+            <div class="file-tree-toolbar" style="padding: 10px 0; border-bottom: 1px solid #3e3e42; background-color: #252526; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                 <button class="footer-btn" onclick="window.fileTree.handleFontIncrease()" title="Font Size +" style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 4px; border: 1px solid transparent; background: transparent; color: #c5c5c5; cursor: pointer;">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+                <button class="footer-btn" onclick="window.fileTree.handleFontDecrease()" title="Font Size -" style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 4px; border: 1px solid transparent; background: transparent; color: #c5c5c5; cursor: pointer;">
+                    <i class="bi bi-dash-lg"></i>
+                </button>
+                <button class="footer-btn" onclick="window.fileTree.handleRefresh()" title="Refresh" style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 4px; border: 1px solid transparent; background: transparent; color: #c5c5c5; cursor: pointer;">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <button class="footer-btn" onclick="window.fileTree.handleDownload()" title="Download" style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 4px; border: 1px solid transparent; background: transparent; color: #c5c5c5; cursor: pointer;">
+                    <i class="bi bi-download"></i>
+                </button>
+                 <button id="ft-toggle-btn" class="footer-btn" title="${isCollapsed ? 'Expand' : 'Collapse'}" style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 4px; border: 1px solid transparent; background: transparent; color: #c5c5c5; cursor: pointer;">
+                    <i class="bi ${isCollapsed ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}"></i>
+                </button>
+            </div>
+            
             <div class="file-tree-content" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
                 <ul class="file-list" style="display: ${isCollapsed ? 'none' : 'block'}; flex: 1; margin: 0;">
         `;
@@ -112,46 +131,8 @@ class FileTree {
 
         html += `</ul>`;
 
-        // Controls Section (Bottom of content)
-        // Hidden when collapsed? Or icon only? User implies full buttons at bottom.
-        // If collapsed, 60px width is too small for row of buttons. Hide them or stack?
-        // Let's hide controls when collapsed for now to keep it clean.
+        // Footer removed (moved to top)
 
-        html += `</ul>`;
-
-        // Controls Section (Bottom of content)
-        // Always render, CSS handles layout based on .collapsed class
-        html += `
-            <div class="file-tree-footer-section" style="padding: 10px; border-top: 1px solid #3e3e42; background-color: #252526;">
-                <div class="section-title" style="font-size: 11px; color: #858585; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; ${isCollapsed ? 'display: none;' : ''}">Functions</div>
-                <div class="ide-footer-controls" style="display: flex; gap: 8px; flex-wrap: wrap; ${isCollapsed ? 'flex-direction: column; align-items: center;' : ''}">
-                    <button class="footer-btn" onclick="window.fileTree.handleFontIncrease()" title="Font Size +">
-                        <i class="bi bi-plus-lg"></i>
-                    </button>
-                    <button class="footer-btn" onclick="window.fileTree.handleFontDecrease()" title="Font Size -">
-                        <i class="bi bi-dash-lg"></i>
-                    </button>
-                    <button class="footer-btn" onclick="window.fileTree.handleRefresh()" title="Refresh">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
-                    <button class="footer-btn" onclick="window.fileTree.handleDownload()" title="Download">
-                        <i class="bi bi-download"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-
-        html += `</div>`; // End of file-tree-content
-
-        // Toggle Button Footer (Absolute Bottom)
-        // 🔥 Added padding-bottom to lift it up slightly as requested
-        html += `
-            <div class="file-tree-footer" style="padding: 10px 0 15px 0; min-height: 50px; display: flex; align-items: center; justify-content: ${isCollapsed ? 'center' : 'flex-end'}; border-top: 1px solid #3e3e42; background-color: #252526;">
-                <button id="ft-toggle-btn" class="btn btn-xs btn-link" title="${isCollapsed ? 'Expand' : 'Collapse'}" style="color: #ccc; width: 60px; height: 40px; display: flex; align-items: center; justify-content: center; padding: 0;">
-                    <i class="bi ${isCollapsed ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}" style="font-size: 16px;"></i>
-                </button>
-            </div>
-        `;
 
         this.element.innerHTML = html;
         this.element.style.display = 'flex';
@@ -205,7 +186,7 @@ class FileTree {
     }
 
     handleFileDelete(fileName) {
-        if (!confirm(`Delete '${fileName}' ? `)) return;
+        if (!confirm(`Delete '${fileName}'?`)) return;
 
         if (this.options.onFileDelete) {
             this.options.onFileDelete(fileName);

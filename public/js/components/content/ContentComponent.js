@@ -726,7 +726,8 @@ class ContentComponent extends Component {
       setTimeout(() => this.injectHideTitleStyle(), 100);
 
       // 이벤트 발행 및 상태 업데이트
-      this.publishProblemChangedEvent(problemNumber, pythonFileUrl);
+      const answerType = (problemInfo && problemInfo.length > 8) ? problemInfo[8] : null;
+      this.publishProblemChangedEvent(problemNumber, pythonFileUrl, answerType);
       this.updateExplanationButton(problemInfo, problemNumber);
       this.updateProblemTitle(problemNumber);
 
@@ -916,7 +917,8 @@ class ContentComponent extends Component {
       setTimeout(() => this.injectHideTitleStyle(), 100);
 
       // 이벤트 발행 및 상태 업데이트
-      this.publishProblemChangedEvent(problemNumber, pythonFileUrl);
+      const answerType = (problemInfo && problemInfo.length > 8) ? problemInfo[8] : null;
+      this.publishProblemChangedEvent(problemNumber, pythonFileUrl, answerType);
       this.updateExplanationButton(problemInfo, problemNumber);
       this.updateProblemTitle(problemNumber);
 
@@ -932,12 +934,13 @@ class ContentComponent extends Component {
   }
 
   // 🔥 NEW: 공통 이벤트 발행 로직
-  publishProblemChangedEvent(problemNumber, pythonFileUrl) {
+  publishProblemChangedEvent(problemNumber, pythonFileUrl, answerType) {
     if (window.EventBus && window.EventBus.publish) {
       const eventData = {
         examName: this.state.currentExamName,
         problemNumber: problemNumber,
-        pythonFileUrl: pythonFileUrl || null
+        pythonFileUrl: pythonFileUrl || null,
+        answerType: answerType || null
       };
 
       console.log('problemChanged 이벤트 발행:', eventData);

@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # Main Application (Node.js + Jupyter)
+  app:
+    build: .
+    container_name: educodingnplay-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - REDIS_HOST=redis
+      - JUDGE0_API_URL=http://judge0-server:2358
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - db
+      - redis
+      - judge0-server
+    networks:
+      - edu-network
+
+  # Main Database (MySQL) - For Local Dev
+  db:
+    image: mysql:8.0
+    container_name: educodingnplay-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: educoding
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - edu-network
+
+  # Redis (Session/Cache)
+  redis:
+    image: redis:alpine
+    container_name: educodingnplay-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - edu-network
+
+  # Judge0 Server
+  judge0-server:
+    image: judge0/judge0:1.13.1
+    container_name: judge0-server
+    volumes:
+      - ./judge0.conf:/judge0.conf:ro
+    ports:
+      - "2358:2358"
+    environment:
+      - REDIS_HOST=judge0-redis
+      - REDIS_PORT=6379
+      - POSTGRES_USER=judge0
+      - POSTGRES_PASSWORD=judge0
+      - POSTGRES_DB=judge0
+      - POSTGRES_HOST=judge0-db
+    depends_on:
+      - judge0-redis
+      - judge0-db
+    networks:
+      - edu-network
+
+  # Judge0 Worker
+  judge0-worker:
+    image: judge0/judge0:1.13.1
+    container_name: judge0-worker
+    command: ["./scripts/workers"]
+    environment:
+      - REDIS_HOST=judge0-redis
+      - REDIS_PORT=6379
+      - POSTGRES_USER=judge0
+      - POSTGRES_PASSWORD=judge0
+      - POSTGRES_DB=judge0
+      - POSTGRES_HOST=judge0-db
+    depends_on:
+      - judge0-redis
+      - judge0-db
+    networks:
+      - edu-network
+
+  # Judge0 Database (Postgres)
+  judge0-db:
+    image: postgres:13.0
+    container_name: judge0-db
+    environment:
+      - POSTGRES_USER=judge0
+      - POSTGRES_PASSWORD=judge0
+      - POSTGRES_DB=judge0
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - edu-network
+
+  # Judge0 Redis
+  judge0-redis:
+    image: redis:6.0
+    container_name: judge0-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - edu-network
+
+networks:
+  edu-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  postgres_data:
+  redis_data:
