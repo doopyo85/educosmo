@@ -14,6 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabPanes = document.querySelectorAll('.nuguri-tab-pane');
 
     // Chat
+    const chatInput = document.getElementById('nuguriInput');
+    const sendBtn = document.getElementById('nuguriSendBtn');
+    const chatList = document.getElementById('nuguriChatList');
+
     // Secret Chat (if exists)
     const secretInput = document.getElementById('nuguriSecretInput');
     const secretSendBtn = document.getElementById('nuguriSecretSendBtn');
