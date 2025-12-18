@@ -45,13 +45,13 @@ router.get('/api/data', authenticateUser, async (req, res) => {
     console.log(`Template API - 사용할 시트: ${sheetName}`);
 
     // 선택된 시트에서 데이터 로드
-    const data = await getSheetData(`${sheetName}!A2:L`);
-    console.log(`Template API - 메뉴 데이터 로드 완료: ${data.length}개 항목`);
+    const menuData = await getSheetData(`${sheetName}!A2:E`);
+    console.log(`Template API - 메뉴 데이터 로드 완료: ${menuData.length}개 항목`);
 
     res.json({
       success: true,
-      data: data,
-      count: data.length,
+      data: menuData,
+      count: menuData.length,
       sheetName: sheetName // 디버깅용 정보 추가
     });
   } catch (error) {
@@ -200,7 +200,7 @@ router.get('/api-test', authenticateUser, async (req, res) => {
 
     for (const sheet of sheetsToTest) {
       try {
-        const data = await getSheetData(`${sheet}!A2:L100`);
+        const data = await getSheetData(`${sheet}!A2:E100`);
         testResults[sheet] = {
           success: true,
           count: data.length,

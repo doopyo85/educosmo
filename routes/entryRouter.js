@@ -513,12 +513,24 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 });
 
 // =============================================================================
-// 🔥 프로젝트 삭제 API (quotaChecker 용량 반환)
+// 🔥 프로젝트 삭제 API (소프트 삭제 지원 + quotaChecker 용량 반환)
 // =============================================================================
+
+// S3 URL에서 키 추출 헬퍼 함수
+function extractS3KeyFromUrl(s3Url) {
+    if (!s3Url) return null;
+    try {
+        const url = new URL(s3Url);
+        return url.pathname.substring(1); // 앞의 / 제거
+    } catch (e) {
+        return s3Url;
+    }
+}
 
 router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
     try {
         const { projectId } = req.params;
+        const { permanent } = req.query; // ?permanent=true 면 하드 삭제
         const userID = req.session.userID;
         
         if (!projectId) {
@@ -528,7 +540,7 @@ router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
             });
         }
 
-        console.log(`🗑️ [Entry 삭제] 요청: projectId=${projectId}, userID=${userID}`);
+        console.log(`🗑️ [Entry 삭제] 요청: projectId=${projectId}, userID=${userID}, permanent=${permanent}`);
 
         const db = require('../lib_login/db');
         const quotaChecker = require('../lib_storage/quotaChecker');
@@ -551,9 +563,11 @@ router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
         const userId = user.id;
         const centerId = user.centerID;
 
-        // 2. 프로젝트 정보 조회
+        // 2. 프로젝트 정보 조회 (삭제되지 않은 항목만)
         const [project] = await db.queryDatabase(
-            'SELECT id, s3_key, file_size_kb FROM ProjectSubmissions WHERE id = ? AND user_id = ?',
+            `SELECT id, s3_key, s3_url, file_size_kb 
+             FROM ProjectSubmissions 
+             WHERE id = ? AND user_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)`,
             [projectId, userId]
         );
 
@@ -566,36 +580,63 @@ router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
 
         const fileSize = (project.file_size_kb || 0) * 1024;
 
-        // 3. S3에서 파일 삭제
-        if (project.s3_key) {
-            try {
-                await s3Manager.deleteProject(project.s3_key);
-                console.log(`✅ S3 파일 삭제: ${project.s3_key}`);
-            } catch (s3Error) {
-                console.warn(`⚠️ S3 파일 삭제 실패 (무시하고 계속):`, s3Error.message);
+        if (permanent === 'true') {
+            // 🔥 하드 삭제: S3 파일 + DB 레코드 완전 삭제
+            const s3KeyToDelete = project.s3_key || extractS3KeyFromUrl(project.s3_url);
+            if (s3KeyToDelete) {
+                try {
+                    await s3Manager.deleteProject(s3KeyToDelete);
+                    console.log(`✅ S3 파일 삭제: ${s3KeyToDelete}`);
+                } catch (s3Error) {
+                    console.warn(`⚠️ S3 파일 삭제 실패 (무시하고 계속):`, s3Error.message);
+                }
             }
+
+            await db.queryDatabase(
+                'DELETE FROM ProjectSubmissions WHERE id = ? AND user_id = ?',
+                [projectId, userId]
+            );
+            
+            console.log(`✅ DB 하드 삭제 완료: ID ${projectId}`);
+
+            if (fileSize > 0) {
+                await quotaChecker.decreaseUsage(userId, centerId, fileSize, 'entry');
+                console.log(`💾 용량 반환: ${(fileSize / 1024).toFixed(2)} KB`);
+            }
+
+            res.json({
+                success: true,
+                message: '프로젝트가 완전히 삭제되었습니다.',
+                deletedId: projectId,
+                freedSpace: fileSize,
+                deleteType: 'permanent'
+            });
+
+        } else {
+            // 🔥 소프트 삭제: is_deleted = TRUE, deleted_at = NOW()
+            await db.queryDatabase(
+                `UPDATE ProjectSubmissions 
+                 SET is_deleted = TRUE, deleted_at = NOW() 
+                 WHERE id = ? AND user_id = ?`,
+                [projectId, userId]
+            );
+            
+            console.log(`✅ DB 소프트 삭제 완료: ID ${projectId}`);
+
+            // 용량 반환 (소프트 삭제에서도 용량은 반환)
+            if (fileSize > 0) {
+                await quotaChecker.decreaseUsage(userId, centerId, fileSize, 'entry');
+                console.log(`💾 용량 반환: ${(fileSize / 1024).toFixed(2)} KB`);
+            }
+
+            res.json({
+                success: true,
+                message: '프로젝트가 휴지통으로 이동되었습니다.',
+                deletedId: projectId,
+                freedSpace: fileSize,
+                deleteType: 'soft'
+            });
         }
-
-        // 4. DB에서 삭제 (소프트 삭제 또는 하드 삭제)
-        await db.queryDatabase(
-            'DELETE FROM ProjectSubmissions WHERE id = ? AND user_id = ?',
-            [projectId, userId]
-        );
-        
-        console.log(`✅ DB 삭제 완료: ID ${projectId}`);
-
-        // 5. 🔥 용량 반환
-        if (fileSize > 0) {
-            await quotaChecker.decreaseUsage(userId, centerId, fileSize, 'entry');
-            console.log(`💾 용량 반환: ${(fileSize / 1024).toFixed(2)} KB`);
-        }
-
-        res.json({
-            success: true,
-            message: '프로젝트가 삭제되었습니다.',
-            deletedId: projectId,
-            freedSpace: fileSize
-        });
 
     } catch (error) {
         console.error('❌ [Entry 삭제] 오류:', error);
@@ -811,7 +852,7 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
 
         const userId = user.id;
 
-        // 🔥 수정: 파라미터 3개 모두 제공 (user_id, platform, LIMIT)
+        // 🔥 수정: 파라미터 3개 모두 제공 (user_id, platform, LIMIT) + 소프트 삭제 필터
         const query = `
             SELECT 
                 id,
@@ -830,6 +871,7 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
             FROM ProjectSubmissions
             WHERE user_id = ?
               AND platform = ?
+              AND (is_deleted = FALSE OR is_deleted IS NULL)
             ORDER BY created_at DESC 
             LIMIT ?
         `;
@@ -1113,6 +1155,7 @@ router.get('/api/center-usage', authenticateUser, async (req, res) => {
                     MAX(ps.created_at) as last_upload
                 FROM ProjectSubmissions ps
                 WHERE ps.platform = 'entry'
+                  AND (ps.is_deleted = FALSE OR ps.is_deleted IS NULL)
                 GROUP BY ps.center_id
             `;
             params = [];
@@ -1125,7 +1168,9 @@ router.get('/api/center-usage', authenticateUser, async (req, res) => {
                     COUNT(DISTINCT ps.user_id) as user_count,
                     MAX(ps.created_at) as last_upload
                 FROM ProjectSubmissions ps
-                WHERE ps.center_id = ? AND ps.platform = 'entry'
+                WHERE ps.center_id = ? 
+                  AND ps.platform = 'entry'
+                  AND (ps.is_deleted = FALSE OR ps.is_deleted IS NULL)
                 GROUP BY ps.center_id
             `;
             params = [sessionCenterId];
@@ -1186,13 +1231,15 @@ router.get('/api/storage-usage', authenticateUser, async (req, res) => {
             });
         }
         
-        // Entry 프로젝트 통계
+        // Entry 프로젝트 통계 (삭제되지 않은 것만)
         const [entryStats] = await db.queryDatabase(`
             SELECT 
                 COUNT(*) as project_count,
                 COALESCE(SUM(file_size_kb), 0) as total_size_kb
             FROM ProjectSubmissions 
-            WHERE user_id = ? AND platform = 'entry'
+            WHERE user_id = ? 
+              AND platform = 'entry'
+              AND (is_deleted = FALSE OR is_deleted IS NULL)
         `, [user.id]);
         
         // 전체 사용량 (모든 플랫폼)

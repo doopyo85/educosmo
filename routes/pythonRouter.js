@@ -31,8 +31,8 @@ router.get('/api/get-python-data', async (req, res) => {
             }
         }
 
-        // Expanded range to include answerType (Index 8/Col I) and Tags
-        const data = await getSheetData('Python!A2:L100');
+        // Reverted: Menu data only needs A~E
+        const data = await getSheetData('Python!A2:E100');
         console.log(`Python 메뉴 데이터 로드 완료: ${data ? data.length : 0}개 항목`);
 
         res.json({
