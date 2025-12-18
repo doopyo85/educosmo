@@ -3,12 +3,12 @@ const router = express.Router();
 const { authenticateUser, checkPageAccess } = require('../lib_login/authMiddleware');
 
 // 템플릿 페이지 라우트 - template.ejs 사용
-router.get('/', 
+router.get('/',
   authenticateUser,
   checkPageAccess('/template'),
   (req, res) => {
     console.log('템플릿 페이지 요청 - 사용자:', req.session?.userID);
-    
+
     res.render('template', {  // lesson-view가 아닌 template.ejs 사용
       userID: req.session.userID,
       userRole: req.session.role,
@@ -26,10 +26,10 @@ router.get('/api/data', authenticateUser, async (req, res) => {
   try {
     const { pageType } = req.query;
     console.log(`Template API - 메뉴 데이터 요청: pageType=${pageType}`);
-    
+
     // getSheetData 함수 가져오기
     const { getSheetData } = require('../server');
-    
+
     // 페이지 타입에 따라 시트 이름 선택
     let sheetName = 'Template';
     switch (pageType) {
@@ -41,13 +41,13 @@ router.get('/api/data', authenticateUser, async (req, res) => {
       case 'component': sheetName = 'Template'; break; // 테스트용
       default: sheetName = 'Template';
     }
-    
+
     console.log(`Template API - 사용할 시트: ${sheetName}`);
-    
+
     // 선택된 시트에서 데이터 로드
-    const data = await getSheetData(`${sheetName}!A2:E`);
+    const data = await getSheetData(`${sheetName}!A2:L100`);
     console.log(`Template API - 메뉴 데이터 로드 완료: ${data.length}개 항목`);
-    
+
     res.json({
       success: true,
       data: data,
@@ -68,11 +68,11 @@ router.get('/api/problems', authenticateUser, async (req, res) => {
   try {
     const { pageType } = req.query;
     console.log(`Template API - 문제 데이터 요청: pageType=${pageType}`);
-    
+
     const { getSheetData } = require('../server');
     const data = await getSheetData('problems!A2:N');
     console.log(`Template API - 문제 데이터 로드 완료: ${data.length}개 항목`);
-    
+
     res.json({
       success: true,
       data: data,
@@ -88,7 +88,7 @@ router.get('/api/problems', authenticateUser, async (req, res) => {
 });
 
 // 컴포넌트 시스템 테스트 페이지들도 template.ejs 사용
-router.get('/component', 
+router.get('/component',
   authenticateUser,
   checkPageAccess('/template'),
   (req, res) => {
@@ -103,7 +103,7 @@ router.get('/component',
   }
 );
 
-router.get('/python-style', 
+router.get('/python-style',
   authenticateUser,
   checkPageAccess('/template'),
   (req, res) => {
@@ -118,7 +118,7 @@ router.get('/python-style',
   }
 );
 
-router.get('/cert-style', 
+router.get('/cert-style',
   authenticateUser,
   checkPageAccess('/template'),
   (req, res) => {
@@ -133,7 +133,7 @@ router.get('/cert-style',
   }
 );
 
-router.get('/aimath-style', 
+router.get('/aimath-style',
   authenticateUser,
   checkPageAccess('/template'),
   (req, res) => {
@@ -149,7 +149,7 @@ router.get('/aimath-style',
 );
 
 // 🔥 NEW: 데이터분석 스타일 테스트 페이지
-router.get('/dataanalysis-style', 
+router.get('/dataanalysis-style',
   authenticateUser,
   checkPageAccess('/template'),
   (req, res) => {
@@ -177,7 +177,7 @@ router.get('/debug', authenticateUser, (req, res) => {
     nodeEnv: process.env.NODE_ENV,
     availableRoutes: [
       '/template',
-      '/template/component', 
+      '/template/component',
       '/template/python-style',
       '/template/cert-style',
       '/template/aimath-style',
@@ -190,17 +190,17 @@ router.get('/debug', authenticateUser, (req, res) => {
 router.get('/api-test', authenticateUser, async (req, res) => {
   try {
     const { getSheetData } = require('../server');
-    
+
     if (!getSheetData) {
       throw new Error('getSheetData 함수를 찾을 수 없습니다');
     }
-    
+
     const testResults = {};
     const sheetsToTest = ['Template', 'Python', 'Algorithm', 'AIMath', 'Certification', 'DataAnalysis', 'Default']; // 🔥 DataAnalysis 추가
-    
+
     for (const sheet of sheetsToTest) {
       try {
-        const data = await getSheetData(`${sheet}!A2:E`);
+        const data = await getSheetData(`${sheet}!A2:L100`);
         testResults[sheet] = {
           success: true,
           count: data.length,
@@ -213,7 +213,7 @@ router.get('/api-test', authenticateUser, async (req, res) => {
         };
       }
     }
-    
+
     res.json({
       message: 'API 테스트 결과',
       results: testResults

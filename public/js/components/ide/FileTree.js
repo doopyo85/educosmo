@@ -128,10 +128,12 @@ class FileTree {
             color: #c5c5c5; 
             cursor: pointer;
             text-align: left;
+            overflow: hidden; /* Prevent layout shift */
         `;
         // Icon container fixed width 60px to match logo, centered icon
         const iconContainerStyle = "width: 60px; height: 32px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;";
-        const labelStyle = isCollapsed ? "display: none;" : "display: block; font-size: 13px; margin-left: 0px; white-space: nowrap;";
+        // Label with explicit overflow hidden to prevent pushing
+        const labelStyle = isCollapsed ? "display: none;" : "display: block; font-size: 13px; margin-left: 0px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
 
         html += `
             <div class="file-tree-toolbar" style="flex: 0.4; padding: 4px 0; background-color: #252526; display: flex; flex-direction: column; align-items: flex-start; gap: 0px; overflow-y: auto;">
@@ -162,7 +164,7 @@ class FileTree {
                      <div style="${iconContainerStyle}"><i class="bi ${isCollapsed ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}"></i></div>
                     <span style="${labelStyle}">${isCollapsed ? '펼치기' : '접기'}</span>
                 </button>
-            </div>
+             </div>
         `;
 
 
