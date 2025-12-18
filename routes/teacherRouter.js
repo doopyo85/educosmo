@@ -536,7 +536,8 @@ router.get('/student-management/progress', requireTeacher, async (req, res) => {
         role: req.session.role,
         centerID: req.query.centerID || req.session.centerID,
         currentView: 'progress',
-        centers: centers
+        centers: centers,
+        ajax: req.query.ajax
     });
 });
 
@@ -551,7 +552,8 @@ router.get('/student-management/list', requireTeacher, async (req, res) => {
         role: req.session.role,
         centerID: req.query.centerID || req.session.centerID,
         currentView: 'list',
-        centers: centers
+        centers: centers,
+        ajax: req.query.ajax
     });
 });
 
@@ -572,7 +574,8 @@ router.get('/student-management/attendance', requireTeacher, async (req, res) =>
         role: req.session.role,
         centerID: req.query.centerID || req.session.centerID,
         currentView: 'attendance',
-        centers: centers
+        centers: centers,
+        ajax: req.query.ajax
     });
 });
 

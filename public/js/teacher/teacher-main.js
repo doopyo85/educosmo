@@ -1,30 +1,30 @@
 const TeacherMain = {
     currentPage: 'student-management',
-    
+
     init() {
         this.bindEvents();
         this.loadPage('student-management');
     },
-    
+
     bindEvents() {
         $('.menu-item').on('click', (e) => {
             e.preventDefault();
             const $item = $(e.currentTarget);
             const page = $item.data('page');
-            
+
             // 메뉴 활성화
             $('.menu-item').removeClass('active');
             $item.addClass('active');
-            
+
             // 페이지 로드
             this.loadPage(page);
         });
     },
-    
+
     async loadPage(page) {
         this.currentPage = page;
         const $container = $('#content-container');
-        
+
         // 로딩 표시
         $container.html(`
             <div class="loading-message">
@@ -33,14 +33,14 @@ const TeacherMain = {
                 </div>
             </div>
         `);
-        
+
         try {
-            const response = await fetch(`/teacher/${page}`);
-            
+            const response = await fetch(`/teacher/${page}?ajax=true`);
+
             if (response.ok) {
                 const html = await response.text();
                 $container.html(html);
-                
+
                 // 페이지별 초기화
                 this.initPageScript(page);
             } else {
@@ -56,9 +56,9 @@ const TeacherMain = {
             `);
         }
     },
-    
+
     initPageScript(page) {
-        switch(page) {
+        switch (page) {
             case 'student-management':
                 if (window.StudentManagement) {
                     window.StudentManagement.init();

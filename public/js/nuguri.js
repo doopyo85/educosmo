@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         // Delete Button (Mine or Admin)
-        const canDelete = isMine || currentUser.role === 'admin' || currentUser.role === 'manager';
+        const canDelete = isMine || currentUser.role === 'admin';
         if (data.id && canDelete) {
             html += `<span class="delete-msg-btn" title="삭제" style="cursor:pointer; margin-left:5px; font-size: 0.8rem; opacity: 0.5;">&times;</span>`;
         }
