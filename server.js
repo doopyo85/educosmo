@@ -12,7 +12,9 @@ const mime = require('mime-types');
 const fs = require('fs');
 const { google } = require('googleapis');
 const cron = require('node-cron');
+const cron = require('node-cron');
 const bcrypt = require('bcrypt');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 // 설정 파일 불러오기
 const config = require('./config');
@@ -250,6 +252,26 @@ app.use((req, res, next) => {
 });
 
 app.set('trust proxy', 1);
+
+// =====================================================================
+// Jupyter Proxy (Body Parser 이전에 설정 필수)
+// =====================================================================
+const JUPYTER_HOST = process.env.JUPYTER_HOST || 'localhost';
+const JUPYTER_PORT = process.env.JUPYTER_PORT || 8000;
+const jupyterTarget = `http://${JUPYTER_HOST}:${JUPYTER_PORT}`;
+
+console.log(`Setting up Jupyter Proxy to: ${jupyterTarget}`);
+
+app.use('/jupyter', createProxyMiddleware({
+  target: jupyterTarget,
+  changeOrigin: true,
+  ws: true,
+  logLevel: 'debug',
+  onError: (err, req, res) => {
+    console.error('Jupyter Proxy Error:', err);
+    res.status(502).send('Jupyter Proxy Error');
+  }
+}));
 
 // =====================================================================
 // 미들웨어 등록 (최적화된 순서)

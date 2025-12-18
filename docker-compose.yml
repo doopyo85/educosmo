@@ -12,6 +12,8 @@ services:
       - DB_HOST=db
       - REDIS_HOST=redis
       - JUDGE0_API_URL=http://judge0-server:2358
+      - JUPYTER_HOST=jupyter
+      - JUPYTER_PORT=8888
     volumes:
       - .:/app
       - /app/node_modules
@@ -19,6 +21,21 @@ services:
       - db
       - redis
       - judge0-server
+    networks:
+      - edu-network
+
+  # Jupyter Notebook Service
+  jupyter:
+    build: .
+    container_name: educodingnplay-jupyter
+    command: [ "jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''", "--NotebookApp.password=''", "--notebook-dir=/app/jupyter_notebooks", "--NotebookApp.base_url=/jupyter", "--NotebookApp.trust_xheaders=True" ]
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "8888:8888"
+    environment:
+      - JUPYTER_PORT=8888
     networks:
       - edu-network
 
@@ -72,7 +89,7 @@ services:
   judge0-worker:
     image: judge0/judge0:1.13.1
     container_name: judge0-worker
-    command: ["./scripts/workers"]
+    command: [ "./scripts/workers" ]
     environment:
       - REDIS_HOST=judge0-redis
       - REDIS_PORT=6379
@@ -103,7 +120,7 @@ services:
   judge0-redis:
     image: redis:6.0
     container_name: judge0-redis
-    command: ["redis-server", "--appendonly", "yes"]
+    command: [ "redis-server", "--appendonly", "yes" ]
     volumes:
       - redis_data:/data
     networks:

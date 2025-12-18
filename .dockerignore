@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+npm-debug.log
+
+# Jupyter / Data
+jupyter_notebooks
+public/uploads
+*.ipynb_checkpoints
+
+# Environment
+.env
+.env.local
+.env.docker
+
+# Docker
+Dockerfile
+docker-compose.yml
+judge0.conf
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
