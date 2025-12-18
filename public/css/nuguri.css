@@ -139,12 +139,18 @@
     background: none;
     border: none;
     padding: 8px 4px;
+    /* Reduced padding */
     font-size: 14px;
     font-weight: 600;
     color: #888;
     cursor: pointer;
     position: relative;
     transition: color 0.2s;
+    white-space: nowrap;
+    /* Prevent wrapping */
+    flex: 1;
+    /* Distribute space evenly */
+    text-align: center;
 }
 
 .nuguri-tab-btn.active {

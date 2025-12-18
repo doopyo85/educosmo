@@ -14,9 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabPanes = document.querySelectorAll('.nuguri-tab-pane');
 
     // Chat
-    const chatInput = document.getElementById('nuguriInput');
-    const sendBtn = document.getElementById('nuguriSendBtn');
-    const chatList = document.getElementById('nuguriChatList');
+    // Secret Chat (if exists)
+    const secretInput = document.getElementById('nuguriSecretInput');
+    const secretSendBtn = document.getElementById('nuguriSecretSendBtn');
+    const secretChatList = document.getElementById('nuguriSecretChatList');
+
+    // Online Indicator
+    const onlineIndicator = document.getElementById('nuguriOnlineIndicator');
 
     // User Data (from data attributes)
     const container = document.getElementById('nuguri-widget-container');
@@ -68,14 +72,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Send Message
-    sendBtn.addEventListener('click', sendMessage);
+    // Send Message (Public)
+    sendBtn.addEventListener('click', () => sendMessage('public'));
     chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
+        if (e.key === 'Enter') sendMessage('public');
     });
+
+    // Send Message (Secret)
+    if (secretSendBtn) {
+        secretSendBtn.addEventListener('click', () => sendMessage('secret'));
+        secretInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage('secret');
+        });
+    }
 
 
     // --- Functions ---
+    // Workroom Logic
+    function updateWorkroom() {
+        if (!document.getElementById('workroomImg')) return;
+
+        const images = [
+            { src: "sleep_nuguri.webp", text: "자는 중..." },
+            { src: "coffee_nuguri.webp", text: "커피 마시는 중..." },
+            { src: "coding_nuguri.webp", text: "코딩 하는 중..." }
+        ];
+        const random = images[Math.floor(Math.random() * images.length)];
+
+        document.getElementById('workroomImg').src = `/resource/${random.src}`;
+        document.getElementById('workroomStatus').textContent = random.text;
+    }
+    // Update initially and periodically
+    updateWorkroom();
+    setInterval(updateWorkroom, 10000); // Change status every 10s
 
     function toggleModal(show) {
         isOpen = show;
@@ -83,7 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.classList.add('open');
             unreadCount = 0;
             updateBadge();
-            scrollToBottom();
+            scrollToBottom(chatList);
+            if (secretChatList) scrollToBottom(secretChatList);
             chatInput.focus();
         } else {
             modal.classList.remove('open');
@@ -99,11 +129,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function sendMessage() {
-        const text = chatInput.value.trim();
+    function sendMessage(type = 'public') {
+        const input = type === 'public' ? chatInput : secretInput;
+        const text = input.value.trim();
         if (!text) return;
 
         if (socket) {
+            const eventName = type === 'public' ? 'chat_message' : 'secret_chat_message';
             const payload = {
                 text: text,
                 user: currentUser.id,
@@ -111,18 +143,17 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             // Emit to server
-            socket.emit('chat_message', payload);
+            socket.emit(eventName, payload);
 
-            // Optimistic update
-            // appendMessage(payload, true);
-
-            chatInput.value = '';
+            input.value = '';
         }
     }
 
-    function appendMessage(data, isMine) {
+    function appendMessage(targetList, data, isMine) {
+        if (!targetList) return;
+
         // Remove empty state if exists
-        const emptyState = chatList.querySelector('.empty-state');
+        const emptyState = targetList.querySelector('.empty-state');
         if (emptyState) emptyState.remove();
 
         const bubble = document.createElement('div');
@@ -140,12 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         bubble.innerHTML = html;
-        chatList.appendChild(bubble);
-        scrollToBottom();
+        targetList.appendChild(bubble);
+        scrollToBottom(targetList);
     }
 
-    function scrollToBottom() {
-        chatList.scrollTop = chatList.scrollHeight;
+    function scrollToBottom(element) {
+        if (element) element.scrollTop = element.scrollHeight;
     }
 
     function initSocketEvents() {
@@ -155,33 +186,42 @@ document.addEventListener('DOMContentLoaded', () => {
             // Join with user info
             socket.emit('join', {
                 id: currentUser.id,
-                name: currentUser.id, // Can be improved if name is available separately
+                name: currentUser.id,
                 role: currentUser.role,
                 centerID: currentUser.centerID
             });
+
+            // If teacher, join secret room
+            if (currentUser.role === 'teacher' || currentUser.role === 'admin' || currentUser.role === 'manager') {
+                socket.emit('join_secret');
+            }
         });
 
         socket.on('chat_history', (messages) => {
-            // Clear current list to avoid duplicates if reconnecting
             const emptyState = chatList.querySelector('.empty-state');
             if (emptyState) emptyState.remove();
 
-            // Append history
             messages.forEach(msg => {
-                const isMine = msg.user == currentUser.id; // Loose equality
-                appendMessage(msg, isMine);
+                const isMine = msg.user == currentUser.id;
+                appendMessage(chatList, msg, isMine);
             });
-            scrollToBottom();
+            scrollToBottom(chatList);
         });
 
         socket.on('chat_message', (data) => {
-            const isMine = data.user === currentUser.id;
-            appendMessage(data, isMine);
+            const isMine = data.user == currentUser.id;
+            appendMessage(chatList, data, isMine);
 
             if (!isOpen && !isMine) {
                 unreadCount++;
                 updateBadge();
             }
+        });
+
+        // Secret Chat Events
+        socket.on('secret_chat_message', (data) => {
+            const isMine = data.user == currentUser.id;
+            appendMessage(secretChatList, data, isMine);
         });
 
         socket.on('user_list_update', (users) => {
@@ -194,6 +234,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderUserList(users) {
+        // Online Indicator Logic (Green Dot)
+        // If more than 1 user (me + others), show green dot
+        if (users.length > 1) {
+            onlineIndicator.classList.add('show');
+            onlineIndicator.textContent = '❇️'; // Green emoji or check
+        } else {
+            onlineIndicator.classList.remove('show');
+        }
+
         const userListEl = document.getElementById('nuguriUserList');
         const countBadge = document.getElementById('userCountBadge');
 

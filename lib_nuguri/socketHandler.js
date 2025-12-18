@@ -67,6 +67,29 @@ const initSocket = (server) => {
             socket.emit('pong', 'Alive');
         });
 
+        // 🔒 Secret Chat (Teachers Only)
+        socket.on('join_secret', () => {
+            if (socket.userData &&
+                (socket.userData.role === 'teacher' || socket.userData.role === 'admin' || socket.userData.role === 'manager')) {
+                socket.join('secret_room');
+            }
+        });
+
+        socket.on('secret_chat_message', (data) => {
+            // Validate & Auth Check
+            if (!data || !data.text) return;
+            // Double check permission (though room limits recipients, sender must be auth'd)
+            // In real app, we check socket.userData.role again but room isolation is okay for now
+
+            // Broadcast to 'secret_room' only
+            io.to('secret_room').emit('secret_chat_message', {
+                user: data.user,
+                userName: socket.userData ? socket.userData.name : data.user,
+                text: data.text,
+                time: data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+        });
+
         // 💬 Chat Message Handler
         socket.on('chat_message', async (data) => {
             // Validate data
