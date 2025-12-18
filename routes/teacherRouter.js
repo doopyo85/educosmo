@@ -711,7 +711,7 @@ router.get('/api/student-progress', requireTeacher, async (req, res) => {
             ORDER BY u.name
         `;
 
-        const params = teacherRole === 'admin' ? [] : [teacherCenterId];
+
         const students = await db.queryDatabase(query, params);
 
         res.json({
