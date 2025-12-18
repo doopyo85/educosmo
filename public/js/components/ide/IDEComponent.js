@@ -458,34 +458,80 @@ class IDEComponent extends Component {
     const modalBody = document.getElementById('submissionResultBody');
     if (!modalBody) return;
 
-    let html = `<div class="mb-3 text-center">
-        <h4>${data.success ? '<span class="text-success"><i class="bi bi-check-circle"></i> 통과</span>' : '<span class="text-danger"><i class="bi bi-x-circle"></i> 실패</span>'}</h4>
-        <p>총 ${data.total}개 중 ${data.passed}개 테스트 케이스 통과</p>
+    // 1. Summary Header with Progress Bar
+    const passRate = Math.round((data.passed / data.total) * 100);
+    const progressColor = passRate === 100 ? 'bg-success' : (passRate > 50 ? 'bg-warning' : 'bg-danger');
+
+    let html = `
+      <div class="mb-4 text-center">
+        <h3 class="mb-2">
+            ${data.success ?
+        '<span class="badge bg-success rounded-pill px-4"><i class="bi bi-check-lg"></i> 통과</span>' :
+        '<span class="badge bg-danger rounded-pill px-4"><i class="bi bi-x-lg"></i> 실패</span>'}
+        </h3>
+        <p class="text-muted mb-2">총 <strong>${data.total}</strong>개 중 <strong>${data.passed}</strong>개 테스트 케이스 통과</p>
+        <div class="progress" style="height: 10px;">
+          <div class="progress-bar ${progressColor}" role="progressbar" style="width: ${passRate}%" aria-valuenow="${passRate}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
       </div>`;
 
-    html += '<ul class="list-group">';
-    data.results.forEach((r, i) => {
-      const statusClass = r.passed ? 'list-group-item-success' : 'list-group-item-danger';
-      const icon = r.passed ? 'bi-check' : 'bi-x';
+    // 2. Result Table
+    html += `
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered border align-middle">
+          <thead class="table-light text-center">
+            <tr>
+              <th style="width: 10%">No.</th>
+              <th style="width: 30%">입력값 (Stdin)</th>
+              <th style="width: 40%">출력결과 (Stdout / Expected)</th>
+              <th style="width: 20%">판정</th>
+            </tr>
+          </thead>
+          <tbody>`;
 
-      let detail = '';
-      if (!r.passed) {
-        if (r.message) detail += `<br><small>${r.message}</small>`;
-        if (r.expected) detail += `<br><small>Expected: ${r.expected}</small>`;
-        if (r.actual !== undefined) detail += `<br><small>Actual: ${r.actual}</small>`;
-        if (r.error) detail += `<br><small class="text-danger">Error: ${r.error}</small>`;
+    data.results.forEach((r, i) => {
+      const rowClass = r.passed ? '' : 'table-danger';
+      const statusBadge = r.passed ?
+        '<span class="badge bg-success-subtle text-success border border-success-subtle">Success</span>' :
+        '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Fail</span>';
+
+      // Diff Logic for Actual vs Expected
+      let outputDisplay = '';
+      if (r.passed) {
+        outputDisplay = `<div class="text-success small">${r.actual || '(Empty)'}</div>`;
+      } else if (r.error) {
+        outputDisplay = `<div class="text-danger small fw-bold">Error: ${r.error}</div>`;
+      } else {
+        // Show Diff
+        outputDisplay = `
+            <div class="d-flex flex-column gap-1 small">
+                <div class="d-flex">
+                    <span class="badge bg-secondary me-2" style="width:60px">Actual</span>
+                    <span class="text-danger font-monospace text-wrap text-break">${r.actual || '(Empty)'}</span>
+                </div>
+                <div class="d-flex">
+                    <span class="badge bg-info text-dark me-2" style="width:60px">Expect</span>
+                    <span class="text-success font-monospace text-wrap text-break">${r.expected || '(Unknown)'}</span>
+                </div>
+                ${r.message ? `<div class="text-muted fst-italic mt-1">${r.message}</div>` : ''}
+            </div>`;
       }
 
-      html += `<li class="list-group-item ${statusClass} d-flex justify-content-between align-items-center">
-              <div>
-                  <strong>테스트 케이스 ${i + 1}</strong>: ${r.passed ? '통과' : '실패'}
-                  ${detail}
-              </div>
-              <i class="bi ${icon}" style="font-size: 1.5rem;"></i>
-          </li>`;
-    });
-    html += '</ul>';
+      // Mask Hidden Case
+      const inputDisplay = (r.message && r.message.includes('Hidden')) ?
+        '<span class="text-muted fst-italic">Hidden Case</span>' :
+        `<code class="text-primary">${r.input || '(Empty)'}</code>`;
 
+      html += `
+        <tr class="${rowClass}">
+          <td class="text-center fw-bold">${i + 1}</td>
+          <td>${inputDisplay}</td>
+          <td>${outputDisplay}</td>
+          <td class="text-center">${statusBadge}</td>
+        </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
     modalBody.innerHTML = html;
   }
 

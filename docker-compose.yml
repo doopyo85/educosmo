@@ -3,6 +3,7 @@ version: '3.8'
 services:
   # Main Application (Node.js + Jupyter)
   app:
+    image: educoding-app:latest
     build: .
     container_name: educodingnplay-app
     ports:
@@ -24,9 +25,9 @@ services:
     networks:
       - edu-network
 
-  # Jupyter Notebook Service
+  # Jupyter Notebook Service (Reuses app image)
   jupyter:
-    build: .
+    image: educoding-app:latest
     container_name: educodingnplay-jupyter
     command: [ "jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''", "--NotebookApp.password=''", "--notebook-dir=/app/jupyter_notebooks", "--NotebookApp.base_url=/jupyter", "--NotebookApp.trust_xheaders=True" ]
     volumes:
