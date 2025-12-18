@@ -718,7 +718,7 @@ class IDEComponent extends Component {
   setupDownloadButton() {
     // 전체 파일 압축 다운로드? 아니면 현재 파일만?
     // 우선 현재 파일만 다운로드하도록 유지
-    super.setupDownloadButton();
+    // super.setupDownloadButton(); // Parent does not have this method
   }
   // --- Footer Control Methods ---
 
