@@ -8,14 +8,14 @@ class PythonProblemManager {
         this.mockProblems = [
             {
                 id: 1,
-                title: 'Hello Python (Mock)',
-                description: '사용자로부터 입력을 받아 인사말을 출력하세요.',
+                title: 'cospro_3-1',
+                description: '두 숫자를 입력받아 합을 출력하는 프로그램을 작성하세요.',
                 difficulty_level: 1,
                 tags: ['io', 'basic'],
-                starter_code: 'name = input()',
+                starter_code: 'num1, num2 = input("숫자 두 개를 입력하세요 ").split()\nnum1 = int(num1)\nnum2 = int(num2)\nprint( @@@ )',
                 test_cases: [
-                    { input: 'Alice', output: 'Hello, Alice!', is_hidden: false },
-                    { input: 'Bob', output: 'Hello, Bob!', is_hidden: true }
+                    { input: '5 3', output: '8', is_hidden: false },
+                    { input: '10 20', output: '30', is_hidden: true }
                 ]
             }
         ];

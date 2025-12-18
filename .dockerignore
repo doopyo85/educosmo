@@ -29,7 +29,12 @@ judge0.conf
 .DS_Store
 Thumbs.db
 
-# Large Directories
+# Large Directories / Backups
 appinventor-sources
 appinventor
 android-build
+docs
+backup
+imagedata
+*_backup*
+old_version
