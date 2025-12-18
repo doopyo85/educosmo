@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     git \
-#    ffmpeg \  # Uncomment if sound processing needed
+    #    ffmpeg \  # Uncomment if sound processing needed
     && rm -rf /var/lib/apt/lists/*
 
 # Set Timezone to KST
@@ -29,7 +29,7 @@ RUN npm install
 # For Docker, global pip install is often acceptable if it's the only app.
 # But let's be safe and separate if possible, or just install to system python.
 # System python is typically /usr/bin/python3
-RUN pip3 install --no-cache-dir \
+RUN pip3 install --no-cache-dir --break-system-packages \
     jupyter \
     notebook \
     numpy \
