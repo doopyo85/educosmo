@@ -28,3 +28,8 @@ judge0.conf
 # OS
 .DS_Store
 Thumbs.db
+
+# Large Directories
+appinventor-sources
+appinventor
+android-build
