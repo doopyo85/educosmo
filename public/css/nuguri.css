@@ -1,0 +1,338 @@
+/* Nuguri Talk Floating Widget Styles */
+
+#nuguri-widget-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 9999;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+/* Floating Icon */
+.nuguri-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border: 3px solid #ff9f1c; /* Raccoon Orange */
+}
+
+.nuguri-icon:hover {
+    transform: scale(1.1) rotate(-5deg);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.nuguri-icon img {
+    width: 85%;
+    height: 85%;
+    object-fit: contain;
+}
+
+/* Notification Badge on Icon */
+.nuguri-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #ff4757;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid white;
+    transform: scale(0);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.nuguri-badge.show {
+    transform: scale(1);
+}
+
+/* Chat Modal - Aero Glass Style */
+.nuguri-modal {
+    position: absolute;
+    bottom: 90px;
+    right: 0;
+    width: 380px;
+    height: 600px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform-origin: bottom right;
+    transform: scale(0);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease;
+    pointer-events: none; /* Hidden state */
+}
+
+.nuguri-modal.open {
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Modal Header */
+.nuguri-header {
+    height: 60px;
+    background: rgba(255, 255, 255, 0.5);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    justify-content: space-between;
+}
+
+.nuguri-title {
+    font-weight: 700;
+    font-size: 18px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nuguri-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #666;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.nuguri-close:hover {
+    color: #000;
+}
+
+/* Tabs */
+.nuguri-tabs {
+    display: flex;
+    padding: 8px 16px 0;
+    gap: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.nuguri-tab-btn {
+    background: none;
+    border: none;
+    padding: 8px 4px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+}
+
+.nuguri-tab-btn.active {
+    color: #ff9f1c;
+}
+
+.nuguri-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #ff9f1c;
+    border-radius: 2px 2px 0 0;
+}
+
+/* Content Area */
+.nuguri-content {
+    flex: 1;
+    overflow-y: auto;
+    background-color: rgba(249, 250, 251, 0.6);
+    position: relative;
+}
+
+.nuguri-tab-pane {
+    display: none;
+    height: 100%;
+}
+
+.nuguri-tab-pane.active {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Chat Messages */
+.nuguri-chat-list {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    position: relative;
+    word-break: break-word;
+}
+
+.chat-bubble.mine {
+    align-self: flex-end;
+    background-color: #ff9f1c;
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-bubble.others {
+    align-self: flex-start;
+    background-color: white;
+    color: #333;
+    border: 1px solid rgba(0,0,0,0.05);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+}
+
+.chat-meta {
+    font-size: 11px;
+    color: rgba(0,0,0,0.4);
+    margin-top: 4px;
+    display: block;
+}
+
+.chat-bubble.mine .chat-meta {
+    color: rgba(255,255,255,0.7);
+    text-align: right;
+}
+
+/* Input Area */
+.nuguri-input-area {
+    padding: 12px;
+    background: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    gap: 8px;
+}
+
+.nuguri-input {
+    flex: 1;
+    border: 1px solid #eee;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.nuguri-input:focus {
+    border-color: #ff9f1c;
+    background-color: white;
+}
+
+.nuguri-send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #ff9f1c;
+    color: white;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.nuguri-send-btn:hover {
+    background-color: #e68a00;
+}
+
+/* User List */
+.user-list-item {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.user-list-item:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #eee;
+    overflow: hidden;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+}
+
+.user-status {
+    font-size: 12px;
+    color: #2ecc71; /* Online green */
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.user-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #2ecc71;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #aaa;
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 40px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}

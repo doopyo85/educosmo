@@ -263,36 +263,39 @@
 <script defer src="/header.js"></script>
 <script defer src="/js/board-notification.js"></script>
 
-<script>
-    /**
-     * 내 파일 모달 열기 (역할별 자동 경로 선택)
-     */
-    function openMyFiles() {
-        const userRole = '<%= role %>';
-        const modal = new bootstrap.Modal(document.getElementById('myFilesModal'));
-        const iframe = document.getElementById('myFilesFrame');
+<!-- 🦝 너구리톡 위젯 -->
+<%- include('nuguri_widget') %>
 
-        // 🔥 역할별 경로 자동 선택
-        let s3Path;
+    <script>
+        /**
+         * 내 파일 모달 열기 (역할별 자동 경로 선택)
+         */
+        function openMyFiles() {
+            const userRole = '<%= role %>';
+            const modal = new bootstrap.Modal(document.getElementById('myFilesModal'));
+            const iframe = document.getElementById('myFilesFrame');
 
-        if (userRole === 'admin') {
-            s3Path = '/s3/browser';  // Admin은 전체 탐색
-        } else if (userRole === 'teacher' || userRole === 'manager') {
-            s3Path = '/s3/student-files';  // Teacher는 학생 파일
-        } else if (userRole === 'student') {
-            s3Path = '/s3/my-files';  // Student는 본인 파일만
-        } else {
-            s3Path = '/s3/browser';  // 기본값
+            // 🔥 역할별 경로 자동 선택
+            let s3Path;
+
+            if (userRole === 'admin') {
+                s3Path = '/s3/browser';  // Admin은 전체 탐색
+            } else if (userRole === 'teacher' || userRole === 'manager') {
+                s3Path = '/s3/student-files';  // Teacher는 학생 파일
+            } else if (userRole === 'student') {
+                s3Path = '/s3/my-files';  // Student는 본인 파일만
+            } else {
+                s3Path = '/s3/browser';  // 기본값
+            }
+
+            console.log('📂 S3 경로:', s3Path, '(역할:', userRole, ')');
+            iframe.src = s3Path;
+
+            modal.show();
         }
 
-        console.log('📂 S3 경로:', s3Path, '(역할:', userRole, ')');
-        iframe.src = s3Path;
-
-        modal.show();
-    }
-
-    // 모달이 닫힐 때 iframe src 초기화 (메모리 절약)
-    document.getElementById('myFilesModal').addEventListener('hidden.bs.modal', function () {
-        document.getElementById('myFilesFrame').src = '';
-    });
-</script>
+        // 모달이 닫힐 때 iframe src 초기화 (메모리 절약)
+        document.getElementById('myFilesModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('myFilesFrame').src = '';
+        });
+    </script>

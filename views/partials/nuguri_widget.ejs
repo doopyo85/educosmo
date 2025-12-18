@@ -1,0 +1,55 @@
+<link rel="stylesheet" href="/css/nuguri.css">
+
+<div id="nuguri-widget-container">
+    <!-- Chat Modal -->
+    <div class="nuguri-modal" id="nuguriModal">
+        <div class="nuguri-header">
+            <div class="nuguri-title">
+                <img src="https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/thumbs/nuguri.png" width="24"
+                    height="24">
+                너구리톡
+            </div>
+            <button class="nuguri-close" id="closeNuguriBtn"><i class="bi bi-x"></i></button>
+        </div>
+
+        <div class="nuguri-tabs">
+            <button class="nuguri-tab-btn active" data-tab="chat">💬 대화창</button>
+            <button class="nuguri-tab-btn" data-tab="users">👥 접속자 <span id="userCountBadge">(0)</span></button>
+        </div>
+
+        <div class="nuguri-content">
+            <!-- Chat Tab -->
+            <div class="nuguri-tab-pane active" id="pane-chat">
+                <div class="nuguri-chat-list" id="nuguriChatList">
+                    <div class="empty-state">
+                        <i class="bi bi-chat-heart"></i>
+                        <p>너구리톡에 오신 것을 환영합니다!<br>자유롭게 대화를 나눠보세요.</p>
+                    </div>
+                </div>
+                <div class="nuguri-input-area">
+                    <input type="text" class="nuguri-input" id="nuguriInput" placeholder="메시지를 입력하세요..."
+                        autocomplete="off">
+                    <button class="nuguri-send-btn" id="nuguriSendBtn">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div class="nuguri-tab-pane" id="pane-users">
+                <div id="nuguriUserList">
+                    <!-- Users will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Icon -->
+    <div class="nuguri-icon" id="nuguriFloatIcon" title="너구리톡 열기">
+        <img src="https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/thumbs/nuguri.png" alt="Nuguri Talk">
+        <div class="nuguri-badge" id="nuguriUnreadBadge">0</div>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/nuguri.js"></script>

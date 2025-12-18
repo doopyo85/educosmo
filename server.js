@@ -1235,6 +1235,14 @@ const server = app.listen(PORT, () => {
   console.log(`   - ENV: ${process.env.NODE_ENV}`);
 });
 
+// 🔥 Socket.io 초기화
+try {
+  const { initSocket } = require('./lib_nuguri/socketHandler');
+  initSocket(server);
+} catch (err) {
+  console.error('❌ Socket.io 초기화 실패:', err);
+}
+
 // 🔥 우아한 종료 (Graceful Shutdown) - PM2 재시작 시 포트 점유 문제 예방
 // 활성 소켓 추적
 const sockets = new Set();
