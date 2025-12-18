@@ -50,7 +50,7 @@ const initSocket = (server) => {
                     user: msg.author_id, // Use ID for comparison
                     userName: msg.author_name || msg.author,
                     text: msg.title, // 'title' column contains the message text based on router code
-                    time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    time: new Date(msg.created_at).toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: true })
                 })));
             } catch (err) {
                 console.error('Error fetching chat history:', err);
@@ -86,7 +86,7 @@ const initSocket = (server) => {
                 user: data.user,
                 userName: socket.userData ? socket.userData.name : data.user,
                 text: data.text,
-                time: data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                time: data.time || new Date().toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: true })
             });
         });
 
@@ -125,7 +125,7 @@ const initSocket = (server) => {
                     user: data.user,
                     userName: authorName,
                     text: data.text,
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    time: new Date().toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: true })
                 });
 
             } catch (err) {
