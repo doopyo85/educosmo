@@ -23,21 +23,108 @@ document.addEventListener('DOMContentLoaded', () => {
     // Online Indicator
     const onlineIndicator = document.getElementById('nuguriOnlineIndicator');
 
-    // ... (User Data Code) ...
+    // User Data (from data attributes)
+    const container = document.getElementById('nuguri-widget-container');
+    const currentUser = {
+        id: container.dataset.userId || 'Guest',
+        role: container.dataset.userRole || 'guest',
+        centerID: container.dataset.centerId || ''
+    };
 
-    // ... (Socket Setup) ...
+    let isOpen = false;
+    let unreadCount = 0;
 
-    // ... (Event Listeners) ...
+    // --- Socket.io Setup ---
+    let socket;
 
-    // Send Message
-    sendBtn.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
+    try {
+        socket = io({
+            path: '/socket.io'
+        });
+
+        initSocketEvents();
+    } catch (e) {
+        console.error('Socket.io connection failed:', e);
+    }
+
+    // --- Event Listeners ---
+
+    // Toggle Modal
+    floatIcon.addEventListener('click', () => {
+        toggleModal(true);
     });
 
-    // ... (Tabs, Workroom, ToggleModal, etc.) ...
+    closeBtn.addEventListener('click', () => {
+        toggleModal(false);
+    });
+
+    // Tabs
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.tab;
+
+            // UI Update
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabPanes.forEach(p => p.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById(`pane-${target}`).classList.add('active');
+        });
+    });
+
+    // Send Message
+    if (sendBtn) {
+        sendBtn.addEventListener('click', sendMessage);
+    }
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    }
+
+    // --- Functions ---
+    // Workroom Logic
+    function updateWorkroom() {
+        if (!document.getElementById('workroomImg')) return;
+
+        const images = [
+            { src: "sleep_nuguri.webp", text: "자는 중..." },
+            { src: "coffee_nuguri.webp", text: "커피 마시는 중..." },
+            { src: "coding_nuguri.webp", text: "코딩 하는 중..." }
+        ];
+        const random = images[Math.floor(Math.random() * images.length)];
+
+        document.getElementById('workroomImg').src = `/resource/${random.src}`;
+        document.getElementById('workroomStatus').textContent = random.text;
+    }
+    // Update initially and periodically
+    updateWorkroom();
+    setInterval(updateWorkroom, 10000); // Change status every 10s
+
+    function toggleModal(show) {
+        isOpen = show;
+        if (show) {
+            modal.classList.add('open');
+            unreadCount = 0;
+            updateBadge();
+            scrollToBottom(chatList);
+            if (chatInput) chatInput.focus();
+        } else {
+            modal.classList.remove('open');
+        }
+    }
+
+    function updateBadge() {
+        if (unreadCount > 0) {
+            unreadBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            unreadBadge.classList.add('show');
+        } else {
+            unreadBadge.classList.remove('show');
+        }
+    }
 
     function sendMessage() {
+        if (!chatInput) return;
         const text = chatInput.value.trim();
         if (!text) return;
 
@@ -94,9 +181,13 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom(targetList);
     }
 
-    // ... (ScrollToBottom) ...
+    function scrollToBottom(element) {
+        if (element) element.scrollTop = element.scrollHeight;
+    }
 
     function initSocketEvents() {
+        if (!socket) return;
+
         socket.on('connect', () => {
             console.log('✅ Connected to Nuguri Talk');
 
@@ -120,7 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             messages.forEach(msg => {
                 const isMine = msg.user == currentUser.id;
-                // Currently history is only public, but we handle it generally
                 appendMessage(chatList, msg, isMine);
             });
             scrollToBottom(chatList);
@@ -144,37 +234,44 @@ document.addEventListener('DOMContentLoaded', () => {
             appendMessage(chatList, data, isMine);
         });
 
-        // ... (User List, Disconnect) ...
+        socket.on('user_list_update', (users) => {
+            renderUserList(users);
+        });
 
-        function renderUserList(users) {
-            // Online Indicator Logic (Green Dot)
-            // If more than 1 user (me + others), show green dot
-            if (users.length > 1) {
-                onlineIndicator.classList.add('show');
-                onlineIndicator.textContent = '❇️'; // Green emoji or check
-            } else {
-                onlineIndicator.classList.remove('show');
-            }
+        socket.on('disconnect', () => {
+            console.log('❌ Disconnected from Nuguri Talk');
+        });
+    }
 
-            const userListEl = document.getElementById('nuguriUserList');
-            const countBadge = document.getElementById('userCountBadge');
+    function renderUserList(users) {
+        // Online Indicator Logic (Green Dot)
+        // If more than 1 user (me + others), show green dot
+        if (users.length > 1) {
+            onlineIndicator.classList.add('show');
+            onlineIndicator.textContent = '❇️'; // Green emoji or check
+        } else {
+            onlineIndicator.classList.remove('show');
+        }
 
-            // Update Count
-            if (countBadge) countBadge.textContent = `(${users.length})`;
+        const userListEl = document.getElementById('nuguriUserList');
+        const countBadge = document.getElementById('userCountBadge');
 
-            // Clear list
-            userListEl.innerHTML = '';
+        // Update Count
+        if (countBadge) countBadge.textContent = `(${users.length})`;
 
-            if (users.length === 0) {
-                userListEl.innerHTML = '<div class="empty-state"><p>접속자가 없습니다.</p></div>';
-                return;
-            }
+        // Clear list
+        userListEl.innerHTML = '';
 
-            users.forEach(user => {
-                const isMe = user.id === currentUser.id;
-                const item = document.createElement('div');
-                item.className = 'user-list-item';
-                item.innerHTML = `
+        if (users.length === 0) {
+            userListEl.innerHTML = '<div class="empty-state"><p>접속자가 없습니다.</p></div>';
+            return;
+        }
+
+        users.forEach(user => {
+            const isMe = user.id === currentUser.id;
+            const item = document.createElement('div');
+            item.className = 'user-list-item';
+            item.innerHTML = `
                 <div class="user-avatar">
                    <img src="/resource/profiles/default.webp" alt="User">
                 </div>
@@ -186,18 +283,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="user-status">온라인</div>
                 </div>
             `;
-                userListEl.appendChild(item);
-            });
-        }
+            userListEl.appendChild(item);
+        });
+    }
 
-        // Utility
-        function escapeHtml(text) {
-            if (!text) return text;
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-    });
+    // Utility
+    function escapeHtml(text) {
+        if (!text) return text;
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+});
