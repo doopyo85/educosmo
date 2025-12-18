@@ -6,16 +6,16 @@ const recentLogs = new Map();
 
 
 const logUserActivity = async (req, res, next) => {
-    const isAuthRequest = req.path.includes('/auth/login_process') || 
-                          req.path.includes('/logout');
-    
+    const isAuthRequest = req.path.includes('/auth/login_process') ||
+        req.path.includes('/logout');
+
     if (!req.session?.is_logined && !isAuthRequest) {
         return next();
     }
 
     try {
         let userId, centerId;
-        
+
         if (isAuthRequest && req.body?.userID) {
             const sql = `SELECT id, centerID FROM Users WHERE userID = ?`;
             const [user] = await queryDatabase(sql, [req.body.userID]);
@@ -37,12 +37,12 @@ const logUserActivity = async (req, res, next) => {
             const logKey = `${userId}-${req.method}-${req.originalUrl}`;
             const now = Date.now();
             const lastLog = recentLogs.get(logKey);
-            
+
             if (lastLog && (now - lastLog) < 1000) {
                 return next(); // 1초 이내 중복 요청 무시
             }
             recentLogs.set(logKey, now);
-            
+
             // 메모리 관리: 1분 이상 된 항목 삭제
             if (recentLogs.size > 1000) {
                 const cutoff = now - 60000;
@@ -50,14 +50,14 @@ const logUserActivity = async (req, res, next) => {
                     if (time < cutoff) recentLogs.delete(key);
                 }
             }
-            
+
             let status = 'active';
             if (req.originalUrl.includes('login_process')) {
                 status = 'login';
             } else if (req.originalUrl.includes('logout')) {
                 status = 'logout';
             }
-            
+
             await queryDatabase(`
                 INSERT INTO UserActivityLogs 
                 (user_id, center_id, action_type, url, ip_address, user_agent, action_detail, status) 
@@ -94,9 +94,10 @@ function logMenuAccess(req, res, next) {
     // 응답이 완료될 때 로그 기록
     res.on('finish', async () => {
         try {
+            if (!req.session?.userID) return;
             const sql = `SELECT id, centerID FROM Users WHERE userID = ?`;
             const [user] = await queryDatabase(sql, [req.session.userID]);
-            
+
             if (user) {
                 const startTime = menuAccessStartTimes.get(`${req.session.userID}-${url}`);
                 const duration = Math.round((new Date() - startTime) / 1000); // 초 단위

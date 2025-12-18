@@ -2,21 +2,21 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateUser } = require('../../lib_login/authMiddleware');
-const { getSheetData } = require('../../server');
+const { getSheetData } = require('../../lib_google/sheetService');
 
 // 공통 Google 시트 데이터 API - 데이터 전처리 추가
 router.get('/computer', async (req, res) => {
   try {
     const data = await getSheetData('computer!A2:E');
-    
+
     // 데이터 전처리 - 안전한 문자열 변환 및 JSON 직렬화 문제 해결
     const safeData = data.map(row => {
       if (!Array.isArray(row)) return [];
-      
+
       return row.map(cell => {
         // undefined, null 처리
         if (cell === undefined || cell === null) return '';
-        
+
         // 객체인 경우 JSON 문자열로 변환 (안전하게)
         if (typeof cell === 'object') {
           try {
@@ -25,20 +25,20 @@ router.get('/computer', async (req, res) => {
             return '';
           }
         }
-        
+
         // 기본적으로 문자열로 변환
         return String(cell);
       });
     });
-    
+
     console.log('전처리된 데이터 샘플 (첫 항목):', safeData.length > 0 ? safeData[0] : '데이터 없음');
-    
+
     res.json(safeData);
   } catch (error) {
     console.error('Computer 시트 데이터 로드 및 처리 오류:', error);
-    res.status(500).json({ 
-      error: 'computer 시트 오류', 
-      message: error.message 
+    res.status(500).json({
+      error: 'computer 시트 오류',
+      message: error.message
     });
   }
 });
@@ -86,6 +86,7 @@ router.get('/sb3', async (req, res) => {
 router.get('/ent', async (req, res) => {
   try {
     const data = await getSheetData('ent!A2:F');
+    console.log(`✅ ENT Sheet Data Loaded: ${data ? data.length : 0} rows`);
     res.json(data);
   } catch (error) {
     console.error('ent 시트 오류:', error);

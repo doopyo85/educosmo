@@ -10,7 +10,6 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const mime = require('mime-types');
 const fs = require('fs');
-const { google } = require('googleapis');
 const cron = require('node-cron');
 
 const bcrypt = require('bcrypt');
@@ -409,44 +408,10 @@ app.use((req, res, next) => {
 });
 
 // =====================================================================
-// Google Sheets API
+// Google Sheets API using sheetService
 // =====================================================================
 
-let sheets;
-
-async function initGoogleSheets() {
-  sheets = google.sheets({ version: 'v4', auth: config.GOOGLE_API.KEY });
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Google Sheets API 초기화 성공');
-  }
-}
-
-async function getSheetData(range) {
-  if (!sheets) {
-    await initGoogleSheets();
-  }
-
-  try {
-    const requestParams = {
-      spreadsheetId: config.GOOGLE_API.SPREADSHEET_ID,
-      range: range,
-    };
-
-    const response = await sheets.spreadsheets.values.get(requestParams);
-
-    if (!response || !response.data) {
-      console.error('API 응답이 없거나 올바르지 않음:', response);
-      return [];
-    }
-
-    return response.data.values || [];
-  } catch (error) {
-    console.error(`스프레드시트 데이터 로드 오류 (${range}):`, error.message);
-    throw error;
-  }
-}
-
-
+const { getSheetData, initGoogleSheets } = require('./lib_google/sheetService');
 
 // 🔥 센터 목록 로드 및 캐싱
 global.centerMap = new Map();
@@ -467,11 +432,11 @@ async function loadCenterData() {
 }
 
 // 초기화 후 센터 목록 로드 (1시간마다 갱신)
-initGoogleSheets().then(() => {
-  loadCenterData();
-  setInterval(loadCenterData, 3600000);
-});
+// initGoogleSheets is handled internally by getSheetData but explicit init is fine
+loadCenterData();
+setInterval(loadCenterData, 3600000);
 
+// Export for legacy compatibility (though routers should update)
 module.exports = { getSheetData };
 
 // =====================================================================

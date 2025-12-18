@@ -416,22 +416,7 @@ router.post('/submit-solution', authenticateUser, async (req, res) => {
 });
 
 // getSheetData 함수 가져오기
-let getSheetData;
-try {
-  const serverModule = require('../server');
-  getSheetData = serverModule.getSheetData;
-
-  // 함수가 제대로 로드되었는지 확인
-  if (typeof getSheetData !== 'function') {
-    console.error('getSheetData는 함수가 아닙니다!');
-    // 임시 구현
-    getSheetData = async () => [];
-  }
-} catch (error) {
-  console.error('server.js에서 getSheetData 가져오기 실패:', error);
-  // 임시 구현
-  getSheetData = async () => [];
-}
+const { getSheetData } = require('../lib_google/sheetService');
 
 // 사용자 관련 API
 router.get('/get-user', (req, res) => {
@@ -570,22 +555,7 @@ router.get('/get-python-data', authenticateUser, async (req, res) => {
   try {
     console.log('Python 메뉴 데이터 API 요청');
 
-    let getSheetData;
-    try {
-      getSheetData = req.app.get('getSheetData');
-      if (!getSheetData) throw new Error('getSheetData function not found in app');
-    } catch (e) {
-      try {
-        const server = require('../server');
-        getSheetData = server.getSheetData;
-        if (!getSheetData) throw new Error('getSheetData function not found in server module');
-      } catch (e2) {
-        return res.status(500).json({
-          error: '데이터 로드 함수를 찾을 수 없습니다',
-          message: e2.message
-        });
-      }
-    }
+    // getSheetData is imported from sheetService globally
 
     const data = await getSheetData('Python!A2:F100');
     console.log(`Python 메뉴 데이터 로드 완료: ${data.length}개 항목`);
@@ -743,23 +713,7 @@ router.get('/get-dataanalysis-data', authenticateUser, async (req, res) => {
 router.get('/get-problem-data', async (req, res) => {
   try {
     // getSheetData 함수 가져오기
-    let getSheetData;
-    try {
-      getSheetData = req.app.get('getSheetData');
-      if (!getSheetData) throw new Error('getSheetData function not found in app');
-    } catch (e) {
-      console.log('app에서 getSheetData 로드 실패, 직접 import 시도:', e.message);
-      try {
-        const server = require('../server');
-        getSheetData = server.getSheetData;
-        if (!getSheetData) throw new Error('getSheetData function not found in server module');
-      } catch (e2) {
-        return res.status(500).json({
-          error: '데이터 로드 함수를 찾을 수 없습니다',
-          message: e2.message
-        });
-      }
-    }
+    // getSheetData is imported from sheetService globally
 
     // 🔥 수정: 새로운 구조로 N열까지 데이터 가져오기 (예제파일URL 추가)
     const data = await getSheetData('problems!A2:N');
@@ -909,23 +863,7 @@ router.get('/get-quiz-exams', authenticateUser, async (req, res) => {
   try {
     console.log('퀴즈 시험지 목록 요청 받음');
 
-    // getSheetData 함수 가져오기
-    let getSheetData;
-    try {
-      getSheetData = req.app.get('getSheetData');
-      if (!getSheetData) throw new Error('getSheetData function not found in app');
-    } catch (e) {
-      try {
-        const server = require('../server');
-        getSheetData = server.getSheetData;
-        if (!getSheetData) throw new Error('getSheetData function not found in server module');
-      } catch (e2) {
-        return res.status(500).json({
-          error: '데이터 로드 함수를 찾을 수 없습니다',
-          message: e2.message
-        });
-      }
-    }
+    // getSheetData is imported from sheetService globally
 
     // problems 시트에서 시험지 목록 가져오기 (새로운 구조 N열까지)
     const problemsData = await getSheetData('problems!A2:N500');
@@ -1132,23 +1070,7 @@ router.get('/get-explanation-md', authenticateUser, async (req, res) => {
 
     console.log('조회할 해설:', examName, formattedProblemNumber);
 
-    // getSheetData 함수 가져오기
-    let getSheetData;
-    try {
-      getSheetData = req.app.get('getSheetData');
-      if (!getSheetData) throw new Error('getSheetData function not found in app');
-    } catch (e) {
-      try {
-        const server = require('../server');
-        getSheetData = server.getSheetData;
-        if (!getSheetData) throw new Error('getSheetData function not found in server module');
-      } catch (e2) {
-        return res.status(500).json({
-          error: '데이터 로드 함수를 찾을 수 없습니다',
-          message: e2.message
-        });
-      }
-    }
+    // getSheetData is imported from sheetService globally
 
     // 문제 데이터에서 해설 파일명 찾기 (H열 = 인덱스 7, 새로운 구조)
     const allProblemData = await getSheetData('problems!A2:N500');
