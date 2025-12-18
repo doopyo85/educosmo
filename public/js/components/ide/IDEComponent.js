@@ -458,80 +458,214 @@ class IDEComponent extends Component {
     const modalBody = document.getElementById('submissionResultBody');
     if (!modalBody) return;
 
-    // 1. Summary Header with Progress Bar
+    // 1. Calculate Stats
     const passRate = Math.round((data.passed / data.total) * 100);
-    const progressColor = passRate === 100 ? 'bg-success' : (passRate > 50 ? 'bg-warning' : 'bg-danger');
+    const isSuccess = data.success;
+    const progressColor = isSuccess ? '#34c759' : (passRate > 50 ? '#ff9f0a' : '#ff3b30'); // Apple Green, Orange, Red
 
+    // 2. Apple Style CSS (Injected for scoped usage)
+    const style = `
+      <style>
+        .apple-container {
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          color: #1d1d1f;
+        }
+        .apple-card {
+          background: #ffffff;
+          border-radius: 18px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+          overflow: hidden;
+          border: 1px solid rgba(0,0,0,0.04);
+        }
+        .apple-header {
+          padding: 40px 20px 30px;
+          text-align: center;
+          background: linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%);
+          border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        .apple-status-text {
+          font-size: 28px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          margin-top: 15px;
+          margin-bottom: 5px;
+          color: #1d1d1f;
+        }
+        .apple-subtext {
+          font-size: 15px;
+          color: #86868b;
+          font-weight: 500;
+        }
+        .apple-list {
+          padding: 0;
+          margin: 0;
+          list-style: none;
+        }
+        .apple-list-item {
+          padding: 24px;
+          border-bottom: 1px solid rgba(0,0,0,0.06);
+          display: flex;
+          gap: 20px;
+          align-items: flex-start;
+          transition: background 0.2s;
+        }
+        .apple-list-item:last-child { border-bottom: none; }
+        .apple-list-item:hover { background: #fafafa; }
+        
+        .apple-case-badge {
+          font-size: 11px;
+          font-weight: 600;
+          color: #86868b;
+          text-transform: uppercase;
+          background: #f5f5f7;
+          padding: 4px 8px;
+          border-radius: 6px;
+          min-width: 60px;
+          text-align: center;
+        }
+        
+        .apple-code-box {
+          font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
+          background: #f5f5f7;
+          border-radius: 8px;
+          padding: 8px 12px;
+          font-size: 13px;
+          color: #1d1d1f;
+          margin-top: 6px;
+          word-break: break-all;
+        }
+        .apple-label {
+          font-size: 11px;
+          font-weight: 600;
+          color: #86868b;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          margin-bottom: 4px;
+          display: block;
+        }
+        .apple-diff-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .apple-diff-row {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .apple-diff-label {
+            width: 60px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #86868b;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .apple-diff-val {
+            font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
+            flex: 1;
+        }
+        .val-error { color: #ff3b30; }
+        .val-success { color: #34c759; }
+        .progress-apple {
+            height: 6px;
+            background: #f2f2f7;
+            border-radius: 3px;
+            margin-top: 20px;
+            overflow: hidden;
+            width: 60%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .progress-bar-apple {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease-out;
+        }
+      </style>`;
+
+    // 3. Construct HTML
     let html = `
-      <div class="mb-4 text-center">
-        <h3 class="mb-2">
-            ${data.success ?
-        '<span class="badge bg-success rounded-pill px-4"><i class="bi bi-check-lg"></i> 통과</span>' :
-        '<span class="badge bg-danger rounded-pill px-4"><i class="bi bi-x-lg"></i> 실패</span>'}
-        </h3>
-        <p class="text-muted mb-2">총 <strong>${data.total}</strong>개 중 <strong>${data.passed}</strong>개 테스트 케이스 통과</p>
-        <div class="progress" style="height: 10px;">
-          <div class="progress-bar ${progressColor}" role="progressbar" style="width: ${passRate}%" aria-valuenow="${passRate}" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-      </div>`;
+      ${style}
+      <div class="apple-container">
+          <div class="apple-card">
+              <!-- Header -->
+              <div class="apple-header">
+                  <div style="font-size: 52px; color: ${progressColor};">
+                      <i class="bi ${isSuccess ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}"></i>
+                  </div>
+                  <div class="apple-status-text">${isSuccess ? '성공' : '실패'}</div>
+                  <div class="apple-subtext">총 ${data.total}개 중 ${data.passed}개 테스트 케이스 통과</div>
+                  
+                  <div class="progress-apple">
+                      <div class="progress-bar-apple" style="width: ${passRate}%; background: ${progressColor};"></div>
+                  </div>
+              </div>
 
-    // 2. Result Table
-    html += `
-      <div class="table-responsive">
-        <table class="table table-hover table-bordered border align-middle">
-          <thead class="table-light text-center">
-            <tr>
-              <th style="width: 10%">No.</th>
-              <th style="width: 30%">입력값 (Stdin)</th>
-              <th style="width: 40%">출력결과 (Stdout / Expected)</th>
-              <th style="width: 20%">판정</th>
-            </tr>
-          </thead>
-          <tbody>`;
+              <!-- List -->
+              <div class="apple-list">`;
 
     data.results.forEach((r, i) => {
-      const rowClass = r.passed ? '' : 'table-danger';
-      const statusBadge = r.passed ?
-        '<span class="badge bg-success-subtle text-success border border-success-subtle">Success</span>' :
-        '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Fail</span>';
+      const statusIcon = r.passed ?
+        `<i class="bi bi-check-circle-fill" style="color: #34c759; font-size: 20px;"></i>` :
+        `<i class="bi bi-x-circle-fill" style="color: #ff3b30; font-size: 20px;"></i>`;
 
-      // Diff Logic for Actual vs Expected
+      // Input Display
+      const inputDisplay = (r.message && r.message.includes('Hidden')) ?
+        '<span style="color: #86868b; font-style: italic;">Hidden Case</span>' :
+        `<div class="apple-code-box">${r.input || ''}</div>`;
+
+      // Output Display
       let outputDisplay = '';
       if (r.passed) {
-        outputDisplay = `<div class="text-success small">${r.actual || '(Empty)'}</div>`;
-      } else if (r.error) {
-        outputDisplay = `<div class="text-danger small fw-bold">Error: ${r.error}</div>`;
-      } else {
-        // Show Diff
+        // Success Case
         outputDisplay = `
-            <div class="d-flex flex-column gap-1 small">
-                <div class="d-flex">
-                    <span class="badge bg-secondary me-2" style="width:60px">Actual</span>
-                    <span class="text-danger font-monospace text-wrap text-break">${r.actual || '(Empty)'}</span>
+            <div>
+                <span class="apple-label">Output</span>
+                <div class="apple-code-box text-success" style="background:#f0fff4; color:#34c759;">
+                    ${r.actual || '(Empty)'}
                 </div>
-                <div class="d-flex">
-                    <span class="badge bg-info text-dark me-2" style="width:60px">Expect</span>
-                    <span class="text-success font-monospace text-wrap text-break">${r.expected || '(Unknown)'}</span>
-                </div>
-                ${r.message ? `<div class="text-muted fst-italic mt-1">${r.message}</div>` : ''}
             </div>`;
+      } else {
+        // Fail Case (Diff)
+        if (r.error) {
+          outputDisplay = `<div class="apple-code-box" style="background:#fff0f0; color:#ff3b30;">${r.error}</div>`;
+        } else {
+          outputDisplay = `
+                <div class="apple-diff-box">
+                    <div class="apple-diff-row">
+                        <span class="apple-diff-label">ACTUAL</span>
+                        <span class="apple-diff-val val-error">${r.actual || '(Empty)'}</span>
+                    </div>
+                    <div class="apple-diff-row">
+                        <span class="apple-diff-label">EXPECT</span>
+                        <span class="apple-diff-val val-success">${r.expected || '(Unknown)'}</span>
+                    </div>
+                </div>`;
+        }
       }
 
-      // Mask Hidden Case
-      const inputDisplay = (r.message && r.message.includes('Hidden')) ?
-        '<span class="text-muted fst-italic">Hidden Case</span>' :
-        `<code class="text-primary">${r.input || '(Empty)'}</code>`;
-
       html += `
-        <tr class="${rowClass}">
-          <td class="text-center fw-bold">${i + 1}</td>
-          <td>${inputDisplay}</td>
-          <td>${outputDisplay}</td>
-          <td class="text-center">${statusBadge}</td>
-        </tr>`;
+        <div class="apple-list-item">
+            <div class="d-flex flex-column align-items-center gap-2 pt-1">
+                <span class="apple-case-badge">CASE ${i + 1}</span>
+                ${statusIcon}
+            </div>
+            
+            <div style="flex: 1;">
+                <div class="mb-3">
+                    <span class="apple-label">Input</span>
+                    ${inputDisplay}
+                </div>
+                ${outputDisplay}
+                ${r.message ? `<div class="mt-2" style="font-size:12px; color:#86868b;">${r.message}</div>` : ''}
+            </div>
+        </div>`;
     });
 
-    html += `</tbody></table></div>`;
+    html += `</div></div></div>`;
     modalBody.innerHTML = html;
   }
 
