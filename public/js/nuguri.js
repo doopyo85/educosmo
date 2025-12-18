@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Toggle Modal
     floatIcon.addEventListener('click', () => {
-        toggleModal(true);
+        toggleModal(!isOpen);
     });
 
     closeBtn.addEventListener('click', () => {
@@ -164,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         bubble.className = bubbleClass;
+        if (data.id) bubble.dataset.id = data.id; // Store ID
 
         let html = '';
         if (!isMine) {
@@ -176,7 +177,25 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="chat-meta">${data.time}</span>
         `;
 
+        // Delete Button (Mine or Admin)
+        const canDelete = isMine || currentUser.role === 'admin' || currentUser.role === 'manager';
+        if (data.id && canDelete) {
+            html += `<span class="delete-msg-btn" title="삭제" style="cursor:pointer; margin-left:5px; font-size: 0.8rem; opacity: 0.5;">&times;</span>`;
+        }
+
         bubble.innerHTML = html;
+
+        // Attach Delete Handler
+        const deleteBtn = bubble.querySelector('.delete-msg-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm('메시지를 삭제하시겠습니까?')) {
+                    socket.emit('delete_message', { id: data.id });
+                }
+            });
+        }
+
         targetList.appendChild(bubble);
         scrollToBottom(targetList);
     }
@@ -232,6 +251,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const isMine = data.user == currentUser.id;
             data.type = 'secret'; // Mark as secret
             appendMessage(chatList, data, isMine);
+        });
+
+        socket.on('message_deleted', (data) => {
+            if (!data || !data.id) return;
+            const bubble = chatList.querySelector(`.chat-bubble[data-id="${data.id}"]`);
+            if (bubble) {
+                bubble.remove();
+            }
         });
 
         socket.on('user_list_update', (users) => {

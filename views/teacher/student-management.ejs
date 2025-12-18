@@ -76,17 +76,17 @@
                         <i class="bi bi-people me-2"></i> 학생 관리
                     </div>
                     <div class="d-flex flex-column gap-1">
-                        <a href="/teacher/student-management/progress"
+                        <a href="/teacher/student-management/progress<%= typeof centerID !== 'undefined' ? '?centerID=' + centerID : '' %>"
                             class="board-category-item ps-5 py-2 <%= typeof currentView !== 'undefined' && currentView === 'progress' ? 'active' : '' %>"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             학습 진도
                         </a>
-                        <a href="/teacher/student-management/list"
+                        <a href="/teacher/student-management/list<%= typeof centerID !== 'undefined' ? '?centerID=' + centerID : '' %>"
                             class="board-category-item ps-5 py-2 <%= typeof currentView !== 'undefined' && currentView === 'list' ? 'active' : '' %>"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             학생 목록
                         </a>
-                        <a href="/teacher/student-management/attendance"
+                        <a href="/teacher/student-management/attendance<%= typeof centerID !== 'undefined' ? '?centerID=' + centerID : '' %>"
                             class="board-category-item ps-5 py-2 <%= typeof currentView !== 'undefined' && currentView === 'attendance' ? 'active' : '' %>"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             출석부
@@ -148,47 +148,45 @@
                                         onclick="StudentManagement.nextMonth()">
                                         <i class="bi bi-chevron-right"></i>
                                     </button>
-
-                                    <!-- 🔥 Admin Center Selector -->
-                                    <% if (role==='admin' && typeof centers !=='undefined' && centers.length> 0) { %>
-                                        <div class="ms-3">
-                                            <select id="centerSelect" class="form-select form-select-sm"
-                                                style="width: 150px;"
-                                                onchange="StudentManagement.changeCenter(this.value)">
-                                                <% centers.forEach(function(center) { %>
-                                                    <option value="<%= center.id %>" <%=typeof centerID !=='undefined'
-                                                        && center.id==centerID ? 'selected' : '' %>>
-                                                        <%= center.name %>
-                                                    </option>
-                                                    <% }); %>
-                                            </select>
-                                        </div>
-                                        <% } %>
                                 </div>
                             </div>
 
                             <!-- Right Group: Controls -->
                             <div class="header-controls">
-                                <!-- Add Button (List Only) -->
-                                <button class="btn btn-primary rounded-pill btn-sm px-3" id="addStudentBtn"
-                                    style="<%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'display: none;' %>">
-                                    <i class="bi bi-person-plus me-1"></i> 추가
-                                </button>
+                                <!-- 🔥 Admin Center Selector (Moved Here) -->
+                                <% if (role==='admin' && typeof centers !=='undefined' && centers.length> 0) { %>
+                                    <div class="me-2">
+                                        <select id="centerSelect" class="form-select form-select-sm"
+                                            style="width: 150px;" onchange="StudentManagement.changeCenter(this.value)">
+                                            <% centers.forEach(function(center) { %>
+                                                <option value="<%= center.id %>" <%=typeof centerID !=='undefined' &&
+                                                    center.id==centerID ? 'selected' : '' %>>
+                                                    <%= center.name %>
+                                                </option>
+                                                <% }); %>
+                                        </select>
+                                    </div>
+                                    <% } %>
+                                        <!-- Add Button (List Only) -->
+                                        <button class="btn btn-primary rounded-pill btn-sm px-3" id="addStudentBtn"
+                                            style="<%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'display: none;' %>">
+                                            <i class="bi bi-person-plus me-1"></i> 추가
+                                        </button>
 
-                                <!-- Search Inputs -->
-                                <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'progress' ? '' : 'd-none' %>"
-                                    id="progressSearchWrapper">
-                                    <i class="bi bi-search search-icon"></i>
-                                    <input type="text" id="progressSearch" class="form-control"
-                                        placeholder="학생 이름/아이디 검색..." />
-                                </div>
+                                        <!-- Search Inputs -->
+                                        <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'progress' ? '' : 'd-none' %>"
+                                            id="progressSearchWrapper">
+                                            <i class="bi bi-search search-icon"></i>
+                                            <input type="text" id="progressSearch" class="form-control"
+                                                placeholder="학생 이름/아이디 검색..." />
+                                        </div>
 
-                                <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'd-none' %>"
-                                    id="studentSearchWrapper">
-                                    <i class="bi bi-search search-icon"></i>
-                                    <input type="text" id="studentSearch" class="form-control"
-                                        placeholder="학생 이름/아이디 검색..." />
-                                </div>
+                                        <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'd-none' %>"
+                                            id="studentSearchWrapper">
+                                            <i class="bi bi-search search-icon"></i>
+                                            <input type="text" id="studentSearch" class="form-control"
+                                                placeholder="학생 이름/아이디 검색..." />
+                                        </div>
                             </div>
                         </div>
 

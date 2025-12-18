@@ -99,7 +99,13 @@ const StudentManagement = {
     async loadStudents() {
         console.log('🔄 Fetching student list...');
         try {
-            const response = await fetch('/teacher/api/students');
+            // Check for centerID in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const centerID = urlParams.get('centerID');
+            let fetchUrl = '/teacher/api/students';
+            if (centerID) fetchUrl += `?centerID=${centerID}`;
+
+            const response = await fetch(fetchUrl);
             const data = await response.json();
             console.log('✅ Student list loaded:', data.success, 'Count:', data.students ? data.students.length : 0);
 
@@ -117,7 +123,13 @@ const StudentManagement = {
 
     async loadProgress() {
         try {
-            const response = await fetch('/teacher/api/student-progress');
+            // Check for centerID in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const centerID = urlParams.get('centerID');
+            let fetchUrl = '/teacher/api/student-progress';
+            if (centerID) fetchUrl += `?centerID=${centerID}`;
+
+            const response = await fetch(fetchUrl);
             const data = await response.json();
 
             if (data.success) {

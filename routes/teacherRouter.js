@@ -80,18 +80,36 @@ router.get('/api/students', requireTeacher, async (req, res) => {
         let query, params;
 
         if (teacherRole === 'admin') {
-            query = `
-                SELECT 
-                    u.id, u.userID, u.name, u.email, u.phone, u.birthdate, 
-                    u.created_at, u.profile_image, u.centerID,
-                    MAX(ual.created_at) AS last_access
-                FROM Users u
-                LEFT JOIN UserActivityLogs ual ON ual.user_id = u.id
-                WHERE u.role = 'student'
-                GROUP BY u.id
-                ORDER BY u.created_at DESC
-            `;
-            params = [];
+            const filterCenterId = req.query.centerID;
+            if (filterCenterId) {
+                // Admin filtering by specific center
+                query = `
+                    SELECT 
+                        u.id, u.userID, u.name, u.email, u.phone, u.birthdate, 
+                        u.created_at, u.profile_image, u.centerID,
+                        MAX(ual.created_at) AS last_access
+                    FROM Users u
+                    LEFT JOIN UserActivityLogs ual ON ual.user_id = u.id
+                    WHERE u.role = 'student' AND u.centerID = ?
+                    GROUP BY u.id
+                    ORDER BY u.created_at DESC
+                `;
+                params = [filterCenterId];
+            } else {
+                // Admin viewing all students
+                query = `
+                    SELECT 
+                        u.id, u.userID, u.name, u.email, u.phone, u.birthdate, 
+                        u.created_at, u.profile_image, u.centerID,
+                        MAX(ual.created_at) AS last_access
+                    FROM Users u
+                    LEFT JOIN UserActivityLogs ual ON ual.user_id = u.id
+                    WHERE u.role = 'student'
+                    GROUP BY u.id
+                    ORDER BY u.created_at DESC
+                `;
+                params = [];
+            }
         } else {
             query = `
                 SELECT 
@@ -507,22 +525,33 @@ router.get('/student-management', requireTeacher, (req, res) => {
 });
 
 // 학생 관리 - 학습 진도
-router.get('/student-management/progress', requireTeacher, (req, res) => {
+// 학생 관리 - 학습 진도
+router.get('/student-management/progress', requireTeacher, async (req, res) => {
+    let centers = [];
+    if (req.session.role === 'admin') {
+        try { centers = await db.queryDatabase('SELECT id, name FROM Centers ORDER BY name'); } catch (e) { }
+    }
     res.render('teacher/student-management', {
         userID: req.session.userID,
         role: req.session.role,
-        centerID: req.session.centerID,
-        currentView: 'progress'
+        centerID: req.query.centerID || req.session.centerID,
+        currentView: 'progress',
+        centers: centers
     });
 });
 
 // 학생 관리 - 학생 목록
-router.get('/student-management/list', requireTeacher, (req, res) => {
+router.get('/student-management/list', requireTeacher, async (req, res) => {
+    let centers = [];
+    if (req.session.role === 'admin') {
+        try { centers = await db.queryDatabase('SELECT id, name FROM Centers ORDER BY name'); } catch (e) { }
+    }
     res.render('teacher/student-management', {
         userID: req.session.userID,
         role: req.session.role,
-        centerID: req.session.centerID,
-        currentView: 'list'
+        centerID: req.query.centerID || req.session.centerID,
+        currentView: 'list',
+        centers: centers
     });
 });
 
@@ -620,9 +649,20 @@ router.get('/api/student-progress', requireTeacher, async (req, res) => {
         const teacherCenterId = req.session.centerID;
         const teacherRole = req.session.role;
 
-        const whereClause = teacherRole === 'admin'
-            ? "WHERE u.role = 'student'"
-            : "WHERE u.role = 'student' AND u.centerID = ?";
+        let whereClause = "WHERE u.role = 'student' AND u.centerID = ?";
+        let params = [teacherCenterId];
+
+        if (teacherRole === 'admin') {
+            const filterCenterId = req.query.centerID;
+            if (filterCenterId) {
+                whereClause = "WHERE u.role = 'student' AND u.centerID = ?";
+                params = [filterCenterId];
+            } else {
+                whereClause = "WHERE u.role = 'student'";
+                params = [];
+            }
+        }
+
         const query = `
             SELECT 
                 u.id AS user_id,

@@ -47,6 +47,7 @@ const initSocket = (server) => {
 
                 // Reverse to show oldest first in chat flow
                 socket.emit('chat_history', history.reverse().map(msg => ({
+                    id: msg.id,
                     user: msg.author_id, // Use ID for comparison
                     userName: msg.author_name || msg.author,
                     text: msg.title, // 'title' column contains the message text based on router code
@@ -90,6 +91,32 @@ const initSocket = (server) => {
             });
         });
 
+        // 🗑️ Delete Message Handler
+        socket.on('delete_message', async (data) => {
+            if (!socket.userData) return;
+            const messageId = data.id;
+            const userId = socket.userData.id; // String ID
+            const userRole = socket.userData.role;
+
+            try {
+                // Check Message Ownership
+                const msg = await db.queryDatabase('SELECT author_id FROM nuguritalk_posts WHERE id = ?', [messageId]);
+                if (!msg || msg.length === 0) return;
+
+                // Resolve integer ID for comparison
+                const userResult = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [userId]);
+                if (!userResult || userResult.length === 0) return;
+                const userIntId = userResult[0].id;
+
+                if (userRole === 'admin' || userRole === 'manager' || msg[0].author_id === userIntId) {
+                    await db.queryDatabase('DELETE FROM nuguritalk_posts WHERE id = ?', [messageId]);
+                    io.emit('message_deleted', { id: messageId });
+                }
+            } catch (e) {
+                console.error('Delete message error:', e);
+            }
+        });
+
         // 💬 Chat Message Handler
         socket.on('chat_message', async (data) => {
             // Validate data
@@ -115,13 +142,14 @@ const initSocket = (server) => {
 
                 const userIntId = userResult[0].id;
 
-                await db.queryDatabase(`
+                const result = await db.queryDatabase(`
                     INSERT INTO nuguritalk_posts (title, content, author, author_id)
                     VALUES (?, ?, ?, ?)
                 `, [data.text, data.text, authorName, userIntId]);
 
                 // Broadcast
                 io.emit('chat_message', {
+                    id: result.insertId,
                     user: data.user,
                     userName: authorName,
                     text: data.text,

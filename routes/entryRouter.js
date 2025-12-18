@@ -342,14 +342,6 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
             });
         }
 
-        console.log('💾 [Entry 저장] 요청:', {
-            userID,
-            projectName,
-            isUpdate,
-            projectId,
-            saveType: saveType || 'projects'
-        });
-
         const db = require('../lib_login/db');
         const quotaChecker = require('../lib_storage/quotaChecker');
         const S3Manager = require('../lib_storage/s3Manager');
@@ -370,6 +362,39 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 
         const userId = user.id;
         const centerId = clientCenterID || user.centerID || req.session.centerID;
+        const actualSaveType = saveType || 'projects';
+
+        // 🔥 자동저장 특별 처리: 기존 autosave 레코드가 있으면 UPDATE로 전환
+        let effectiveIsUpdate = isUpdate;
+        let effectiveProjectId = projectId;
+
+        if (actualSaveType === 'autosave') {
+            // 해당 사용자의 기존 autosave 레코드 검색
+            const existingAutosave = await db.queryDatabase(
+                `SELECT id, file_size_kb FROM ProjectSubmissions 
+                 WHERE user_id = ? AND platform = 'entry' AND save_type = 'autosave'
+                   AND (is_deleted = FALSE OR is_deleted IS NULL)
+                 ORDER BY updated_at DESC LIMIT 1`,
+                [userId]
+            );
+            
+            if (existingAutosave.length > 0) {
+                // 기존 autosave가 있으면 UPDATE 모드로 전환
+                effectiveIsUpdate = true;
+                effectiveProjectId = existingAutosave[0].id;
+                console.log(`🔄 [자동저장] 기존 autosave 발견 (ID: ${effectiveProjectId}), UPDATE 모드로 전환`);
+            } else {
+                console.log(`➕ [자동저장] 기존 autosave 없음, 새로 생성`);
+            }
+        }
+
+        console.log('💾 [Entry 저장] 요청:', {
+            userID,
+            projectName,
+            isUpdate: effectiveIsUpdate,
+            projectId: effectiveProjectId,
+            saveType: actualSaveType
+        });
 
         // 2. 프로젝트 데이터 → JSON → Buffer
         const projectJson = JSON.stringify(projectData);
@@ -380,11 +405,11 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 
         // 3. 🔥 용량 체크 (quotaChecker)
         let oldFileSize = 0;
-        if (isUpdate && projectId) {
+        if (effectiveIsUpdate && effectiveProjectId) {
             // 덮어쓰기인 경우 기존 파일 크기 조회
             const [oldProject] = await db.queryDatabase(
                 'SELECT file_size_kb FROM ProjectSubmissions WHERE id = ? AND user_id = ?',
-                [projectId, userId]
+                [effectiveProjectId, userId]
             );
             if (oldProject) {
                 oldFileSize = (oldProject.file_size_kb || 0) * 1024;
@@ -411,7 +436,6 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 
         // 4. S3 키 생성 (정책 준수: users/{userID}/{platform}/{saveType}/)
         const timestamp = Date.now();
-        const actualSaveType = saveType || 'projects';
         const safeName = (projectName || 'project').replace(/[^a-zA-Z0-9가-힣_-]/g, '_');
         const fileName = `${safeName}_${timestamp}.ent`;
         const s3Key = `users/${userID}/entry/${actualSaveType}/${fileName}`;
@@ -432,7 +456,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
         }, 0) || 0;
         const spritesCount = projectData.objects?.length || 0;
 
-        if (isUpdate && projectId) {
+        if (effectiveIsUpdate && effectiveProjectId) {
             // 덮어쓰기: 기존 레코드 업데이트
             await db.queryDatabase(`
                 UPDATE ProjectSubmissions 
@@ -451,11 +475,11 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
                 Math.ceil(fileSize / 1024),
                 blocksCount,
                 spritesCount,
-                projectId,
+                effectiveProjectId,
                 userId
             ]);
             
-            dbProjectId = projectId;
+            dbProjectId = effectiveProjectId;
             console.log(`✅ DB 업데이트 완료: ID ${dbProjectId}`);
 
             // 용량 차이 업데이트
@@ -500,7 +524,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
             s3Key: s3Key,
             fileSize: fileSize,
             fileSizeKb: Math.ceil(fileSize / 1024),
-            message: isUpdate ? '프로젝트가 업데이트되었습니다.' : '프로젝트가 저장되었습니다.'
+            message: effectiveIsUpdate ? '프로젝트가 업데이트되었습니다.' : '프로젝트가 저장되었습니다.'
         });
 
     } catch (error) {
