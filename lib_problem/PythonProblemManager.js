@@ -90,7 +90,7 @@ class PythonProblemManager {
         }
     }
 
-    async submitSolution(problemId, userCode) {
+    async submitSolution(problemId, userCode, userId) {
         const problem = await this.getProblem(problemId);
         if (!problem) {
             throw new Error('Problem not found');
@@ -106,6 +106,35 @@ class PythonProblemManager {
         const totalTests = results.length;
         const passedTests = results.filter(r => r.passed).length;
         const isSuccess = totalTests === passedTests;
+        const score = Math.round((passedTests / totalTests) * 100);
+
+        // Aggregate Metrics (Average)
+        const avgTime = results.reduce((sum, r) => sum + (r.time || 0), 0) / totalTests || 0;
+        const avgMemory = results.reduce((sum, r) => sum + (r.memory || 0), 0) / totalTests || 0;
+
+        // DB Logging (Grading Engine)
+        if (!this.useMock && userId) {
+            try {
+                // Determine Status
+                let status = isSuccess ? 'PASS' : 'FAIL';
+                // Check for errors
+                if (results.some(r => r.error)) status = 'ERROR';
+
+                await queryDatabase(`
+                    INSERT INTO ProblemSubmissions 
+                    (user_id, problem_id, code, language, status, score, execution_time, memory_usage, submitted_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                `, [userId, problemId, userCode, 'python', status, score, avgTime, avgMemory]);
+
+                console.log(`✅ Submission saved for User ${userId}, Problem ${problemId}`);
+
+                // TODO: Trigger Evaluation Engine & CT Update here (Event / Queue)
+
+            } catch (dbError) {
+                console.error('❌ Failed to save submission to DB:', dbError);
+                // Don't fail the request if logging fails
+            }
+        }
 
         // Mask hidden test cases in the response
         const clientResults = results.map((r, index) => {
@@ -128,7 +157,9 @@ class PythonProblemManager {
                     expected: r.expected,
                     actual: r.actual,
                     passed: r.passed,
-                    error: r.error
+                    error: r.error,
+                    time: r.time,
+                    memory: r.memory
                 };
             }
         });
@@ -137,6 +168,7 @@ class PythonProblemManager {
             success: isSuccess,
             total: totalTests,
             passed: passedTests,
+            score: score,
             results: clientResults
         };
     }

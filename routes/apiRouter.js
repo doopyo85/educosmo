@@ -399,7 +399,7 @@ router.post('/submit-solution', authenticateUser, async (req, res) => {
 
     console.log(`📝 문제 제출 요청: Problem ${problemId}, User ${req.session.userID}`);
 
-    const result = await pythonProblemManager.submitSolution(problemId, code);
+    const result = await pythonProblemManager.submitSolution(problemId, code, req.session.userID);
 
     res.json({
       success: true,
