@@ -160,61 +160,66 @@
                                     </div>
 
                                     <!-- Right Group: Controls -->
-                                    <div class="header-controls">
-                                        <!-- 🔥 Admin Center Selector (Top Right) -->
-                                        <% if (role==='admin' && typeof centers !=='undefined' && centers.length> 0) {
-                                            %>
-                                            <div class="me-2">
-                                                <select id="centerSelect" class="form-select form-select-sm"
-                                                    style="width: 200px; border-color: #ff9f1c;"
-                                                    onchange="changeAdminCenter(this.value)">
-                                                    <option value="">전체 센터 보기</option>
-                                                    <% centers.forEach(function(center) { %>
-                                                        <option value="<%= center.id %>" <%=typeof centerID
-                                                            !=='undefined' && center.id==centerID ? 'selected' : '' %>>
-                                                            <%= center.name %>
-                                                        </option>
-                                                        <% }); %>
-                                                </select>
-                                                <script>
-                                                    function changeAdminCenter(val) {
-                                                        try {
-                                                            const currentUrl = new window.URL(window.location.href);
-                                                            if (val) {
-                                                                currentUrl.searchParams.set('centerID', val);
-                                                            } else {
-                                                                currentUrl.searchParams.delete('centerID');
+                                    <div class="header-controls d-flex align-items-center justify-content-end">
+                                        <!-- Add Button (List Only) -->
+                                        <button class="btn btn-primary rounded-pill btn-sm px-3 me-3" id="addStudentBtn"
+                                            style="<%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'display: none;' %>">
+                                            <i class="bi bi-person-plus me-1"></i> 추가
+                                        </button>
+
+                                        <!-- Vertical Stack: Center Select (Top) & Search (Bottom) -->
+                                        <div class="d-flex flex-column align-items-end gap-2">
+                                            <!-- 🔥 Admin Center Selector -->
+                                            <% if (role==='admin' && typeof centers !=='undefined' && centers.length> 0)
+                                                { %>
+                                                <div>
+                                                    <select id="centerSelect"
+                                                        class="form-select form-select-sm text-end"
+                                                        style="width: 200px; border-color: #ff9f1c;"
+                                                        onchange="changeAdminCenter(this.value)">
+                                                        <option value="">전체 센터 보기</option>
+                                                        <% centers.forEach(function(center) { %>
+                                                            <option value="<%= center.id %>" <%=typeof centerID
+                                                                !=='undefined' && center.id==centerID ? 'selected' : ''
+                                                                %>>
+                                                                <%= center.name %>
+                                                            </option>
+                                                            <% }); %>
+                                                    </select>
+                                                    <script>
+                                                        function changeAdminCenter(val) {
+                                                            try {
+                                                                const currentUrl = new window.URL(window.location.href);
+                                                                if (val) {
+                                                                    currentUrl.searchParams.set('centerID', val);
+                                                                } else {
+                                                                    currentUrl.searchParams.delete('centerID');
+                                                                }
+                                                                window.location.href = currentUrl.toString();
+                                                            } catch (e) {
+                                                                console.error('URL Update Error:', e);
+                                                                alert('페이지 이동 중 오류가 발생했습니다.');
                                                             }
-                                                            window.location.href = currentUrl.toString();
-                                                        } catch (e) {
-                                                            console.error('URL Update Error:', e);
-                                                            alert('페이지 이동 중 오류가 발생했습니다.');
                                                         }
-                                                    }
-                                                </script>
-                                            </div>
-                                            <% } %>
-                                                <!-- Add Button (List Only) -->
-                                                <button class="btn btn-primary rounded-pill btn-sm px-3"
-                                                    id="addStudentBtn"
-                                                    style="<%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'display: none;' %>">
-                                                    <i class="bi bi-person-plus me-1"></i> 추가
-                                                </button>
-
-                                                <!-- Search Inputs -->
-                                                <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'progress' ? '' : 'd-none' %>"
-                                                    id="progressSearchWrapper">
-                                                    <i class="bi bi-search search-icon"></i>
-                                                    <input type="text" id="progressSearch" class="form-control"
-                                                        placeholder="학생 이름/아이디 검색..." />
+                                                    </script>
                                                 </div>
+                                                <% } %>
 
-                                                <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'd-none' %>"
-                                                    id="studentSearchWrapper">
-                                                    <i class="bi bi-search search-icon"></i>
-                                                    <input type="text" id="studentSearch" class="form-control"
-                                                        placeholder="학생 이름/아이디 검색..." />
-                                                </div>
+                                                    <!-- Search Inputs -->
+                                                    <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'progress' ? '' : 'd-none' %>"
+                                                        id="progressSearchWrapper">
+                                                        <i class="bi bi-search search-icon"></i>
+                                                        <input type="text" id="progressSearch" class="form-control"
+                                                            placeholder="학생 이름/아이디 검색..." />
+                                                    </div>
+
+                                                    <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'd-none' %>"
+                                                        id="studentSearchWrapper">
+                                                        <i class="bi bi-search search-icon"></i>
+                                                        <input type="text" id="studentSearch" class="form-control"
+                                                            placeholder="학생 이름/아이디 검색..." />
+                                                    </div>
+                                        </div>
                                     </div>
                                 </div>
 
