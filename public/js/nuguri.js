@@ -42,8 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
         socket = io({
-            path: '/socket.io',
-            transports: ['websocket', 'polling']
+            path: '/socket.io'
         });
 
         initSocketEvents();
