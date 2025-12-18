@@ -508,7 +508,7 @@ class IDEComponent extends Component {
 
   // Override setupEventBusListeners to add our custom listener
   setupEventBusListeners() {
-    super.setupEventBusListeners();
+    // super.setupEventBusListeners(); // Parent class does not have this method
 
     if (window.EventBus) {
       window.EventBus.subscribe('problemChanged', (data) => {
