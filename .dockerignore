@@ -8,6 +8,7 @@ npm-debug.log
 
 # Jupyter / Data
 jupyter_notebooks
+jupyter_env
 public/uploads
 *.ipynb_checkpoints
 
@@ -15,6 +16,7 @@ public/uploads
 .env
 .env.local
 .env.docker
+myenv
 
 # Docker
 Dockerfile
@@ -28,6 +30,8 @@ judge0.conf
 # OS
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
 # Large Directories / Backups
 appinventor-sources
@@ -38,3 +42,17 @@ backup
 imagedata
 *_backup*
 old_version
+
+# Large Source Folders (Entry/Scratch Source)
+entry
+scratch
+lib_entry
+lib_board
+
+# Windows Scripts & Docs (Not needed in Linux Docker)
+*.bat
+*.cmd
+*.ps1
+*.md
+*.txt
+LICENSE
