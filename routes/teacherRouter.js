@@ -527,104 +527,103 @@ router.get('/student-management/list', requireTeacher, (req, res) => {
 });
 
 // 학생 관리 - 출석부
-router.get('/student-management/attendance', requireTeacher, (req, res) => {
-    // 학생 관리 - 출석부
-    router.get('/student-management/attendance', requireTeacher, async (req, res) => {
-        let centers = [];
-        if (req.session.role === 'admin') {
-            try {
-                centers = await db.queryDatabase('SELECT id, name FROM Centers ORDER BY name');
-            } catch (e) {
-                console.error('Center fetch error:', e);
-            }
+// 학생 관리 - 출석부
+router.get('/student-management/attendance', requireTeacher, async (req, res) => {
+    let centers = [];
+    if (req.session.role === 'admin') {
+        try {
+            centers = await db.queryDatabase('SELECT id, name FROM Centers ORDER BY name');
+        } catch (e) {
+            console.error('Center fetch error:', e);
+        }
+    }
+
+    res.render('teacher/student-management', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.query.centerID || req.session.centerID,
+        currentView: 'attendance',
+        centers: centers
+    });
+});
+
+// 수업 자료 (Coming Soon)
+router.get('/class-materials', requireTeacher, (req, res) => {
+    res.render('teacher/student-management', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.session.centerID,
+        currentView: 'class-materials'
+    });
+});
+
+// 진로 진학 (Coming Soon)
+router.get('/career-info', requireTeacher, (req, res) => {
+    res.render('teacher/student-management', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.session.centerID,
+        currentView: 'career-info'
+    });
+});
+
+// 🔥 중복 제거: S3 통합 라우터로 리다이렉트
+router.get('/student-files', requireTeacher, (req, res) => {
+    res.redirect('/s3/student-files');
+});
+
+
+// 316번째 줄 근처 수정
+router.get('/student-detail/:id', requireTeacher, checkSameCenter, async (req, res) => {
+    try {
+        const studentId = req.params.id;
+
+        const [student] = await db.queryDatabase(
+            'SELECT * FROM Users WHERE id = ? AND role = "student"',
+            [studentId]
+        );
+
+        if (!student) {
+            return res.status(404).send('학생을 찾을 수 없습니다.');
         }
 
-        res.render('teacher/student-management', {
-            userID: req.session.userID,
-            role: req.session.role,
-            centerID: req.query.centerID || req.session.centerID,
-            currentView: 'attendance',
-            centers: centers
-        });
-    });
+        const logs = await db.queryDatabase(
+            'SELECT * FROM LearningLogs WHERE user_id = ? ORDER BY start_time DESC LIMIT 20',
+            [studentId]
+        );
 
-    // 수업 자료 (Coming Soon)
-    router.get('/class-materials', requireTeacher, (req, res) => {
-        res.render('teacher/student-management', {
-            userID: req.session.userID,
-            role: req.session.role,
-            centerID: req.session.centerID,
-            currentView: 'class-materials'
-        });
-    });
-
-    // 진로 진학 (Coming Soon)
-    router.get('/career-info', requireTeacher, (req, res) => {
-        res.render('teacher/student-management', {
-            userID: req.session.userID,
-            role: req.session.role,
-            centerID: req.session.centerID,
-            currentView: 'career-info'
-        });
-    });
-
-    // 🔥 중복 제거: S3 통합 라우터로 리다이렉트
-    router.get('/student-files', requireTeacher, (req, res) => {
-        res.redirect('/s3/student-files');
-    });
-
-
-    // 316번째 줄 근처 수정
-    router.get('/student-detail/:id', requireTeacher, checkSameCenter, async (req, res) => {
-        try {
-            const studentId = req.params.id;
-
-            const [student] = await db.queryDatabase(
-                'SELECT * FROM Users WHERE id = ? AND role = "student"',
-                [studentId]
-            );
-
-            if (!student) {
-                return res.status(404).send('학생을 찾을 수 없습니다.');
-            }
-
-            const logs = await db.queryDatabase(
-                'SELECT * FROM LearningLogs WHERE user_id = ? ORDER BY start_time DESC LIMIT 20',
-                [studentId]
-            );
-
-            const activityLogs = await db.queryDatabase(
-                `SELECT created_at, ip_address, user_agent, url, status 
+        const activityLogs = await db.queryDatabase(
+            `SELECT created_at, ip_address, user_agent, url, status 
             FROM UserActivityLogs 
             WHERE user_id = ? AND status IN ('login', 'logout')
             ORDER BY created_at DESC 
             LIMIT 50`,
-                [studentId]
-            );
+            [studentId]
+        );
 
-            res.render('teacher/student-detail', {
-                student,
-                logs,
-                activityLogs  // 🔥 추가
-            });
+        res.render('teacher/student-detail', {
+            student,
+            logs,
+            activityLogs  // 🔥 추가
+        });
 
-        } catch (error) {
-            console.error('학생 상세 조회 오류:', error);
-            res.status(500).send('오류 발생');
-        }
-    });
+    } catch (error) {
+        console.error('학생 상세 조회 오류:', error);
+        res.status(500).send('오류 발생');
+    }
+});
 
 
-    // 진도 데이터 API
-    router.get('/api/student-progress', requireTeacher, async (req, res) => {
-        try {
-            const teacherCenterId = req.session.centerID;
-            const teacherRole = req.session.role;
+// 진도 데이터 API
+router.get('/api/student-progress', requireTeacher, async (req, res) => {
+    try {
+        const teacherCenterId = req.session.centerID;
+        const teacherRole = req.session.role;
 
-            const whereClause = teacherRole === 'admin'
-                ? "WHERE u.role = 'student'"
-                : "WHERE u.role = 'student' AND u.centerID = ?";
-            const query = `
+        const whereClause = teacherRole === 'admin'
+            ? "WHERE u.role = 'student'"
+            : "WHERE u.role = 'student' AND u.centerID = ?";
+        const query = `
             SELECT 
                 u.id AS user_id,
                 u.name,
@@ -672,56 +671,56 @@ router.get('/student-management/attendance', requireTeacher, (req, res) => {
             ORDER BY u.name
         `;
 
-            const params = teacherRole === 'admin' ? [] : [teacherCenterId];
-            const students = await db.queryDatabase(query, params);
+        const params = teacherRole === 'admin' ? [] : [teacherCenterId];
+        const students = await db.queryDatabase(query, params);
 
-            res.json({
-                success: true,
-                students: students
-            });
-
-        } catch (error) {
-            console.error('진도 데이터 로드 오류:', error);
-            res.status(500).json({
-                success: false,
-                message: '진도 데이터를 불러올 수 없습니다.'
-            });
-        }
-    });
-
-    // 수업 자료 페이지
-    router.get('/teaching-materials', requireTeacher, (req, res) => {
-        res.render('teacher/teaching-materials', {
-            userID: req.session.userID,
-            role: req.session.role
+        res.json({
+            success: true,
+            students: students
         });
-    });
 
-    // 진로진학 페이지
-    router.get('/career-info', requireTeacher, (req, res) => {
-        res.render('teacher/career-info', {
-            userID: req.session.userID,
-            role: req.session.role
+    } catch (error) {
+        console.error('진도 데이터 로드 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '진도 데이터를 불러올 수 없습니다.'
         });
+    }
+});
+
+// 수업 자료 페이지
+router.get('/teaching-materials', requireTeacher, (req, res) => {
+    res.render('teacher/teaching-materials', {
+        userID: req.session.userID,
+        role: req.session.role
     });
+});
+
+// 진로진학 페이지
+router.get('/career-info', requireTeacher, (req, res) => {
+    res.render('teacher/career-info', {
+        userID: req.session.userID,
+        role: req.session.role
+    });
+});
 
 
-    // ============================================
-    // API: 학생 통계 (대시보드용)
-    // ============================================
-    router.get('/api/students/:id/stats', requireTeacher, checkSameCenter, async (req, res) => {
-        try {
-            const studentId = req.params.id;
+// ============================================
+// API: 학생 통계 (대시보드용)
+// ============================================
+router.get('/api/students/:id/stats', requireTeacher, checkSameCenter, async (req, res) => {
+    try {
+        const studentId = req.params.id;
 
-            // 총 학습 시간
-            const [learningTimeResult] = await db.queryDatabase(`
+        // 총 학습 시간
+        const [learningTimeResult] = await db.queryDatabase(`
             SELECT SUM(duration) as totalLearningTime, COUNT(*) as sessionCount
             FROM LearningLogs
             WHERE user_id = ?
         `, [studentId]);
 
-            // 퀴즈 정답률
-            const [quizStatsResult] = await db.queryDatabase(`
+        // 퀴즈 정답률
+        const [quizStatsResult] = await db.queryDatabase(`
             SELECT 
                 COUNT(*) as totalQuizzes,
                 SUM(is_correct) as correctCount
@@ -729,8 +728,8 @@ router.get('/student-management/attendance', requireTeacher, (req, res) => {
             WHERE user_id = ?
         `, [studentId]);
 
-            // 최근 접속
-            const [lastAccessResult] = await db.queryDatabase(`
+        // 최근 접속
+        const [lastAccessResult] = await db.queryDatabase(`
             SELECT created_at as lastAccess
             FROM UserActivityLogs
             WHERE user_id = ?
@@ -738,40 +737,40 @@ router.get('/student-management/attendance', requireTeacher, (req, res) => {
             LIMIT 1
         `, [studentId]);
 
-            res.json({
-                success: true,
-                stats: {
-                    totalLearningTime: learningTimeResult?.totalLearningTime || 0,
-                    sessionCount: learningTimeResult?.sessionCount || 0,
-                    totalQuizzes: quizStatsResult?.totalQuizzes || 0,
-                    correctCount: quizStatsResult?.correctCount || 0,
-                    accuracy: quizStatsResult?.totalQuizzes > 0
-                        ? ((quizStatsResult.correctCount / quizStatsResult.totalQuizzes) * 100).toFixed(1)
-                        : 0,
-                    lastAccess: lastAccessResult?.lastAccess || null
-                }
-            });
+        res.json({
+            success: true,
+            stats: {
+                totalLearningTime: learningTimeResult?.totalLearningTime || 0,
+                sessionCount: learningTimeResult?.sessionCount || 0,
+                totalQuizzes: quizStatsResult?.totalQuizzes || 0,
+                correctCount: quizStatsResult?.correctCount || 0,
+                accuracy: quizStatsResult?.totalQuizzes > 0
+                    ? ((quizStatsResult.correctCount / quizStatsResult.totalQuizzes) * 100).toFixed(1)
+                    : 0,
+                lastAccess: lastAccessResult?.lastAccess || null
+            }
+        });
 
-        } catch (error) {
-            console.error('학생 통계 조회 오류:', error);
-            res.status(500).json({
-                success: false,
-                message: '통계를 불러올 수 없습니다.',
-                error: error.message
-            });
-        }
-    });
+    } catch (error) {
+        console.error('학생 통계 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '통계를 불러올 수 없습니다.',
+            error: error.message
+        });
+    }
+});
 
-    // ============================================
-    // 🔥 API: 학생 제출물 조회 (Entry/Scratch)
-    // ============================================
-    router.get('/api/students/:id/submissions', requireTeacher, checkSameCenter, async (req, res) => {
-        try {
-            const studentId = req.params.id;
-            const platform = req.query.platform || 'entry'; // 'entry' or 'scratch'
+// ============================================
+// 🔥 API: 학생 제출물 조회 (Entry/Scratch)
+// ============================================
+router.get('/api/students/:id/submissions', requireTeacher, checkSameCenter, async (req, res) => {
+    try {
+        const studentId = req.params.id;
+        const platform = req.query.platform || 'entry'; // 'entry' or 'scratch'
 
-            // ProjectSubmissions 테이블에서 제출물 조회
-            const submissions = await db.queryDatabase(`
+        // ProjectSubmissions 테이블에서 제출물 조회
+        const submissions = await db.queryDatabase(`
             SELECT 
                 ps.id,
                 ps.project_name,
@@ -787,42 +786,42 @@ router.get('/student-management/attendance', requireTeacher, (req, res) => {
             ORDER BY ps.submitted_at DESC
         `, [studentId, platform]);
 
-            // S3 URL 생성
-            const submissionsWithUrl = submissions.map(sub => ({
-                ...sub,
-                s3_url: `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${sub.s3_file_path}`,
-                file_size_mb: (sub.file_size_kb / 1024).toFixed(2)
-            }));
+        // S3 URL 생성
+        const submissionsWithUrl = submissions.map(sub => ({
+            ...sub,
+            s3_url: `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${sub.s3_file_path}`,
+            file_size_mb: (sub.file_size_kb / 1024).toFixed(2)
+        }));
 
-            res.json({
-                success: true,
-                submissions: submissionsWithUrl,
-                count: submissions.length
-            });
+        res.json({
+            success: true,
+            submissions: submissionsWithUrl,
+            count: submissions.length
+        });
 
-        } catch (error) {
-            console.error('제출물 조회 오류:', error);
-            res.status(500).json({
-                success: false,
-                message: '제출물을 불러올 수 없습니다.',
-                error: error.message
-            });
-        }
-    });
+    } catch (error) {
+        console.error('제출물 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '제출물을 불러올 수 없습니다.',
+            error: error.message
+        });
+    }
+});
 
-    // ============================================
-    // 🔥 API: 모든 학생 제출물 목록 (선생님 대시보드용)
-    // ============================================
-    router.get('/api/all-submissions', requireTeacher, async (req, res) => {
-        try {
-            const teacherCenterId = req.session.centerID;
-            const teacherRole = req.session.role;
-            const platform = req.query.platform || 'entry';
+// ============================================
+// 🔥 API: 모든 학생 제출물 목록 (선생님 대시보드용)
+// ============================================
+router.get('/api/all-submissions', requireTeacher, async (req, res) => {
+    try {
+        const teacherCenterId = req.session.centerID;
+        const teacherRole = req.session.role;
+        const platform = req.query.platform || 'entry';
 
-            let query, params;
+        let query, params;
 
-            if (teacherRole === 'admin') {
-                query = `
+        if (teacherRole === 'admin') {
+            query = `
                 SELECT 
                     ps.id,
                     ps.project_name,
@@ -839,9 +838,9 @@ router.get('/student-management/attendance', requireTeacher, (req, res) => {
                 ORDER BY ps.submitted_at DESC
                 LIMIT 100
             `;
-                params = [platform];
-            } else {
-                query = `
+            params = [platform];
+        } else {
+            query = `
                 SELECT 
                     ps.id,
                     ps.project_name,
@@ -858,32 +857,32 @@ router.get('/student-management/attendance', requireTeacher, (req, res) => {
                 ORDER BY ps.submitted_at DESC
                 LIMIT 100
             `;
-                params = [platform, teacherCenterId];
-            }
-
-            const submissions = await db.queryDatabase(query, params);
-
-            // S3 URL 추가
-            const submissionsWithUrl = submissions.map(sub => ({
-                ...sub,
-                s3_url: `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${sub.s3_file_path}`,
-                file_size_mb: (sub.file_size_kb / 1024).toFixed(2)
-            }));
-
-            res.json({
-                success: true,
-                submissions: submissionsWithUrl,
-                count: submissions.length
-            });
-
-        } catch (error) {
-            console.error('제출물 목록 조회 오류:', error);
-            res.status(500).json({
-                success: false,
-                message: '제출물 목록을 불러올 수 없습니다.',
-                error: error.message
-            });
+            params = [platform, teacherCenterId];
         }
-    });
 
-    module.exports = router;
+        const submissions = await db.queryDatabase(query, params);
+
+        // S3 URL 추가
+        const submissionsWithUrl = submissions.map(sub => ({
+            ...sub,
+            s3_url: `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${sub.s3_file_path}`,
+            file_size_mb: (sub.file_size_kb / 1024).toFixed(2)
+        }));
+
+        res.json({
+            success: true,
+            submissions: submissionsWithUrl,
+            count: submissions.length
+        });
+
+    } catch (error) {
+        console.error('제출물 목록 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '제출물 목록을 불러올 수 없습니다.',
+            error: error.message
+        });
+    }
+});
+
+module.exports = router;
