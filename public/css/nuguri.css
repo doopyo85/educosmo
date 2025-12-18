@@ -473,5 +473,66 @@
 .empty-state i {
     font-size: 40px;
     margin-bottom: 10px;
+
     opacity: 0.5;
+}
+
+/* Secret Toggle */
+.secret-toggle-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.secret-toggle-input {
+    display: none;
+}
+
+.secret-toggle-label {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f1f3f5;
+    color: #adb5bd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s;
+    border: 1px solid #dee2e6;
+}
+
+.secret-toggle-label:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.secret-toggle-input:checked+.secret-toggle-label {
+    background: #7209b7;
+    color: white;
+    border-color: #7209b7;
+    box-shadow: 0 2px 5px rgba(114, 9, 183, 0.3);
+}
+
+/* Secret Message Styles in Main Chat */
+.chat-bubble.secret {
+    border: 2px solid #7209b7;
+}
+
+.chat-bubble.secret.mine {
+    background: #7209b7;
+    /* Purple background for my secret messages */
+    color: white;
+}
+
+.chat-bubble.secret.others {
+    background: #f3e5f5;
+    /* Light purple for others' secret messages */
+    color: #4a148c;
+    border-color: #ce93d8;
+}
+
+.chat-bubble.secret .message-text::before {
+    content: '🔒 ';
+    font-size: 12px;
 }

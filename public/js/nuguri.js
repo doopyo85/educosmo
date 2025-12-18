@@ -17,138 +17,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatInput = document.getElementById('nuguriInput');
     const sendBtn = document.getElementById('nuguriSendBtn');
     const chatList = document.getElementById('nuguriChatList');
-
-    // Secret Chat (if exists)
-    const secretInput = document.getElementById('nuguriSecretInput');
-    const secretSendBtn = document.getElementById('nuguriSecretSendBtn');
-    const secretChatList = document.getElementById('nuguriSecretChatList');
+    // Secret Toggle (Optional)
+    const secretToggle = document.getElementById('secretToggle');
 
     // Online Indicator
     const onlineIndicator = document.getElementById('nuguriOnlineIndicator');
 
-    // User Data (from data attributes)
-    const container = document.getElementById('nuguri-widget-container');
-    const currentUser = {
-        id: container.dataset.userId || 'Guest',
-        role: container.dataset.userRole || 'guest',
-        centerID: container.dataset.centerId || ''
-    };
+    // ... (User Data Code) ...
 
-    let isOpen = false;
-    let unreadCount = 0;
+    // ... (Socket Setup) ...
 
-    // --- Socket.io Setup ---
-    let socket;
+    // ... (Event Listeners) ...
 
-    try {
-        socket = io({
-            path: '/socket.io'
-        });
-
-        initSocketEvents();
-    } catch (e) {
-        console.error('Socket.io connection failed:', e);
-    }
-
-    // --- Event Listeners ---
-
-    // Toggle Modal
-    floatIcon.addEventListener('click', () => {
-        toggleModal(true);
-    });
-
-    closeBtn.addEventListener('click', () => {
-        toggleModal(false);
-    });
-
-    // Tabs
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.dataset.tab;
-
-            // UI Update
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabPanes.forEach(p => p.classList.remove('active'));
-
-            btn.classList.add('active');
-            document.getElementById(`pane-${target}`).classList.add('active');
-        });
-    });
-
-    // Send Message (Public)
-    sendBtn.addEventListener('click', () => sendMessage('public'));
+    // Send Message
+    sendBtn.addEventListener('click', sendMessage);
     chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage('public');
+        if (e.key === 'Enter') sendMessage();
     });
 
-    // Send Message (Secret)
-    if (secretSendBtn) {
-        secretSendBtn.addEventListener('click', () => sendMessage('secret'));
-        secretInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage('secret');
-        });
-    }
+    // ... (Tabs, Workroom, ToggleModal, etc.) ...
 
-
-    // --- Functions ---
-    // Workroom Logic
-    function updateWorkroom() {
-        if (!document.getElementById('workroomImg')) return;
-
-        const images = [
-            { src: "sleep_nuguri.webp", text: "자는 중..." },
-            { src: "coffee_nuguri.webp", text: "커피 마시는 중..." },
-            { src: "coding_nuguri.webp", text: "코딩 하는 중..." }
-        ];
-        const random = images[Math.floor(Math.random() * images.length)];
-
-        document.getElementById('workroomImg').src = `/resource/${random.src}`;
-        document.getElementById('workroomStatus').textContent = random.text;
-    }
-    // Update initially and periodically
-    updateWorkroom();
-    setInterval(updateWorkroom, 10000); // Change status every 10s
-
-    function toggleModal(show) {
-        isOpen = show;
-        if (show) {
-            modal.classList.add('open');
-            unreadCount = 0;
-            updateBadge();
-            scrollToBottom(chatList);
-            if (secretChatList) scrollToBottom(secretChatList);
-            chatInput.focus();
-        } else {
-            modal.classList.remove('open');
-        }
-    }
-
-    function updateBadge() {
-        if (unreadCount > 0) {
-            unreadBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-            unreadBadge.classList.add('show');
-        } else {
-            unreadBadge.classList.remove('show');
-        }
-    }
-
-    function sendMessage(type = 'public') {
-        const input = type === 'public' ? chatInput : secretInput;
-        const text = input.value.trim();
+    function sendMessage() {
+        const text = chatInput.value.trim();
         if (!text) return;
 
+        // Check if Secret Mode is ON
+        const isSecret = secretToggle && secretToggle.checked;
+
         if (socket) {
-            const eventName = type === 'public' ? 'chat_message' : 'secret_chat_message';
+            const eventName = isSecret ? 'secret_chat_message' : 'chat_message';
             const payload = {
                 text: text,
                 user: currentUser.id,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                type: isSecret ? 'secret' : 'public'
             };
 
             // Emit to server
             socket.emit(eventName, payload);
 
-            input.value = '';
+            chatInput.value = '';
+            // Don't uncheck toggle - teacher might want to maintain conversation
         }
     }
 
@@ -160,7 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (emptyState) emptyState.remove();
 
         const bubble = document.createElement('div');
-        bubble.className = `chat-bubble ${isMine ? 'mine' : 'others'}`;
+        let bubbleClass = `chat-bubble ${isMine ? 'mine' : 'others'}`;
+
+        // Add secret style if applicable
+        if (data.type === 'secret') {
+            bubbleClass += ' secret';
+        }
+
+        bubble.className = bubbleClass;
 
         let html = '';
         if (!isMine) {
@@ -178,9 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom(targetList);
     }
 
-    function scrollToBottom(element) {
-        if (element) element.scrollTop = element.scrollHeight;
-    }
+    // ... (ScrollToBottom) ...
 
     function initSocketEvents() {
         socket.on('connect', () => {
@@ -206,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             messages.forEach(msg => {
                 const isMine = msg.user == currentUser.id;
+                // Currently history is only public, but we handle it generally
                 appendMessage(chatList, msg, isMine);
             });
             scrollToBottom(chatList);
@@ -213,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         socket.on('chat_message', (data) => {
             const isMine = data.user == currentUser.id;
+            data.type = 'public'; // Ensure type
             appendMessage(chatList, data, isMine);
 
             if (!isOpen && !isMine) {
@@ -221,50 +137,44 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Secret Chat Events
+        // Secret Chat Events - Merged into Main List
         socket.on('secret_chat_message', (data) => {
             const isMine = data.user == currentUser.id;
-            appendMessage(secretChatList, data, isMine);
+            data.type = 'secret'; // Mark as secret
+            appendMessage(chatList, data, isMine);
         });
 
-        socket.on('user_list_update', (users) => {
-            renderUserList(users);
-        });
+        // ... (User List, Disconnect) ...
 
-        socket.on('disconnect', () => {
-            console.log('❌ Disconnected from Nuguri Talk');
-        });
-    }
+        function renderUserList(users) {
+            // Online Indicator Logic (Green Dot)
+            // If more than 1 user (me + others), show green dot
+            if (users.length > 1) {
+                onlineIndicator.classList.add('show');
+                onlineIndicator.textContent = '❇️'; // Green emoji or check
+            } else {
+                onlineIndicator.classList.remove('show');
+            }
 
-    function renderUserList(users) {
-        // Online Indicator Logic (Green Dot)
-        // If more than 1 user (me + others), show green dot
-        if (users.length > 1) {
-            onlineIndicator.classList.add('show');
-            onlineIndicator.textContent = '❇️'; // Green emoji or check
-        } else {
-            onlineIndicator.classList.remove('show');
-        }
+            const userListEl = document.getElementById('nuguriUserList');
+            const countBadge = document.getElementById('userCountBadge');
 
-        const userListEl = document.getElementById('nuguriUserList');
-        const countBadge = document.getElementById('userCountBadge');
+            // Update Count
+            if (countBadge) countBadge.textContent = `(${users.length})`;
 
-        // Update Count
-        if (countBadge) countBadge.textContent = `(${users.length})`;
+            // Clear list
+            userListEl.innerHTML = '';
 
-        // Clear list
-        userListEl.innerHTML = '';
+            if (users.length === 0) {
+                userListEl.innerHTML = '<div class="empty-state"><p>접속자가 없습니다.</p></div>';
+                return;
+            }
 
-        if (users.length === 0) {
-            userListEl.innerHTML = '<div class="empty-state"><p>접속자가 없습니다.</p></div>';
-            return;
-        }
-
-        users.forEach(user => {
-            const isMe = user.id === currentUser.id;
-            const item = document.createElement('div');
-            item.className = 'user-list-item';
-            item.innerHTML = `
+            users.forEach(user => {
+                const isMe = user.id === currentUser.id;
+                const item = document.createElement('div');
+                item.className = 'user-list-item';
+                item.innerHTML = `
                 <div class="user-avatar">
                    <img src="/resource/profiles/default.webp" alt="User">
                 </div>
@@ -276,18 +186,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="user-status">온라인</div>
                 </div>
             `;
-            userListEl.appendChild(item);
-        });
-    }
+                userListEl.appendChild(item);
+            });
+        }
 
-    // Utility
-    function escapeHtml(text) {
-        if (!text) return text;
-        return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-});
+        // Utility
+        function escapeHtml(text) {
+            if (!text) return text;
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    });

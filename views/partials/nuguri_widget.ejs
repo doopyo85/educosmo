@@ -17,9 +17,7 @@
             <button class="nuguri-tab-btn active" data-tab="chat">💬 대화창</button>
             <button class="nuguri-tab-btn" data-tab="users">👥 접속자 <span id="userCountBadge">(0)</span></button>
             <button class="nuguri-tab-btn" data-tab="workroom">🛠 작업실</button>
-            <% if (locals.role==='teacher' || locals.role==='admin' || locals.role==='manager' ) { %>
-                <button class="nuguri-tab-btn secret-tab" data-tab="secret" style="color: #7209b7;">🔒 비밀</button>
-                <% } %>
+
         </div>
 
         <div class="nuguri-content">
@@ -32,11 +30,19 @@
                     </div>
                 </div>
                 <div class="nuguri-input-area">
-                    <input type="text" class="nuguri-input" id="nuguriInput" placeholder="메시지를 입력하세요..."
-                        autocomplete="off">
-                    <button class="nuguri-send-btn" id="nuguriSendBtn">
-                        <i class="bi bi-send-fill"></i>
-                    </button>
+                    <% if (locals.role==='teacher' || locals.role==='admin' || locals.role==='manager' ) { %>
+                        <div class="secret-toggle-wrapper">
+                            <input type="checkbox" id="secretToggle" class="secret-toggle-input">
+                            <label for="secretToggle" class="secret-toggle-label" title="비밀 메시지 모드">
+                                <i class="bi bi-shield-lock-fill"></i>
+                            </label>
+                        </div>
+                        <% } %>
+                            <input type="text" class="nuguri-input" id="nuguriInput" placeholder="메시지를 입력하세요..."
+                                autocomplete="off">
+                            <button class="nuguri-send-btn" id="nuguriSendBtn">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
                 </div>
             </div>
 
@@ -72,24 +78,7 @@
                 </div>
             </div>
 
-            <!-- Secret Chat Tab (Teacher Only) -->
-            <% if (locals.role==='teacher' || locals.role==='admin' || locals.role==='manager' ) { %>
-                <div class="nuguri-tab-pane secret-theme" id="pane-secret">
-                    <div class="nuguri-chat-list" id="nuguriSecretChatList">
-                        <div class="empty-state">
-                            <i class="bi bi-shield-lock" style="color: #7209b7;"></i>
-                            <p>선생님들만의 비밀 공간입니다.</p>
-                        </div>
-                    </div>
-                    <div class="nuguri-input-area">
-                        <input type="text" class="nuguri-input" id="nuguriSecretInput" placeholder="비밀 메시지..."
-                            autocomplete="off">
-                        <button class="nuguri-send-btn" id="nuguriSecretSendBtn" style="background-color: #7209b7;">
-                            <i class="bi bi-send-fill"></i>
-                        </button>
-                    </div>
-                </div>
-                <% } %>
+
 
         </div>
     </div>
