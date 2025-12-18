@@ -321,6 +321,91 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Draggable & Bouncing Logic ---
+    makeDraggable(container, floatIcon);
+    startRandomBouncing(floatIcon);
+
+    function makeDraggable(element, handle) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+        handle.onmousedown = dragMouseDown;
+        handle.ontouchstart = dragTouchStart;
+
+        function dragMouseDown(e) {
+            e.preventDefault(); // Prevent default image dragging
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+            e.preventDefault();
+            // Calculate new cursor position
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+
+            // Set the element's new position
+            // Note: Use offsetTop/Left because we are modifying standard positioning
+            // Logic: We are modifying bottom/right based on delta? 
+            // Better: Switch to fixed Left/Top calculation if we want full freedom, 
+            // but simple transform is easier. Let's use Top/Left style modification.
+
+            const newTop = element.offsetTop - pos2;
+            const newLeft = element.offsetLeft - pos1;
+
+            element.style.top = newTop + "px";
+            element.style.left = newLeft + "px";
+            element.style.bottom = 'auto'; // Clear CSS bottom
+            element.style.right = 'auto';  // Clear CSS right
+        }
+
+        function closeDragElement() {
+            // Stop moving when mouse button is released:
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+
+        // Touch Support
+        function dragTouchStart(e) {
+            const touch = e.touches[0];
+            pos3 = touch.clientX;
+            pos4 = touch.clientY;
+            document.ontouchend = closeDragElement;
+            document.ontouchmove = elementTouchDrag;
+        }
+
+        function elementTouchDrag(e) {
+            const touch = e.touches[0];
+            pos1 = pos3 - touch.clientX;
+            pos2 = pos4 - touch.clientY;
+            pos3 = touch.clientX;
+            pos4 = touch.clientY;
+
+            const newTop = element.offsetTop - pos2;
+            const newLeft = element.offsetLeft - pos1;
+
+            element.style.top = newTop + "px";
+            element.style.left = newLeft + "px";
+            element.style.bottom = 'auto';
+            element.style.right = 'auto';
+        }
+    }
+
+    function startRandomBouncing(element) {
+        // Random bounce every 15-40 seconds
+        setInterval(() => {
+            if (Math.random() > 0.3) {
+                element.classList.add('bounce-animate');
+                setTimeout(() => {
+                    element.classList.remove('bounce-animate');
+                }, 2000); // Animation duration
+            }
+        }, 20000);
+    }
+
     // Utility
     function escapeHtml(text) {
         if (!text) return text;
