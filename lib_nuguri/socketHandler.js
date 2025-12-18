@@ -122,19 +122,22 @@ const initSocket = (server) => {
 
         // Helper: Broadcast User List
         const broadcastUserList = () => {
-            const users = [];
+            const usersMap = new Map();
             for (const [id, skt] of io.of("/").sockets) {
                 if (skt.userData) {
-                    users.push({
-                        socketId: id,
-                        id: skt.userData.id,
-                        name: skt.userData.name || skt.userData.id,
-                        role: skt.userData.role,
-                        centerID: skt.userData.centerID
-                    });
+                    // Deduplicate by User ID
+                    if (!usersMap.has(skt.userData.id)) {
+                        usersMap.set(skt.userData.id, {
+                            socketId: id,
+                            id: skt.userData.id,
+                            name: skt.userData.name || skt.userData.id,
+                            role: skt.userData.role,
+                            centerID: skt.userData.centerID
+                        });
+                    }
                 }
             }
-            io.emit('user_list_update', users);
+            io.emit('user_list_update', Array.from(usersMap.values()));
         };
     });
 
