@@ -549,7 +549,7 @@ if (isMain || SERVICE_TYPE === 'entry') {
 const entDebugRouter = require('./routes/api/debug/entDebugRouter');
 app.use('/api/debug/ent', entDebugRouter);
 
-const { createProxyMiddleware } = require('http-proxy-middleware');
+
 if (isMain || SERVICE_TYPE === 'appinventor') {
   app.use('/appinventor/editor', createProxyMiddleware({
     target: 'http://localhost:8888',
