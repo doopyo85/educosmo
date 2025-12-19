@@ -632,25 +632,25 @@ class IDEComponent extends Component {
           max-width: 600px; /* 🔥 최대 너비 제한 */
         }
         .apple-header {
-          padding: 40px 20px 30px;
+          padding: 20px 20px 15px; /* 🔥 Reduced padding */
           text-align: center;
           background: linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%);
           border-bottom: 1px solid rgba(0,0,0,0.06);
         }
         .apple-status-text {
-          font-size: 28px;
+          font-size: 24px; /* 🔥 Reduced font size */
           font-weight: 700;
           letter-spacing: -0.02em;
-          margin-top: 15px;
+          margin-top: 10px;
           margin-bottom: 5px;
           color: #1d1d1f;
-          word-break: break-word; /* 🔥 줄바꿈 추가 */
+          word-break: break-word;
         }
         .apple-subtext {
-          font-size: 15px;
+          font-size: 14px;
           color: #86868b;
           font-weight: 500;
-          word-break: break-word; /* 🔥 줄바꿈 추가 */
+          word-break: break-word;
         }
         .apple-list {
           padding: 0;
@@ -658,10 +658,10 @@ class IDEComponent extends Component {
           list-style: none;
         }
         .apple-list-item {
-          padding: 24px;
+          padding: 15px 20px; /* 🔥 Reduced padding */
           border-bottom: 1px solid rgba(0,0,0,0.06);
           display: flex;
-          gap: 20px;
+          gap: 15px; /* 🔥 Reduced gap */
           align-items: flex-start;
           transition: background 0.2s;
         }
@@ -676,20 +676,20 @@ class IDEComponent extends Component {
           background: #f5f5f7;
           padding: 4px 8px;
           border-radius: 6px;
-          min-width: 60px;
+          min-width: 50px; /* 🔥 Reduced width */
           text-align: center;
         }
         
         .apple-code-box {
           font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
           background: #f5f5f7;
-          border-radius: 8px;
-          padding: 8px 12px;
-          font-size: 13px;
+          border-radius: 6px; /* 🔥 Reduced radius */
+          padding: 6px 10px; /* 🔥 Reduced padding */
+          font-size: 12px; /* 🔥 Reduced font size */
           color: #1d1d1f;
-          margin-top: 6px;
+          margin-top: 4px; /* 🔥 Reduced margin */
           word-break: break-all;
-          white-space: pre-wrap; /* 🔥 줄바꿈 및 공백 유지 */
+          white-space: pre-wrap; 
         }
         .apple-label {
           font-size: 11px;
@@ -771,10 +771,15 @@ class IDEComponent extends Component {
         `<i class="bi bi-check-circle-fill" style="color: #34c759; font-size: 20px;"></i>` :
         `<i class="bi bi-x-circle-fill" style="color: #ff3b30; font-size: 20px;"></i>`;
 
+      // 🔥 Trim content to reduce vertical space
+      const inputVal = (r.input || '').trim();
+      const actualVal = (r.actual || '').trim();
+      const expectedVal = (r.expected || '').trim();
+
       // Input Display
       const inputDisplay = (r.message && r.message.includes('Hidden')) ?
         '<span style="color: #86868b; font-style: italic;">Hidden Case</span>' :
-        `<div class="apple-code-box">${r.input || ''}</div>`;
+        `<div class="apple-code-box">${inputVal}</div>`;
 
       // Output Display
       let outputDisplay = '';
@@ -784,7 +789,7 @@ class IDEComponent extends Component {
             <div>
                 <span class="apple-label">Output</span>
                 <div class="apple-code-box text-success" style="background:#f0fff4; color:#34c759;">
-                    ${r.actual || '(Empty)'}
+                    ${actualVal || '(Empty)'}
                 </div>
             </div>`;
       } else {
@@ -796,15 +801,16 @@ class IDEComponent extends Component {
                 <div class="apple-diff-box">
                     <div class="apple-diff-row">
                         <span class="apple-diff-label">ACTUAL</span>
-                        <span class="apple-diff-val val-error">${r.actual || '(Empty)'}</span>
+                        <span class="apple-diff-val val-error">${actualVal || '(Empty)'}</span>
                     </div>
                     <div class="apple-diff-row">
-                        <span class="apple-diff-label">EXPECT</span>
-                        <span class="apple-diff-val val-success">${r.expected || '(Unknown)'}</span>
+                        <span class="apple-diff-label">EXPECTED</span>
+                        <span class="apple-diff-val val-success">${expectedVal || '(Empty)'}</span>
                     </div>
                 </div>`;
         }
       }
+
 
       html += `
         <div class="apple-list-item">
@@ -826,15 +832,15 @@ class IDEComponent extends Component {
 
     // 🔥 Close Button Added
     html += `
-            </div>
-            <div style="padding: 20px; text-align: center; background: #fafafa; border-top: 1px solid rgba(0,0,0,0.06);">
-                <button class="btn btn-dark" onclick="window.ideComponent.hideResultView()">
-                    터미널로 돌아가기
-                </button>
-            </div>
-          </div>
-      </div>
-    `;
+            </div >
+        <div style="padding: 20px; text-align: center; background: #fafafa; border-top: 1px solid rgba(0,0,0,0.06);">
+          <button class="btn btn-dark" onclick="window.ideComponent.hideResultView()">
+            터미널로 돌아가기
+          </button>
+        </div>
+          </div >
+      </div >
+        `;
 
     resultContent.innerHTML = html;
   }
