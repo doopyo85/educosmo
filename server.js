@@ -268,7 +268,7 @@ const JUPYTER_HOST = process.env.JUPYTER_HOST || 'localhost';
 const JUPYTER_PORT = process.env.JUPYTER_PORT || 8888;
 const jupyterTarget = `http://${JUPYTER_HOST}:${JUPYTER_PORT}`;
 
-console.log(`Setting up Jupyter Proxy to: ${jupyterTarget}`);
+console.log(`Setting up Jupyter Proxy to: ${jupyterTarget} (Env: ${process.env.JUPYTER_HOST}:${process.env.JUPYTER_PORT})`);
 
 app.use('/jupyter', createProxyMiddleware({
   target: jupyterTarget,

@@ -150,7 +150,10 @@
                                 <!-- 오른쪽: 컨트롤 버튼 -->
                                 <div class="code-editor-controls" style="display: flex; align-items: center; gap: 6px;">
                                     <div class="editor-button-group"
-                                        style="display: flex; align-items: center; gap: 4px;"></div>
+                                        style="display: flex; align-items: center; gap: 4px;">
+                                        <!-- 🔥 복원 버튼 슬롯 -->
+                                        <div id="restore-button-slot"></div>
+                                    </div>
 
                                     <div id="problem-bank-controls"
                                         style="display: <%= typeof pageType !== 'undefined' && pageType === 'algorithm' ? 'flex' : 'none' %>; align-items: center; gap: 4px;">
