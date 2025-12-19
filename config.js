@@ -67,7 +67,7 @@ const CORS = {
     'http://codingnplay.co.kr',
     'http://www.codingnplay.co.kr',
     'http://app.codingnplay.co.kr',
-    
+
     // 🔥 신규 cosmoedu 도메인들 추가
     'https://cosmoedu.co.kr',
     'https://www.cosmoedu.co.kr',
@@ -75,7 +75,7 @@ const CORS = {
     'http://cosmoedu.co.kr',
     'http://www.cosmoedu.co.kr',
     'http://app.cosmoedu.co.kr',
-    
+
     undefined  // 같은 origin 요청 허용
   ],
 };
@@ -85,17 +85,17 @@ const CSP = {
   DEFAULT_SRC: ["'self'"],
   FONT_SRC: ["'self'", "data:", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
   SCRIPT_SRC: [
-    "'self'", 
-    "'unsafe-inline'", 
-    "'unsafe-eval'", 
-    "https://apis.google.com", 
-    "https://code.jquery.com", 
-    "https://cdn.jsdelivr.net", 
-    "https://unpkg.com", 
-    "https://cdnjs.cloudflare.com", 
-    "https://playentry.org", 
-    "https://pyscript.net", 
-    "https://www.gstatic.com", 
+    "'self'",
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    "https://apis.google.com",
+    "https://code.jquery.com",
+    "https://cdn.jsdelivr.net",
+    "https://unpkg.com",
+    "https://cdnjs.cloudflare.com",
+    "https://playentry.org",
+    "https://pyscript.net",
+    "https://www.gstatic.com",
     "https://polyfill.io",
     "https://cdn.ckeditor.com",  // 🔥 CKEditor 추가
     "https://entry-cdn.pstatic.net",  // 🔥 EntryJS CDN 추가
@@ -107,12 +107,12 @@ const CSP = {
     "https://aiblock.playentry.org"
   ],
   STYLE_SRC: [
-    "'self'", 
-    "'unsafe-inline'", 
-    "https://fonts.googleapis.com", 
-    "https://cdn.jsdelivr.net", 
-    "https://cdnjs.cloudflare.com", 
-    "https://playentry.org", 
+    "'self'",
+    "'unsafe-inline'",
+    "https://fonts.googleapis.com",
+    "https://cdn.jsdelivr.net",
+    "https://cdnjs.cloudflare.com",
+    "https://playentry.org",
     "https://pyscript.net",
     "https://cdn.ckeditor.com",  // 🔥 CKEditor CSS 추가
     "https://entry-cdn.pstatic.net",  // 🔥 EntryJS CSS 추가
@@ -123,14 +123,14 @@ const CSP = {
     "https://nstatic.playentry.org"
   ],
   IMG_SRC: [
-    "'self'", 
-    "data:", 
+    "'self'",
+    "data:",
     "blob:",
-    "https://educodingnplaycontents.s3.amazonaws.com", 
-    "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com", 
-    "https://www.google.com", 
-    "https://code.org", 
-    "https://blockly.games", 
+    "https://educodingnplaycontents.s3.amazonaws.com",
+    "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com",
+    "https://www.google.com",
+    "https://code.org",
+    "https://blockly.games",
     "https://playentry.org",
     "https://cdn.ckeditor.com",  // 🔥 CKEditor 이미지 추가
     "https://entry-cdn.pstatic.net",
@@ -142,16 +142,16 @@ const CSP = {
     "https://aiblock.playentry.org"
   ],
   CONNECT_SRC: [
-    "'self'", 
-    "https://apis.google.com", 
-    "https://content-sheets.googleapis.com", 
-    "https://educodingnplaycontents.s3.amazonaws.com", 
-    "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com", 
-    "https://www.google.com", 
-    "https://cdn.jsdelivr.net", 
-    "https://cdnjs.cloudflare.com", 
-    "https://playentry.org", 
-    "https://firestore.googleapis.com", 
+    "'self'",
+    "https://apis.google.com",
+    "https://content-sheets.googleapis.com",
+    "https://educodingnplaycontents.s3.amazonaws.com",
+    "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com",
+    "https://www.google.com",
+    "https://cdn.jsdelivr.net",
+    "https://cdnjs.cloudflare.com",
+    "https://playentry.org",
+    "https://firestore.googleapis.com",
     "https://firebase-api.com",
     "https://cdn.ckeditor.com",  // 🔥 CKEditor 연결 추가
     "https://entry-cdn.pstatic.net",  // 🔥 EntryJS 연결 추가
@@ -166,17 +166,17 @@ const CSP = {
     "https://aiblock.playentry.org"
   ],
   FRAME_SRC: [
-    "'self'", 
-    "https://docs.google.com", 
-    "https://sheets.googleapis.com", 
-    "https://content-sheets.googleapis.com", 
-    "https://educodingnplaycontents.s3.amazonaws.com", 
+    "'self'",
+    "https://docs.google.com",
+    "https://sheets.googleapis.com",
+    "https://content-sheets.googleapis.com",
+    "https://educodingnplaycontents.s3.amazonaws.com",
     "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com",
     // codingnplay 도메인들
-    "https://app.codingnplay.co.kr:8080", 
-    "https://app.codingnplay.co.kr:8888", 
-    "https://app.codingnplay.co.kr:8889", 
-    "https://app.codingnplay.co.kr", 
+    "https://app.codingnplay.co.kr:8080",
+    "https://app.codingnplay.co.kr:8888",
+    "https://app.codingnplay.co.kr:8889",
+    "https://app.codingnplay.co.kr",
     "https://app.codingnplay.co.kr:6080",
     "http://app.codingnplay.co.kr:6080",
     "https://app.codingnplay.co.kr/report/",
@@ -220,8 +220,8 @@ const Roles = {
 const SERVICES = {
   SCRATCH: `${BASE_URL}:8601`,
   ENTRY: `${BASE_URL}:8080`,
-  APPINVENTOR: `${BASE_URL}:8888`,  
-  JUPYTER: `${BASE_URL}:8889`,     
+  APPINVENTOR: `${BASE_URL}:8888`,
+  JUPYTER: `${BASE_URL}:8889`,
 };
 
 // 크론 작업 설정
@@ -232,7 +232,7 @@ const CRON = {
 // 🔥 서비스 감지 함수 추가 (오류 방지 강화)
 const getServiceType = (req) => {
   const host = req.get('host') || req.hostname || '';
-  
+
   // host가 문자열인지 확인 후 includes 사용
   if (typeof host === 'string' && host.includes('cosmoedu.co.kr')) {
     return SERVICE_TYPES.COSMOEDU;
@@ -257,7 +257,7 @@ module.exports = {
   SERVICES,
   CRON,
   getServiceType,
-  
+
   // 전체 CSP 문자열 생성 함수
   getCSPString: () => {
     return Object.entries(CSP)

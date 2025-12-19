@@ -265,7 +265,7 @@ app.set('trust proxy', 1);
 // Jupyter Proxy (Body Parser 이전에 설정 필수)
 // =====================================================================
 const JUPYTER_HOST = process.env.JUPYTER_HOST || 'localhost';
-const JUPYTER_PORT = process.env.JUPYTER_PORT || 8888;
+const JUPYTER_PORT = process.env.JUPYTER_PORT || 8889;
 const jupyterTarget = `http://${JUPYTER_HOST}:${JUPYTER_PORT}`;
 
 console.log(`Setting up Jupyter Proxy to: ${jupyterTarget} (Env: ${process.env.JUPYTER_HOST}:${process.env.JUPYTER_PORT})`);

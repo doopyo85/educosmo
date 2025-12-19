@@ -11,7 +11,7 @@ services:
       - .:/app
       - /app/node_modules
     ports:
-      - "8888:8888"
+      - "8889:8888"
     environment:
       - JUPYTER_PORT=8888
     networks:
