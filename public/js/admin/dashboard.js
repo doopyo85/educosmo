@@ -12,6 +12,19 @@ async function fetchWithAuth(url) {
     return response.json();
 }
 
+let centerList = []; // 센터 목록 캐시
+
+async function loadCenters() {
+    try {
+        const result = await fetchWithAuth('/admin/api/centers');
+        if (result.success) {
+            centerList = result.centers;
+            console.log('Centers loaded:', centerList.length);
+        }
+    } catch (error) {
+        console.error('Failed to load centers:', error);
+    }
+}
 
 function updateDashboardStats(data) {
     if (!data?.totalStats) return;
@@ -90,7 +103,12 @@ async function loadUsers(sortField = 'no', sortOrder = 'asc', filter = {}) {
                 <td>${user.userID}</td>
                 <td>${user.name || '-'}</td>
                 <td>${user.role}</td>
-                <td>${user.centerID ? `${user.centerID} (${user.centerName})` : '-'}</td>
+                <td>
+                    ${user.centerID ? `${user.centerID} (${user.centerName})` : '-'}
+                    <button class="btn btn-sm btn-link text-secondary p-0 ms-1" onclick="openEditCenterModal(${user.id}, '${user.centerID || ''}', '${user.name || user.userID}')">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                </td>
                 <td>${user.last_activity ? new Date(user.last_activity).toLocaleString() : '-'}</td>
                 <td>${user.activity_count || 0}</td>
                 <td>${user.email}</td>
@@ -662,6 +680,65 @@ function showToast(title, message, type = 'info') {
     });
 }
 
+// ========================================
+// 사용자 센터 변경
+// ========================================
+
+async function openEditCenterModal(userId, currentCenterId, userName) {
+    if (centerList.length === 0) {
+        await loadCenters();
+    }
+
+    const select = document.getElementById('editCenterSelect');
+    select.innerHTML = '<option value="">센터 선택 (미지정)</option>' +
+        centerList.map(center => `
+            <option value="${center.id}" ${String(center.id) === String(currentCenterId) ? 'selected' : ''}>
+                ${center.id} (${center.name})
+            </option>
+        `).join('');
+
+    document.getElementById('editCenterUserId').value = userId;
+    document.getElementById('editCenterUserName').value = userName;
+
+    const modal = new bootstrap.Modal(document.getElementById('centerEditModal'));
+    modal.show();
+}
+
+async function saveUserCenter() {
+    const userId = document.getElementById('editCenterUserId').value;
+    const centerId = document.getElementById('editCenterSelect').value;
+
+    try {
+        const response = await fetch(`/admin/api/users/${userId}/center`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ centerId })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showToast('성공', '센터 정보가 수정되었습니다.', 'success');
+
+            // 모달 닫기
+            const modalEl = document.getElementById('centerEditModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+
+            // 목록 새로고침
+            loadUsers();
+
+            // 센터 통계도 갱신될 수 있으므로
+            loadStats();
+        } else {
+            throw new Error(result.error);
+        }
+    } catch (error) {
+        console.error('Center update error:', error);
+        alert('센터 수정 실패: ' + error.message);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded');
 
@@ -700,5 +777,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // 초기 섹션 로드 (대시보드 개요)
     showSection('overview');
     loadStats();
+    loadCenters(); // 미리 로드
+
+    // 센터 저장 버튼
+    const saveCenterBtn = document.getElementById('saveCenterBtn');
+    if (saveCenterBtn) {
+        saveCenterBtn.addEventListener('click', saveUserCenter);
+    }
+
     console.log('Loading initial section');
 });
