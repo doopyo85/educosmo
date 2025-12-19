@@ -23,92 +23,32 @@ const requireAuth = (req, res, next) => {
     next();
 };
 
-// Jupyter 프로세스 관리
-let jupyterProcess = null;
+// Jupyter 프로세스 관리 (제거됨 - Docker 서비스로 대체)
+// let jupyterProcess = null;
 
-function startJupyterServer() {
-    if (jupyterProcess) {
-        console.log('Jupyter 서버가 이미 실행 중입니다.');
-        return;
-    }
+// S3 Manager 인스턴스 (필요 시 require 위치 조정)
+const S3Manager = require('../../lib_storage/s3Manager');
+const s3Manager = new S3Manager();
 
-    console.log('Jupyter Notebook 서버 시작 중...');
-
-    const jupyterArgs = [
-        'notebook',
-        '--no-browser',
-        '--allow-root',
-        `--port=${JUPYTER_PORT}`,
-        `--notebook-dir=${NOTEBOOKS_DIR}`,
-        '--ip=0.0.0.0',
-        '--NotebookApp.token=""',
-        '--NotebookApp.password=""',
-        '--NotebookApp.disable_check_xsrf=True'
-    ];
-
-    jupyterProcess = spawn('jupyter', jupyterArgs, {
-        stdio: ['ignore', 'pipe', 'pipe'],
-        detached: false
-    });
-
-    jupyterProcess.stdout.on('data', (data) => {
-        console.log('Jupyter stdout:', data.toString());
-    });
-
-    jupyterProcess.stderr.on('data', (data) => {
-        console.log('Jupyter stderr:', data.toString());
-    });
-
-    jupyterProcess.on('close', (code) => {
-        console.log(`Jupyter 프로세스 종료, 코드: ${code}`);
-        jupyterProcess = null;
-    });
-
-    jupyterProcess.on('error', (error) => {
-        console.error('Jupyter 프로세스 오류:', error);
-        jupyterProcess = null;
-    });
-
-    console.log(`Jupyter 서버 시작됨 (PID: ${jupyterProcess.pid})`);
-}
-
-function stopJupyterServer() {
-    if (jupyterProcess) {
-        console.log('Jupyter 서버 중지 중...');
-        jupyterProcess.kill('SIGTERM');
-        jupyterProcess = null;
-    }
-}
-
-// 서버 시작 시 Jupyter 시작
-// 🔥 FIX: PM2에서 별도로 실행되는 jupyter-server(ID:4)를 사용하므로, 
-// 메인 서버에서 하위 프로세스로 실행하지 않음. (ENOENT 오류 및 포트 충돌 방지)
-// startJupyterServer();
-
-// 프로세스 종료 시 Jupyter 정리
-// process.on('exit', stopJupyterServer);
-// process.on('SIGINT', stopJupyterServer);
-// process.on('SIGTERM', stopJupyterServer);
-
-// 사용자별 디렉토리 생성 함수
+// 사용자별 디렉토리 생성 함수 (S3에서는 폴더 개념이 가상이므로 실제 생성 불필요, 체크만)
 async function ensureUserDir(userID) {
-    const userDir = path.join(NOTEBOOKS_DIR, userID);
+    const userPrefix = `users/${userID}/`;
     try {
-        await fs.mkdir(userDir, { recursive: true });
-        console.log(`사용자 디렉토리 생성/확인: ${userDir}`);
-        return userDir;
+        // S3에서는 폴더를 명시적으로 생성할 필요가 없지만, 
+        // 사용자 존재 여부나 권한 체크를 위해 list를 한번 해볼 수 있음.
+        // 여기서는 단순히 경로만 반환.
+        return userPrefix;
     } catch (error) {
-        console.error('사용자 디렉토리 생성 오류:', error);
+        console.error('사용자 디렉토리 확인 오류:', error);
         throw error;
     }
 }
 
-// 빈 노트북 생성 함수
+// 빈 노트북 생성 함수 (S3 업로드)
 async function createBlankNotebook(userID) {
     const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
     const filename = `${userID}_${timestamp}.ipynb`;
-    const userDir = await ensureUserDir(userID);
-    const filePath = path.join(userDir, filename);
+    const s3Key = `users/${userID}/${filename}`;
 
     // 빈 노트북 구조
     const blankNotebook = {
@@ -143,7 +83,7 @@ async function createBlankNotebook(userID) {
             },
             "language_info": {
                 "name": "python",
-                "version": "3.8.5"
+                "version": "3.10.0"
             }
         },
         "nbformat": 4,
@@ -151,17 +91,29 @@ async function createBlankNotebook(userID) {
     };
 
     try {
-        await fs.writeFile(filePath, JSON.stringify(blankNotebook, null, 2));
-        console.log(`빈 노트북 생성 완료: ${filename}`);
+        const buffer = Buffer.from(JSON.stringify(blankNotebook, null, 2));
+        
+        // S3에 직접 업로드
+        // uses s3Client from s3Manager
+        const { uploadBufferToS3 } = require('../../lib_board/s3Utils'); 
+        // Note: s3Manager class might encapsulate this differently. 
+        // Checking s3Manager usage in s3BrowserRouter suggests it has upload methods,
+        // but s3Utils.js (lib_board) is also available. 
+        // Let's use s3Manager.uploadUserProject if available or s3Utils directly.
+        // Consistent with s3BrowserRouter:
+        
+        // Using s3Utils directly for simplicity as s3Manager wrapper might expect multipart
+        await uploadBufferToS3(buffer, s3Key, 'application/json');
+
+        console.log(`빈 노트북 S3 생성 완료: ${s3Key}`);
 
         return {
             filename: filename,
-            userDir: userDir,
-            filePath: filePath,
-            relativePath: path.join(userID, filename)
+            s3Key: s3Key,
+            relativePath: path.join(userID, filename) // Jupyter URL용
         };
     } catch (error) {
-        console.error('빈 노트북 생성 오류:', error);
+        console.error('빈 노트북 생성 오류 (S3):', error);
         throw error;
     }
 }

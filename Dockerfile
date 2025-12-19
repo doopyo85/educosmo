@@ -1,53 +1,56 @@
-# Base Image
-FROM node:18-slim
+# Base Image - Python 3.10 for TensorFlow compatibility
+FROM python:3.10-slim
 
-# Install system dependencies and Python
+# Install system dependencies
+# - s3fs, fuse: For S3 mounting
+# - fonts-nanum: For Korean font support in matplotlib
+# - build-essential, git: For installing some python packages
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-venv \
+    s3fs \
+    fuse \
+    fonts-nanum \
     build-essential \
     curl \
     git \
-    #    ffmpeg \  # Uncomment if sound processing needed
+    procps \
+    vim \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Timezone to KST
 ENV TZ=Asia/Seoul
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# App Directory
+# Install updated Node.js (needed if this container runs node scripts, but primarily it's python now)
+# If this container is purely for Jupyter, we might not need Node.js explicitly unless extensions require it.
+# Keeping it minimal for now.
+
 WORKDIR /app
 
-# Copy package.json and install Node dependencies
-COPY package*.json ./
-# Install production dependencies only initially, but since we might need dev tools or full install:
-RUN npm install
+# Upgrade pip
+RUN pip install --upgrade pip
 
-# Install Jupyter and Python dependencies
-# Creating a virtual environment or installing globally? 
-# For Docker, global pip install is often acceptable if it's the only app.
-# But let's be safe and separate if possible, or just install to system python.
-# System python is typically /usr/bin/python3
-RUN pip3 install --no-cache-dir --break-system-packages \
-    jupyter \
-    notebook \
-    numpy \
-    pandas \
-    matplotlib \
-    requests
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Jupyter explicitly if not in requirements (it is recommended to have it there)
+RUN pip install --no-cache-dir jupyter notebook jupyter-server-proxy
 
 # Copy Source Code
 COPY . .
 
-# Create necessary directories for Jupyter/Uploads if they don't exist
-RUN mkdir -p jupyter_notebooks public/uploads
+# Copy and setup entrypoint script
+COPY start-jupyter.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/start-jupyter.sh
+
+# Create mount point and config directories
+RUN mkdir -p /app/jupyter_notebooks /app/public/uploads
 
 # Expose Ports
-# 3000: Base Express App
-# 8000-8100: Reserved for Jupyter if needed (though we currently spawn it)
-EXPOSE 3000
+EXPOSE 8888
 
-# Start Command
-# Using dumb-init or integrated node
-CMD ["npm", "start"]
+# Set Entrypoint to our script
+ENTRYPOINT ["/usr/local/bin/start-jupyter.sh"]
+
+# Default Command
+CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''", "--NotebookApp.password=''", "--notebook-dir=/app/jupyter_notebooks", "--NotebookApp.base_url=/jupyter", "--NotebookApp.trust_xheaders=True"]

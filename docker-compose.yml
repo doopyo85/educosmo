@@ -2,18 +2,30 @@ version: '3.8'
 
 services:
   # Jupyter Notebook Service (Maintains image build)
+  # Jupyter Notebook Service (Maintains image build)
   jupyter:
     image: educoding-app:latest
     build: .
     container_name: educodingnplay-jupyter
+    # 🔥 Privileged mode and capabilities are required for FUSE/s3fs
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
     command: [ "jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''", "--NotebookApp.password=''", "--notebook-dir=/app/jupyter_notebooks", "--NotebookApp.base_url=/jupyter", "--NotebookApp.trust_xheaders=True" ]
     volumes:
       - .:/app
       - /app/node_modules
+      # Mount host AWS credentials if available (optional, but good for local dev)
+      # - ~/.aws:/root/.aws:ro
     ports:
       - "8889:8888"
     environment:
       - JUPYTER_PORT=8888
+      - AWS_REGION=${AWS_REGION:-ap-northeast-2}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-educodingnplaycontents}
     networks:
       - edu-network
 

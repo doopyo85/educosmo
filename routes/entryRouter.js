@@ -851,6 +851,7 @@ router.post('/data/upload-drawing', authenticateUser, async (req, res) => {
 router.get('/api/user-projects', authenticateUser, async (req, res) => {
     try {
         const userID = req.session.userID;
+        const { saveType } = req.query; // 선택적 필터: 'autosave', 'projects' 등
         
         if (!userID) {
             return res.status(400).json({ 
@@ -859,11 +860,13 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
             });
         }
 
-        console.log(`📂 [불러오기] 사용자 프로젝트 조회 요청: ${userID}`);
+        console.log(`\n📂 ========== [불러오기] 프로젝트 목록 조회 ==========`);
+        console.log(`👤 사용자: ${userID}`);
+        console.log(`🔍 saveType 필터: ${saveType || '전체'}`);
 
         const db = require('../lib_login/db');
 
-        // 🔥 수정: user_id를 Users 테이블에서 먼저 조회
+        // 사용자 DB ID 조회
         const userQuery = 'SELECT id FROM Users WHERE userID = ?';
         const [user] = await db.queryDatabase(userQuery, [userID]);
 
@@ -876,8 +879,9 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
 
         const userId = user.id;
 
-        // 🔥 수정: LIMIT은 하드코딩 (prepared statement 호환성)
-        const query = `
+        // 🔥 수정: updated_at DESC로 변경 (autosave는 UPDATE되므로)
+        // 🔥 수정: LIMIT 100으로 증가
+        let query = `
             SELECT 
                 id,
                 user_id,
@@ -895,22 +899,48 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
                 updated_at
             FROM ProjectSubmissions
             WHERE user_id = ?
-              AND platform = ?
+              AND platform = 'entry'
               AND (is_deleted = FALSE OR is_deleted IS NULL)
-            ORDER BY created_at DESC 
-            LIMIT 50
         `;
+        
+        const params = [userId];
+        
+        // saveType 필터 적용 (선택적)
+        if (saveType) {
+            query += ` AND save_type = ?`;
+            params.push(saveType);
+        }
+        
+        query += ` ORDER BY updated_at DESC LIMIT 100`;
 
-        // 🔥 파라미터 2개만 전달 (LIMIT은 하드코딩)
-        const projects = await db.queryDatabase(query, [
-            userId,           // user_id
-            'entry'           // platform (Entry 프로젝트만 조회)
-        ]);
+        const projects = await db.queryDatabase(query, params);
 
-        console.log(`✅ [불러오기] ${projects.length}개 프로젝트 조회 성공`);
+        // 🔥 디버깅: save_type별 개수 집계
+        const saveTypeCounts = projects.reduce((acc, p) => {
+            const type = p.save_type || 'unknown';
+            acc[type] = (acc[type] || 0) + 1;
+            return acc;
+        }, {});
+
+        console.log(`✅ [불러오기] 조회 결과:`);
+        console.log(`   📊 총 ${projects.length}개 프로젝트`);
+        console.log(`   📁 save_type별 개수:`, saveTypeCounts);
+        
+        // 최근 autosave 정보 출력
+        const latestAutosave = projects.find(p => p.save_type === 'autosave');
+        if (latestAutosave) {
+            console.log(`   🔄 최신 autosave: "${latestAutosave.project_name}" (ID: ${latestAutosave.id})`);
+            console.log(`      - created_at: ${latestAutosave.created_at}`);
+            console.log(`      - updated_at: ${latestAutosave.updated_at}`);
+        } else {
+            console.log(`   ⚠️ autosave 파일 없음`);
+        }
+        console.log(`================================================\n`);
 
         res.json({
             success: true,
+            totalCount: projects.length,
+            saveTypeCounts: saveTypeCounts,
             projects: projects.map(p => ({
                 id: p.id,
                 projectName: p.project_name,
@@ -922,6 +952,7 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
                 spritesCount: p.sprites_count,
                 createdAt: p.created_at,
                 updatedAt: p.updated_at,
+                thumbnailUrl: null, // TODO: 썸네일 기능 추가 예정
                 metadata: p.metadata ? (typeof p.metadata === 'string' ? JSON.parse(p.metadata) : p.metadata) : null
             }))
         });
