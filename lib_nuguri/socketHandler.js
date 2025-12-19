@@ -122,6 +122,57 @@ const initSocket = (server) => {
             // Validate data
             if (!data || !data.text) return;
 
+            // 🛑 Rate Limiting Logic
+            const now = Date.now();
+
+            // Initialize user tracking
+            if (!socket.userData.msgLog) {
+                socket.userData.msgLog = [];
+                socket.userData.blockedUntil = 0;
+            }
+
+            // Check if blocked
+            if (now < socket.userData.blockedUntil) {
+                const remaining = Math.ceil((socket.userData.blockedUntil - now) / 1000);
+                socket.emit('spam_warning', {
+                    message: `도배 방지를 위해 30초간 대화가 제한됩니다. (${remaining}초 남음)`,
+                    remaining: remaining
+                });
+                return;
+            }
+
+            // Cleanup old logs (> 5 seconds ago)
+            socket.userData.msgLog = socket.userData.msgLog.filter(time => now - time < 5000);
+
+            // Add current message
+            socket.userData.msgLog.push(now);
+
+            // Check limit (5 messages in 5 seconds)
+            if (socket.userData.msgLog.length > 5) {
+                socket.userData.blockedUntil = now + 30000; // Block for 30s
+                socket.emit('spam_warning', {
+                    message: '너무 빠르게 입력하셨습니다. 도배 방지를 위해 30초간 입력이 차단됩니다.',
+                    remaining: 30
+                });
+                return;
+            }
+
+            // 🤬 Profanity Filter Logic
+            // Replace bad words with '너구리'
+            const badWords = [
+                '시발', '씨발', '개새끼', '병신', '지랄', '좆', '씹', '년', '놈', '닥쳐', '꺼져',
+                '니미', '엠창', '느금마', '애미', '애비', '섹스', '보지', '자지', '야동', '성관계'
+            ];
+
+            let filteredText = data.text;
+            badWords.forEach(word => {
+                const regex = new RegExp(word, 'gi'); // Simple check, can be improved
+                filteredText = filteredText.replace(regex, '너구리');
+            });
+
+            // Use filtered text
+            const finalContent = filteredText;
+
             try {
                 // 🔥 Save to DB
                 let authorName = data.user;
@@ -145,14 +196,14 @@ const initSocket = (server) => {
                 const result = await db.queryDatabase(`
                     INSERT INTO nuguritalk_posts (title, content, author, author_id)
                     VALUES (?, ?, ?, ?)
-                `, [data.text, data.text, authorName, userIntId]);
+                `, [finalContent, finalContent, authorName, userIntId]);
 
                 // Broadcast
                 io.emit('chat_message', {
                     id: result.insertId,
                     user: data.user,
                     userName: authorName,
-                    text: data.text,
+                    text: finalContent,
                     time: new Date().toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: true })
                 });
 

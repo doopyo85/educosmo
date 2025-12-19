@@ -303,6 +303,32 @@ document.addEventListener('DOMContentLoaded', () => {
             renderUserList(users);
         });
 
+        // 🛑 Spam Warning Handler
+        socket.on('spam_warning', (data) => {
+            // Option 1: Alert
+            alert(data.message);
+
+            // Option 2: System Message in Chat (Optional)
+            appendMessage(chatList, {
+                text: data.message,
+                time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                type: 'system',
+                user: 'System' // Or 'Nuguri'
+            }, false);
+
+            // Disable input temporarily? The backend blocks it anyway, but UI feedback is good.
+            if (chatInput) {
+                chatInput.disabled = true;
+                chatInput.placeholder = `도배 방지: ${data.remaining}초 후 입력 가능`;
+
+                setTimeout(() => {
+                    chatInput.disabled = false;
+                    chatInput.placeholder = '메시지를 입력하세요...';
+                    chatInput.focus();
+                }, data.remaining * 1000);
+            }
+        });
+
 
         socket.on('disconnect', () => {
             console.log('❌ Disconnected from Nuguri Talk');

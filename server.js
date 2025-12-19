@@ -462,6 +462,21 @@ app.use('/api/assets', (req, res) => {
   res.redirect(301, s3Url);
 });
 
+// 🔥 Temporary Cleanup Route (No Auth)
+app.get('/api/cleanup-nuguri-temp', async (req, res) => {
+  try {
+    const targetUsers = ['류태훈', '이하윤'];
+    const result = await db.queryDatabase(
+      `DELETE FROM nuguritalk_posts WHERE author IN (?, ?)`,
+      targetUsers
+    );
+    res.json({ success: true, deleted: result.affectedRows, message: `Deleted messages from: ${targetUsers.join(', ')}` });
+  } catch (error) {
+    console.error('Cleanup Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // API 라우터 등록
 app.use('/api', require('./routes/apiRouter'));
 app.use('/api/board', require('./routes/api/boardApiRouter'));
