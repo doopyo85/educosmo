@@ -629,20 +629,30 @@ class IDEComponent extends Component {
           overflow: hidden;
           border: 1px solid rgba(0,0,0,0.04);
           width: 100%;
-          max-width: 600px; /* 🔥 최대 너비 제한 */
+          max-width: 900px; /* 🔥 Increased width for split view */
+          display: flex; /* 🔥 Horizontal Layout */
+          flex-direction: row; 
+          align-items: stretch;
+          height: 100%; /* Ensure it fills height if needed */
         }
         .apple-header {
-          padding: 20px 20px 15px; /* 🔥 Reduced padding */
+          width: 300px; /* 🔥 Fixed width for left panel */
+          flex-shrink: 0;
+          padding: 40px 20px;
           text-align: center;
           background: linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%);
-          border-bottom: 1px solid rgba(0,0,0,0.06);
+          border-right: 1px solid rgba(0,0,0,0.06); /* Changed bottom to right */
+          border-bottom: none;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
         }
         .apple-status-text {
-          font-size: 24px; /* 🔥 Reduced font size */
+          font-size: 24px; 
           font-weight: 700;
           letter-spacing: -0.02em;
-          margin-top: 10px;
-          margin-bottom: 5px;
+          margin-top: 20px;
+          margin-bottom: 10px;
           color: #1d1d1f;
           word-break: break-word;
         }
@@ -653,15 +663,20 @@ class IDEComponent extends Component {
           word-break: break-word;
         }
         .apple-list {
+          flex: 1; /* 🔥 Take remaining width */
           padding: 0;
           margin: 0;
           list-style: none;
+          overflow-y: auto; /* 🔥 Independent scroll */
+          background: #fff;
+          display: flex;
+          flex-direction: column;
         }
         .apple-list-item {
-          padding: 15px 20px; /* 🔥 Reduced padding */
+          padding: 15px 20px;
           border-bottom: 1px solid rgba(0,0,0,0.06);
           display: flex;
-          gap: 15px; /* 🔥 Reduced gap */
+          gap: 15px; 
           align-items: flex-start;
           transition: background 0.2s;
         }
@@ -676,7 +691,7 @@ class IDEComponent extends Component {
           background: #f5f5f7;
           padding: 4px 8px;
           border-radius: 6px;
-          min-width: 50px; /* 🔥 Reduced width */
+          min-width: 50px; 
           text-align: center;
         }
         
@@ -830,17 +845,18 @@ class IDEComponent extends Component {
         </div>`;
     });
 
-    // 🔥 Close Button Added
+    // 🔥 Close Button (Inside Right Panel or Footer)
+    // In Split view, it might be better placed in the right panel footer, or just appended
     html += `
-            </div >
-        <div style="padding: 20px; text-align: center; background: #fafafa; border-top: 1px solid rgba(0,0,0,0.06);">
+        <div style="padding: 20px; text-align: center; background: #fafafa; border-top: 1px solid rgba(0,0,0,0.06); margin-top: auto;">
           <button class="btn btn-dark" onclick="window.ideComponent.hideResultView()">
             터미널로 돌아가기
           </button>
         </div>
-          </div >
-      </div >
-        `;
+      </div> <!-- End apple-list -->
+      </div> <!-- End apple-card -->
+    </div> <!-- End apple-container -->
+    `;
 
     resultContent.innerHTML = html;
   }
