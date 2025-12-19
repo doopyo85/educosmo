@@ -29,6 +29,7 @@ const s3Client = new S3Client({
 // S3 버킷 및 경로 설정
 const S3_BUCKET = config.S3.BUCKET_NAME;
 const S3_SCRATCH_PATH = 'scratch/projects';
+const S3_THUMBNAIL_PATH = 'scratch/thumbnails';
 
 // =====================================================================
 // 헬퍼 함수
@@ -97,7 +98,7 @@ router.get('/auth/session', (req, res) => {
 // =====================================================================
 router.post('/save-project', requireAuth, async (req, res) => {
     try {
-        const { projectData, title } = req.body;
+        const { projectData, title, thumbnail } = req.body;
         const userID = req.session.userID;
         const centerID = req.session.centerID;
 
@@ -141,7 +142,7 @@ router.post('/save-project', requireAuth, async (req, res) => {
         const projectTitle = title || '제목 없음';
         const s3Key = `${S3_SCRATCH_PATH}/${userID}/${projectId}.sb3`;
 
-        // S3에 업로드
+        // S3에 프로젝트 업로드
         const uploadParams = {
             Bucket: S3_BUCKET,
             Key: s3Key,
@@ -150,6 +151,29 @@ router.post('/save-project', requireAuth, async (req, res) => {
         };
 
         await s3Client.send(new PutObjectCommand(uploadParams));
+
+        // 썸네일 업로드 (thumbnail 이 있는 경우)
+        let thumbnailUrl = null;
+        if (thumbnail) {
+            try {
+                // data:image/png;base64,XXXXX 형식에서 base64 부분 추출
+                const base64Data = thumbnail.replace(/^data:image\/\w+;base64,/, '');
+                const thumbnailBuffer = Buffer.from(base64Data, 'base64');
+                const thumbnailKey = `${S3_THUMBNAIL_PATH}/${userID}/${projectId}.png`;
+
+                await s3Client.send(new PutObjectCommand({
+                    Bucket: S3_BUCKET,
+                    Key: thumbnailKey,
+                    Body: thumbnailBuffer,
+                    ContentType: 'image/png'
+                }));
+
+                thumbnailUrl = `https://${S3_BUCKET}.s3.${config.S3.REGION}.amazonaws.com/${thumbnailKey}`;
+                console.log(`썸네일 저장 완료: ${thumbnailKey}`);
+            } catch (thumbError) {
+                console.error('썸네일 저장 실패 (무시하고 계속):', thumbError.message);
+            }
+        }
 
         // S3 URL 생성
         const s3Url = `https://${S3_BUCKET}.s3.${config.S3.REGION}.amazonaws.com/${s3Key}`;
@@ -163,7 +187,8 @@ router.post('/save-project', requireAuth, async (req, res) => {
             storedName: s3Key,
             size: fileSize,
             type: 'application/x-scratch',
-            s3Url: s3Url
+            s3Url: s3Url,
+            thumbnailUrl: thumbnailUrl
         });
 
         console.log(`스크래치 프로젝트 저장 완료: ${projectId} by ${userID} (${fileSize} bytes)`);
@@ -172,6 +197,7 @@ router.post('/save-project', requireAuth, async (req, res) => {
             success: true,
             projectId: projectId,
             fileId: fileId,
+            thumbnailUrl: thumbnailUrl,
             message: '프로젝트가 저장되었습니다.'
         });
 
@@ -192,7 +218,7 @@ router.post('/save-project', requireAuth, async (req, res) => {
 router.put('/save-project/:fileId', requireAuth, async (req, res) => {
     try {
         const { fileId } = req.params;
-        const { projectData, title } = req.body;
+        const { projectData, title, thumbnail } = req.body;
         const userID = req.session.userID;
 
         if (!projectData) {
@@ -247,7 +273,7 @@ router.put('/save-project/:fileId', requireAuth, async (req, res) => {
             }
         }
 
-        // S3에 업로드 (덮어쓰기)
+        // S3에 프로젝트 업로드 (덮어쓰기)
         const uploadParams = {
             Bucket: S3_BUCKET,
             Key: existingFile.stored_name,
@@ -257,6 +283,32 @@ router.put('/save-project/:fileId', requireAuth, async (req, res) => {
 
         await s3Client.send(new PutObjectCommand(uploadParams));
 
+        // 썸네일 업데이트 (thumbnail 이 있는 경우)
+        let thumbnailUrl = existingFile.thumbnail_url;
+        if (thumbnail) {
+            try {
+                // 기존 stored_name에서 projectId 추출
+                const projectIdMatch = existingFile.stored_name.match(/\/([^/]+)\.sb3$/);
+                const projectId = projectIdMatch ? projectIdMatch[1] : fileId;
+                
+                const base64Data = thumbnail.replace(/^data:image\/\w+;base64,/, '');
+                const thumbnailBuffer = Buffer.from(base64Data, 'base64');
+                const thumbnailKey = `${S3_THUMBNAIL_PATH}/${userID}/${projectId}.png`;
+
+                await s3Client.send(new PutObjectCommand({
+                    Bucket: S3_BUCKET,
+                    Key: thumbnailKey,
+                    Body: thumbnailBuffer,
+                    ContentType: 'image/png'
+                }));
+
+                thumbnailUrl = `https://${S3_BUCKET}.s3.${config.S3.REGION}.amazonaws.com/${thumbnailKey}`;
+                console.log(`썸네일 업데이트 완료: ${thumbnailKey}`);
+            } catch (thumbError) {
+                console.error('썸네일 업데이트 실패 (무시하고 계속):', thumbError.message);
+            }
+        }
+
         // 용량 조정
         if (sizeDiff > 0) {
             await increaseUsage(user.id, user.centerID, sizeDiff, 'scratch');
@@ -264,11 +316,11 @@ router.put('/save-project/:fileId', requireAuth, async (req, res) => {
             await decreaseUsage(user.id, user.centerID, Math.abs(sizeDiff), 'scratch');
         }
 
-        // 파일명(제목) 업데이트
+        // 파일명(제목) 및 썸네일 업데이트
         const newTitle = title ? `${title}.sb3` : existingFile.original_name;
         await db.queryDatabase(
-            'UPDATE UserFiles SET original_name = ?, file_size = ? WHERE id = ?',
-            [newTitle, newFileSize, fileId]
+            'UPDATE UserFiles SET original_name = ?, file_size = ?, thumbnail_url = ? WHERE id = ?',
+            [newTitle, newFileSize, thumbnailUrl, fileId]
         );
 
         console.log(`스크래치 프로젝트 업데이트 완료: fileId=${fileId} by ${userID}`);
@@ -276,6 +328,7 @@ router.put('/save-project/:fileId', requireAuth, async (req, res) => {
         res.json({
             success: true,
             fileId: parseInt(fileId),
+            thumbnailUrl: thumbnailUrl,
             message: '프로젝트가 업데이트되었습니다.'
         });
 
