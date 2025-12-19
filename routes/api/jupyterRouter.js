@@ -44,77 +44,87 @@ async function ensureUserDir(userID) {
     }
 }
 
-// 빈 노트북 생성 함수 (S3 업로드)
+// Import checkFileExists
+const { uploadBufferToS3, checkFileExists } = require('../../lib_board/s3Utils');
+
+// 빈 노트북 생성 함수 (S3 업로드) -> 이제는 "사용자 노트북 가져오기/생성" 역할
 async function createBlankNotebook(userID) {
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-    const filename = `${userID}_${timestamp}.ipynb`;
+    // 🔥 Timestamp 제거 -> 고정 파일명 사용
+    const filename = `${userID}.ipynb`;
     // 🔥 유저 폴더 내 jupyter 서브 폴더에 저장
     const s3Key = `users/${userID}/jupyter/${filename}`;
-
-    // 빈 노트북 구조
-    const blankNotebook = {
-        "cells": [
-            {
-                "cell_type": "markdown",
-                "metadata": {},
-                "source": [
-                    `# ${userID}님의 노트북\n`,
-                    `\n`,
-                    `생성일: ${new Date().toLocaleString('ko-KR')}\n`,
-                    `\n`,
-                    `왼쪽 Content에서 내용을 복사해서 붙여넣으세요.`
-                ]
-            },
-            {
-                "cell_type": "code",
-                "execution_count": null,
-                "metadata": {},
-                "outputs": [],
-                "source": [
-                    "# 여기에 코드를 입력하세요\n",
-                    "print('Hello, Jupyter!')"
-                ]
-            }
-        ],
-        "metadata": {
-            "kernelspec": {
-                "display_name": "Python 3",
-                "language": "python",
-                "name": "python3"
-            },
-            "language_info": {
-                "name": "python",
-                "version": "3.10.0"
-            }
-        },
-        "nbformat": 4,
-        "nbformat_minor": 4
-    };
+    const relativePath = path.join('users', userID, 'jupyter', filename);
 
     try {
+        // 1. 이미 존재하는지 확인 (Persistent Storage)
+        const exists = await checkFileExists(s3Key);
+
+        if (exists) {
+            console.log(`기존 노트북 발견: ${s3Key}`);
+            return {
+                filename: filename,
+                s3Key: s3Key,
+                relativePath: relativePath,
+                isNew: false
+            };
+        }
+
+        // 2. 없으면 생성
+        // 빈 노트북 구조
+        const blankNotebook = {
+            "cells": [
+                {
+                    "cell_type": "markdown",
+                    "metadata": {},
+                    "source": [
+                        `# ${userID}님의 노트북\n`,
+                        `\n`,
+                        `생성일: ${new Date().toLocaleString('ko-KR')}\n`,
+                        `\n`,
+                        `이 파일은 고정된 개인 노트북입니다.`
+                    ]
+                },
+                {
+                    "cell_type": "code",
+                    "execution_count": null,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": [
+                        "# 여기에 코드를 입력하세요\n",
+                        "print('Hello, Jupyter!')"
+                    ]
+                }
+            ],
+            "metadata": {
+                "kernelspec": {
+                    "display_name": "Python 3",
+                    "language": "python",
+                    "name": "python3"
+                },
+                "language_info": {
+                    "name": "python",
+                    "version": "3.10.0"
+                }
+            },
+            "nbformat": 4,
+            "nbformat_minor": 4
+        };
+
         const buffer = Buffer.from(JSON.stringify(blankNotebook, null, 2));
 
         // S3에 직접 업로드
-        // uses s3Client from s3Manager
-        const { uploadBufferToS3 } = require('../../lib_board/s3Utils');
-        // Note: s3Manager class might encapsulate this differently. 
-        // Checking s3Manager usage in s3BrowserRouter suggests it has upload methods,
-        // but s3Utils.js (lib_board) is also available. 
-        // Let's use s3Manager.uploadUserProject if available or s3Utils directly.
-        // Consistent with s3BrowserRouter:
-
-        // Using s3Utils directly for simplicity as s3Manager wrapper might expect multipart
         await uploadBufferToS3(buffer, s3Key, 'application/json');
 
-        console.log(`빈 노트북 S3 생성 완료: ${s3Key}`);
+        console.log(`새 고정 노트북 S3 생성 완료: ${s3Key}`);
 
         return {
             filename: filename,
             s3Key: s3Key,
-            relativePath: path.join('users', userID, 'jupyter', filename) // Jupyter URL용 ('users' prefix 추가)
+            relativePath: relativePath,
+            isNew: true
         };
     } catch (error) {
-        console.error('빈 노트북 생성 오류 (S3):', error);
+        console.error('노트북 확인/생성 오류 (S3):', error);
         throw error;
     }
 }
