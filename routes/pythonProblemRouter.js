@@ -3,7 +3,7 @@ const router = express.Router();
 // Phase 1: Judge0 Integration
 // const PythonRunner = require('../lib_execution/PythonRunner');
 const Judge0Adapter = require('../lib_execution/Judge0Adapter');
-const Judge0Adapter = require('../lib_execution/Judge0Adapter');
+
 const PythonProblemManager = require('../lib_problem/PythonProblemManager');
 const db = require('../lib_login/db'); // 🔥 Add DB module
 
