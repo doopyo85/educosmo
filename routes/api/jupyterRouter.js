@@ -8,7 +8,7 @@ const fs = require('fs').promises;
 
 // Jupyter Notebook 서버 설정
 const JUPYTER_HOST = process.env.JUPYTER_HOST || 'localhost';
-const JUPYTER_PORT = process.env.JUPYTER_PORT || 8000;
+const JUPYTER_PORT = process.env.JUPYTER_PORT || 8888;
 const JUPYTER_URL = `http://${JUPYTER_HOST}:${JUPYTER_PORT}`;
 const NOTEBOOKS_DIR = path.join(__dirname, '../../jupyter_notebooks');
 
