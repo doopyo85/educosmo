@@ -503,20 +503,30 @@ class IDEComponent extends Component {
 
   // 🔥 Terminal Swap Logic -> Now Bottom Sheet Modal
   showResultView() {
-    // const outputContent = document.getElementById('output-content');
     const resultModal = document.getElementById('submission-result-modal');
-
-    // 🔥 Overlay Modal: Don't hide terminal, but show modal on top (bottom 40%)
     if (resultModal) {
       resultModal.style.display = 'flex';
-      // Add specific animation class if needed
+      resultModal.classList.remove('hiding'); // Ensure hiding class is gone
+
+      // Force Reflow or Wait for next frame to trigger animation
+      requestAnimationFrame(() => {
+        resultModal.classList.add('show');
+      });
     }
   }
 
   hideResultView() {
     const resultModal = document.getElementById('submission-result-modal');
     if (resultModal) {
-      resultModal.style.display = 'none';
+      // 1. Trigger Exit Animation
+      resultModal.classList.add('hiding'); // Add elastic exit easing
+      resultModal.classList.remove('show'); // Slide down
+
+      // 2. Wait for animation to finish before hiding display
+      setTimeout(() => {
+        resultModal.style.display = 'none';
+        resultModal.classList.remove('hiding'); // Reset
+      }, 400); // Match CSS transition duration (0.4s)
     }
   }
 
