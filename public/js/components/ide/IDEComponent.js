@@ -468,7 +468,9 @@ class IDEComponent extends Component {
 
     const path = sounds[type];
     if (path) {
-      new Audio(path).play().catch(e => console.log('Audio play error:', e));
+      const audio = new Audio(path);
+      audio.volume = 0.7; // 🔥 Reduced volume to 70%
+      audio.play().catch(e => console.log('Audio play error:', e));
     }
   }
 
@@ -782,6 +784,9 @@ class IDEComponent extends Component {
                   </div>
                   <div class="apple-status-text">${isSuccess ? '성공' : '실패'}</div>
                   <div class="apple-subtext">총 ${data.total}개 중 ${data.passed}개 테스트 케이스 통과</div>
+                  <div class="apple-subtext" style="font-size: 12px; margin-top: 4px; color: #86868b;">
+                      정답률: ${Math.round(passRate)}%
+                  </div>
                   
                   <div class="progress-apple">
                       <div class="progress-bar-apple" style="width: ${passRate}%; background: ${progressColor};"></div>
