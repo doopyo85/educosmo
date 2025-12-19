@@ -53,7 +53,8 @@ async function createBlankNotebook(userID) {
     const filename = `${userID}.ipynb`;
     // 🔥 유저 폴더 내 jupyter 서브 폴더에 저장
     const s3Key = `users/${userID}/jupyter/${filename}`;
-    const relativePath = path.join('users', userID, 'jupyter', filename);
+    // 🔥 중요: Jupyter URL은 항상 Forward Slash(/)를 사용해야 함 (Windows에서도)
+    const relativePath = `users/${userID}/jupyter/${filename}`;
 
     try {
         // 1. 이미 존재하는지 확인 (Persistent Storage)
