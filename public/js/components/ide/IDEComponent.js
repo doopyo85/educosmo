@@ -526,7 +526,7 @@ class IDEComponent extends Component {
       setTimeout(() => {
         resultModal.style.display = 'none';
         resultModal.classList.remove('hiding'); // Reset
-      }, 400); // Match CSS transition duration (0.4s)
+      }, 800); // Back In Ease needs more time
     }
   }
 
