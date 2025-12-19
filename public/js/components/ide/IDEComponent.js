@@ -481,11 +481,7 @@ class IDEComponent extends Component {
     this.state.currentProblemNumber = nextNum;
 
     // Hide Modal
-    const modalEl = document.getElementById('submissionResultModal');
-    if (modalEl && window.bootstrap) {
-      const modal = window.bootstrap.Modal.getInstance(modalEl);
-      if (modal) modal.hide();
-    }
+    this.hideResultView();
 
     // Trigger Problem Change Logic
     // 1. Update UI (Sidebar?) - This is hard to reach from here without global event.
@@ -505,19 +501,23 @@ class IDEComponent extends Component {
     // alert('Next Problem!'); 
   }
 
-  // 🔥 Terminal Swap Logic
+  // 🔥 Terminal Swap Logic -> Now Bottom Sheet Modal
   showResultView() {
-    const outputContent = document.getElementById('output-content');
-    const resultContent = document.getElementById('submission-result-content');
-    if (outputContent) outputContent.style.display = 'none';
-    if (resultContent) resultContent.style.display = 'block';
+    // const outputContent = document.getElementById('output-content');
+    const resultModal = document.getElementById('submission-result-modal');
+
+    // 🔥 Overlay Modal: Don't hide terminal, but show modal on top (bottom 40%)
+    if (resultModal) {
+      resultModal.style.display = 'flex';
+      // Add specific animation class if needed
+    }
   }
 
   hideResultView() {
-    const outputContent = document.getElementById('output-content');
-    const resultContent = document.getElementById('submission-result-content');
-    if (outputContent) outputContent.style.display = 'block'; // Or 'flex' depending on Terminal.js
-    if (resultContent) resultContent.style.display = 'none';
+    const resultModal = document.getElementById('submission-result-modal');
+    if (resultModal) {
+      resultModal.style.display = 'none';
+    }
   }
 
   async submitSolution() {
@@ -525,11 +525,12 @@ class IDEComponent extends Component {
     const submitBtn = document.getElementById(this.options.submitButtonId);
     if (submitBtn) submitBtn.disabled = true;
 
-    // 🔥 Swap to Result View & Show Loading
+    // 🔥 Show Modal & Loading
     this.showResultView();
-    const resultContent = document.getElementById('submission-result-content');
-    if (resultContent) {
-      resultContent.innerHTML = `
+    const resultBody = document.getElementById('submission-result-body');
+
+    if (resultBody) {
+      resultBody.innerHTML = `
             <div class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">채점 중...</span>
@@ -554,6 +555,9 @@ class IDEComponent extends Component {
 
       // Render Result
       if (result.success && result.data) {
+        // 🔥 Pass specifically the body element if renderSubmissionResult expects it, 
+        // or update renderSubmissionResult to look for the body ID.
+        // Assuming renderSubmissionResult uses 'submission-result-content' ID internally, let's fix it there too.
         this.renderSubmissionResult(result.data);
 
         // 🔥 UX Logic: Sound, Confetti, Nav
@@ -573,8 +577,8 @@ class IDEComponent extends Component {
         }
 
       } else {
-        if (resultContent) {
-          resultContent.innerHTML = `
+        if (resultBody) {
+          resultBody.innerHTML = `
             <div class="alert alert-danger m-3">
                 ${result.message || '오류가 발생했습니다.'}
                 <div class="mt-3">
@@ -586,8 +590,8 @@ class IDEComponent extends Component {
 
     } catch (e) {
       console.error(e);
-      if (resultContent) {
-        resultContent.innerHTML = `
+      if (resultBody) {
+        resultBody.innerHTML = `
             <div class="alert alert-danger m-3">
                 서버 통신 오류
                 <div class="mt-3">
@@ -601,7 +605,7 @@ class IDEComponent extends Component {
   }
 
   renderSubmissionResult(data) {
-    const resultContent = document.getElementById('submission-result-content');
+    const resultContent = document.getElementById('submission-result-body');
     if (!resultContent) return;
 
     // 1. Calculate Stats

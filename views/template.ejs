@@ -209,12 +209,61 @@
                                         <div id="output-content" class="output-content">
                                             <!-- 실행 결과가 여기에 표시됩니다 -->
                                         </div>
-                                        <!-- 🔥 추가: 제출 결과 레포트 컨테이너 (터미널 스왑용) -->
-                                        <div id="submission-result-content" class="submission-result-content"
-                                            style="display: none; height: 100%; overflow-y: auto; background-color: #ffffff;">
-                                            <!-- 채점 결과가 여기에 로드됩니다 -->
+                                    </div>
+
+                                    <!-- 🔥 Custom Result Modal (Bottom Sheet) -->
+                                    <div id="submission-result-modal" class="submission-result-modal"
+                                        style="display: none;">
+                                        <div class="modal-header-custom">
+                                            <h5 class="m-0"><i class="bi bi-clipboard-check"></i> 채점 결과</h5>
+                                            <button type="button" class="btn-close"
+                                                onclick="window.ideComponent.hideResultView()"></button>
+                                        </div>
+                                        <div id="submission-result-body" class="modal-body-custom">
+                                            <!-- Content loaded here -->
                                         </div>
                                     </div>
+
+                                    <style>
+                                        /* Bottom Sheet Modal Styles */
+                                        .submission-result-modal {
+                                            position: absolute;
+                                            bottom: 0;
+                                            left: 0;
+                                            width: 100%;
+                                            height: 40%;
+                                            background-color: white;
+                                            z-index: 1050;
+                                            border-top-left-radius: 20px;
+                                            border-top-right-radius: 20px;
+                                            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+                                            display: flex;
+                                            flex-direction: column;
+                                            overflow: hidden;
+                                            border-top: 1px solid #e0e0e0;
+                                        }
+
+                                        .modal-header-custom {
+                                            padding: 15px 20px;
+                                            border-bottom: 1px solid #eee;
+                                            display: flex;
+                                            justify-content: space-between;
+                                            align-items: center;
+                                            background: #f8f9fa;
+                                        }
+
+                                        .modal-body-custom {
+                                            flex: 1;
+                                            overflow-y: auto;
+                                            padding: 0;
+                                            /* Let content handle padding */
+                                        }
+
+                                        /* Ensure container is relative for absolute positioning */
+                                        .ide-container-inner {
+                                            position: relative;
+                                        }
+                                    </style>
                                 </div>
 
                                 <!-- Jupyter 컨테이너 (필요시) -->
