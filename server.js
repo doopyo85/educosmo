@@ -250,13 +250,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// 🔥 Observatory 3D Dashboard Route
-app.get('/observatory', checkPageAccess('/observatory'), (req, res) => {
-  res.render('observatory', {
-    user: req.session.userID,
-    role: req.session.role
-  });
-});
+
 
 
 app.set('trust proxy', 1);
@@ -689,6 +683,16 @@ function checkUnderConstruction(req, res, next) {
 }
 
 app.use(checkUnderConstruction);
+
+// 🔥 Observatory 3D Dashboard Route (Moved here to ensure session exists)
+app.get('/observatory', authenticateUser, checkPageAccess('/observatory'), (req, res) => {
+  res.render('observatory', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID
+  });
+});
 
 app.get('/entry_project', authenticateUser, checkPageAccess('/entry_project'), (req, res) => {
   res.render('entry_project', {
