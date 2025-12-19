@@ -620,8 +620,23 @@ class IDEComponent extends Component {
     const resultContent = document.getElementById('submission-result-body');
     if (!resultContent) return;
 
-    // 1. Calculate Stats
-    const passRate = Math.round((data.passed / data.total) * 100);
+    // 2. Calculate Pass Rate & Performance Metrics
+    const passRate = (data.passed / data.total) * 100;
+
+    // 🔥 Calculate Max Time & Memory
+    let maxTime = 0;
+    let maxMemory = 0;
+    if (data.results && data.results.length > 0) {
+      data.results.forEach(r => {
+        const t = parseFloat(r.executionTime || 0);
+        const m = parseInt(r.memory || 0);
+        if (t > maxTime) maxTime = t;
+        if (m > maxMemory) maxMemory = m;
+      });
+    }
+    const timeDisplay = maxTime.toFixed(3) + 's';
+    const memoryDisplay = (maxMemory / 1024).toFixed(2) + 'MB'; // Convert KB to MB
+
     const isSuccess = data.success;
     const progressColor = isSuccess ? '#34c759' : (passRate > 50 ? '#ff9f0a' : '#ff3b30'); // Apple Green, Orange, Red
 
@@ -786,6 +801,9 @@ class IDEComponent extends Component {
                   <div class="apple-subtext">총 ${data.total}개 중 ${data.passed}개 테스트 케이스 통과</div>
                   <div class="apple-subtext" style="font-size: 12px; margin-top: 4px; color: #86868b;">
                       정답률: ${Math.round(passRate)}%
+                  </div>
+                  <div class="apple-subtext" style="font-size: 11px; margin-top: 2px; color: #86868b; font-family: monospace;">
+                      ⏱ ${timeDisplay} | 💾 ${memoryDisplay}
                   </div>
                   
                   <div class="progress-apple">

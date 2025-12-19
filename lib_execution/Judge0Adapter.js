@@ -95,7 +95,8 @@ class Judge0Adapter {
                     actual: res.stdout || '',
                     passed: passed,
                     error: res.stderr || res.compile_output || '',
-                    executionTime: res.time
+                    executionTime: res.time,
+                    memory: res.memory // 🔥 Added Memory usage (KB)
                 };
             });
 
