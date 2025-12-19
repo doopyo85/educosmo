@@ -227,8 +227,12 @@
                     <div id="submission-result-modal" class="submission-result-modal" style="display: none;">
                         <div class="modal-header-custom">
                             <h5 class="m-0"><i class="bi bi-clipboard-check"></i> 채점 결과</h5>
-                            <button type="button" class="btn-close"
-                                onclick="window.ideComponent.hideResultView()"></button>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                    onclick="window.ideComponent.hideResultView()">터미널로 돌아가기</button>
+                                <button type="button" class="btn-close"
+                                    onclick="window.ideComponent.hideResultView()"></button>
+                            </div>
                         </div>
                         <div id="submission-result-body" class="modal-body-custom">
                             <!-- Content loaded here -->

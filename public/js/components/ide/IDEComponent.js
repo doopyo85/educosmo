@@ -845,14 +845,7 @@ class IDEComponent extends Component {
         </div>`;
     });
 
-    // 🔥 Close Button (Inside Right Panel or Footer)
-    // In Split view, it might be better placed in the right panel footer, or just appended
     html += `
-        <div style="padding: 20px; text-align: center; background: #fafafa; border-top: 1px solid rgba(0,0,0,0.06); margin-top: auto;">
-          <button class="btn btn-dark" onclick="window.ideComponent.hideResultView()">
-            터미널로 돌아가기
-          </button>
-        </div>
       </div> <!-- End apple-list -->
       </div> <!-- End apple-card -->
     </div> <!-- End apple-container -->
