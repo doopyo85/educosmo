@@ -161,6 +161,72 @@ const initSocket = (server) => {
             }
         });
 
+        // 👁️ 원격 모니터링 핸들러 (Remote Monitoring)
+        // 1. 교사가 모니터링 요청
+        socket.on('request_monitor', (targetUserId) => {
+            // 권한 체크: 교사/관리자만 요청 가능
+            if (!socket.userData || !['teacher', 'admin', 'manager'].includes(socket.userData.role)) {
+                socket.emit('error', '권한이 없습니다.');
+                return;
+            }
+
+            console.log(`[Monitor] ${socket.userData.id} requests to monitor ${targetUserId}`);
+
+            // 대상 찾기
+            let targetSocketId = null;
+            for (const [id, skt] of io.of("/").sockets) {
+                if (skt.userData && skt.userData.id === targetUserId) {
+                    targetSocketId = id;
+                    break;
+                }
+            }
+
+            if (targetSocketId) {
+                // 학생에게 모니터링 시작 명령 전송
+                // 교사의 Socket ID를 함께 보내서 학생이 누구에게 데이터를 보낼지 알게 함 (혹은 서버 릴레이)
+                io.to(targetSocketId).emit('cmd_monitor_start', {
+                    monitorId: socket.id, // 교사의 소켓 ID
+                    monitorName: socket.userData.name
+                });
+
+                // 교사에게 성공 응답 (필요시)
+                socket.emit('monitor_connected', { targetUserId });
+            } else {
+                socket.emit('error', '해당 사용자를 찾을 수 없거나 오프라인입니다.');
+            }
+        });
+
+        // 2. 교사가 모니터링 중단
+        socket.on('stop_monitor', (targetUserId) => {
+            if (!socket.userData || !['teacher', 'admin', 'manager'].includes(socket.userData.role)) return;
+
+            // 대상 찾기
+            let targetSocketId = null;
+            for (const [id, skt] of io.of("/").sockets) {
+                if (skt.userData && skt.userData.id === targetUserId) {
+                    targetSocketId = id;
+                    break;
+                }
+            }
+
+            if (targetSocketId) {
+                io.to(targetSocketId).emit('cmd_monitor_stop', { monitorId: socket.id });
+            }
+        });
+
+        // 3. 학생이 코드 데이터 전송 (릴레이)
+        socket.on('monitor_data', (data) => {
+            // data: { targetSocketId (monitor), code, cursor }
+            if (!data || !data.targetSocketId) return;
+
+            // 교사에게 데이터 전달
+            io.to(data.targetSocketId).emit('monitor_update', {
+                userId: socket.userData ? socket.userData.id : 'unknown',
+                code: data.code,
+                cursor: data.cursor
+            });
+        });
+
         // Helper: Broadcast User List
         const broadcastUserList = () => {
             const usersMap = new Map();

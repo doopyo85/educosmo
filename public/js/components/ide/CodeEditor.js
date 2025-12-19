@@ -146,6 +146,9 @@ class CodeEditor {
       setTimeout(() => {
         this.state.editor.resize();
         this.setupPlaceholder(); // 🔥 Setup Placeholder
+
+        // 🔥 [Nuguri Talk] 모니터링을 위해 전역 노출
+        window.ideEditor = this.state.editor;
       }, 200);
 
       console.log('✅ ACE 에디터 초기화 완료');

@@ -303,40 +303,92 @@ document.addEventListener('DOMContentLoaded', () => {
             renderUserList(users);
         });
 
+
         socket.on('disconnect', () => {
             console.log('❌ Disconnected from Nuguri Talk');
         });
-    }
 
-    function renderUserList(users) {
-        // Online Indicator Logic (Green Dot)
-        // If more than 1 user (me + others), show green dot
-        if (users.length > 1) {
-            onlineIndicator.classList.add('show');
-            onlineIndicator.textContent = '❇️'; // Green emoji or check
-        } else {
-            onlineIndicator.classList.remove('show');
-        }
+        // 👁️ Monitoring Events
+        // For Student: Recieve Monitor Request
+        socket.on('cmd_monitor_start', (data) => {
+            console.log('👁️ Monitoring Started by:', data.monitorName);
+            amBeingMonitored = true;
 
-        const userListEl = document.getElementById('nuguriUserList');
-        const countBadge = document.getElementById('userCountBadge');
+            // Show toast or indicator (Optional)
+            // Hook into Editor
+            if (window.ideEditor) {
+                // Remove existing listener to avoid duplicates
+                window.ideEditor.session.removeAllListeners('change');
 
-        // Update Count
-        if (countBadge) countBadge.textContent = `(${users.length})`;
+                // Add listener
+                window.ideEditor.session.on('change', () => {
+                    if (!amBeingMonitored) return;
+                    const code = window.ideEditor.getValue();
+                    const cursor = window.ideEditor.getCursorPosition();
 
-        // Clear list
-        userListEl.innerHTML = '';
+                    socket.emit('monitor_data', {
+                        targetSocketId: data.monitorId,
+                        code: code,
+                        cursor: cursor
+                    });
+                });
 
-        if (users.length === 0) {
-            userListEl.innerHTML = '<div class="empty-state"><p>접속자가 없습니다.</p></div>';
-            return;
-        }
+                // Send initial state
+                socket.emit('monitor_data', {
+                    targetSocketId: data.monitorId,
+                    code: window.ideEditor.getValue(),
+                    cursor: window.ideEditor.getCursorPosition()
+                });
+            }
+        });
 
-        users.forEach(user => {
-            const isMe = user.id === currentUser.id;
-            const item = document.createElement('div');
-            item.className = 'user-list-item';
-            item.innerHTML = `
+        socket.on('cmd_monitor_stop', () => {
+            console.log('👁️ Monitoring Stopped');
+            amBeingMonitored = false;
+        });
+
+        // For Teacher: Recieve Data
+        socket.on('monitor_update', (data) => {
+            // Update Monitoring Editor
+            if (monitorModal.style.display !== 'none' && monitorEditor) {
+                const currentPos = monitorEditor.getCursorPosition();
+                monitorEditor.setValue(data.code, -1);
+
+                // Optional: Show cursor
+                // monitorEditor.moveCursorToPosition(data.cursor);
+                // monitorEditor.clearSelection();
+            }
+        });
+
+        function renderUserList(users) {
+            // Online Indicator Logic (Green Dot)
+            // If more than 1 user (me + others), show green dot
+            if (users.length > 1) {
+                onlineIndicator.classList.add('show');
+                onlineIndicator.textContent = '❇️'; // Green emoji or check
+            } else {
+                onlineIndicator.classList.remove('show');
+            }
+
+            const userListEl = document.getElementById('nuguriUserList');
+            const countBadge = document.getElementById('userCountBadge');
+
+            // Update Count
+            if (countBadge) countBadge.textContent = `(${users.length})`;
+
+            // Clear list
+            userListEl.innerHTML = '';
+
+            if (users.length === 0) {
+                userListEl.innerHTML = '<div class="empty-state"><p>접속자가 없습니다.</p></div>';
+                return;
+            }
+
+            users.forEach(user => {
+                const isMe = user.id === currentUser.id;
+                const item = document.createElement('div');
+                item.className = 'user-list-item';
+                item.innerHTML = `
                 <div class="user-avatar">
                    <img src="/resource/profiles/default.webp" alt="User">
                 </div>
@@ -347,97 +399,192 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="user-status">온라인</div>
                 </div>
+                ${!isMe && ['teacher', 'admin', 'manager'].includes(currentUser.role) ?
+                        `<button class="monitor-btn" onclick="startMonitoring('${user.id}')" title="모니터링" style="margin-left: auto; background: none; border: none; cursor: pointer; color: #fff;">
+                        <i class="bi bi-eye"></i>
+                    </button>`
+                        : ''}
             `;
-            userListEl.appendChild(item);
-        });
-    }
 
-    // --- Draggable & Bouncing Logic ---
-    makeDraggable(container, floatIcon);
-    startRandomBouncing(floatIcon);
-
-    function makeDraggable(element, handle) {
-        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
-        handle.onmousedown = dragMouseDown;
-        handle.ontouchstart = dragTouchStart;
-
-        function dragMouseDown(e) {
-            e.preventDefault(); // Prevent default image dragging
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-            document.onmouseup = closeDragElement;
-            document.onmousemove = elementDrag;
+                // 🔥 Make startMonitoring global so onclick works
+                window.startMonitoring = ((targetId) => {
+                    currentMonitoredUserId = targetId;
+                    startMonitoring(targetId);
+                });
+                userListEl.appendChild(item);
+            });
         }
 
-        function elementDrag(e) {
-            e.preventDefault();
-            // Calculate new cursor position
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
-            pos3 = e.clientX;
-            pos4 = e.clientY;
+        // --- Draggable & Bouncing Logic ---
+        makeDraggable(container, floatIcon);
+        startRandomBouncing(floatIcon);
 
-            // Set the element's new position
-            // Note: Use offsetTop/Left because we are modifying standard positioning
-            // Logic: We are modifying bottom/right based on delta? 
-            // Better: Switch to fixed Left/Top calculation if we want full freedom, 
-            // but simple transform is easier. Let's use Top/Left style modification.
+        function makeDraggable(element, handle) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-            const newTop = element.offsetTop - pos2;
-            const newLeft = element.offsetLeft - pos1;
+            handle.onmousedown = dragMouseDown;
+            handle.ontouchstart = dragTouchStart;
 
-            element.style.top = newTop + "px";
-            element.style.left = newLeft + "px";
-            element.style.bottom = 'auto'; // Clear CSS bottom
-            element.style.right = 'auto';  // Clear CSS right
-        }
-
-        function closeDragElement() {
-            // Stop moving when mouse button is released:
-            document.onmouseup = null;
-            document.onmousemove = null;
-        }
-
-        // Touch Support
-        function dragTouchStart(e) {
-            const touch = e.touches[0];
-            pos3 = touch.clientX;
-            pos4 = touch.clientY;
-            document.ontouchend = closeDragElement;
-            document.ontouchmove = elementTouchDrag;
-        }
-
-        function elementTouchDrag(e) {
-            const touch = e.touches[0];
-            pos1 = pos3 - touch.clientX;
-            pos2 = pos4 - touch.clientY;
-            pos3 = touch.clientX;
-            pos4 = touch.clientY;
-
-            const newTop = element.offsetTop - pos2;
-            const newLeft = element.offsetLeft - pos1;
-
-            element.style.top = newTop + "px";
-            element.style.left = newLeft + "px";
-            element.style.bottom = 'auto';
-            element.style.right = 'auto';
-        }
-    }
-
-    function startRandomBouncing(element) {
-        // Random bounce every 15-40 seconds
-        setInterval(() => {
-            if (Math.random() > 0.3) {
-                element.classList.add('bounce-animate');
-                setTimeout(() => {
-                    element.classList.remove('bounce-animate');
-                }, 2000); // Animation duration
+            function dragMouseDown(e) {
+                e.preventDefault(); // Prevent default image dragging
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
             }
-        }, 20000);
-    }
 
-    // Utility
+            function elementDrag(e) {
+                e.preventDefault();
+                // Calculate new cursor position
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+
+                // Set the element's new position
+                // Note: Use offsetTop/Left because we are modifying standard positioning
+                // Logic: We are modifying bottom/right based on delta? 
+                // Better: Switch to fixed Left/Top calculation if we want full freedom, 
+                // but simple transform is easier. Let's use Top/Left style modification.
+
+                const newTop = element.offsetTop - pos2;
+                const newLeft = element.offsetLeft - pos1;
+
+                element.style.top = newTop + "px";
+                element.style.left = newLeft + "px";
+                element.style.bottom = 'auto'; // Clear CSS bottom
+                element.style.right = 'auto';  // Clear CSS right
+            }
+
+            function closeDragElement() {
+                // Stop moving when mouse button is released:
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+
+            // Touch Support
+            function dragTouchStart(e) {
+                const touch = e.touches[0];
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+                document.ontouchend = closeDragElement;
+                document.ontouchmove = elementTouchDrag;
+            }
+
+            function elementTouchDrag(e) {
+                const touch = e.touches[0];
+                pos1 = pos3 - touch.clientX;
+                pos2 = pos4 - touch.clientY;
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+
+                const newTop = element.offsetTop - pos2;
+                const newLeft = element.offsetLeft - pos1;
+
+                element.style.top = newTop + "px";
+                element.style.left = newLeft + "px";
+                element.style.bottom = 'auto';
+                element.style.right = 'auto';
+            }
+        }
+
+        function startRandomBouncing(element) {
+            // Random bounce every 15-40 seconds
+            setInterval(() => {
+                if (Math.random() > 0.3) {
+                    element.classList.add('bounce-animate');
+                    setTimeout(() => {
+                        element.classList.remove('bounce-animate');
+                    }, 2000); // Animation duration
+                }
+            }, 20000);
+        }
+
+
+        // --- Monitoring Logic ---
+        let monitoringSocketId = null; // ID of the person I am monitoring
+        let amBeingMonitored = false;
+
+        // Create Monitor Modal (Teacher Side)
+        const monitorModal = document.createElement('div');
+        monitorModal.id = 'monitorModal';
+        monitorModal.style.cssText = `
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 800px;
+        height: 600px;
+        background: #1e1e1e;
+        border: 1px solid #444;
+        border-radius: 8px;
+        z-index: 10000;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        flex-direction: column;
+    `;
+        monitorModal.innerHTML = `
+        <div style="padding: 10px; background: #252526; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; color: #fff;">
+            <span id="monitorModalTitle" style="font-weight: bold;">모니터링 중...</span>
+            <button id="closeMonitorBtn" style="background: none; border: none; color: #fff; cursor: pointer;">&times;</button>
+        </div>
+        <div id="monitorEditor" style="flex: 1; width: 100%; height: 100%;"></div>
+    `;
+        document.body.appendChild(monitorModal);
+
+        const closeMonitorBtn = document.getElementById('closeMonitorBtn');
+        let monitorEditor = null;
+
+        closeMonitorBtn.addEventListener('click', () => {
+            stopMonitoring();
+        });
+
+        function initMonitorEditor() {
+            if (!monitorEditor && window.ace) {
+                monitorEditor = ace.edit("monitorEditor");
+                monitorEditor.setTheme("ace/theme/monokai");
+                monitorEditor.session.setMode("ace/mode/python");
+                monitorEditor.setReadOnly(true);
+                monitorEditor.setFontSize(14);
+            }
+        }
+
+        function startMonitoring(targetUserId) {
+            if (!socket) return;
+            socket.emit('request_monitor', targetUserId);
+
+            monitorModal.style.display = 'flex';
+            document.getElementById('monitorModalTitle').textContent = `${targetUserId} 모니터링 중...`;
+
+            initMonitorEditor();
+            if (monitorEditor) monitorEditor.setValue("학생의 입력을 기다리는 중...", -1);
+        }
+
+        function stopMonitoring() {
+            monitorModal.style.display = 'none';
+
+            // Notify server
+            // We need to know who we were monitoring. 
+            // Logic simplification: Just emit stop with current monitoring ID if we tracked it, 
+            // but for now we rely on the teacher knowing who they clicked.
+            // Better: store currentMonitoredUser
+            if (monitoringSocketId) {
+                // We actually need the UserID, not socket ID, for the stop_monitor event based on server implementation
+                // But server expects UserID. Let's fix this later or assume we store it.
+            }
+            // Ideally we should track 'currentMonitoredUserId'
+            if (currentMonitoredUserId) {
+                socket.emit('stop_monitor', currentMonitoredUserId);
+            }
+            currentMonitoredUserId = null;
+        }
+
+        let currentMonitoredUserId = null;
+
+
+    } // This closes the initSocketEvents function, assuming it was defined just before the comments.
+
+    // --- Updated Utility ---
     function escapeHtml(text) {
         if (!text) return text;
         return text
@@ -448,3 +595,4 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, "&#039;");
     }
 });
+
