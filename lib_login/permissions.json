@@ -2,132 +2,329 @@
     "pages": {
         "/admin": {
             "name": "관리자 대시보드",
-            "roles": ["admin"]
+            "roles": [
+                "admin"
+            ]
         },
         "/kinder": {
             "name": "유치원",
-            "roles": ["admin", "kinder"]
+            "roles": [
+                "admin",
+                "kinder"
+            ]
         },
         "/computer": {
             "name": "컴퓨터 기초활용",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/scratch_project": {
             "name": "스크래치",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/entry_project": {
             "name": "엔트리",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/python_project": {
             "name": "파이썬",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/certification": {
             "name": "자격증 과정",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/machinelearning": {
             "name": "인공지능",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/algorithm": {
             "name": "알고리즘 연습",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/aiMath": {
             "name": "AI 수학",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/dataAnalysis": {
             "name": "데이터 분석",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/appinventor_project": {
             "name": "앱인벤터",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/template": {
             "name": "템플릿",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/teacher": {
             "name": "교사 교육",
-            "roles": ["admin", "manager", "teacher"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher"
+            ]
         },
         "/board": {
             "name": "게시판",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/learning": {
             "name": "학습 관리",
-            "roles": ["admin", "manager", "teacher"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher"
+            ]
         },
         "/report": {
             "name": "리포트 생성",
-            "roles": ["admin", "manager", "teacher"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher"
+            ]
         },
         "/onlineclass": {
             "name": "온라인 클래스",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/portfolio": {
             "name": "포트폴리오",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/entry/*": {
             "name": "엔트리 관련",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/appinventor/*": {
             "name": "앱인벤터 관련",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/python/*": {
             "name": "파이썬 관련",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/admin/*": {
             "name": "관리자 기능",
-            "roles": ["admin"]
+            "roles": [
+                "admin"
+            ]
         },
         "/nuguritalk/*": {
             "name": "너구리톡",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/kinder/*": {
             "name": "유치원 기능",
-            "roles": ["admin", "kinder"]
+            "roles": [
+                "admin",
+                "kinder"
+            ]
         },
         "/template/*": {
             "name": "템플릿 기능",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/machu": {
             "name": "마추기 게임",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
+        },
+        "/observatory": {
+            "name": "관측소 (Observatory)",
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         },
         "/machu/*": {
             "name": "마추기 게임 기능",
-            "roles": ["admin", "manager", "teacher", "student"]
+            "roles": [
+                "admin",
+                "manager",
+                "teacher",
+                "student"
+            ]
         }
     },
     "features": {
-        "PPT_BUTTON": ["admin", "teacher", "manager"],
-        "USER_MANAGE": ["admin"],
-        "CONTENT_EDIT": ["admin", "manager", "teacher"],
-        "ANSWER_VIEW": ["admin", "manager", "teacher"],
-        "CODE_EXECUTION": ["admin", "manager", "teacher", "student"],
-        "QUIZ_CREATION": ["admin", "manager", "teacher"],
-        "REPORT_GENERATION": ["admin", "manager", "teacher"],
-        "PORTFOLIO_MANAGE": ["admin", "manager", "teacher", "student"],
-        "DATA_ANALYSIS": ["admin", "manager", "teacher", "student"],
-        "AI_MATH_ACCESS": ["admin", "manager", "teacher", "student"],
-        "JUPYTER_ACCESS": ["admin", "manager", "teacher"],
-        "PYTHON_EXECUTION": ["admin", "manager", "teacher", "student"],
-        "ALGORITHM_PRACTICE": ["admin", "manager", "teacher", "student"],
-        "CERTIFICATION_TEST": ["admin", "manager", "teacher", "student"]
+        "PPT_BUTTON": [
+            "admin",
+            "teacher",
+            "manager"
+        ],
+        "USER_MANAGE": [
+            "admin"
+        ],
+        "CONTENT_EDIT": [
+            "admin",
+            "manager",
+            "teacher"
+        ],
+        "ANSWER_VIEW": [
+            "admin",
+            "manager",
+            "teacher"
+        ],
+        "CODE_EXECUTION": [
+            "admin",
+            "manager",
+            "teacher",
+            "student"
+        ],
+        "QUIZ_CREATION": [
+            "admin",
+            "manager",
+            "teacher"
+        ],
+        "REPORT_GENERATION": [
+            "admin",
+            "manager",
+            "teacher"
+        ],
+        "PORTFOLIO_MANAGE": [
+            "admin",
+            "manager",
+            "teacher",
+            "student"
+        ],
+        "DATA_ANALYSIS": [
+            "admin",
+            "manager",
+            "teacher",
+            "student"
+        ],
+        "AI_MATH_ACCESS": [
+            "admin",
+            "manager",
+            "teacher",
+            "student"
+        ],
+        "JUPYTER_ACCESS": [
+            "admin",
+            "manager",
+            "teacher"
+        ],
+        "PYTHON_EXECUTION": [
+            "admin",
+            "manager",
+            "teacher",
+            "student"
+        ],
+        "ALGORITHM_PRACTICE": [
+            "admin",
+            "manager",
+            "teacher",
+            "student"
+        ],
+        "CERTIFICATION_TEST": [
+            "admin",
+            "manager",
+            "teacher",
+            "student"
+        ]
     },
     "roles": {
         "admin": {
@@ -166,7 +363,7 @@
             "name": "학습 콘텐츠",
             "pages": [
                 "/computer",
-                "/scratch_project", 
+                "/scratch_project",
                 "/entry_project",
                 "/python_project",
                 "/algorithm",

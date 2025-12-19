@@ -251,7 +251,7 @@ app.use((req, res, next) => {
 });
 
 // 🔥 Observatory 3D Dashboard Route
-app.get('/observatory', checkPageAccess, (req, res) => {
+app.get('/observatory', checkPageAccess('/observatory'), (req, res) => {
   res.render('observatory', {
     user: req.session.userID,
     role: req.session.role
