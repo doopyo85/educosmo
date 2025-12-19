@@ -1203,6 +1203,23 @@ if (!PORT) {
   process.exit(1);
 }
 
+// 🔥 Database Migration: Drop Invalid FK
+(async () => {
+  try {
+    const result = await db.queryDatabase(
+      `SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE 
+       WHERE TABLE_NAME = 'LearningLogs' AND CONSTRAINT_NAME = 'LearningLogs_ibfk_2' AND TABLE_SCHEMA = DATABASE()`
+    );
+    if (result && result.length > 0) {
+      console.log('🚧 Fixing DB: Dropping invalid foreign key LearningLogs_ibfk_2...');
+      await db.queryDatabase('ALTER TABLE LearningLogs DROP FOREIGN KEY LearningLogs_ibfk_2');
+      console.log('✅ DB Fix Complete: LearningLogs_ibfk_2 dropped.');
+    }
+  } catch (err) {
+    console.error('❌ DB Fix Error:', err.message);
+  }
+})();
+
 const server = app.listen(PORT, () => {
   console.log(`✅ 서버 실행`);
   console.log(`   - PORT: ${PORT}`);

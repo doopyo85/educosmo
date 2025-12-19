@@ -979,7 +979,7 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
                 spritesCount: p.sprites_count,
                 createdAt: p.created_at,
                 updatedAt: p.updated_at,
-                thumbnailUrl: null, // TODO: 썸네일 기능 추가 예정
+                thumbnailUrl: p.thumbnail_url || null,  // 🔥 DB에서 실제 썸네일 URL 반환
                 metadata: p.metadata ? (typeof p.metadata === 'string' ? JSON.parse(p.metadata) : p.metadata) : null
             }))
         });
