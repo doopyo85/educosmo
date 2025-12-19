@@ -388,7 +388,7 @@ router.post('/run-python', authenticateUser, (req, res) => {
 // 🔥 추가: 문제 제출 및 채점 API
 router.post('/submit-solution', authenticateUser, async (req, res) => {
   try {
-    const { problemId, code } = req.body;
+    const { problemId, code, examName } = req.body;
 
     if (!problemId || !code) {
       return res.status(400).json({
@@ -397,9 +397,9 @@ router.post('/submit-solution', authenticateUser, async (req, res) => {
       });
     }
 
-    console.log(`📝 문제 제출 요청: Problem ${problemId}, User ${req.session.userID}`);
+    console.log(`📝 문제 제출 요청: Exam ${examName}, Problem ${problemId}, User ${req.session.userID}`);
 
-    const result = await pythonProblemManager.submitSolution(problemId, code, req.session.userID);
+    const result = await pythonProblemManager.submitSolution(problemId, code, req.session.userID, examName);
 
     res.json({
       success: true,

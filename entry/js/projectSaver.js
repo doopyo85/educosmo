@@ -232,6 +232,53 @@ class EntryProjectSaver {
   }
 
   /**
+   * 🔥 스테이지 썸네일 캡처 (Base64)
+   * Entry 캔버스를 이미지로 캡처하여 반환
+   */
+  async captureStageThumb() {
+    try {
+      // Entry 스테이지 캔버스 찾기
+      const stageCanvas = document.querySelector('#entryCanvas') || 
+                          document.querySelector('.entryCanvas') ||
+                          document.querySelector('canvas[class*="entry"]') ||
+                          document.querySelector('#canvas');
+      
+      if (!stageCanvas) {
+        console.warn('⚠️ Entry 캔버스를 찾을 수 없습니다.');
+        return null;
+      }
+      
+      // 썸네일 크기 (180x135 = 4:3 비율)
+      const thumbWidth = 180;
+      const thumbHeight = 135;
+      
+      // 임시 캔버스 생성
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = thumbWidth;
+      tempCanvas.height = thumbHeight;
+      const ctx = tempCanvas.getContext('2d');
+      
+      // 원본 캔버스를 썸네일 크기로 축소하여 그리기
+      ctx.drawImage(stageCanvas, 0, 0, thumbWidth, thumbHeight);
+      
+      // Base64 PNG로 변환 (품질 조절로 용량 최적화)
+      const thumbnailBase64 = tempCanvas.toDataURL('image/png', 0.8);
+      
+      console.log('📸 썸네일 캡처 완료:', {
+        originalSize: `${stageCanvas.width}x${stageCanvas.height}`,
+        thumbSize: `${thumbWidth}x${thumbHeight}`,
+        dataLength: thumbnailBase64.length
+      });
+      
+      return thumbnailBase64;
+      
+    } catch (error) {
+      console.error('❌ 썸네일 캡처 실패:', error);
+      return null;
+    }
+  }
+
+  /**
    * 🔥 프로젝트 저장 (기존 API 사용)
    * POST /entry/api/save-project
    */
@@ -250,9 +297,14 @@ class EntryProjectSaver {
       }
 
       const projectData = Entry.exportProject();
+      
+      // 🔥 썸네일 캡처
+      const thumbnailBase64 = await this.captureStageThumb();
+      
       console.log('📦 프로젝트 데이터 추출 완료:', {
         objects: projectData.objects?.length || 0,
-        scenes: projectData.scenes?.length || 0
+        scenes: projectData.scenes?.length || 0,
+        hasThumbnail: !!thumbnailBase64
       });
 
       // URL에서 projectId 확인 (새로고침 대비)
@@ -272,7 +324,7 @@ class EntryProjectSaver {
 
       console.log(`📤 서버로 전송 중: ${this.apiBase}/save-project`);
       
-      // 3. 🔥 기존 API 호출
+      // 3. 🔥 기존 API 호출 (썸네일 포함)
       const response = await fetch(`${this.apiBase}/save-project`, {
         method: 'POST',
         headers: {
@@ -287,7 +339,8 @@ class EntryProjectSaver {
           userID: this.userID,
           centerID: window.EDUCODINGNPLAY_USER?.centerID || null,
           isUpdate: !!this.loadedProjectId,
-          projectId: this.loadedProjectId
+          projectId: this.loadedProjectId,
+          thumbnailBase64: thumbnailBase64  // 🔥 썸네일 데이터 추가
         })
       });
 

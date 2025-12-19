@@ -402,6 +402,104 @@ class IDEComponent extends Component {
   /**
    * 🔥 솔루션 제출
    */
+  // 🔥 Confetti Effect
+  async triggerConfetti() {
+    if (!window.confetti) {
+      // Dynamic load
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    if (window.confetti) {
+      window.confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+  }
+
+  // 🔥 Series End Confetti
+  async triggerBigConfetti() {
+    if (!window.confetti) {
+      await this.triggerConfetti(); // Load it first
+    }
+
+    if (window.confetti) {
+      var duration = 3000;
+      var animationEnd = Date.now() + duration;
+      var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+      function random(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      var interval = setInterval(function () {
+        var timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        var particleCount = 50 * (timeLeft / duration);
+        window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: random(0.1, 0.3), y: Math.random() - 0.2 } }));
+        window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: random(0.7, 0.9), y: Math.random() - 0.2 } }));
+      }, 250);
+    }
+  }
+
+  // 🔥 Sound Effect
+  playSound(type) {
+    const sounds = {
+      success: '/resource/sound/yay.mp3',
+      fail: '/resource/sound/e-oh.mp3',
+      complete: '/resource/sound/tada.mp3'
+    };
+
+    const path = sounds[type];
+    if (path) {
+      new Audio(path).play().catch(e => console.log('Audio play error:', e));
+    }
+  }
+
+  // 🔥 Auto Navigation
+  moveToNextProblem() {
+    const nextNum = parseInt(this.state.currentProblemNumber) + 1;
+    console.log(`Auto-navigating to problem ${nextNum}`);
+
+    // Update State
+    this.state.currentProblemNumber = nextNum;
+
+    // Hide Modal
+    const modalEl = document.getElementById('submissionResultModal');
+    if (modalEl && window.bootstrap) {
+      const modal = window.bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    }
+
+    // Trigger Problem Change Logic
+    // 1. Update UI (Sidebar?) - This is hard to reach from here without global event.
+    // Try EventBus if available
+    if (window.EventBus) {
+      // Assuming there is a listener that handles 'problemSelection' or similar
+      // For now, let's try to reload the editor content manually as a fallback
+    }
+
+    // 2. Reload Code
+    if (this.modules.codeEditor) {
+      this.modules.codeEditor.loadExampleCodeFromAPI(this.state.currentExamName, nextNum);
+    }
+
+
+    // 3. Update URL if possible (optional, might require page reload if heavy)
+    // alert('Next Problem!'); 
+  }
+
   async submitSolution() {
     console.log('📝 Submitting solution...');
     const submitBtn = document.getElementById(this.options.submitButtonId);
@@ -428,11 +526,12 @@ class IDEComponent extends Component {
       const code = this.modules.codeEditor.getCurrentCode();
       // Use currentProblemNumber as problemId (assuming backend handles it)
       const problemId = this.state.currentProblemNumber;
+      const examName = this.state.currentExamName; // 🔥 추가: 시험지명
 
       const response = await fetch('/api/submit-solution', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ problemId, code })
+        body: JSON.stringify({ problemId, code, examName }) // 🔥 examName 전송
       });
 
       const result = await response.json();
@@ -440,6 +539,32 @@ class IDEComponent extends Component {
       // Render Result
       if (result.success && result.data) {
         this.renderSubmissionResult(result.data);
+
+        // 🔥 UX Logic: Sound, Confetti, Nav
+        const isSuccess = result.data.success;
+        const currentNum = parseInt(this.state.currentProblemNumber);
+
+        if (isSuccess) {
+          if (currentNum >= 10) {
+            // Series Completion
+            this.playSound('complete');
+            this.triggerBigConfetti();
+            // No navigation
+          } else {
+            // Normal Success
+            this.playSound('success');
+            this.triggerConfetti();
+
+            // Auto Nav
+            setTimeout(() => {
+              this.moveToNextProblem();
+            }, 2000);
+          }
+        } else {
+          // Failure
+          this.playSound('fail');
+        }
+
       } else {
         if (modalBody) {
           modalBody.innerHTML = `<div class="alert alert-danger">${result.message || '오류가 발생했습니다.'}</div>`;
@@ -469,6 +594,8 @@ class IDEComponent extends Component {
         .apple-container {
           font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
           color: #1d1d1f;
+          display: flex;
+          justify-content: center; /* 🔥 중앙 정렬 */
         }
         .apple-card {
           background: #ffffff;
@@ -476,6 +603,8 @@ class IDEComponent extends Component {
           box-shadow: 0 4px 24px rgba(0,0,0,0.06);
           overflow: hidden;
           border: 1px solid rgba(0,0,0,0.04);
+          width: 100%;
+          max-width: 600px; /* 🔥 최대 너비 제한 */
         }
         .apple-header {
           padding: 40px 20px 30px;
@@ -490,11 +619,13 @@ class IDEComponent extends Component {
           margin-top: 15px;
           margin-bottom: 5px;
           color: #1d1d1f;
+          word-break: break-word; /* 🔥 줄바꿈 추가 */
         }
         .apple-subtext {
           font-size: 15px;
           color: #86868b;
           font-weight: 500;
+          word-break: break-word; /* 🔥 줄바꿈 추가 */
         }
         .apple-list {
           padding: 0;
@@ -533,6 +664,7 @@ class IDEComponent extends Component {
           color: #1d1d1f;
           margin-top: 6px;
           word-break: break-all;
+          white-space: pre-wrap; /* 🔥 줄바꿈 및 공백 유지 */
         }
         .apple-label {
           font-size: 11px;
@@ -566,6 +698,8 @@ class IDEComponent extends Component {
         .apple-diff-val {
             font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
             flex: 1;
+            word-break: break-all; /* 🔥 줄바꿈 추가 */
+            white-space: pre-wrap;
         }
         .val-error { color: #ff3b30; }
         .val-success { color: #34c759; }

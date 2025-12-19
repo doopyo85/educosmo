@@ -332,7 +332,7 @@ router.get('/api/load-project', authenticateUser, async (req, res) => {
 
 router.post('/api/save-project', authenticateUser, async (req, res) => {
     try {
-        const { projectData, projectName, userID: clientUserID, centerID: clientCenterID, isUpdate, projectId, saveType } = req.body;
+        const { projectData, projectName, userID: clientUserID, centerID: clientCenterID, isUpdate, projectId, saveType, thumbnailBase64 } = req.body;
         const userID = clientUserID || req.session.userID;
         
         if (!projectData) {
@@ -447,6 +447,27 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
         
         console.log(`✅ S3 업로드 완료: ${s3Url}`);
 
+        // 🔥 5-1. 썸네일 업로드 (있는 경우)
+        let thumbnailUrl = null;
+        if (thumbnailBase64) {
+            try {
+                // Base64 데이터에서 헤더 제거 (data:image/png;base64, 부분)
+                const base64Data = thumbnailBase64.replace(/^data:image\/\w+;base64,/, '');
+                const thumbnailBuffer = Buffer.from(base64Data, 'base64');
+                
+                // 썸네일 S3 키 생성
+                const thumbKey = `users/${userID}/entry/${actualSaveType}/thumbnails/${safeName}_${timestamp}.png`;
+                
+                // S3에 썸네일 업로드
+                thumbnailUrl = await s3Manager.uploadProject(thumbKey, thumbnailBuffer, 'image/png');
+                
+                console.log(`📸 썸네일 업로드 완료: ${thumbnailUrl}`);
+            } catch (thumbError) {
+                console.warn(`⚠️ 썸네일 업로드 실패 (무시하고 계속):`, thumbError.message);
+                // 썸네일 실패해도 저장은 계속 진행
+            }
+        }
+
         // 6. DB 저장 (ProjectSubmissions)
         let dbProjectId;
         
@@ -457,7 +478,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
         const spritesCount = projectData.objects?.length || 0;
 
         if (effectiveIsUpdate && effectiveProjectId) {
-            // 덮어쓰기: 기존 레코드 업데이트
+            // 덮어쓰기: 기존 레코드 업데이트 (🔥 썸네일 포함)
             await db.queryDatabase(`
                 UPDATE ProjectSubmissions 
                 SET project_name = ?,
@@ -466,6 +487,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
                     file_size_kb = ?,
                     blocks_count = ?,
                     sprites_count = ?,
+                    thumbnail_url = COALESCE(?, thumbnail_url),
                     updated_at = NOW()
                 WHERE id = ? AND user_id = ?
             `, [
@@ -475,6 +497,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
                 Math.ceil(fileSize / 1024),
                 blocksCount,
                 spritesCount,
+                thumbnailUrl,
                 effectiveProjectId,
                 userId
             ]);
@@ -492,11 +515,11 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
             }
             
         } else {
-            // 새 저장: INSERT
+            // 새 저장: INSERT (🔥 썸네일 포함)
             const insertResult = await db.queryDatabase(`
                 INSERT INTO ProjectSubmissions 
-                (user_id, center_id, platform, project_name, save_type, s3_url, s3_key, file_size_kb, blocks_count, sprites_count, created_at, updated_at)
-                VALUES (?, ?, 'entry', ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                (user_id, center_id, platform, project_name, save_type, s3_url, s3_key, file_size_kb, blocks_count, sprites_count, thumbnail_url, created_at, updated_at)
+                VALUES (?, ?, 'entry', ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             `, [
                 userId,
                 centerId,
@@ -506,7 +529,8 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
                 s3Key,
                 Math.ceil(fileSize / 1024),
                 blocksCount,
-                spritesCount
+                spritesCount,
+                thumbnailUrl
             ]);
             
             dbProjectId = insertResult.insertId;
@@ -524,6 +548,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
             s3Key: s3Key,
             fileSize: fileSize,
             fileSizeKb: Math.ceil(fileSize / 1024),
+            thumbnailUrl: thumbnailUrl,  // 🔥 썸네일 URL 추가
             message: effectiveIsUpdate ? '프로젝트가 업데이트되었습니다.' : '프로젝트가 저장되었습니다.'
         });
 
@@ -881,6 +906,7 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
 
         // 🔥 수정: updated_at DESC로 변경 (autosave는 UPDATE되므로)
         // 🔥 수정: LIMIT 100으로 증가
+        // 🔥 수정: thumbnail_url 추가
         let query = `
             SELECT 
                 id,
@@ -895,6 +921,7 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
                 blocks_count,
                 sprites_count,
                 metadata,
+                thumbnail_url,
                 created_at,
                 updated_at
             FROM ProjectSubmissions

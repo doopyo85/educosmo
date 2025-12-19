@@ -19,7 +19,23 @@ Github_sync_contents/python/cospro_2-7_p07.html,cospro_2-7,p07,_,Github_sync_con
 Github_sync_contents/python/cospro_2-7_p08.html,cospro_2-7,p08,_,Github_sync_contents/python/cospro_2-7_e08.py,_,Github_sync_contents/python/cospro_2-7_a08.py,Github_sync_contents/python/cospro_2-7_s08.md,io,_,_,_,_,_
 Github_sync_contents/python/cospro_2-7_p09.html,cospro_2-7,p09,_,Github_sync_contents/python/cospro_2-7_e09.py,_,Github_sync_contents/python/cospro_2-7_a09.py,Github_sync_contents/python/cospro_2-7_s09.md,io,_,_,_,_,_
 Github_sync_contents/python/cospro_2-7_p10.html,cospro_2-7,p10,_,Github_sync_contents/python/cospro_2-7_e10.py,_,Github_sync_contents/python/cospro_2-7_p10.py,Github_sync_contents/python/cospro_2-7_s10.md,io,_,_,_,_,_
-Github_sync_contents/python/cospro_3-1_p01.html,cospro_3-1,p01,_,Github_sync_contents/python/cospro_3-1_e01.py,_,Github_sync_contents/python/cospro_3-1_p01.py,Github_sync_contents/python/python_0-0_s00.md,io,_,_,_,_,_
+Github_sync_contents/python/cospro_3-1_p01.html,cospro_3-1,p01,_,Github_sync_contents/python/cospro_3-1_e01.py,_,Github_sync_contents/python/cospro_3-1_p01.py,Github_sync_contents/python/python_0-0_s00.md,io,_,"[ 
+{ 
+""input"": ""5 3"", 
+""output"": ""8"", 
+""is_hidden"": false 
+}, 
+{ 
+""input"": ""10 20"", 
+""output"": ""30"", 
+""is_hidden"": true 
+}, 
+{ 
+""input"": ""-5 5"", 
+""output"": ""0"", 
+""is_hidden"": true 
+} 
+]",_,_,_
 Github_sync_contents/python/cospro_3-1_p02.html,cospro_3-1,p02,_,Github_sync_contents/python/python_0-0_e00.py,_,Github_sync_contents/python/cospro_3-1_p02.py,Github_sync_contents/python/python_0-0_s00.md,io,_,_,_,_,_
 Github_sync_contents/python/cospro_3-1_p03.html,cospro_3-1,p03,_,Github_sync_contents/python/python_0-0_e00.py,_,Github_sync_contents/python/cospro_3-1_p03.py,Github_sync_contents/python/python_0-0_s00.md,io,_,_,_,_,_
 Github_sync_contents/python/cospro_3-1_p04.html,cospro_3-1,p04,_,Github_sync_contents/python/cospro_3-1_e04.py,_,Github_sync_contents/python/cospro_3-1_p04.py,Github_sync_contents/python/python_0-0_s00.md,io,_,_,_,_,_
