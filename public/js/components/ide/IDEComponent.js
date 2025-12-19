@@ -806,13 +806,20 @@ class IDEComponent extends Component {
   // --- 기존 메서드 호환 (onProblemChanged 등) ---
 
   onProblemChanged(examName, problemNumber) {
-    // 문제 로드 시 파일 목록 초기화 로직 필요
-    // (API에서 문제의 starter_code 등을 가져와서 main.py에 세팅)
-    super.onProblemChanged(examName, problemNumber);
+    console.log(`[IDEComponent] Problem Changed: ${examName} / ${problemNumber}`);
 
-    // 예시: 문제 변경 시 main.py 리셋
-    // 실제로는 loadExampleCodeFromAPI 등이 호출되면서 codeEditor 값을 바꿈.
-    // 그 값을 잡아서 main.py content로 업데이트해야 함.
+    // 1. 상태 업데이트
+    this.state.currentExamName = examName;
+    this.state.currentProblemNumber = problemNumber;
+
+    // 2. Mock or Real File Loading Logic
+    // If we have a loader, use it:
+    if (this.modules.codeEditor && this.modules.codeEditor.loadExampleCodeFromAPI) {
+      this.modules.codeEditor.loadExampleCodeFromAPI(examName, problemNumber);
+    }
+
+    // 3. Reset files state if needed (optional)
+    // this.initDefaultFiles(); // careful not to overwrite user work if not intended
   }
 
   setupEventBindings() {
