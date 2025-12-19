@@ -111,7 +111,7 @@ async function createBlankNotebook(userID) {
         return {
             filename: filename,
             s3Key: s3Key,
-            relativePath: path.join(userID, 'jupyter', filename) // Jupyter URL용
+            relativePath: path.join('users', userID, 'jupyter', filename) // Jupyter URL용 ('users' prefix 추가)
         };
     } catch (error) {
         console.error('빈 노트북 생성 오류 (S3):', error);
