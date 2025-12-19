@@ -1,4 +1,10 @@
 const { getSheetData } = require('../lib_google/sheetService'); // 🔥 Import sheetService
+const PythonRunner = require('../lib_execution/PythonRunner');
+const ConnectomeService = require('./ConnectomeService');
+const EvaluationService = require('./EvaluationService');
+const { queryDatabase } = require('../lib_login/db'); // Adjusted Assumption
+
+
 
 class PythonProblemManager {
     constructor() {
