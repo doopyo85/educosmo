@@ -32,7 +32,7 @@ const s3Manager = new S3Manager();
 
 // 사용자별 디렉토리 생성 함수 (S3에서는 폴더 개념이 가상이므로 실제 생성 불필요, 체크만)
 async function ensureUserDir(userID) {
-    const userPrefix = `users/${userID}/`;
+    const userPrefix = `users/${userID}/jupyter/`;
     try {
         // S3에서는 폴더를 명시적으로 생성할 필요가 없지만, 
         // 사용자 존재 여부나 권한 체크를 위해 list를 한번 해볼 수 있음.
@@ -48,7 +48,8 @@ async function ensureUserDir(userID) {
 async function createBlankNotebook(userID) {
     const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
     const filename = `${userID}_${timestamp}.ipynb`;
-    const s3Key = `users/${userID}/${filename}`;
+    // 🔥 유저 폴더 내 jupyter 서브 폴더에 저장
+    const s3Key = `users/${userID}/jupyter/${filename}`;
 
     // 빈 노트북 구조
     const blankNotebook = {
@@ -92,16 +93,16 @@ async function createBlankNotebook(userID) {
 
     try {
         const buffer = Buffer.from(JSON.stringify(blankNotebook, null, 2));
-        
+
         // S3에 직접 업로드
         // uses s3Client from s3Manager
-        const { uploadBufferToS3 } = require('../../lib_board/s3Utils'); 
+        const { uploadBufferToS3 } = require('../../lib_board/s3Utils');
         // Note: s3Manager class might encapsulate this differently. 
         // Checking s3Manager usage in s3BrowserRouter suggests it has upload methods,
         // but s3Utils.js (lib_board) is also available. 
         // Let's use s3Manager.uploadUserProject if available or s3Utils directly.
         // Consistent with s3BrowserRouter:
-        
+
         // Using s3Utils directly for simplicity as s3Manager wrapper might expect multipart
         await uploadBufferToS3(buffer, s3Key, 'application/json');
 
@@ -110,7 +111,7 @@ async function createBlankNotebook(userID) {
         return {
             filename: filename,
             s3Key: s3Key,
-            relativePath: path.join(userID, filename) // Jupyter URL용
+            relativePath: path.join(userID, 'jupyter', filename) // Jupyter URL용
         };
     } catch (error) {
         console.error('빈 노트북 생성 오류 (S3):', error);
