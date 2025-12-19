@@ -60,6 +60,10 @@ class IDEComponent extends Component {
       this.setupDownloadButton();
 
       this.state.isInitialized = true;
+
+      // Global reference for onclick handlers
+      window.ideComponent = this;
+
       console.log('IDEComponent 초기화 완료');
       return true;
 
@@ -338,6 +342,7 @@ class IDEComponent extends Component {
    * 🔥 멀티 파일 실행 로직
    */
   async runMultiFileCode() {
+    this.hideResultView(); // 🔥 Force show terminal
     console.log('🚀 멀티 파일 코드 실행 중...');
 
     // 1. 현재 에디터 내용 저장
@@ -500,38 +505,49 @@ class IDEComponent extends Component {
     // alert('Next Problem!'); 
   }
 
+  // 🔥 Terminal Swap Logic
+  showResultView() {
+    const outputContent = document.getElementById('output-content');
+    const resultContent = document.getElementById('submission-result-content');
+    if (outputContent) outputContent.style.display = 'none';
+    if (resultContent) resultContent.style.display = 'block';
+  }
+
+  hideResultView() {
+    const outputContent = document.getElementById('output-content');
+    const resultContent = document.getElementById('submission-result-content');
+    if (outputContent) outputContent.style.display = 'block'; // Or 'flex' depending on Terminal.js
+    if (resultContent) resultContent.style.display = 'none';
+  }
+
   async submitSolution() {
     console.log('📝 Submitting solution...');
     const submitBtn = document.getElementById(this.options.submitButtonId);
     if (submitBtn) submitBtn.disabled = true;
 
-    // Show Modal
-    const modalEl = document.getElementById('submissionResultModal');
-    const modalBody = document.getElementById('submissionResultBody');
-    if (modalEl && window.bootstrap) {
-      const modal = new window.bootstrap.Modal(modalEl);
-      modal.show();
-      // Reset modal content
-      modalBody.innerHTML = `
+    // 🔥 Swap to Result View & Show Loading
+    this.showResultView();
+    const resultContent = document.getElementById('submission-result-content');
+    if (resultContent) {
+      resultContent.innerHTML = `
             <div class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">채점 중...</span>
                 </div>
                 <p class="mt-2">채점 중입니다...</p>
             </div>
-         `;
+        `;
     }
 
     try {
       const code = this.modules.codeEditor.getCurrentCode();
-      // Use currentProblemNumber as problemId (assuming backend handles it)
       const problemId = this.state.currentProblemNumber;
-      const examName = this.state.currentExamName; // 🔥 추가: 시험지명
+      const examName = this.state.currentExamName;
 
       const response = await fetch('/api/submit-solution', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ problemId, code, examName }) // 🔥 examName 전송
+        body: JSON.stringify({ problemId, code, examName })
       });
 
       const result = await response.json();
@@ -546,42 +562,47 @@ class IDEComponent extends Component {
 
         if (isSuccess) {
           if (currentNum >= 10) {
-            // Series Completion
             this.playSound('complete');
             this.triggerBigConfetti();
-            // No navigation
           } else {
-            // Normal Success
             this.playSound('success');
             this.triggerConfetti();
-
-            // Auto Nav
-            setTimeout(() => {
-              this.moveToNextProblem();
-            }, 2000);
           }
         } else {
-          // Failure
           this.playSound('fail');
         }
 
       } else {
-        if (modalBody) {
-          modalBody.innerHTML = `<div class="alert alert-danger">${result.message || '오류가 발생했습니다.'}</div>`;
+        if (resultContent) {
+          resultContent.innerHTML = `
+            <div class="alert alert-danger m-3">
+                ${result.message || '오류가 발생했습니다.'}
+                <div class="mt-3">
+                    <button class="btn btn-secondary btn-sm" onclick="window.ideComponent.hideResultView()">닫기</button>
+                </div>
+            </div>`;
         }
       }
 
     } catch (e) {
       console.error(e);
-      if (modalBody) modalBody.innerHTML = `<div class="alert alert-danger">서버 통신 오류</div>`;
+      if (resultContent) {
+        resultContent.innerHTML = `
+            <div class="alert alert-danger m-3">
+                서버 통신 오류
+                <div class="mt-3">
+                    <button class="btn btn-secondary btn-sm" onclick="window.ideComponent.hideResultView()">닫기</button>
+                </div>
+            </div>`;
+      }
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
   }
 
   renderSubmissionResult(data) {
-    const modalBody = document.getElementById('submissionResultBody');
-    if (!modalBody) return;
+    const resultContent = document.getElementById('submission-result-content');
+    if (!resultContent) return;
 
     // 1. Calculate Stats
     const passRate = Math.round((data.passed / data.total) * 100);
@@ -799,9 +820,22 @@ class IDEComponent extends Component {
         </div>`;
     });
 
-    html += `</div></div></div>`;
-    modalBody.innerHTML = html;
+    // 🔥 Close Button Added
+    html += `
+            </div>
+            <div style="padding: 20px; text-align: center; background: #fafafa; border-top: 1px solid rgba(0,0,0,0.06);">
+                <button class="btn btn-dark" onclick="window.ideComponent.hideResultView()">
+                    터미널로 돌아가기
+                </button>
+            </div>
+          </div>
+      </div>
+    `;
+
+    resultContent.innerHTML = html;
   }
+
+
 
   // --- 기존 메서드 호환 (onProblemChanged 등) ---
 

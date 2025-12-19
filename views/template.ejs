@@ -209,6 +209,11 @@
                                         <div id="output-content" class="output-content">
                                             <!-- 실행 결과가 여기에 표시됩니다 -->
                                         </div>
+                                        <!-- 🔥 추가: 제출 결과 레포트 컨테이너 (터미널 스왑용) -->
+                                        <div id="submission-result-content" class="submission-result-content"
+                                            style="display: none; height: 100%; overflow-y: auto; background-color: #ffffff;">
+                                            <!-- 채점 결과가 여기에 로드됩니다 -->
+                                        </div>
                                     </div>
                                 </div>
 
@@ -313,29 +318,7 @@
             </div>
         </div>
 
-        <!-- 🔥 추가: 제출 결과 팝업 -->
-        <div class="modal fade" id="submissionResultModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="bi bi-clipboard-check"></i> 채점 결과</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body" id="submissionResultBody">
-                        <!-- 결과 내용이 여기에 동적으로 로드됨 -->
-                        <div class="text-center py-5">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">채점 중...</span>
-                            </div>
-                            <p class="mt-2">채점 중입니다...</p>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- 스크립트 -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

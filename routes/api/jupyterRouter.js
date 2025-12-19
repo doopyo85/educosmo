@@ -44,34 +44,35 @@ async function ensureUserDir(userID) {
     }
 }
 
-// Import checkFileExists
-const { uploadBufferToS3, checkFileExists } = require('../../lib_board/s3Utils');
-
-// 빈 노트북 생성 함수 (S3 업로드) -> 이제는 "사용자 노트북 가져오기/생성" 역할
+// 빈 노트북 생성 함수 (Local FS 사용)
 async function createBlankNotebook(userID) {
-    // 🔥 Timestamp 제거 -> 고정 파일명 사용
     const filename = `${userID}.ipynb`;
-    // 🔥 유저 폴더 내 jupyter 서브 폴더에 저장
-    const s3Key = `users/${userID}/jupyter/${filename}`;
-    // 🔥 중요: Jupyter URL은 항상 Forward Slash(/)를 사용해야 함 (Windows에서도)
-    const relativePath = `users/${userID}/jupyter/${filename}`;
+    // 🔥 유저별 폴더 구조: jupyter_notebooks/users/{userID}/jupyter/
+    // Jupyter의 root가 jupyter_notebooks라면, URL은 /users/{userID}/jupyter/{filename}
+
+    // 1. 로컬 경로 설정 (NOTEBOOKS_DIR = project/jupyter_notebooks)
+    const userDir = path.join(NOTEBOOKS_DIR, 'users', userID, 'jupyter');
+    const filePath = path.join(userDir, filename);
+    const relativePath = `users/${userID}/jupyter/${filename}`; // Jupyter URL용
 
     try {
-        // 1. 이미 존재하는지 확인 (Persistent Storage)
-        const exists = await checkFileExists(s3Key);
+        // 2. 디렉토리 생성 (recursive)
+        await fs.mkdir(userDir, { recursive: true });
 
-        if (exists) {
-            console.log(`기존 노트북 발견: ${s3Key}`);
+        // 3. 이미 존재하는지 확인
+        try {
+            await fs.access(filePath);
+            console.log(`기존 노트북 발견 (Local): ${filePath}`);
             return {
                 filename: filename,
-                s3Key: s3Key,
                 relativePath: relativePath,
                 isNew: false
             };
+        } catch (err) {
+            // 파일이 없으면 계속 진행
         }
 
-        // 2. 없으면 생성
-        // 빈 노트북 구조
+        // 4. 없으면 생성 (빈 노트북 구조)
         const blankNotebook = {
             "cells": [
                 {
@@ -111,21 +112,17 @@ async function createBlankNotebook(userID) {
             "nbformat_minor": 4
         };
 
-        const buffer = Buffer.from(JSON.stringify(blankNotebook, null, 2));
+        await fs.writeFile(filePath, JSON.stringify(blankNotebook, null, 2), 'utf8');
 
-        // S3에 직접 업로드
-        await uploadBufferToS3(buffer, s3Key, 'application/json');
-
-        console.log(`새 고정 노트북 S3 생성 완료: ${s3Key}`);
+        console.log(`새 고정 노트북 생성 완료 (Local): ${filePath}`);
 
         return {
             filename: filename,
-            s3Key: s3Key,
             relativePath: relativePath,
             isNew: true
         };
     } catch (error) {
-        console.error('노트북 확인/생성 오류 (S3):', error);
+        console.error('노트북 확인/생성 오류 (Local):', error);
         throw error;
     }
 }

@@ -371,6 +371,7 @@ router.get('/projects', requireAuth, async (req, res) => {
                 stored_name AS s3Key,
                 file_size AS size,
                 s3_url AS url,
+                thumbnail_url AS thumbnailUrl,
                 created_at AS createdAt
             FROM UserFiles 
             WHERE user_id = ? AND file_category = 'scratch' AND is_deleted = FALSE

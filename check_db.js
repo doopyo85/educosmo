@@ -1,9 +1,10 @@
+require('dotenv').config();
 const { queryDatabase } = require('./lib_login/db');
 
 async function checkSchema() {
     try {
         console.log('Checking tables...');
-        const tables = await queryDatabase("SHOW TABLES LIKE 'board_%'");
+        const tables = await queryDatabase("SHOW TABLES");
         console.log('Tables:', tables);
 
         console.log('\nChecking board_posts columns...');

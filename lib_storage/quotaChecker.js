@@ -274,8 +274,8 @@ async function recordFile(userId, centerId, fileInfo) {
         const result = await db.queryDatabase(`
             INSERT INTO UserFiles 
             (user_id, center_id, file_category, original_name, stored_name, 
-             file_size, file_type, s3_url, related_post_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+             file_size, file_type, s3_url, thumbnail_url, related_post_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
             userId,
             centerId,
@@ -285,6 +285,7 @@ async function recordFile(userId, centerId, fileInfo) {
             fileInfo.size,
             fileInfo.type || fileInfo.mimeType,
             fileInfo.url || fileInfo.s3Url,
+            fileInfo.thumbnailUrl || null,
             fileInfo.postId || null
         ]);
         

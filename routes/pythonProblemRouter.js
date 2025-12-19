@@ -3,7 +3,9 @@ const router = express.Router();
 // Phase 1: Judge0 Integration
 // const PythonRunner = require('../lib_execution/PythonRunner');
 const Judge0Adapter = require('../lib_execution/Judge0Adapter');
+const Judge0Adapter = require('../lib_execution/Judge0Adapter');
 const PythonProblemManager = require('../lib_problem/PythonProblemManager');
+const db = require('../lib_login/db'); // 🔥 Add DB module
 
 // const runner = new PythonRunner();
 const runner = new Judge0Adapter(); // Judge0Adapter implements same interface for executeWithInput
@@ -81,7 +83,26 @@ router.post('/:id/submit', async (req, res) => {
             results: finalResults
         });
 
-        // Remove old loop logic to avoid duplication
+        // 🔥 Log success to Database (for Observatory)
+        if (allPassed && req.session.userID) {
+            try {
+                // 1. Get User numeric ID
+                const [user] = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [req.session.userID]);
+                if (user) {
+                    // 2. Check if already logged (avoid duplicate logs for same problem?)
+                    // Optional: For now, just log everything. Observatory can deduplicate.
+                    await db.queryDatabase(`
+                        INSERT INTO StudentLogs (student_id, log_type, description, created_at)
+                        VALUES (?, 'PROBLEM_SOLVED', ?, CURRENT_TIMESTAMP)
+                    `, [user.id, `Solved Problem ${problemId}`]);
+                    console.log(`✅ Logged solution for User ${user.id}, Problem ${problemId}`);
+                }
+            } catch (dbError) {
+                console.error('Failed to log solution to DB:', dbError);
+                // Don't fail the request just because logging failed
+            }
+        }
+
         return;
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
