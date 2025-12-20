@@ -7,7 +7,7 @@ const { checkPageAccess } = require('../lib_login/authMiddleware');
 const corsOptions = {
   origin: [
     'https://cosmoedu.co.kr',
-    'https://www.cosmoedu.co.kr', 
+    'https://www.cosmoedu.co.kr',
     'http://localhost:3000',
     /\.netlify\.app$/,
     /\.github\.io$/
@@ -31,7 +31,7 @@ router.get('/', checkPageAccess('/machu'), (req, res) => {
 // 🎯 특정 시리즈 게임 페이지
 router.get('/:seriesId', checkPageAccess('/machu'), (req, res) => {
   const seriesId = req.params.seriesId;
-  
+
   res.render('machu_play', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -42,21 +42,33 @@ router.get('/:seriesId', checkPageAccess('/machu'), (req, res) => {
   });
 });
 
+// 🐭 동물 잡기 (클릭 연습) 게임
+router.get('/pong2/click-practice', checkPageAccess('/machu'), (req, res) => {
+  res.render('click_practice', {
+    userID: req.session.userID,
+    userRole: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID,
+    serviceName: res.locals.serviceName
+  });
+});
+
+
 // 🔥 API: 시리즈 목록 (CORS 적용)
 router.get('/api/series', cors(corsOptions), async (req, res) => {
   try {
     // getSheetData 함수 가져오기
     const getSheetData = req.app.get('getSheetData');
     if (!getSheetData) {
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Google Sheets API가 초기화되지 않았습니다.' 
+      return res.status(500).json({
+        success: false,
+        error: 'Google Sheets API가 초기화되지 않았습니다.'
       });
     }
 
     // MemeSeries 시트에서 데이터 가져오기
     const rawData = await getSheetData('MemeSeries!A2:F100');
-    
+
     // 데이터 포맷팅
     const series = rawData.map(row => ({
       id: row[0] || '',
@@ -68,7 +80,7 @@ router.get('/api/series', cors(corsOptions), async (req, res) => {
     })).filter(item => item.id && item.status === 'active');
 
     console.log(`마추기 시리즈 로드 완료: ${series.length}개 시리즈`);
-    
+
     res.json({
       success: true,
       data: series
@@ -87,22 +99,22 @@ router.get('/api/series', cors(corsOptions), async (req, res) => {
 router.get('/api/:seriesId/questions', cors(corsOptions), async (req, res) => {
   try {
     const seriesId = req.params.seriesId;
-    
+
     // getSheetData 함수 가져오기
     const getSheetData = req.app.get('getSheetData');
     if (!getSheetData) {
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Google Sheets API가 초기화되지 않았습니다.' 
+      return res.status(500).json({
+        success: false,
+        error: 'Google Sheets API가 초기화되지 않았습니다.'
       });
     }
 
     // Quiz 시트에서 모든 데이터 가져오기
     const allQuestions = await getSheetData('Quiz!A2:G500');
-    
+
     // 특정 시리즈 문제만 필터링
     const seriesQuestions = allQuestions.filter(row => row[1] === seriesId);
-    
+
     // 데이터 포맷팅
     const questions = seriesQuestions.map((row, index) => ({
       id: parseInt(row[0]) || index + 1,
@@ -115,7 +127,7 @@ router.get('/api/:seriesId/questions', cors(corsOptions), async (req, res) => {
     })).filter(item => item.answer && item.imageUrl);
 
     console.log(`${seriesId} 시리즈 문제 로드 완료: ${questions.length}개 문제`);
-    
+
     res.json({
       success: true,
       seriesId: seriesId,
@@ -136,26 +148,26 @@ router.post('/api/:seriesId/random-game', cors(corsOptions), async (req, res) =>
   try {
     const seriesId = req.params.seriesId;
     const { count = 10 } = req.body;
-    
+
     // 시리즈 문제 가져오기
     const getSheetData = req.app.get('getSheetData');
     const allQuestions = await getSheetData('Quiz!A2:G500');
     const seriesQuestions = allQuestions.filter(row => row[1] === seriesId);
-    
+
     if (seriesQuestions.length < count) {
       return res.status(400).json({
         success: false,
         error: `${seriesId} 시리즈에는 ${seriesQuestions.length}개의 문제만 있습니다.`
       });
     }
-    
+
     // Fisher-Yates 알고리즘으로 랜덤 선택
     const shuffled = [...seriesQuestions];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    
+
     // 선택된 문제들 포맷팅 (정답은 제외하고 전송)
     const gameQuestions = shuffled.slice(0, count).map((row, index) => ({
       questionId: index + 1,
@@ -165,10 +177,10 @@ router.post('/api/:seriesId/random-game', cors(corsOptions), async (req, res) =>
       hint: row[6] || ''
       // 정답과 별칭은 클라이언트에 전송하지 않음 (보안)
     }));
-    
+
     // 게임 세션 ID 생성
     const gameSessionId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     res.json({
       success: true,
       gameSessionId: gameSessionId,
@@ -190,39 +202,39 @@ router.post('/api/:seriesId/random-game', cors(corsOptions), async (req, res) =>
 router.post('/api/check-answer', cors(corsOptions), async (req, res) => {
   try {
     const { seriesId, questionId, userAnswer } = req.body;
-    
+
     if (!seriesId || !questionId || !userAnswer) {
       return res.status(400).json({
         success: false,
         error: '필수 파라미터가 누락되었습니다.'
       });
     }
-    
+
     // Quiz 시트에서 해당 문제 찾기
     const getSheetData = req.app.get('getSheetData');
     const allQuestions = await getSheetData('Quiz!A2:G500');
-    
-    const question = allQuestions.find(row => 
+
+    const question = allQuestions.find(row =>
       row[1] === seriesId && parseInt(row[0]) === parseInt(questionId)
     );
-    
+
     if (!question) {
       return res.status(404).json({
         success: false,
         error: '문제를 찾을 수 없습니다.'
       });
     }
-    
+
     // 정답과 별칭 확인
     const correctAnswer = question[2] || '';
     const aliases = (question[3] || '').split(',').map(alias => alias.trim().toLowerCase());
     const userAnswerLower = userAnswer.trim().toLowerCase();
-    
+
     // 정답 체크 (정답 자체 또는 별칭 중 하나와 일치)
-    const isCorrect = 
+    const isCorrect =
       correctAnswer.toLowerCase() === userAnswerLower ||
       aliases.includes(userAnswerLower);
-    
+
     res.json({
       success: true,
       correct: isCorrect,

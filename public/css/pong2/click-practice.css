@@ -1,0 +1,131 @@
+/* Click Practice Game CSS */
+
+.game-container {
+    max-width: 900px;
+    margin: 30px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
+
+.score-display, .time-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    padding: 10px 20px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    min-width: 150px;
+    text-align: center;
+}
+
+.score-display span, .time-display span {
+    color: #007bff;
+}
+
+.canvas-wrapper {
+    position: relative;
+    width: 600px;
+    height: 600px;
+    margin: 0 auto;
+    border: 4px solid #333;
+    border-radius: 4px;
+    background: #deb887; /* Wooden board color */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    cursor: crosshair;
+}
+
+canvas {
+    display: block;
+}
+
+.game-controls {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.start-btn {
+    font-size: 1.2rem;
+    padding: 12px 40px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+.start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+}
+
+/* Ranking Section */
+.ranking-section {
+    margin-top: 50px;
+    border-top: 1px solid #eee;
+    padding-top: 30px;
+}
+
+.ranking-title {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+    font-weight: bold;
+}
+
+.ranking-table {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.ranking-table th {
+    background: #007bff;
+    color: white;
+    padding: 15px;
+}
+
+.ranking-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.ranking-table tr:first-child td {
+    font-weight: bold;
+    color: #d4af37; /* Gold */
+}
+
+/* Game Over Overlay */
+.game-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    border-radius: 2px;
+}
+
+.overlay-title {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.overlay-score {
+    font-size: 2rem;
+    margin-bottom: 30px;
+}
