@@ -134,6 +134,7 @@ app.use('/node_modules/bootstrap-icons', express.static(path.join(__dirname, 'no
 app.use('/js/turn.js', express.static(path.join(__dirname, 'node_modules/turn.js/turn.min.js')));
 app.use('/favicon.ico', express.static(path.join(__dirname, 'public', 'resource', 'favicon.ico')));
 
+
 app.use('/node_modules', express.static(path.join(__dirname, 'node_modules'), {
   setHeaders: (res, filePath, stat) => {
     const ext = path.extname(filePath).toLowerCase();
