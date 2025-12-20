@@ -67,6 +67,14 @@ try {
   problemRouter = express.Router();
 }
 
+let quizRouter;
+try {
+  quizRouter = require('./api/quizRouter');
+} catch (error) {
+  console.error('quizRouter 로드 실패:', error);
+  quizRouter = express.Router();
+}
+
 // Entry 전용 API 라우터 연결
 try {
   const entryApiRouter = require('./api/entryApiRouter');
@@ -88,6 +96,7 @@ try {
 router.use('/s3', s3BrowserRouter);
 router.use('/game', gameScoreRouter);
 router.use('/jupyter', jupyterRouter);
+router.use('/quiz', quizRouter);
 router.use('/sheets', googleSheetRouter);
 router.use('/', problemRouter);
 
