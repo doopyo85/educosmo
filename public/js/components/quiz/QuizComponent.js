@@ -11,9 +11,9 @@ class QuizComponent extends Component {
       type: 'QUIZ',
       visible: config.visible !== undefined ? config.visible : true
     };
-    
+
     super(mergedConfig);
-    
+
     this.state = {
       currentProblemData: null,
       userAnswers: {},
@@ -21,52 +21,52 @@ class QuizComponent extends Component {
       userProgress: {},
       initialized: false
     };
-    
+
     this.isLoading = false;
     this.lastLoadedExam = '';
     this.lastLoadedProblem = '';
     this.active = false;
     this.userId = null; // 간단한 사용자 ID 저장
-    
+
     this.containerId = config.containerId || 'quiz-component';
-    
+
     this.apiEndpoints = {
       getQuizProblem: '/api/quiz/get-quiz-problem',
       submitAnswer: '/api/quiz/submit-answer',
       getUserProgress: '/api/quiz/get-user-progress'
     };
-    
+
     this.options = {
       allowRetry: config.allowRetry !== undefined ? config.allowRetry : true,
       showFeedback: config.showFeedback !== undefined ? config.showFeedback : true,
       examName: config.examName || ''
     };
-    
+
     this.elements = {
       container: null
     };
-    
+
     this.eventBus = config.eventBus || window.EventBus || {
-      subscribe: function() { console.warn('EventBus not available'); },
-      publish: function() { console.warn('EventBus not available'); }
+      subscribe: function () { console.warn('EventBus not available'); },
+      publish: function () { console.warn('EventBus not available'); }
     };
-    
+
     console.log('✅ QuizComponent 생성됨, 컨테이너 ID:', this.containerId);
-    
+
     this.setupEventBindings();
   }
-  
+
   async init() {
     console.log('퀴즈 컴포넌트 초기화');
-    
+
     this.initElements();
-    
+
     try {
       if (!this.eventBus && window.EventBus) {
         this.eventBus = window.EventBus;
         this.setupEventBindings();
       }
-      
+
       // 🔥 개선: 사용자 정보 가져오기 - 실패해도 계속 진행
       try {
         await this.loadUser();
@@ -75,12 +75,12 @@ class QuizComponent extends Component {
         console.warn('⚠️ 사용자 정보 로드 실패, 나중에 재시도:', userError.message);
         // 사용자 정보 로드 실패해도 계속 진행
       }
-      
+
       await this.loadUserProgress();
-      
+
       this.state.initialized = true;
       console.log('퀴즈 컴포넌트 초기화 완료');
-      
+
       if (this.eventBus && typeof this.eventBus.publish === 'function') {
         this.eventBus.publish('quizComponentInitialized', {
           component: this,
@@ -90,59 +90,59 @@ class QuizComponent extends Component {
     } catch (error) {
       console.error('퀴즈 컴포넌트 초기화 오류:', error);
       this.showError('퀴즈 컴포넌트 초기화에 실패했습니다: ' + error.message);
-      
+
       // 🔥 초기화 실패해도 일부 기능은 유지
       this.state.initialized = true;
     }
   }
-  
+
   /**
    * 🔥 간소화: 사용자 정보 로드 - 단순하게 API 호출만
    */
   async loadUser() {
     console.log('🔍 사용자 정보 로드 시작');
-    
+
     try {
       console.log('📡 /api/get-user-session 호출 중...');
       const response = await fetch('/api/get-user-session');
-      
+
       console.log('📶 응답 상태:', response.status, response.statusText);
-      
+
       if (!response.ok) {
         throw new Error(`세션 API 오류: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log('📊 사용자 세션 응답 데이터:', data);
-      
+
       if (data.is_logined && data.userID) {
         this.userId = data.userID;
         console.log('✅ 사용자 ID 로드 성공:', this.userId);
       } else {
         console.warn('⚠️ 로그인되지 않은 사용자 또는 userID 없음');
         console.log('상세 응답:', data);
-        
+
         // 🔥 폴백: DOM에서 사용자 정보 찾기
         await this.tryGetUserFromDOM();
       }
     } catch (error) {
       console.error('❌ 사용자 정보 로드 실패:', error);
-      
+
       // 🔥 폴백: DOM에서 사용자 정보 찾기
       await this.tryGetUserFromDOM();
-      
+
       if (!this.userId) {
         throw new Error('로그인이 필요합니다. 페이지를 새로고침해 주세요.');
       }
     }
   }
-  
+
   /**
    * 🔥 새로 추가: DOM에서 사용자 정보 가져오기
    */
   async tryGetUserFromDOM() {
     console.log('🔄 DOM에서 사용자 정보 찾기 시도');
-    
+
     // 방법 1: hidden input에서 찾기
     const currentUserElement = document.getElementById('currentUserID');
     if (currentUserElement && currentUserElement.value && currentUserElement.value !== '게스트') {
@@ -150,7 +150,7 @@ class QuizComponent extends Component {
       console.log('✅ hidden input에서 사용자 ID 찾음:', this.userId);
       return;
     }
-    
+
     // 방법 2: userName 엘리먼트에서 찾기
     const userNameElement = document.getElementById('userName');
     if (userNameElement && userNameElement.textContent.trim() !== '게스트') {
@@ -158,7 +158,7 @@ class QuizComponent extends Component {
       console.log('✅ userName에서 사용자 ID 찾음:', this.userId);
       return;
     }
-    
+
     // 방법 3: 다른 API 시도
     try {
       console.log('📡 /api/get-user 호출 중...');
@@ -174,18 +174,18 @@ class QuizComponent extends Component {
     } catch (e) {
       console.warn('대체 API 호출 실패:', e);
     }
-    
+
     console.warn('⚠️ 모든 방법으로 사용자 ID를 찾을 수 없습니다');
   }
-  
+
   initElements() {
     console.log('🔍 퀴즈 컨테이너 찾는 중:', this.containerId);
-    
+
     this.elements.container = document.getElementById(this.containerId);
-    
+
     if (!this.elements.container) {
       console.error(`❌ 퀴즈 컨테이너(${this.containerId})를 찾을 수 없습니다`);
-      
+
       // 대체 컨테이너 찾기
       const possibleIds = ['quiz-component', 'quiz-container', 'quizComponent'];
       for (const id of possibleIds) {
@@ -201,25 +201,25 @@ class QuizComponent extends Component {
       console.log(`✅ 퀴즈 컨테이너 찾음: ${this.containerId}`);
     }
   }
-  
+
   async loadUserProgress() {
     if (!this.userId) {
       console.warn('사용자 ID가 없어 진행 상황을 로드할 수 없습니다');
       return;
     }
-    
+
     try {
       const response = await fetch(
         `${this.apiEndpoints.getUserProgress}?userID=${encodeURIComponent(this.userId)}&examName=${encodeURIComponent(this.options.examName)}`
       );
-      
+
       if (!response.ok) {
         console.warn(`사용자 진행 상황 로드 실패: HTTP ${response.status}`);
         return;
       }
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         this.state.userProgress = data.progress || {};
         console.log('사용자 진행 상황 로드 완료:', this.state.userProgress);
@@ -236,12 +236,12 @@ class QuizComponent extends Component {
       console.warn('EventBus가 없거나, subscribe 메서드가 없습니다. 이벤트 바인딩을 건너뜁니다.');
       return;
     }
-    
+
     if (this.eventsSetup) {
       console.log('QuizComponent 이벤트가 이미 설정됨 - 건너뜀');
       return;
     }
-    
+
     // 퀴즈 모드 활성화 이벤트 처리
     this.eventBus.subscribe('quizModeActivated', (data) => {
       console.log('퀴즈 모드 활성화됨:', data);
@@ -250,7 +250,7 @@ class QuizComponent extends Component {
       this.state.totalProblems = data.totalProblems || 0;
       this.loadUserProgress();
     });
-    
+
     // 문제 변경 이벤트 처리
     this.eventBus.subscribe('problemChanged', (data) => {
       console.log('문제 변경 이벤트 받음:', data);
@@ -258,14 +258,14 @@ class QuizComponent extends Component {
         this.loadQuizForProblem(data.examName, data.problemNumber);
       }
     });
-    
+
     // 메뉴 선택 이벤트 처리
     this.eventBus.subscribe('menuSelected', (data) => {
       if (data.layoutType !== 'quiz') {
         this.deactivate();
       }
     });
-    
+
     // 레이아웃 타입 변경 이벤트 처리
     this.eventBus.subscribe('layoutTypeChanged', (data) => {
       if (data.type === 'quiz') {
@@ -275,7 +275,7 @@ class QuizComponent extends Component {
         this.deactivate();
       }
     });
-    
+
     this.eventsSetup = true;
     console.log('QuizComponent 이벤트 바인딩 완료');
   }
@@ -285,44 +285,44 @@ class QuizComponent extends Component {
       console.log('퀴즈 중복 로드 방지:', examName, problemNumber);
       return;
     }
-    
+
     if (!this.active) {
       console.log('퀴즈 컴포넌트가 비활성화 상태 - 로드 건너뜀');
       return;
     }
-    
+
     console.log('퀴즈 데이터 로드 시작:', examName, problemNumber);
-    
+
     this.isLoading = true;
     this.lastLoadedExam = examName;
     this.lastLoadedProblem = problemNumber;
-    
+
     try {
       this.state.isAnswerSubmitted = false;
       this.options.examName = examName;
-      
+
       this.showLoading();
-      
+
       const response = await fetch(
         `${this.apiEndpoints.getQuizProblem}?examName=${encodeURIComponent(examName)}&problemNumber=${problemNumber}`
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP 오류: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (data.success && data.quizData) {
         this.state.currentProblemData = data.quizData;
         this.renderQuiz();
-        
+
         // 이전 답변이 있는지 확인
         const problemKey = `${examName}_p${problemNumber.toString().padStart(2, '0')}`;
         if (this.state.userProgress[problemKey]) {
           this.markAsSolved(this.state.userProgress[problemKey].isCorrect);
         }
-        
+
         console.log('퀴즈 데이터 로드 완료:', examName, problemNumber);
       } else {
         this.showError('퀴즈 데이터를 불러올 수 없습니다.');
@@ -334,7 +334,7 @@ class QuizComponent extends Component {
       this.isLoading = false;
     }
   }
-  
+
   activate() {
     console.log('QuizComponent 활성화');
     this.active = true;
@@ -350,7 +350,7 @@ class QuizComponent extends Component {
 
   showLoading() {
     if (!this.elements.container) return;
-    
+
     this.elements.container.innerHTML = `
       <div class="text-center my-5">
         <div class="spinner-border text-primary" role="status">
@@ -360,10 +360,10 @@ class QuizComponent extends Component {
       </div>
     `;
   }
-  
+
   showError(message) {
     if (!this.elements.container) return;
-    
+
     this.elements.container.innerHTML = `
       <div class="alert alert-danger" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -374,25 +374,25 @@ class QuizComponent extends Component {
       </div>
     `;
   }
-  
+
   renderQuiz() {
     console.log('🎯 퀴즈 렌더링 시작');
-    
+
     if (!this.elements.container) {
       console.error('❌ 퀴즈 컨테이너가 없습니다');
       return;
     }
-    
+
     if (!this.state.currentProblemData) {
       console.error('❌ 퀴즈 데이터가 없습니다');
       this.showError('퀴즈 데이터가 없습니다.');
       return;
     }
-    
+
     console.log('📊 현재 문제 데이터:', this.state.currentProblemData);
-    
+
     const { answerType, correctAnswer, testCases, difficulty, questionType } = this.state.currentProblemData;
-    
+
     let quizHTML = `
       <div class="quiz-wrapper">
         <div class="quiz-header">
@@ -404,7 +404,7 @@ class QuizComponent extends Component {
         </div>
         <div class="quiz-content">
     `;
-    
+
     if (questionType === '객관식') {
       console.log('🔘 객관식 문제 렌더링 중...');
       quizHTML += this.renderMultipleChoiceQuiz(correctAnswer);
@@ -416,8 +416,21 @@ class QuizComponent extends Component {
       quizHTML += this.renderCodingQuiz(testCases);
     } else {
       console.warn('⚠️ 알 수 없는 문제 타입:', questionType);
+      // 🔥 폴백: 정답 데이터가 있으면 객관식으로 처리, 아니면 주관식/일반 텍스트로 처리
+      if (correctAnswer) {
+        console.log('🔄 알 수 없는 타입 - 객관식으로 대체 렌더링');
+        quizHTML += this.renderMultipleChoiceQuiz(correctAnswer);
+      } else {
+        quizHTML += `
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-circle"></i>
+            지원되지 않는 문제 유형입니다: <strong>${questionType}</strong><br>
+            <small>관리자에게 문의해주세요.</small>
+          </div>
+        `;
+      }
     }
-    
+
     quizHTML += `
         </div>
         <div class="quiz-actions">
@@ -428,15 +441,15 @@ class QuizComponent extends Component {
         <div id="feedback-container" class="feedback-container mt-3" style="display: none;"></div>
       </div>
     `;
-    
+
     this.elements.container.innerHTML = quizHTML;
     this.setupQuizEventListeners();
-    
+
     console.log('✅ 퀴즈 렌더링 완료');
   }
-  
+
   getDifficultyBadgeClass(difficulty) {
-    switch(Number(difficulty)) {
+    switch (Number(difficulty)) {
       case 1: return 'bg-success';
       case 2: return 'bg-primary';
       case 3: return 'bg-warning text-dark';
@@ -445,13 +458,13 @@ class QuizComponent extends Component {
       default: return 'bg-secondary';
     }
   }
-  
+
   renderMultipleChoiceQuiz(correctAnswer) {
     console.log('🎯 객관식 퀴즈 렌더링 시작');
     console.log('원본 correctAnswer 데이터:', correctAnswer);
-    
+
     let choices = [];
-    
+
     try {
       const answerData = JSON.parse(correctAnswer);
       choices = answerData.choices || [];
@@ -461,17 +474,17 @@ class QuizComponent extends Component {
       choices = ['①', '②', '③', '④', '⑤'];
       console.log('기본 선택지 사용:', choices);
     }
-    
+
     if (!choices || choices.length === 0) {
       console.warn('⚠️ 선택지가 비어있음, 기본값 사용');
       choices = ['①', '②', '③', '④', '⑤'];
     }
-    
+
     let html = `
       <div class="multiple-choice">
         <p class="instruction">정답을 선택하세요:</p>
     `;
-    
+
     choices.forEach((choice, index) => {
       const choiceNumber = index + 1;
       html += `
@@ -484,21 +497,21 @@ class QuizComponent extends Component {
         </div>
       `;
     });
-    
+
     html += `</div>`;
-    
+
     console.log('✅ 생성된 객관식 HTML 길이:', html.length);
     return html;
   }
-  
+
   renderShortAnswerQuiz(answerType) {
     let placeholder = '정답을 입력하세요';
     let instruction = '정답을 입력하세요:';
-    
+
     if (answerType === 'pattern') {
       instruction = '패턴에 맞는 정답을 입력하세요:';
     }
-    
+
     return `
       <div class="short-answer">
         <p class="instruction">${instruction}</p>
@@ -506,12 +519,12 @@ class QuizComponent extends Component {
       </div>
     `;
   }
-  
+
   renderCodingQuiz(testCases) {
     let testCasesHtml = '';
     try {
       const parsedTestCases = typeof testCases === 'string' ? JSON.parse(testCases) : testCases;
-      
+
       if (Array.isArray(parsedTestCases) && parsedTestCases.length > 0) {
         testCasesHtml = `
           <div class="test-cases mt-3">
@@ -526,7 +539,7 @@ class QuizComponent extends Component {
                 </thead>
                 <tbody>
         `;
-        
+
         parsedTestCases.forEach(testCase => {
           testCasesHtml += `
             <tr>
@@ -535,7 +548,7 @@ class QuizComponent extends Component {
             </tr>
           `;
         });
-        
+
         testCasesHtml += `
                 </tbody>
               </table>
@@ -546,7 +559,7 @@ class QuizComponent extends Component {
     } catch (e) {
       console.error('테스트 케이스 파싱 오류:', e);
     }
-    
+
     return `
       <div class="coding-quiz">
         <p class="instruction">코드 에디터에 작성한 코드로 문제를 풀이하세요.</p>
@@ -558,14 +571,14 @@ class QuizComponent extends Component {
       </div>
     `;
   }
-  
+
   setupQuizEventListeners() {
     const submitBtn = document.getElementById('submit-answer-btn');
-    
+
     if (submitBtn) {
       submitBtn.addEventListener('click', () => this.submitAnswer());
     }
-    
+
     if (this.userHasSolvedCurrentProblem() && !this.options.allowRetry) {
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -573,61 +586,61 @@ class QuizComponent extends Component {
       }
     }
   }
-  
+
   userHasSolvedCurrentProblem() {
     if (!this.options.examName || !window.currentProblemNumber || !this.state.userProgress) {
       return false;
     }
-    
+
     const problemKey = `${this.options.examName}_p${window.currentProblemNumber.toString().padStart(2, '0')}`;
     return this.state.userProgress[problemKey] && this.state.userProgress[problemKey].isCorrect;
   }
-  
+
   async submitAnswer() {
     console.log('📝 정답 제출 시작');
-    
+
     if (this.state.isAnswerSubmitted && !this.options.allowRetry) {
       console.log('❌ 이미 제출됨');
       this.showFeedback(false, '이미 정답을 제출했습니다.');
       return;
     }
-    
+
     // 🔥 개선: 사용자 ID 확인 및 재로드 시도
     if (!this.userId) {
       console.log('❌ 사용자 ID 없음, 재로드 시도:', this.userId);
-      
+
       try {
         await this.loadUser();
         console.log('🔄 사용자 정보 재로드 결과:', this.userId);
       } catch (error) {
         console.error('❌ 사용자 정보 재로드 실패:', error);
       }
-      
+
       if (!this.userId) {
         console.log('❌ 재로드 후에도 사용자 ID 없음');
         this.showFeedback(false, '로그인이 필요합니다. 페이지를 새로고침해 주세요.');
         return;
       }
     }
-    
+
     console.log('✅ 사용자 ID 확인됨:', this.userId);
-    
+
     const userAnswer = this.getUserAnswer();
     console.log('🔍 사용자 답안 가져오기 결과:', userAnswer);
-    
+
     if (!userAnswer) {
       console.log('❌ 사용자 답안 없음');
       this.showFeedback(false, '답변을 입력하거나 선택해주세요.');
       return;
     }
-    
+
     console.log('📋 사용자 답안:', userAnswer);
     console.log('📋 사용자 ID:', this.userId);
-    
+
     try {
       const { examName } = this.options;
       const problemNumber = window.currentProblemNumber;
-      
+
       const submitData = {
         userID: this.userId,
         examName,
@@ -635,15 +648,15 @@ class QuizComponent extends Component {
         userAnswer,
         answerType: this.state.currentProblemData.answerType || 'number'
       };
-      
+
       // 코딩 문제인 경우 추가 데이터
       if (this.state.currentProblemData.questionType === '코딩') {
         submitData.editorCode = this.getEditorCode();
         submitData.testCases = this.state.currentProblemData.testCases;
       }
-      
+
       console.log('📦 제출할 데이터:', submitData);
-      
+
       const response = await fetch(this.apiEndpoints.submitAnswer, {
         method: 'POST',
         headers: {
@@ -652,13 +665,13 @@ class QuizComponent extends Component {
         credentials: 'include',
         body: JSON.stringify(submitData),
       });
-      
+
       console.log('📶 서버 응답 상태:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ HTTP 오류:', response.status, errorText);
-        
+
         try {
           const errorData = JSON.parse(errorText);
           this.showFeedback(false, errorData.message || '서버 오류가 발생했습니다.');
@@ -667,15 +680,15 @@ class QuizComponent extends Component {
         }
         return;
       }
-      
+
       const result = await response.json();
       console.log('🏆 서버 응답 데이터:', result);
-      
+
       if (result.success) {
         this.showFeedback(result.isCorrect, result.message);
         this.state.isAnswerSubmitted = true;
         this.markAsSolved(result.isCorrect);
-        
+
         // 진행 상황 업데이트
         const problemKey = `${examName}_p${problemNumber.toString().padStart(2, '0')}`;
         this.state.userProgress[problemKey] = {
@@ -691,25 +704,25 @@ class QuizComponent extends Component {
       this.showFeedback(false, '정답 제출 중 오류가 발생했습니다.');
     }
   }
-  
+
   getUserAnswer() {
     console.log('🔍 getUserAnswer 시작');
-    
+
     if (!this.state.currentProblemData) {
       console.error('❌ 현재 문제 데이터가 없습니다');
       return null;
     }
-    
+
     const questionType = this.state.currentProblemData.questionType;
     console.log('📋 문제 타입:', questionType);
-    
+
     if (questionType === '객관식') {
       console.log('🔘 객관식 답안 찾기 시작');
-      
+
       // 모든 라디오 버튼 확인
       const allRadios = document.querySelectorAll('input[name="quiz-answer"]');
       console.log('📋 전체 라디오 버튼 개수:', allRadios.length);
-      
+
       // 각 라디오 버튼 상태 확인
       allRadios.forEach((radio, index) => {
         console.log(`라디오 ${index + 1}:`, {
@@ -719,9 +732,9 @@ class QuizComponent extends Component {
           name: radio.name
         });
       });
-      
+
       const selectedRadio = document.querySelector('input[name="quiz-answer"]:checked');
-      
+
       if (selectedRadio) {
         console.log('✅ 선택된 라디오:', {
           id: selectedRadio.id,
@@ -733,7 +746,7 @@ class QuizComponent extends Component {
         console.log('❌ 선택된 라디오 버튼 없음');
         return null;
       }
-      
+
     } else if (questionType === '주관식') {
       console.log('✏️ 주관식 답안 찾기');
       const inputField = document.getElementById('short-answer-input');
@@ -751,11 +764,11 @@ class QuizComponent extends Component {
       console.log('💻 코드 길이:', code ? code.length : 0);
       return code;
     }
-    
+
     console.log('❌ 알 수 없는 문제 타입:', questionType);
     return null;
   }
-  
+
   getEditorCode() {
     if (window.editor) {
       return window.editor.getValue();
@@ -772,19 +785,19 @@ class QuizComponent extends Component {
         console.error('ACE 에디터에서 코드를 가져오는 중 오류 발생:', e);
       }
     }
-    
+
     return '';
   }
-  
+
   showFeedback(isCorrect, message) {
     const feedbackContainer = document.getElementById('feedback-container');
     if (!feedbackContainer) return;
-    
+
     feedbackContainer.style.display = 'block';
-    feedbackContainer.className = isCorrect 
+    feedbackContainer.className = isCorrect
       ? 'feedback-container correct'
       : 'feedback-container incorrect';
-    
+
     feedbackContainer.innerHTML = `
       <div class="d-flex align-items-center">
         <i class="bi ${isCorrect ? 'bi-check-circle-fill' : 'bi-x-circle-fill'} me-2 fs-4"></i>
@@ -794,7 +807,7 @@ class QuizComponent extends Component {
         </div>
       </div>
     `;
-    
+
     if (this.state.currentProblemData.questionType === '코딩' && !isCorrect) {
       feedbackContainer.innerHTML += `
         <div class="mt-2">
@@ -804,25 +817,25 @@ class QuizComponent extends Component {
       `;
     }
   }
-  
+
   markAsSolved(isCorrect) {
     const submitBtn = document.getElementById('submit-answer-btn');
-    
+
     if (submitBtn) {
       if (isCorrect) {
         submitBtn.classList.add('btn-success');
         submitBtn.classList.remove('btn-primary');
-        
+
         if (!this.options.allowRetry) {
           submitBtn.disabled = true;
         }
-        
+
         this.updateProblemNavigationStatus(true);
       } else {
         submitBtn.classList.add('btn-outline-danger');
       }
     }
-    
+
     if (this.eventBus && typeof this.eventBus.publish === 'function') {
       this.eventBus.publish('quizAnswered', {
         examName: this.options.examName,
@@ -831,11 +844,11 @@ class QuizComponent extends Component {
       });
     }
   }
-  
+
   updateProblemNavigationStatus(solved) {
     const problemNumber = window.currentProblemNumber;
     const problemIcon = document.querySelector(`#problem-navigation .problem-icon:nth-child(${problemNumber})`);
-    
+
     if (problemIcon && solved) {
       problemIcon.classList.add('text-success');
     }
@@ -843,12 +856,12 @@ class QuizComponent extends Component {
 
   show() {
     console.log('🔍 QuizComponent show() 호출됨');
-    
+
     if (!this.elements.container) {
       console.error('❌ 컨테이너를 찾을 수 없어 다시 초기화합니다');
       this.initElements();
     }
-    
+
     if (this.elements.container) {
       this.elements.container.style.display = 'flex';
       this.elements.container.style.visibility = 'visible';
