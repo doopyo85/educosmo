@@ -892,6 +892,17 @@ window.ComponentSystem = {
       } else {
         console.error('IDE 컴포넌트 DOM 요소를 찾을 수 없음');
       }
+    } else if (layoutType === 'jupyter') {
+      // 🔥 추가: Jupyter 강제 표시
+      const jupyterElement = document.getElementById('jupyter-component');
+      if (jupyterElement) {
+        jupyterElement.style.display = 'flex';
+        jupyterElement.style.visibility = 'visible';
+        jupyterElement.style.opacity = '1';
+        console.log('Jupyter 컴포넌트 DOM 강제 표시 완료');
+      } else {
+        console.error('Jupyter 컴포넌트 DOM 요소를 찾을 수 없음');
+      }
     }
   },
 

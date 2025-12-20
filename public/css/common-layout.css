@@ -371,6 +371,28 @@ html {
     flex: 0 !important;
 }
 
+/* 🔥 추가: Jupyter 레이아웃: 콘텐츠 + Jupyter (변수 기반 동적 너비) */
+.layout-jupyter .content-container {
+    width: var(--content-width) !important;
+    flex: 0 0 var(--content-width) !important;
+}
+
+.layout-jupyter .jupyter-container {
+    display: flex !important;
+    width: var(--ide-width) !important;
+    /* IDE 변수 재사용 */
+    flex: 0 0 var(--ide-width) !important;
+    height: 100%;
+}
+
+.layout-jupyter .ide-container,
+.layout-jupyter .quiz-container,
+.layout-jupyter .ppt-viewer {
+    display: none !important;
+    width: 0 !important;
+    flex: 0 !important;
+}
+
 /* 기본 스크롤바 스타일 */
 ::-webkit-scrollbar {
     width: 8px;
