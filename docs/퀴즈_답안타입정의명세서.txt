@@ -7,17 +7,16 @@
 A열	URL
 B열	시험지명
 C열	문제번호
-D열	개념
-E열	파일URL
-F열	예제파일URL
-G열	정답파일URL
-H열	해설파일URL
-I열	answerType (정답 형식 종류 문자열)
-J열	정답 정보(JSON)
-K열	인풋/아웃풋
-L열	난이도
-M열	객관식/주관식
-N열	태그 (Tags)
+D열	개념파일URL
+E열	예제파일URL
+F열	정답파일URL
+G열	해설파일URL
+H열	answerType
+I열	정답
+J열	인풋/아웃풋
+K열	난이도
+L열	객관식/주관식
+M열	Tags
 
 ✅ 기본 구조
 json
@@ -265,7 +264,7 @@ json
   ]
 }
 10. 예시: Google Sheets 입력 방식
-I열 (answerType)	J열 (정답 정보 JSON)
+H열 (answerType)	I열 (정답 정보 JSON)
 number	{"type":"multiple_choice","answer":"3","choices":["①","②","③","④"]}
 code	{"type":"code","answer":"print('Hi')","options":{"language":"python"}}
 text	{"type":"text","answer":"서울"}

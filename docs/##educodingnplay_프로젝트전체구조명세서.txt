@@ -244,7 +244,7 @@ EventBus.publish('explanation-request', problemData)
 
 🎨 Google Sheets 데이터 구조
 problems 시트 (콘텐츠 소스)
-열내용설명A문제파일명HTML/MD URLB시험지명python, algorithm 등C문제번호p01, p02 형식D개념파일URL추가 학습 자료E정답파일URL정답 코드F해설파일URL마크다운 해설GanswerTypecode, text, quiz 등H정답JSON 형식I인풋/아웃풋테스트 케이스J난이도1-5 단계
+열내용설명AURL문제 페이지 URLB시험지명python, algorithm 등C문제번호p01, p02 형식D개념파일URL개념 학습 자료E예제파일URL기본/예제 코드F정답파일URL정답 코드G해설파일URL마크다운 해설HanswerTypecode, text, quiz 등I정답JSON 형식J인풋/아웃풋테스트 케이스K난이도1-5 단계L객관식/주관식문제 유형MTags태그 정보
 
 💡 시스템 핵심 특징 요약
 1. 모듈러 컴포넌트 설계

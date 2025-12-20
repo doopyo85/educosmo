@@ -283,6 +283,7 @@ html {
     overflow-y: auto;
     background-color: #f9f9f9;
     border-left: 1px solid #dee2e6;
+    z-index: var(--z-content);
 }
 
 /* PPT 뷰어 컨테이너 */

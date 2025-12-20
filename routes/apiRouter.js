@@ -785,7 +785,7 @@ router.get('/get-problem-data', async (req, res) => {
         examName: data[0][1],
         problemNumber: data[0][2],
         pythonFileUrl: data[0][3] || '(없음)',
-        answerType: data[0][8] || '(없음/빈칸)'
+        answerType: data[0][7] || '(없음/빈칸)'
       });
     }
 
