@@ -110,6 +110,21 @@ class ProjectStorageModal {
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        <!-- 🔥 상단 버튼 영역 (불러오기 모드용) -->
+                        <div id="topButtons-${this.platform}" class="mb-3 pb-3 border-bottom" style="display: none;">
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-lg"></i> 취소
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm" id="deleteBtnTop-${this.platform}" style="display: none;">
+                                    <i class="bi bi-trash"></i> 삭제
+                                </button>
+                                <button type="button" class="btn btn-primary btn-sm" id="confirmBtnTop-${this.platform}" style="background: ${config.color}; border-color: ${config.color};">
+                                    <i class="bi bi-folder2-open"></i> <span id="confirmBtnTextTop-${this.platform}">불러오기</span>
+                                </button>
+                            </div>
+                        </div>
+                        
                         <!-- 저장 모드 UI -->
                         <div id="saveMode-${this.platform}" style="display: none;">
                             <div class="mb-3">
@@ -206,13 +221,23 @@ class ProjectStorageModal {
             }
         });
         
-        // 확인 버튼
+        // 확인 버튼 (하단)
         document.getElementById(`confirmBtn-${platform}`)?.addEventListener('click', () => {
             this._handleConfirm();
         });
         
-        // 삭제 버튼
+        // 🔥 확인 버튼 (상단)
+        document.getElementById(`confirmBtnTop-${platform}`)?.addEventListener('click', () => {
+            this._handleConfirm();
+        });
+        
+        // 삭제 버튼 (하단)
         document.getElementById(`deleteBtn-${platform}`)?.addEventListener('click', () => {
+            this._handleDelete();
+        });
+        
+        // 🔥 삭제 버튼 (상단)
+        document.getElementById(`deleteBtnTop-${platform}`)?.addEventListener('click', () => {
             this._handleDelete();
         });
         
@@ -242,7 +267,21 @@ class ProjectStorageModal {
             const data = await response.json();
             
             if (data.success) {
-                this.state.projects = data.projects || [];
+                // 🔥 Entry API 응답 필드명 매핑 (projectName → title, id → fileId)
+                let projects = data.projects || [];
+                if (this.platform === 'entry') {
+                    projects = projects.map(p => ({
+                        ...p,
+                        fileId: p.id,
+                        title: p.projectName,
+                        thumbnailUrl: p.thumbnailUrl || null,
+                        s3Url: p.s3Url,
+                        createdAt: p.updatedAt || p.createdAt,
+                        size: p.fileSizeKb ? p.fileSizeKb * 1024 : null,
+                        saveType: p.saveType
+                    }));
+                }
+                this.state.projects = projects;
                 this._renderProjects();
             } else {
                 throw new Error(data.message || '프로젝트 로드 실패');
@@ -334,9 +373,10 @@ class ProjectStorageModal {
         
         this.state.selectedProjectId = fileId;
         
-        // 삭제 버튼 표시 (불러오기 모드일 때)
+        // 삭제 버튼 표시 (불러오기 모드일 때) - 🔥 상단/하단 모두
         if (this.mode === 'load') {
             document.getElementById(`deleteBtn-${platform}`).style.display = 'inline-block';
+            document.getElementById(`deleteBtnTop-${platform}`).style.display = 'inline-block';
         }
     }
     
@@ -426,6 +466,21 @@ class ProjectStorageModal {
             return;
         }
         
+        // 🔥 Entry는 s3Url로 에디터 이동 (페이지 리디렉트)
+        if (this.platform === 'entry') {
+            const project = this.state.projects.find(p => p.fileId === this.state.selectedProjectId);
+            if (!project || !project.s3Url) {
+                alert('프로젝트 URL을 찾을 수 없습니다.');
+                return;
+            }
+            
+            // 에디터로 이동
+            const editorUrl = `/entry/entry_editor?s3Url=${encodeURIComponent(project.s3Url)}&projectId=${project.fileId}&projectName=${encodeURIComponent(project.title || '내작품')}`;
+            console.log('✅ Entry 에디터로 이동:', editorUrl);
+            window.location.href = editorUrl;
+            return;
+        }
+        
         this._showLoading(true);
         
         try {
@@ -496,8 +551,9 @@ class ProjectStorageModal {
                 );
                 this.state.selectedProjectId = null;
                 
-                // 삭제 버튼 숨기기
+                // 삭제 버튼 숨기기 - 🔥 상단/하단 모두
                 document.getElementById(`deleteBtn-${this.platform}`).style.display = 'none';
+                document.getElementById(`deleteBtnTop-${this.platform}`).style.display = 'none';
                 
                 // 목록 다시 렌더링
                 this._renderProjects();
@@ -536,6 +592,11 @@ class ProjectStorageModal {
         document.getElementById(`confirmBtnText-${platform}`).textContent = '불러오기';
         document.getElementById(`deleteBtn-${platform}`).style.display = 'none';
         
+        // 🔥 상단 버튼 영역 표시
+        document.getElementById(`topButtons-${platform}`).style.display = 'block';
+        document.getElementById(`deleteBtnTop-${platform}`).style.display = 'none';
+        document.getElementById(`confirmBtnTextTop-${platform}`).textContent = '불러오기';
+        
         // 프로젝트 목록 로드
         this._loadProjects();
         
@@ -566,6 +627,9 @@ class ProjectStorageModal {
         document.getElementById(`emptyState-${platform}`).style.display = 'none';
         document.getElementById(`confirmBtnText-${platform}`).textContent = '저장';
         document.getElementById(`deleteBtn-${platform}`).style.display = 'none';
+        
+        // 🔥 상단 버튼 영역 숨기기 (저장 모드에서는 불필요)
+        document.getElementById(`topButtons-${platform}`).style.display = 'none';
         
         // 현재 프로젝트 제목 설정
         const titleInput = document.getElementById(`projectTitleInput-${platform}`);
@@ -670,6 +734,13 @@ class ProjectStorageModal {
         this.state.selectedProjectId = null;
         this.pendingProjectData = null;
         this.pendingThumbnail = null;
+        
+        // 🔥 상단/하단 삭제 버튼 숨기기
+        const platform = this.platform;
+        const deleteBtnTop = document.getElementById(`deleteBtnTop-${platform}`);
+        const deleteBtn = document.getElementById(`deleteBtn-${platform}`);
+        if (deleteBtnTop) deleteBtnTop.style.display = 'none';
+        if (deleteBtn) deleteBtn.style.display = 'none';
     }
     
     /**
