@@ -56,3 +56,6 @@ lib_board
 *.md
 *.txt
 LICENSE
+
+# System Trash
+.Trash*

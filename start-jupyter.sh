@@ -49,5 +49,8 @@ else
 fi
 
 # Execute the passed command (Jupyter)
+echo "🧹 Clearing Matplotlib cache..."
+rm -rf /root/.cache/matplotlib
+
 echo "📓 Starting Jupyter Notebook..."
 exec "$@"

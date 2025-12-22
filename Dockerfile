@@ -16,11 +16,16 @@ RUN apt-get update && apt-get install -y \
     git \
     procps \
     vim \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && fc-cache -f -v
 
 # Set Timezone to KST
 ENV TZ=Asia/Seoul
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Matplotlib Configuration
+ENV MPLCONFIGDIR=/etc/matplotlib
+COPY matplotlibrc /etc/matplotlib/matplotlibrc
 
 # Install updated Node.js (needed if this container runs node scripts, but primarily it's python now)
 # If this container is purely for Jupyter, we might not need Node.js explicitly unless extensions require it.
