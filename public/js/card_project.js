@@ -809,7 +809,7 @@ class ProjectCardManager {
                         data-bs-target="#content-cos" 
                         type="button" 
                         role="tab">
-                    🎯 COS 자격증
+                    COS 자격증
                 </button>
             `;
             tabsContainer.appendChild(cosTab);
