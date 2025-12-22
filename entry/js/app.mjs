@@ -4,6 +4,9 @@ import { installEntryEvent } from './event.mjs';
 import { installModalProgress } from './modalProgress/index.mjs';
 
 document.addEventListener('DOMContentLoaded', function() {
+   // 🔥 EntryJS 자동저장 복구 팝업 비활성화 - localStorage 클리어
+   clearEntryAutoSaveData();
+   
    // 사용자 정보 가져오기
    const userInfo = window.EDUCODINGNPLAY_USER || {
        userID: 'guest',
@@ -55,6 +58,9 @@ document.addEventListener('DOMContentLoaded', function() {
    
    Entry.creationChangedEvent = new Entry.Event(window);
    Entry.init(document.getElementById('workspace'), initOption);
+   
+   // 🔥 Entry 초기화 후에도 자동저장 기능 비활성화
+   disableEntryAutoSave();
    
    // 팝업 시스템 설치
    installPopup();
@@ -557,6 +563,112 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
+// =================================================================
+// 🔥 EntryJS 자동저장 복구 팝업 비활성화 함수
+// =================================================================
+
+/**
+ * Entry 초기화 전에 localStorage의 Entry 자동저장 데이터 삭제
+ * 이 함수를 호출하면 복구 팝업이 뜨지 않음
+ */
+function clearEntryAutoSaveData() {
+    try {
+        // EntryJS가 사용하는 localStorage 키들
+        const entryAutoSaveKeys = [
+            'entryAutoSave',
+            'entryLocalStorageProject',
+            'entry_autosave',
+            'entry_backup',
+            'entryProject',
+            'entry-autosave',
+            'entry-backup',
+            'Entry.autosave',
+            'Entry.backup'
+        ];
+        
+        // 모든 Entry 관련 키 삭제
+        entryAutoSaveKeys.forEach(key => {
+            if (localStorage.getItem(key)) {
+                localStorage.removeItem(key);
+                console.log(`[AutoSave] 🗑️ localStorage 키 삭제: ${key}`);
+            }
+        });
+        
+        // 'entry'로 시작하는 모든 키 삭제
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.toLowerCase().includes('entry') && 
+                (key.toLowerCase().includes('autosave') || 
+                 key.toLowerCase().includes('backup') ||
+                 key.toLowerCase().includes('save')))) {
+                keysToRemove.push(key);
+            }
+        }
+        
+        keysToRemove.forEach(key => {
+            localStorage.removeItem(key);
+            console.log(`[AutoSave] 🗑️ localStorage 키 삭제: ${key}`);
+        });
+        
+        console.log('[AutoSave] ✅ EntryJS 자동저장 데이터 클리어 완료');
+    } catch (error) {
+        console.warn('[AutoSave] localStorage 클리어 오류:', error.message);
+    }
+}
+
+/**
+ * Entry 초기화 후 자동저장 기능 비활성화
+ * Entry 객체의 자동저장 관련 메서드를 무효화
+ */
+function disableEntryAutoSave() {
+    try {
+        // Entry 객체의 자동저장 관련 메서드 오버라이드
+        if (window.Entry) {
+            // 자동저장 기능 비활성화
+            if (Entry.enableLocalStorageSave) {
+                Entry.enableLocalStorageSave = function() {
+                    console.log('[AutoSave] localStorage 저장 비활성화됨');
+                    return false;
+                };
+            }
+            
+            // 자동저장 함수 오버라이드
+            if (Entry.saveLocalStorageProject) {
+                Entry.saveLocalStorageProject = function() {
+                    console.log('[AutoSave] localStorage 프로젝트 저장 비활성화됨');
+                    return;
+                };
+            }
+            
+            // 복구 확인 함수 오버라이드
+            if (Entry.hasLocalStorageProject) {
+                Entry.hasLocalStorageProject = function() {
+                    return false;
+                };
+            }
+            
+            // 복구 함수 오버라이드
+            if (Entry.loadLocalStorageProject) {
+                Entry.loadLocalStorageProject = function() {
+                    console.log('[AutoSave] localStorage 복구 비활성화됨');
+                    return null;
+                };
+            }
+            
+            // 자동저장 플래그 설정
+            if (Entry.options) {
+                Entry.options.autoSave = false;
+                Entry.options.useLocalStorage = false;
+            }
+            
+            console.log('[AutoSave] ✅ Entry 자동저장 기능 비활성화 완료');
+        }
+    } catch (error) {
+        console.warn('[AutoSave] Entry 자동저장 비활성화 오류:', error.message);
+    }
+}
+
 // 전역 함수로 내보내기
 window.loadProjectFromBase64 = loadProjectFromBase64;
 window.loadProjectFromS3Url = loadProjectFromS3Url;
@@ -565,3 +677,5 @@ window.saveProjectToS3 = saveProjectToS3;
 window.showNotification = showNotification;
 window.stopAutoSave = stopAutoSave;
 window.getLastAutoSaveTime = getLastAutoSaveTime;
+window.clearEntryAutoSaveData = clearEntryAutoSaveData;
+window.disableEntryAutoSave = disableEntryAutoSave;
