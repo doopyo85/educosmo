@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     s3fs \
     fuse \
     fonts-nanum \
-    fonts-nanum-coding \
+
     fonts-dejavu \
     build-essential \
     curl \
