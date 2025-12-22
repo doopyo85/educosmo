@@ -178,7 +178,7 @@ class IDEComponent extends Component {
          * 이를 멀티 파일 실행으로 바꾸기 위해, Terminal 클래스를 수정하지 않고
          * 여기서 runCode 동작을 재정의함.
          */
-        this.modules.terminal.runCode = () => this.runMultiFileCode();
+        // this.modules.terminal.runCode = () => this.runMultiFileCode();
       }
 
       // 5. Submit Button

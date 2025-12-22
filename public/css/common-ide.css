@@ -52,7 +52,7 @@
   box-shadow: none;
   /* No shadow */
   white-space: nowrap;
-  min-width: 100px;
+  min-width: 100px !important;
   /* Restored min-width for consistent size */
   letter-spacing: normal;
   margin-right: 4px;
