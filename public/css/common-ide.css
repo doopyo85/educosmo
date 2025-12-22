@@ -25,4 +25,67 @@
 /* 디버깅용 - 개발 환경에서만 사용 */
 .debug-ide .ide-container * {
   outline: 1px dashed rgba(255, 0, 0, 0.3);
+
+}
+
+/* ============================================================
+   🔥 IDE Control Buttons (Run / Submit)
+   ============================================================ */
+.ide-control-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  height: 34px;
+  /* A bit taller for better touch target/aesthetics */
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  /* Softer corners */
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  width: auto !important;
+  /* Override inline styles if any leak */
+  min-width: 80px;
+  letter-spacing: 0.3px;
+}
+
+.ide-control-btn i {
+  font-size: 14px;
+  margin-right: 6px;
+}
+
+.ide-control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.ide-control-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Run Button - Apple Blue */
+.ide-btn-run {
+  background: linear-gradient(135deg, #0071e3 0%, #147ce5 100%);
+  color: white;
+}
+
+.ide-btn-run:hover {
+  background: linear-gradient(135deg, #147ce5 0%, #2c8cf0 100%);
+  color: white;
+}
+
+/* Submit Button - Apple Green */
+.ide-btn-submit {
+  background: linear-gradient(135deg, #34c759 0%, #30b350 100%);
+  color: white;
+}
+
+.ide-btn-submit:hover {
+  background: linear-gradient(135deg, #32d74b 0%, #2dc245 100%);
+  color: white;
 }
