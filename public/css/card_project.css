@@ -496,6 +496,42 @@
   transform: scale(0.96);
 }
 
+/* Apple Outline Button (Blue/Primary) */
+.apple-btn-outline-primary {
+  background-color: white !important;
+  color: #0071e3 !important;
+  border: 1px solid #0071e3 !important;
+  font-weight: 600;
+  font-size: 0.95rem !important;
+  padding: 10px 24px !important;
+  border-radius: 999px !important;
+
+  /* Unified Animation */
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform: translateY(0);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 5px rgba(0, 113, 227, 0.1);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.apple-btn-outline-primary:hover {
+  background-color: #0071e3 !important;
+  color: white !important;
+  border-color: #0071e3 !important;
+  box-shadow: 0 6px 15px rgba(0, 113, 227, 0.25);
+
+  /* Unified Hover Action */
+  transform: translateY(-2px);
+}
+
+.apple-btn-outline-primary:active {
+  transform: scale(0.96);
+}
+
 /* Apple Nav Pills (Tabs) */
 .apple-nav-pills {
   display: inline-flex;

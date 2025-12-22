@@ -164,772 +164,769 @@
                                             <button id="showAnswerBtn" class="btn btn-outline-danger btn-sm"
                                                 style="padding: 2px 8px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;">정답</button>
                                             <% } %>
-
-                                                <button id="runCodeBtn" class="btn btn-success btn-sm"
-                                                    style="padding: 2px 10px; font-size: 12px;">
-                                                    <i class="bi bi-play-fill"></i> 실행
-                                                </button>
-
-                                                <button id="submitCodeBtn" class="btn btn-warning btn-sm text-white"
-                                                    style="padding: 2px 10px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;">
-                                                    <i class="bi bi-check-circle-fill me-1"></i> 제출
-                                                </button>
-
-                                                <div class="ide-selector ms-2">
-                                                    <div class="btn-group btn-group-sm" role="group"
-                                                        aria-label="IDE 선택">
-                                                        <button type="button" class="btn btn-outline-primary active"
-                                                            id="ace-btn"
-                                                            style="padding: 2px 6px; font-size: 11px;">ACE</button>
-                                                        <button type="button" class="btn btn-outline-primary"
-                                                            id="jupyter-btn"
-                                                            style="padding: 2px 6px; font-size: 11px;">Jupyter</button>
-                                                    </div>
-                                                </div>
                                     </div>
-                                </div>
 
-                                <!-- 기존 에디터 컨테이너 (헤더 제거됨) -->
-                                <div class="code-editor-container">
-                                    <!-- Top Bar Removed -->
+                                    <button id="runCodeBtn" class="btn btn-success btn-sm"
+                                        style="width: 70px; padding: 2px 0; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-play-fill me-1"></i> 실행
+                                    </button>
 
-                                    <!-- ACE 에디터 컨테이너 -->
-                                    <div id="ace-editor-inner" class="ide-container-inner active">
-                                        <!-- 에디터 영역 -->
-                                        <div class="editor-area">
-                                            <div id="editor" class="code-editor"></div>
-                                        </div>
+                                    <button id="submitCodeBtn" class="btn btn-warning btn-sm text-white"
+                                        style="width: 70px; padding: 2px 0; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-check-circle-fill me-1"></i> 제출
+                                    </button>
 
-                                        <!-- 리사이즈 핸들 -->
-                                        <div id="ide-resize-handle" class="resize-handle" title="드래그하여 터미널 크기 조정">
-                                            <div class="resize-handle-line"></div>
-                                        </div>
-
-                                        <!-- 터미널 영역 -->
-                                        <div class="output-container" style="flex: 0 0 200px; min-height: 200px;">
-                                            <!-- Header removed as per user request -->
-                                            <div id="output-content" class="output-content">
-                                                <!-- 실행 결과가 여기에 표시됩니다 -->
-                                            </div>
-                                        </div>
-
-
-
-                                        <!-- Jupyter 컨테이너 (필요시) -->
-                                        <div id="jupyter-ide-container">
-                                            <div id="jupyter-auth-message" style="display: none;"></div>
-                                            <iframe id="jupyter-frame" style="display: none;"></iframe>
+                                    <div class="ide-selector ms-2">
+                                        <div class="btn-group btn-group-sm" role="group" aria-label="IDE 선택">
+                                            <button type="button" class="btn btn-outline-primary active" id="ace-btn"
+                                                style="padding: 2px 6px; font-size: 11px;">ACE</button>
+                                            <button type="button" class="btn btn-outline-primary" id="jupyter-btn"
+                                                style="padding: 2px 6px; font-size: 11px;">Jupyter</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- 🔥 Custom Result Modal (Bottom Sheet) - Moved to Outer Container -->
-                        <div id="submission-result-modal" class="submission-result-modal" style="display: none;">
-                            <div class="modal-header-custom">
-                                <h5 class="m-0"><i class="bi bi-clipboard-check"></i> 채점 결과</h5>
-                                <div style="display: flex; gap: 10px; align-items: center;">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm"
-                                        onclick="window.ideComponent.hideResultView()">터미널로 돌아가기</button>
-                                    <button type="button" class="btn-close"
-                                        onclick="window.ideComponent.hideResultView()"></button>
-                                </div>
-                            </div>
-                            <div id="submission-result-body" class="modal-body-custom">
-                                <!-- Content loaded here -->
-                            </div>
-                        </div>
+                            <!-- 기존 에디터 컨테이너 (헤더 제거됨) -->
+                            <div class="code-editor-container">
+                                <!-- Top Bar Removed -->
 
-                        <style>
-                            /* Bottom Sheet Modal Styles */
-                            .submission-result-modal {
-                                position: absolute;
-                                bottom: -50px;
-                                /* Buffer offset */
-                                left: 0;
-                                width: 100%;
-                                height: calc(60% + 50px);
-                                /* 🔥 Increased to 60% + Buffer */
-                                background-color: white;
-                                padding-bottom: 50px;
-                                /* Buffer for bounce animation */
-                                z-index: 2000;
-                                /* Higher z-index to cover sidebar */
-                                border-top-left-radius: 20px;
-                                border-top-right-radius: 20px;
-                                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-                                display: flex;
-                                flex-direction: column;
-                                overflow: hidden;
-                                border-top: 1px solid #e0e0e0;
+                                <!-- ACE 에디터 컨테이너 -->
+                                <div id="ace-editor-inner" class="ide-container-inner active">
+                                    <!-- 에디터 영역 -->
+                                    <div class="editor-area">
+                                        <div id="editor" class="code-editor"></div>
+                                    </div>
 
-                                /* 🔥 Animation */
-                                transform: translateY(100%);
-                                transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
-                                /* Slower, smooth slide up */
-                            }
+                                    <!-- 리사이즈 핸들 -->
+                                    <div id="ide-resize-handle" class="resize-handle" title="드래그하여 터미널 크기 조정">
+                                        <div class="resize-handle-line"></div>
+                                    </div>
 
-                            .submission-result-modal.show {
-                                transform: translateY(0);
-                            }
+                                    <!-- 터미널 영역 -->
+                                    <div class="output-container" style="flex: 0 0 200px; min-height: 200px;">
+                                        <!-- Header removed as per user request -->
+                                        <div id="output-content" class="output-content">
+                                            <!-- 실행 결과가 여기에 표시됩니다 -->
+                                        </div>
+                                    </div>
 
-                            .submission-result-modal.hiding {
-                                /* Elastic "Snap" Down: Anticipates up, then shoots down */
-                                transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-                            }
 
-                            .modal-header-custom {
-                                padding: 12px 20px;
-                                border-bottom: 1px solid #eee;
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                background: #f8f9fa;
-                            }
 
-                            .modal-body-custom {
-                                flex: 1;
-                                overflow-y: auto;
-                                padding: 0;
-                            }
-
-                            /* Ensure main container is relative */
-                            .ide-container {
-                                position: relative;
-                            }
-                        </style>
-                    </div>
-                    <!-- ↑ IDE 컴포넌트 닫는 태그 -->
-
-                    <!-- 퀴즈 컴포넌트 -->
-                    <div id="quiz-component" class="quiz-container component component-hidden">
-                        <div class="quiz-wrapper">
-                            <div class="quiz-loading" id="quiz-loading" style="display: none;">
-                                <div class="loading-spinner"></div>
-                                <p>퀴즈를 불러오는 중...</p>
-                            </div>
-
-                            <div class="quiz-main" id="quiz-main" style="display: none;">
-                                <div class="quiz-header">
-                                    <h4 class="quiz-title" id="quiz-title">문제</h4>
-                                    <div class="quiz-meta" id="quiz-meta">
-                                        <span class="badge bg-info" id="quiz-type">객관식</span>
-                                        <span class="badge bg-secondary" id="quiz-points">1점</span>
+                                    <!-- Jupyter 컨테이너 (필요시) -->
+                                    <div id="jupyter-ide-container">
+                                        <div id="jupyter-auth-message" style="display: none;"></div>
+                                        <iframe id="jupyter-frame" style="display: none;"></iframe>
                                     </div>
                                 </div>
-
-                                <div class="quiz-problem" id="quiz-problem">
-                                    <!-- 문제 내용은 ContentComponent의 iframe과 연동 -->
-                                    <p class="text-muted">문제를 선택하면 여기에 표시됩니다.</p>
-                                </div>
-
-                                <div class="quiz-answer-section" id="quiz-answer-section">
-                                    <!-- 답안 입력 UI가 동적으로 생성됨 -->
-                                </div>
-
-                                <div class="quiz-actions" id="quiz-actions">
-                                    <button class="btn btn-primary" id="submit-answer-btn" disabled>답안 제출</button>
-                                    <button class="btn btn-secondary" id="reset-answer-btn" style="display: none;">다시
-                                        풀기</button>
-                                </div>
-
-                                <div class="quiz-result" id="quiz-result" style="display: none;">
-                                    <!-- 결과가 여기 표시됨 -->
-                                </div>
-                            </div>
-
-                            <div class="quiz-no-data" id="quiz-no-data" style="display: block;">
-                                <div class="text-center text-muted">
-                                    <i class="bi bi-question-circle" style="font-size: 3rem;"></i>
-                                    <p class="mt-3">퀴즈 문제를 선택해주세요.</p>
-                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- PPT 뷰어 컴포넌트 -->
-                    <div id="ppt-viewer-component" class="ppt-viewer component component-hidden">
-                        <!-- PPT 뷰어는 동적으로 생성됨 -->
+                    <!-- 🔥 Custom Result Modal (Bottom Sheet) - Moved to Outer Container -->
+                    <div id="submission-result-modal" class="submission-result-modal" style="display: none;">
+                        <div class="modal-header-custom">
+                            <h5 class="m-0"><i class="bi bi-clipboard-check"></i> 채점 결과</h5>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                    onclick="window.ideComponent.hideResultView()">터미널로 돌아가기</button>
+                                <button type="button" class="btn-close"
+                                    onclick="window.ideComponent.hideResultView()"></button>
+                            </div>
+                        </div>
+                        <div id="submission-result-body" class="modal-body-custom">
+                            <!-- Content loaded here -->
+                        </div>
                     </div>
 
-                    <!-- Jupyter 컴포넌트 -->
-                    <div id="jupyter-component" class="jupyter-container component component-hidden">
-                        <!-- JupyterComponent.js에서 동적으로 생성됨 -->
-                    </div>
+                    <style>
+                        /* Bottom Sheet Modal Styles */
+                        .submission-result-modal {
+                            position: absolute;
+                            bottom: -50px;
+                            /* Buffer offset */
+                            left: 0;
+                            width: 100%;
+                            height: calc(60% + 50px);
+                            /* 🔥 Increased to 60% + Buffer */
+                            background-color: white;
+                            padding-bottom: 50px;
+                            /* Buffer for bounce animation */
+                            z-index: 2000;
+                            /* Higher z-index to cover sidebar */
+                            border-top-left-radius: 20px;
+                            border-top-right-radius: 20px;
+                            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+                            display: flex;
+                            flex-direction: column;
+                            overflow: hidden;
+                            border-top: 1px solid #e0e0e0;
+
+                            /* 🔥 Animation */
+                            transform: translateY(100%);
+                            transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+                            /* Slower, smooth slide up */
+                        }
+
+                        .submission-result-modal.show {
+                            transform: translateY(0);
+                        }
+
+                        .submission-result-modal.hiding {
+                            /* Elastic "Snap" Down: Anticipates up, then shoots down */
+                            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                        }
+
+                        .modal-header-custom {
+                            padding: 12px 20px;
+                            border-bottom: 1px solid #eee;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            background: #f8f9fa;
+                        }
+
+                        .modal-body-custom {
+                            flex: 1;
+                            overflow-y: auto;
+                            padding: 0;
+                        }
+
+                        /* Ensure main container is relative */
+                        .ide-container {
+                            position: relative;
+                        }
+                    </style>
                 </div>
+                <!-- ↑ IDE 컴포넌트 닫는 태그 -->
 
-                <!-- 오류 및 로딩 메시지 표시 영역 -->
-                <div id="system-messages" class="system-messages"
-                    style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
-                </div>
-
-                <!-- 🔥 추가: 해설 팝업 HTML 구조 -->
-                <div id="explanation-popup" class="explanation-popup" style="display: none;">
-                    <div class="popup-header">
-                        <div class="popup-title">
-                            <i class="bi bi-lightbulb"></i>
-                            <span id="explanation-title">문제 해설</span>
-                        </div>
-                        <button class="popup-close-btn" id="explanation-close-btn" type="button">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-
-                    <div class="popup-content">
-                        <div class="explanation-loading" id="explanation-loading" style="display: none;">
+                <!-- 퀴즈 컴포넌트 -->
+                <div id="quiz-component" class="quiz-container component component-hidden">
+                    <div class="quiz-wrapper">
+                        <div class="quiz-loading" id="quiz-loading" style="display: none;">
                             <div class="loading-spinner"></div>
-                            <p>해설을 불러오는 중...</p>
+                            <p>퀴즈를 불러오는 중...</p>
                         </div>
 
-                        <div class="explanation-body" id="explanation-body">
-                            <!-- 마크다운 렌더링된 해설 내용이 여기에 표시됩니다 -->
+                        <div class="quiz-main" id="quiz-main" style="display: none;">
+                            <div class="quiz-header">
+                                <h4 class="quiz-title" id="quiz-title">문제</h4>
+                                <div class="quiz-meta" id="quiz-meta">
+                                    <span class="badge bg-info" id="quiz-type">객관식</span>
+                                    <span class="badge bg-secondary" id="quiz-points">1점</span>
+                                </div>
+                            </div>
+
+                            <div class="quiz-problem" id="quiz-problem">
+                                <!-- 문제 내용은 ContentComponent의 iframe과 연동 -->
+                                <p class="text-muted">문제를 선택하면 여기에 표시됩니다.</p>
+                            </div>
+
+                            <div class="quiz-answer-section" id="quiz-answer-section">
+                                <!-- 답안 입력 UI가 동적으로 생성됨 -->
+                            </div>
+
+                            <div class="quiz-actions" id="quiz-actions">
+                                <button class="btn btn-primary" id="submit-answer-btn" disabled>답안 제출</button>
+                                <button class="btn btn-secondary" id="reset-answer-btn" style="display: none;">다시
+                                    풀기</button>
+                            </div>
+
+                            <div class="quiz-result" id="quiz-result" style="display: none;">
+                                <!-- 결과가 여기 표시됨 -->
+                            </div>
                         </div>
 
-                        <div class="explanation-error" id="explanation-error" style="display: none;">
-                            <p class="text-danger">해설을 불러올 수 없습니다.</p>
+                        <div class="quiz-no-data" id="quiz-no-data" style="display: block;">
+                            <div class="text-center text-muted">
+                                <i class="bi bi-question-circle" style="font-size: 3rem;"></i>
+                                <p class="mt-3">퀴즈 문제를 선택해주세요.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- PPT 뷰어 컴포넌트 -->
+                <div id="ppt-viewer-component" class="ppt-viewer component component-hidden">
+                    <!-- PPT 뷰어는 동적으로 생성됨 -->
+                </div>
+
+                <!-- Jupyter 컴포넌트 -->
+                <div id="jupyter-component" class="jupyter-container component component-hidden">
+                    <!-- JupyterComponent.js에서 동적으로 생성됨 -->
+                </div>
+            </div>
+
+            <!-- 오류 및 로딩 메시지 표시 영역 -->
+            <div id="system-messages" class="system-messages"
+                style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+            </div>
+
+            <!-- 🔥 추가: 해설 팝업 HTML 구조 -->
+            <div id="explanation-popup" class="explanation-popup" style="display: none;">
+                <div class="popup-header">
+                    <div class="popup-title">
+                        <i class="bi bi-lightbulb"></i>
+                        <span id="explanation-title">문제 해설</span>
+                    </div>
+                    <button class="popup-close-btn" id="explanation-close-btn" type="button">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="popup-content">
+                    <div class="explanation-loading" id="explanation-loading" style="display: none;">
+                        <div class="loading-spinner"></div>
+                        <p>해설을 불러오는 중...</p>
+                    </div>
+
+                    <div class="explanation-body" id="explanation-body">
+                        <!-- 마크다운 렌더링된 해설 내용이 여기에 표시됩니다 -->
+                    </div>
+
+                    <div class="explanation-error" id="explanation-error" style="display: none;">
+                        <p class="text-danger">해설을 불러올 수 없습니다.</p>
+                    </div>
+                </div>
+            </div>
 
 
-                <!-- 스크립트 -->
-                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-                <!-- marked.js - 마크다운 파서 -->
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+            <!-- 스크립트 -->
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-                <!-- highlight.js - 코드 하이라이팅 (선택사항) -->
-                <link rel="stylesheet"
-                    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+            <!-- marked.js - 마크다운 파서 -->
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 
-                <!-- 추가 언어 지원 (필요한 경우) -->
-                <script
-                    src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
-                <script
-                    src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+            <!-- highlight.js - 코드 하이라이팅 (선택사항) -->
+            <link rel="stylesheet"
+                href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
-                <!-- 폴백 및 오류 처리 -->
-                <script>
-                    // 기본 컴포넌트 클래스 정의
-                    if (!window.Component) {
-                        window.Component = class Component {
-                            constructor(options = {}) {
-                                this.options = options;
-                                this.elementId = options.elementId;
-                                this.element = null;
-                                this.initialized = false;
-                                this.visible = options.visible !== undefined ? options.visible : false;
-                            }
+            <!-- 추가 언어 지원 (필요한 경우) -->
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+            <script
+                src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
 
-                            async init() {
-                                this.element = document.getElementById(this.elementId);
-                                this.initialized = true;
-                                return true;
-                            }
-
-                            activate() {
-                                console.log(`${this.elementId} 컴포넌트 활성화`);
-                            }
-
-                            deactivate() {
-                                console.log(`${this.elementId} 컴포넌트 비활성화`);
-                            }
-                        };
-                    }
-
-                    // 이벤트 버스 폴백
-                    if (!window.EventBus) {
-                        window.EventBus = {
-                            events: {},
-                            subscribe(event, callback) {
-                                if (!this.events[event]) this.events[event] = [];
-                                this.events[event].push(callback);
-                                return () => {
-                                    this.events[event] = this.events[event].filter(cb => cb !== callback);
-                                };
-                            },
-                            publish(event, data) {
-                                if (!this.events[event]) return;
-                                this.events[event].forEach(callback => {
-                                    try {
-                                        callback(data);
-                                    } catch (error) {
-                                        console.error(`'${event}' 이벤트 처리 중 오류:`, error);
-                                    }
-                                });
-                            }
-                        };
-                    }
-
-                    // 🔥 새로 추가: 폰트 크기 조절 기능
-                    let currentFontSize = 16; // 기본 폰트 크기
-
-                    function adjustContentFontSize(delta) {
-                        const iframe = document.getElementById('iframeContent');
-                        if (!iframe) return;
-
-                        currentFontSize = Math.max(12, Math.min(24, currentFontSize + delta));
-
-                        // iframe 내부 스타일 조정
-                        try {
-                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                            if (iframeDoc && iframeDoc.body) {
-                                iframeDoc.body.style.fontSize = currentFontSize + 'px';
-                                console.log('콘텐츠 폰트 크기 변경:', currentFontSize + 'px');
-                            }
-                        } catch (error) {
-                            console.warn('iframe 폰트 크기 조정 실패:', error);
+            <!-- 폴백 및 오류 처리 -->
+            <script>
+                // 기본 컴포넌트 클래스 정의
+                if (!window.Component) {
+                    window.Component = class Component {
+                        constructor(options = {}) {
+                            this.options = options;
+                            this.elementId = options.elementId;
+                            this.element = null;
+                            this.initialized = false;
+                            this.visible = options.visible !== undefined ? options.visible : false;
                         }
-                    }
 
-                    // 🔥 폰트 크기 버튼 이벤트 리스너
-                    document.addEventListener('DOMContentLoaded', function () {
-                        const fontDecreaseBtn = document.getElementById('content-font-decrease');
-                        const fontIncreaseBtn = document.getElementById('content-font-increase');
+                        async init() {
+                            this.element = document.getElementById(this.elementId);
+                            this.initialized = true;
+                            return true;
+                        }
 
-                        if (fontDecreaseBtn) {
-                            fontDecreaseBtn.addEventListener('click', function () {
-                                adjustContentFontSize(-1);
+                        activate() {
+                            console.log(`${this.elementId} 컴포넌트 활성화`);
+                        }
+
+                        deactivate() {
+                            console.log(`${this.elementId} 컴포넌트 비활성화`);
+                        }
+                    };
+                }
+
+                // 이벤트 버스 폴백
+                if (!window.EventBus) {
+                    window.EventBus = {
+                        events: {},
+                        subscribe(event, callback) {
+                            if (!this.events[event]) this.events[event] = [];
+                            this.events[event].push(callback);
+                            return () => {
+                                this.events[event] = this.events[event].filter(cb => cb !== callback);
+                            };
+                        },
+                        publish(event, data) {
+                            if (!this.events[event]) return;
+                            this.events[event].forEach(callback => {
+                                try {
+                                    callback(data);
+                                } catch (error) {
+                                    console.error(`'${event}' 이벤트 처리 중 오류:`, error);
+                                }
                             });
-                            console.log('폰트 축소 버튼 이벤트 연결됨');
                         }
+                    };
+                }
 
-                        if (fontIncreaseBtn) {
-                            fontIncreaseBtn.addEventListener('click', function () {
-                                adjustContentFontSize(1);
-                            });
-                            console.log('폰트 확대 버튼 이벤트 연결됨');
+                // 🔥 새로 추가: 폰트 크기 조절 기능
+                let currentFontSize = 16; // 기본 폰트 크기
+
+                function adjustContentFontSize(delta) {
+                    const iframe = document.getElementById('iframeContent');
+                    if (!iframe) return;
+
+                    currentFontSize = Math.max(12, Math.min(24, currentFontSize + delta));
+
+                    // iframe 내부 스타일 조정
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        if (iframeDoc && iframeDoc.body) {
+                            iframeDoc.body.style.fontSize = currentFontSize + 'px';
+                            console.log('콘텐츠 폰트 크기 변경:', currentFontSize + 'px');
                         }
+                    } catch (error) {
+                        console.warn('iframe 폰트 크기 조정 실패:', error);
+                    }
+                }
 
-                        // 원본 복원 버튼은 CodeEditor.js에서 동적으로 생성 및 처리됨
-                    });
+                // 🔥 폰트 크기 버튼 이벤트 리스너
+                document.addEventListener('DOMContentLoaded', function () {
+                    const fontDecreaseBtn = document.getElementById('content-font-decrease');
+                    const fontIncreaseBtn = document.getElementById('content-font-increase');
 
-                    // 시스템 메시지 표시 함수
-                    function showSystemMessage(message, type = 'info') {
-                        const messagesContainer = document.getElementById('system-messages');
-                        if (!messagesContainer) return;
+                    if (fontDecreaseBtn) {
+                        fontDecreaseBtn.addEventListener('click', function () {
+                            adjustContentFontSize(-1);
+                        });
+                        console.log('폰트 축소 버튼 이벤트 연결됨');
+                    }
 
-                        messagesContainer.style.display = 'block';
+                    if (fontIncreaseBtn) {
+                        fontIncreaseBtn.addEventListener('click', function () {
+                            adjustContentFontSize(1);
+                        });
+                        console.log('폰트 확대 버튼 이벤트 연결됨');
+                    }
 
-                        const messageElement = document.createElement('div');
-                        messageElement.className = `alert alert-${type} alert-dismissible fade show`;
-                        messageElement.innerHTML = `
+                    // 원본 복원 버튼은 CodeEditor.js에서 동적으로 생성 및 처리됨
+                });
+
+                // 시스템 메시지 표시 함수
+                function showSystemMessage(message, type = 'info') {
+                    const messagesContainer = document.getElementById('system-messages');
+                    if (!messagesContainer) return;
+
+                    messagesContainer.style.display = 'block';
+
+                    const messageElement = document.createElement('div');
+                    messageElement.className = `alert alert-${type} alert-dismissible fade show`;
+                    messageElement.innerHTML = `
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             `;
 
-                        messagesContainer.appendChild(messageElement);
+                    messagesContainer.appendChild(messageElement);
 
+                    setTimeout(() => {
+                        messageElement.classList.remove('show');
                         setTimeout(() => {
-                            messageElement.classList.remove('show');
-                            setTimeout(() => {
-                                if (messagesContainer.contains(messageElement)) {
-                                    messagesContainer.removeChild(messageElement);
-                                    if (messagesContainer.children.length === 0) {
-                                        messagesContainer.style.display = 'none';
-                                    }
+                            if (messagesContainer.contains(messageElement)) {
+                                messagesContainer.removeChild(messageElement);
+                                if (messagesContainer.children.length === 0) {
+                                    messagesContainer.style.display = 'none';
                                 }
-                            }, 300);
-                        }, 5000);
-                    }
-
-                    // 🔥 추가: Jupyter 관리 함수들
-                    function retryJupyter() {
-                        console.log('Jupyter 다시 시도');
-                        const jupyterError = document.getElementById('jupyter-error');
-                        const jupyterLoading = document.getElementById('jupyter-loading');
-
-                        if (jupyterError) jupyterError.style.display = 'none';
-                        if (jupyterLoading) jupyterLoading.style.display = 'block';
-
-                        // ContentComponent에서 Jupyter 로드 다시 시도
-                        if (window.ComponentSystem && window.ComponentSystem.components.content) {
-                            const content = window.ComponentSystem.components.content;
-                            if (content.retryJupyterLoad) {
-                                content.retryJupyterLoad();
                             }
+                        }, 300);
+                    }, 5000);
+                }
+
+                // 🔥 추가: Jupyter 관리 함수들
+                function retryJupyter() {
+                    console.log('Jupyter 다시 시도');
+                    const jupyterError = document.getElementById('jupyter-error');
+                    const jupyterLoading = document.getElementById('jupyter-loading');
+
+                    if (jupyterError) jupyterError.style.display = 'none';
+                    if (jupyterLoading) jupyterLoading.style.display = 'block';
+
+                    // ContentComponent에서 Jupyter 로드 다시 시도
+                    if (window.ComponentSystem && window.ComponentSystem.components.content) {
+                        const content = window.ComponentSystem.components.content;
+                        if (content.retryJupyterLoad) {
+                            content.retryJupyterLoad();
                         }
                     }
+                }
 
-                    function refreshJupyter() {
-                        console.log('Jupyter 새로고침');
-                        const jupyterIframe = document.getElementById('jupyter-iframe');
-                        if (jupyterIframe && jupyterIframe.src !== 'about:blank') {
-                            jupyterIframe.src = jupyterIframe.src; // 리로드
+                function refreshJupyter() {
+                    console.log('Jupyter 새로고침');
+                    const jupyterIframe = document.getElementById('jupyter-iframe');
+                    if (jupyterIframe && jupyterIframe.src !== 'about:blank') {
+                        jupyterIframe.src = jupyterIframe.src; // 리로드
+                    }
+                }
+
+                function fullscreenJupyter() {
+                    console.log('Jupyter 전체화면');
+                    const jupyterIframe = document.getElementById('jupyter-iframe');
+                    if (jupyterIframe) {
+                        if (jupyterIframe.requestFullscreen) {
+                            jupyterIframe.requestFullscreen();
+                        } else if (jupyterIframe.webkitRequestFullscreen) {
+                            jupyterIframe.webkitRequestFullscreen();
+                        } else if (jupyterIframe.msRequestFullscreen) {
+                            jupyterIframe.msRequestFullscreen();
                         }
                     }
+                }
 
-                    function fullscreenJupyter() {
-                        console.log('Jupyter 전체화면');
-                        const jupyterIframe = document.getElementById('jupyter-iframe');
-                        if (jupyterIframe) {
-                            if (jupyterIframe.requestFullscreen) {
-                                jupyterIframe.requestFullscreen();
-                            } else if (jupyterIframe.webkitRequestFullscreen) {
-                                jupyterIframe.webkitRequestFullscreen();
-                            } else if (jupyterIframe.msRequestFullscreen) {
-                                jupyterIframe.msRequestFullscreen();
-                            }
+                function downloadNotebook() {
+                    console.log('Jupyter 노트북 다운로드');
+                    // 현재 로드된 노트북 다운로드 로직
+                    if (window.ComponentSystem && window.ComponentSystem.components.content) {
+                        const content = window.ComponentSystem.components.content;
+                        if (content.downloadCurrentNotebook) {
+                            content.downloadCurrentNotebook();
+                        } else {
+                            showSystemMessage('다운로드할 노트북이 없습니다.', 'warning');
                         }
                     }
+                }
 
-                    function downloadNotebook() {
-                        console.log('Jupyter 노트북 다운로드');
-                        // 현재 로드된 노트북 다운로드 로직
-                        if (window.ComponentSystem && window.ComponentSystem.components.content) {
-                            const content = window.ComponentSystem.components.content;
-                            if (content.downloadCurrentNotebook) {
-                                content.downloadCurrentNotebook();
-                            } else {
-                                showSystemMessage('다운로드할 노트북이 없습니다.', 'warning');
-                            }
-                        }
+                // 스크립트 로드 오류 처리
+                window.addEventListener('error', function (event) {
+                    if (event.target.tagName === 'SCRIPT') {
+                        showSystemMessage(`스크립트 로드 오류: ${event.target.src}`, 'danger');
                     }
+                }, true);
+            </script>
 
-                    // 스크립트 로드 오류 처리
-                    window.addEventListener('error', function (event) {
-                        if (event.target.tagName === 'SCRIPT') {
-                            showSystemMessage(`스크립트 로드 오류: ${event.target.src}`, 'danger');
-                        }
-                    }, true);
-                </script>
-
-                <!-- 컴포넌트 시스템 기본 스크립트를 순서대로 로드 -->
-                <script>
-                    // 스크립트 순차 로드 함수
-                    function loadScriptsSequentially(scripts) {
-                        return scripts.reduce((promise, script) => {
-                            return promise.then(() => {
-                                return new Promise((resolve, reject) => {
-                                    const scriptElement = document.createElement('script');
-                                    scriptElement.src = script;
-                                    scriptElement.onload = resolve;
-                                    scriptElement.onerror = () => {
-                                        console.error(`스크립트 로드 실패: ${script}`);
-                                        reject(new Error(`Failed to load ${script}`));
-                                    };
-                                    document.head.appendChild(scriptElement);
-                                });
+            <!-- 컴포넌트 시스템 기본 스크립트를 순서대로 로드 -->
+            <script>
+                // 스크립트 순차 로드 함수
+                function loadScriptsSequentially(scripts) {
+                    return scripts.reduce((promise, script) => {
+                        return promise.then(() => {
+                            return new Promise((resolve, reject) => {
+                                const scriptElement = document.createElement('script');
+                                scriptElement.src = script;
+                                scriptElement.onload = resolve;
+                                scriptElement.onerror = () => {
+                                    console.error(`스크립트 로드 실패: ${script}`);
+                                    reject(new Error(`Failed to load ${script}`));
+                                };
+                                document.head.appendChild(scriptElement);
                             });
-                        }, Promise.resolve());
-                    }
+                        });
+                    }, Promise.resolve());
+                }
 
-                    // 컴포넌트 시스템 초기화
-                    function initializeComponentSystem() {
-                        // 기본 시스템 스크립트들
-                        const systemScripts = [
-                            '/js/components/base/EventBus.js',
-                            '/js/components/base/Component.js',
-                            '/js/components/base/ComponentRegistry.js',
-                            '/js/components/base/ComponentFactory.js'
-                        ];
+                // 컴포넌트 시스템 초기화
+                function initializeComponentSystem() {
+                    // 기본 시스템 스크립트들
+                    const systemScripts = [
+                        '/js/components/base/EventBus.js',
+                        '/js/components/base/Component.js',
+                        '/js/components/base/ComponentRegistry.js',
+                        '/js/components/base/ComponentFactory.js'
+                    ];
 
-                        // 개별 컴포넌트 스크립트들
-                        const componentScripts = [
-                            '/js/components/nav/NavigationComponent.js?v=1.2',
-                            '/js/components/content/ContentComponent.js?v=1.2',
-                            '/js/components/ide/IDEComponent.js',
-                            '/js/components/jupyter/JupyterComponent.js',
-                            '/js/components/quiz/QuizComponent.js',
-                            '/js/components/ppt/PPTViewerComponent.js',
-                            '/js/components/popup/ExplanationPopup.js'
-                        ];
+                    // 개별 컴포넌트 스크립트들
+                    const componentScripts = [
+                        '/js/components/nav/NavigationComponent.js?v=1.2',
+                        '/js/components/content/ContentComponent.js?v=1.2',
+                        '/js/components/ide/IDEComponent.js',
+                        '/js/components/jupyter/JupyterComponent.js',
+                        '/js/components/quiz/QuizComponent.js',
+                        '/js/components/ppt/PPTViewerComponent.js',
+                        '/js/components/popup/ExplanationPopup.js'
+                    ];
 
-                        // 통합 시스템 스크립트
-                        const integrationScripts = [
-                            '/js/component-system.js'
-                        ];
+                    // 통합 시스템 스크립트
+                    const integrationScripts = [
+                        '/js/component-system.js'
+                    ];
 
-                        console.log('컴포넌트 시스템 스크립트 로드 시작...');
+                    console.log('컴포넌트 시스템 스크립트 로드 시작...');
 
-                        // 순차적으로 로드
-                        loadScriptsSequentially(systemScripts)
-                            .then(() => {
-                                console.log('기본 시스템 스크립트 로드 완료');
-                                return loadScriptsSequentially(componentScripts);
-                            })
-                            .then(() => {
-                                console.log('개별 컴포넌트 스크립트 로드 완료');
+                    // 순차적으로 로드
+                    loadScriptsSequentially(systemScripts)
+                        .then(() => {
+                            console.log('기본 시스템 스크립트 로드 완료');
+                            return loadScriptsSequentially(componentScripts);
+                        })
+                        .then(() => {
+                            console.log('개별 컴포넌트 스크립트 로드 완료');
 
-                                // 컴포넌트 자동 등록
-                                setTimeout(() => {
-                                    console.log('컴포넌트 자동 등록 시작...');
+                            // 컴포넌트 자동 등록
+                            setTimeout(() => {
+                                console.log('컴포넌트 자동 등록 시작...');
 
-                                    // 등록할 컴포넌트 목록
-                                    const componentsToRegister = [
-                                        { name: 'navigation', className: 'NavigationComponent', elementId: 'navigation-component' },
-                                        { name: 'content', className: 'ContentComponent', elementId: 'content-component' },
-                                        { name: 'ide', className: 'IDEComponent', elementId: 'ide-component' },
-                                        { name: 'jupyter', className: 'JupyterComponent', elementId: 'jupyter-component' },
-                                        { name: 'quiz', className: 'QuizComponent', elementId: 'quiz-component' },
-                                        { name: 'pptViewer', className: 'PPTViewerComponent', elementId: 'ppt-viewer-component' },
-                                        { name: 'pythonAutoCompleter', className: 'PythonAutoCompleter' },
-                                        { name: 'explanationPopup', className: 'ExplanationPopup' } // 🔥 추가: 해설 팝업
-                                    ];
+                                // 등록할 컴포넌트 목록
+                                const componentsToRegister = [
+                                    { name: 'navigation', className: 'NavigationComponent', elementId: 'navigation-component' },
+                                    { name: 'content', className: 'ContentComponent', elementId: 'content-component' },
+                                    { name: 'ide', className: 'IDEComponent', elementId: 'ide-component' },
+                                    { name: 'jupyter', className: 'JupyterComponent', elementId: 'jupyter-component' },
+                                    { name: 'quiz', className: 'QuizComponent', elementId: 'quiz-component' },
+                                    { name: 'pptViewer', className: 'PPTViewerComponent', elementId: 'ppt-viewer-component' },
+                                    { name: 'pythonAutoCompleter', className: 'PythonAutoCompleter' },
+                                    { name: 'explanationPopup', className: 'ExplanationPopup' } // 🔥 추가: 해설 팝업
+                                ];
 
-                                    componentsToRegister.forEach(comp => {
-                                        if (window[comp.className]) {
-                                            if (window.ComponentFactory && window.ComponentFactory.register) {
-                                                // 🔥 elementId 전달
-                                                const options = comp.elementId ? { elementId: comp.elementId } : {};
-                                                window.ComponentFactory.register(comp.name, window[comp.className], options);
-                                                console.log(`자동 등록 완료: ${comp.name} -> ${comp.className} (elementId: ${comp.elementId || 'default'})`);
-                                            } else {
-                                                console.warn('ComponentFactory.register를 찾을 수 없습니다.');
-                                            }
+                                componentsToRegister.forEach(comp => {
+                                    if (window[comp.className]) {
+                                        if (window.ComponentFactory && window.ComponentFactory.register) {
+                                            // 🔥 elementId 전달
+                                            const options = comp.elementId ? { elementId: comp.elementId } : {};
+                                            window.ComponentFactory.register(comp.name, window[comp.className], options);
+                                            console.log(`자동 등록 완료: ${comp.name} -> ${comp.className} (elementId: ${comp.elementId || 'default'})`);
                                         } else {
-                                            console.warn(`${comp.className} 클래스를 찾을 수 없습니다.`);
+                                            console.warn('ComponentFactory.register를 찾을 수 없습니다.');
                                         }
+                                    } else {
+                                        console.warn(`${comp.className} 클래스를 찾을 수 없습니다.`);
+                                    }
+                                });
+
+                                console.log('컴포넌트 자동 등록 완료');
+                            }, 50);
+
+                            return loadScriptsSequentially(integrationScripts);
+                        })
+                        .then(() => {
+                            console.log('통합 시스템 스크립트 로드 완료');
+
+                            // 컴포넌트 시스템 초기화 (한 번만)
+                            if (window.ComponentSystem && !window.ComponentSystem.state.initialized) {
+                                setTimeout(() => {
+                                    console.log('컴포넌트 시스템 초기화 시작...');
+                                    window.ComponentSystem.init().catch(e => {
+                                        console.error('컴포넌트 시스템 초기화 오류:', e);
+                                        showSystemMessage('컴포넌트 시스템 초기화 중 오류가 발생했습니다.', 'danger');
                                     });
+                                }, 150);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('컴포넌트 시스템 스크립트 로드 오류:', error);
+                            showSystemMessage('필요한 스크립트 로드에 실패했습니다. 페이지를 새로고침해 주세요.', 'danger');
+                        });
+                }
 
-                                    console.log('컴포넌트 자동 등록 완료');
-                                }, 50);
-
-                                return loadScriptsSequentially(integrationScripts);
-                            })
-                            .then(() => {
-                                console.log('통합 시스템 스크립트 로드 완료');
-
-                                // 컴포넌트 시스템 초기화 (한 번만)
-                                if (window.ComponentSystem && !window.ComponentSystem.state.initialized) {
-                                    setTimeout(() => {
-                                        console.log('컴포넌트 시스템 초기화 시작...');
-                                        window.ComponentSystem.init().catch(e => {
-                                            console.error('컴포넌트 시스템 초기화 오류:', e);
-                                            showSystemMessage('컴포넌트 시스템 초기화 중 오류가 발생했습니다.', 'danger');
-                                        });
-                                    }, 150);
-                                }
-                            })
-                            .catch(error => {
-                                console.error('컴포넌트 시스템 스크립트 로드 오류:', error);
-                                showSystemMessage('필요한 스크립트 로드에 실패했습니다. 페이지를 새로고침해 주세요.', 'danger');
-                            });
+                // DOM 로드 완료 후 초기화 (중복 방지)
+                document.addEventListener('DOMContentLoaded', function () {
+                    if (!window.componentSystemInitialized) {
+                        window.componentSystemInitialized = true;
+                        initializeComponentSystem();
                     }
+                });
+            </script>
 
-                    // DOM 로드 완료 후 초기화 (중복 방지)
-                    document.addEventListener('DOMContentLoaded', function () {
-                        if (!window.componentSystemInitialized) {
-                            window.componentSystemInitialized = true;
-                            initializeComponentSystem();
-                        }
-                    });
-                </script>
+            <!-- 🔥 새로 추가: Jupyter 컴포넌트 자동 복구 시스템 -->
+            <script>
+                // Jupyter 컴포넌트 자동 복구 시스템
+                (function () {
+                    let jupyterCheckInterval;
+                    let checkCount = 0;
+                    const maxChecks = 10;
 
-                <!-- 🔥 새로 추가: Jupyter 컴포넌트 자동 복구 시스템 -->
-                <script>
-                    // Jupyter 컴포넌트 자동 복구 시스템
-                    (function () {
-                        let jupyterCheckInterval;
-                        let checkCount = 0;
-                        const maxChecks = 10;
+                    function checkJupyterComponent() {
+                        checkCount++;
 
-                        function checkJupyterComponent() {
-                            checkCount++;
+                        const jupyter = window.ComponentSystem?.components?.jupyter;
+                        const container = document.getElementById('jupyter-component');
+                        const iframe = document.getElementById('jupyter-iframe');
 
-                            const jupyter = window.ComponentSystem?.components?.jupyter;
-                            const container = document.getElementById('jupyter-component');
-                            const iframe = document.getElementById('jupyter-iframe');
-
-                            console.log(`🔍 Jupyter 상태 체크 ${checkCount}/${maxChecks}:`, {
-                                jupyter: !!jupyter,
-                                container: !!container,
-                                iframe: !!iframe,
-                                initialized: jupyter?.state?.initialized,
-                                connected: jupyter?.state?.connected
-                            });
-
-                            // Jupyter 컴포넌트가 있지만 제대로 초기화되지 않은 경우
-                            if (jupyter && (!jupyter.state?.initialized || !iframe)) {
-                                console.log('🔧 Jupyter 컴포넌트 자동 복구 실행...');
-
-                                // 수동 실행했던 로직과 동일하게 처리
-                                try {
-                                    // 1. 강제 컨테이너 참조 설정
-                                    if (!jupyter.elements.container) {
-                                        jupyter.elements.container = container || document.getElementById('jupyter-component');
-                                    }
-
-                                    // 2. 컨테이너가 있으면 정리 후 재생성
-                                    if (jupyter.elements.container) {
-                                        jupyter.elements.container.innerHTML = '';
-
-                                        // 3. 컨테이너 및 iframe 생성
-                                        jupyter.createJupyterContainer().then(() => {
-                                            // 4. iframe 참조 업데이트
-                                            jupyter.elements.iframe = document.getElementById('jupyter-iframe');
-
-                                            // 5. 연결 시도
-                                            if (jupyter.elements.iframe) {
-                                                jupyter.connectToJupyter();
-                                                console.log('✅ Jupyter 자동 복구 완료');
-                                            }
-                                        }).catch(error => {
-                                            console.error('❌ Jupyter 자동 복구 실패:', error);
-                                        });
-                                    }
-
-                                } catch (error) {
-                                    console.error('❌ Jupyter 자동 복구 중 오류:', error);
-                                }
-                            }
-
-                            // 체크 완료 조건: 성공적으로 초기화되거나 최대 체크 횟수 초과
-                            if ((jupyter?.state?.initialized && iframe) || checkCount >= maxChecks) {
-                                clearInterval(jupyterCheckInterval);
-                                console.log('🏁 Jupyter 상태 체크 완료');
-                            }
-                        }
-
-                        // 페이지 로드 후 자동 체크 시작
-                        document.addEventListener('DOMContentLoaded', function () {
-                            // 5초 후부터 3초 간격으로 체크
-                            setTimeout(() => {
-                                jupyterCheckInterval = setInterval(checkJupyterComponent, 3000);
-                                checkJupyterComponent(); // 즉시 한 번 실행
-                            }, 5000);
+                        console.log(`🔍 Jupyter 상태 체크 ${checkCount}/${maxChecks}:`, {
+                            jupyter: !!jupyter,
+                            container: !!container,
+                            iframe: !!iframe,
+                            initialized: jupyter?.state?.initialized,
+                            connected: jupyter?.state?.connected
                         });
 
-                        // 전역 함수로 수동 복구 기능 제공
-                        window.fixJupyterComponent = function () {
-                            const jupyter = window.ComponentSystem?.components?.jupyter;
-                            if (jupyter) {
-                                if (jupyter.reconnect) {
-                                    jupyter.reconnect();
-                                } else {
-                                    // 수동 복구 실행
-                                    checkJupyterComponent();
-                                }
-                            } else {
-                                console.error('Jupyter 컴포넌트를 찾을 수 없습니다.');
-                            }
-                        };
+                        // Jupyter 컴포넌트가 있지만 제대로 초기화되지 않은 경우
+                        if (jupyter && (!jupyter.state?.initialized || !iframe)) {
+                            console.log('🔧 Jupyter 컴포넌트 자동 복구 실행...');
 
-                        // 전역 함수로 상태 확인 기능 제공
-                        window.checkJupyter = function () {
-                            const jupyter = window.ComponentSystem?.components?.jupyter;
-                            if (jupyter) {
-                                if (jupyter.getStatus) {
-                                    console.log('Jupyter 상태:', jupyter.getStatus());
-                                } else {
-                                    console.log('Jupyter 기본 상태:', {
-                                        initialized: jupyter.state?.initialized,
-                                        connected: jupyter.state?.connected,
-                                        container: !!jupyter.elements?.container,
-                                        iframe: !!jupyter.elements?.iframe
+                            // 수동 실행했던 로직과 동일하게 처리
+                            try {
+                                // 1. 강제 컨테이너 참조 설정
+                                if (!jupyter.elements.container) {
+                                    jupyter.elements.container = container || document.getElementById('jupyter-component');
+                                }
+
+                                // 2. 컨테이너가 있으면 정리 후 재생성
+                                if (jupyter.elements.container) {
+                                    jupyter.elements.container.innerHTML = '';
+
+                                    // 3. 컨테이너 및 iframe 생성
+                                    jupyter.createJupyterContainer().then(() => {
+                                        // 4. iframe 참조 업데이트
+                                        jupyter.elements.iframe = document.getElementById('jupyter-iframe');
+
+                                        // 5. 연결 시도
+                                        if (jupyter.elements.iframe) {
+                                            jupyter.connectToJupyter();
+                                            console.log('✅ Jupyter 자동 복구 완료');
+                                        }
+                                    }).catch(error => {
+                                        console.error('❌ Jupyter 자동 복구 실패:', error);
                                     });
                                 }
-                            } else {
-                                console.log('Jupyter 컴포넌트가 없습니다.');
+
+                            } catch (error) {
+                                console.error('❌ Jupyter 자동 복구 중 오류:', error);
                             }
-                        };
+                        }
 
-                        // 강제 재생성 함수
-                        window.recreateJupyter = function () {
-                            const componentSystem = window.ComponentSystem;
-                            if (componentSystem && componentSystem.components.jupyter) {
-                                // 기존 컴포넌트 제거
-                                delete componentSystem.components.jupyter;
+                        // 체크 완료 조건: 성공적으로 초기화되거나 최대 체크 횟수 초과
+                        if ((jupyter?.state?.initialized && iframe) || checkCount >= maxChecks) {
+                            clearInterval(jupyterCheckInterval);
+                            console.log('🏁 Jupyter 상태 체크 완료');
+                        }
+                    }
 
-                                // 새 컴포넌트 생성
-                                if (window.JupyterComponent) {
-                                    componentSystem.components.jupyter = new window.JupyterComponent({
-                                        elementId: 'jupyter-component',
-                                        autoInit: true
-                                    });
+                    // 페이지 로드 후 자동 체크 시작
+                    document.addEventListener('DOMContentLoaded', function () {
+                        // 5초 후부터 3초 간격으로 체크
+                        setTimeout(() => {
+                            jupyterCheckInterval = setInterval(checkJupyterComponent, 3000);
+                            checkJupyterComponent(); // 즉시 한 번 실행
+                        }, 5000);
+                    });
 
-                                    // 초기화
-                                    componentSystem.components.jupyter.init();
-                                    console.log('Jupyter 컴포넌트가 재생성되었습니다.');
-                                } else {
-                                    console.error('JupyterComponent 클래스를 찾을 수 없습니다.');
-                                }
+                    // 전역 함수로 수동 복구 기능 제공
+                    window.fixJupyterComponent = function () {
+                        const jupyter = window.ComponentSystem?.components?.jupyter;
+                        if (jupyter) {
+                            if (jupyter.reconnect) {
+                                jupyter.reconnect();
                             } else {
-                                console.error('ComponentSystem을 찾을 수 없습니다.');
+                                // 수동 복구 실행
+                                checkJupyterComponent();
                             }
-                        };
+                        } else {
+                            console.error('Jupyter 컴포넌트를 찾을 수 없습니다.');
+                        }
+                    };
 
-                    })();
-                </script>
+                    // 전역 함수로 상태 확인 기능 제공
+                    window.checkJupyter = function () {
+                        const jupyter = window.ComponentSystem?.components?.jupyter;
+                        if (jupyter) {
+                            if (jupyter.getStatus) {
+                                console.log('Jupyter 상태:', jupyter.getStatus());
+                            } else {
+                                console.log('Jupyter 기본 상태:', {
+                                    initialized: jupyter.state?.initialized,
+                                    connected: jupyter.state?.connected,
+                                    container: !!jupyter.elements?.container,
+                                    iframe: !!jupyter.elements?.iframe
+                                });
+                            }
+                        } else {
+                            console.log('Jupyter 컴포넌트가 없습니다.');
+                        }
+                    };
 
-                <!-- 🔥 새로 추가: 디버깅용 콘솔 명령어들 -->
-                <script>
-                    // 브라우저 콘솔에서 사용할 수 있는 디버깅 명령어들
+                    // 강제 재생성 함수
+                    window.recreateJupyter = function () {
+                        const componentSystem = window.ComponentSystem;
+                        if (componentSystem && componentSystem.components.jupyter) {
+                            // 기존 컴포넌트 제거
+                            delete componentSystem.components.jupyter;
 
-                    // 1. 전체 컴포넌트 시스템 상태 확인
-                    window.debugComponentSystem = function () {
-                        const cs = window.ComponentSystem;
-                        if (cs) {
-                            console.log('🔍 ComponentSystem 전체 상태:', {
-                                initialized: cs.state.initialized,
-                                pageType: cs.state.pageType,
-                                currentLayoutType: cs.state.currentLayoutType,
-                                activeComponents: cs.state.activeComponents,
-                                dataLoaded: cs.state.dataLoaded,
-                                components: Object.keys(cs.components).map(key => ({
-                                    name: key,
-                                    exists: !!cs.components[key],
-                                    initialized: cs.components[key]?.initialized || cs.components[key]?.state?.initialized,
-                                    active: cs.components[key]?.active || cs.components[key]?.state?.active
-                                }))
-                            });
+                            // 새 컴포넌트 생성
+                            if (window.JupyterComponent) {
+                                componentSystem.components.jupyter = new window.JupyterComponent({
+                                    elementId: 'jupyter-component',
+                                    autoInit: true
+                                });
+
+                                // 초기화
+                                componentSystem.components.jupyter.init();
+                                console.log('Jupyter 컴포넌트가 재생성되었습니다.');
+                            } else {
+                                console.error('JupyterComponent 클래스를 찾을 수 없습니다.');
+                            }
                         } else {
                             console.error('ComponentSystem을 찾을 수 없습니다.');
                         }
                     };
 
-                    // 2. 특정 컴포넌트 상태 확인
-                    window.debugComponent = function (componentName) {
-                        const component = window.ComponentSystem?.components?.[componentName];
-                        if (component) {
-                            console.log(`🔍 ${componentName} 컴포넌트 상태:`, {
-                                exists: true,
-                                initialized: component.initialized || component.state?.initialized,
-                                active: component.active || component.state?.active,
-                                visible: component.visible || component.state?.visible,
-                                element: !!component.element || !!component.elements?.container,
-                                state: component.state,
-                                elements: component.elements ? Object.keys(component.elements) : 'N/A'
-                            });
-                        } else {
-                            console.error(`${componentName} 컴포넌트를 찾을 수 없습니다.`);
-                        }
-                    };
+                })();
+            </script>
 
-                    // 3. 레이아웃 강제 변경
-                    window.forceLayout = function (layoutType) {
-                        if (window.ComponentSystem && window.ComponentSystem.applyLayout) {
-                            window.ComponentSystem.applyLayout(layoutType);
-                            console.log(`레이아웃 강제 변경: ${layoutType}`);
-                        } else {
-                            console.error('ComponentSystem.applyLayout을 찾을 수 없습니다.');
-                        }
-                    };
+            <!-- 🔥 새로 추가: 디버깅용 콘솔 명령어들 -->
+            <script>
+                // 브라우저 콘솔에서 사용할 수 있는 디버깅 명령어들
 
-                    // 4. 이벤트 버스 상태 확인
-                    window.debugEventBus = function () {
-                        if (window.EventBus) {
-                            console.log('🔍 EventBus 상태:', {
-                                events: Object.keys(window.EventBus.events || {}),
-                                eventDetails: Object.entries(window.EventBus.events || {}).map(([event, listeners]) => ({
-                                    event: event,
-                                    listenerCount: listeners.length
-                                }))
-                            });
-                        } else {
-                            console.error('EventBus를 찾을 수 없습니다.');
-                        }
-                    };
+                // 1. 전체 컴포넌트 시스템 상태 확인
+                window.debugComponentSystem = function () {
+                    const cs = window.ComponentSystem;
+                    if (cs) {
+                        console.log('🔍 ComponentSystem 전체 상태:', {
+                            initialized: cs.state.initialized,
+                            pageType: cs.state.pageType,
+                            currentLayoutType: cs.state.currentLayoutType,
+                            activeComponents: cs.state.activeComponents,
+                            dataLoaded: cs.state.dataLoaded,
+                            components: Object.keys(cs.components).map(key => ({
+                                name: key,
+                                exists: !!cs.components[key],
+                                initialized: cs.components[key]?.initialized || cs.components[key]?.state?.initialized,
+                                active: cs.components[key]?.active || cs.components[key]?.state?.active
+                            }))
+                        });
+                    } else {
+                        console.error('ComponentSystem을 찾을 수 없습니다.');
+                    }
+                };
 
-                    // 5. 도움말 표시
-                    window.debugHelp = function () {
-                        console.log(`
+                // 2. 특정 컴포넌트 상태 확인
+                window.debugComponent = function (componentName) {
+                    const component = window.ComponentSystem?.components?.[componentName];
+                    if (component) {
+                        console.log(`🔍 ${componentName} 컴포넌트 상태:`, {
+                            exists: true,
+                            initialized: component.initialized || component.state?.initialized,
+                            active: component.active || component.state?.active,
+                            visible: component.visible || component.state?.visible,
+                            element: !!component.element || !!component.elements?.container,
+                            state: component.state,
+                            elements: component.elements ? Object.keys(component.elements) : 'N/A'
+                        });
+                    } else {
+                        console.error(`${componentName} 컴포넌트를 찾을 수 없습니다.`);
+                    }
+                };
+
+                // 3. 레이아웃 강제 변경
+                window.forceLayout = function (layoutType) {
+                    if (window.ComponentSystem && window.ComponentSystem.applyLayout) {
+                        window.ComponentSystem.applyLayout(layoutType);
+                        console.log(`레이아웃 강제 변경: ${layoutType}`);
+                    } else {
+                        console.error('ComponentSystem.applyLayout을 찾을 수 없습니다.');
+                    }
+                };
+
+                // 4. 이벤트 버스 상태 확인
+                window.debugEventBus = function () {
+                    if (window.EventBus) {
+                        console.log('🔍 EventBus 상태:', {
+                            events: Object.keys(window.EventBus.events || {}),
+                            eventDetails: Object.entries(window.EventBus.events || {}).map(([event, listeners]) => ({
+                                event: event,
+                                listenerCount: listeners.length
+                            }))
+                        });
+                    } else {
+                        console.error('EventBus를 찾을 수 없습니다.');
+                    }
+                };
+
+                // 5. 도움말 표시
+                window.debugHelp = function () {
+                    console.log(`
 🔧 디버깅 명령어 목록:
 
 1. debugComponentSystem() - 전체 컴포넌트 시스템 상태 확인
@@ -948,17 +945,17 @@
 - fixJupyterComponent()      // Jupyter 문제 해결
 - forceLayout('jupyter')     // Jupyter 레이아웃으로 강제 전환
 `);
-                    };
+                };
 
-                    // 페이지 로드 시 디버깅 도구 사용 가능 알림
-                    window.addEventListener('load', function () {
-                        setTimeout(() => {
-                            console.log('%c🔧 디버깅 도구 사용 가능!', 'color: #4CAF50; font-weight: bold; font-size: 14px;');
-                            console.log('%c콘솔에서 debugHelp() 를 입력하여 사용 가능한 명령어를 확인하세요.', 'color: #2196F3;');
-                        }, 2000);
-                    });
-                </script>
-                </script>
+                // 페이지 로드 시 디버깅 도구 사용 가능 알림
+                window.addEventListener('load', function () {
+                    setTimeout(() => {
+                        console.log('%c🔧 디버깅 도구 사용 가능!', 'color: #4CAF50; font-weight: bold; font-size: 14px;');
+                        console.log('%c콘솔에서 debugHelp() 를 입력하여 사용 가능한 명령어를 확인하세요.', 'color: #2196F3;');
+                    }, 2000);
+                });
+            </script>
+            </script>
     </body>
 
 </html>
