@@ -64,9 +64,18 @@ class ProjectStorageModal {
      * 플랫폼별 API 엔드포인트 반환
      */
     _getApiEndpoints() {
+        // 🔥 Entry는 별도 라우터 사용 (/entry/api/)
+        if (this.platform === 'entry') {
+            return {
+                list: '/entry/api/user-projects',
+                save: '/entry/api/save-project',
+                load: (fileId) => `/entry/api/project/${fileId}`,
+                delete: (fileId) => `/entry/api/project/${fileId}`
+            };
+        }
+        
         const baseMap = {
             scratch: '/api/scratch',
-            entry: '/api/entry-storage',
             python: '/api/python-storage',
             appinventor: '/api/appinventor-storage'
         };
