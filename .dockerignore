@@ -54,7 +54,7 @@ lib_board
 *.cmd
 *.ps1
 *.md
-*.txt
+
 LICENSE
 
 # System Trash
