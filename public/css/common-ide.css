@@ -52,10 +52,10 @@
   box-shadow: none;
   /* No shadow */
   white-space: nowrap;
-  min-width: 70px;
+  min-width: 100px;
   /* Restored min-width for consistent size */
   letter-spacing: normal;
-  margin-right: 2px;
+  margin-right: 4px;
 }
 
 .ide-control-btn i {

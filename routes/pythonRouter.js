@@ -51,6 +51,12 @@ router.get('/api/get-python-data', async (req, res) => {
     }
 });
 
+// 🔥 최종 수정: 일반 Python 실행
+router.post('/api/run-python', async (req, res) => {
+    const { code } = req.body;
+    executeNormalPython(code, req, res);
+});
+
 // 🔥 최종 수정: 대화형 Python 실행 시작
 router.post('/api/run-python-interactive', async (req, res) => {
     console.log('=== 대화형 Python 코드 실행 요청 ===');

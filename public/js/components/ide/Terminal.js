@@ -322,7 +322,7 @@ class Terminal {
    */
   async runNormalCode(code) {
     try {
-      const response = await fetch('/api/run-python', {
+      const response = await fetch('/python/api/run-python', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: code })
