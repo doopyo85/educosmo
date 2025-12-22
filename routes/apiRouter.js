@@ -1544,4 +1544,45 @@ try {
   console.error('❌ EntryStorageRouter 로드 실패:', error);
 }
 
+// =================================================================
+// 🔥 세션 Heartbeat API (Entry/Scratch 자동저장 시 세션 연장)
+// =================================================================
+router.post('/session/heartbeat', (req, res) => {
+  try {
+    const { platform, userID, timestamp } = req.body;
+    
+    // 세션이 있으면 TTL 연장 (rolling: true 설정과 함께 동작)
+    if (req.session && req.session.is_logined) {
+      // 세션 touch로 만료 시간 갱신
+      req.session.touch();
+      
+      console.log(`💓 [Heartbeat] 세션 연장 - platform: ${platform}, user: ${req.session.userID}, time: ${new Date().toLocaleTimeString('ko-KR')}`);
+      
+      return res.json({
+        success: true,
+        message: '세션이 연장되었습니다.',
+        sessionUser: req.session.userID,
+        platform: platform,
+        serverTime: new Date().toISOString()
+      });
+    }
+    
+    // 세션이 없거나 로그인되지 않은 경우
+    console.log(`⚠️ [Heartbeat] 세션 없음 - platform: ${platform}, userID: ${userID}`);
+    return res.status(401).json({
+      success: false,
+      message: '유효한 세션이 없습니다.',
+      needsLogin: true
+    });
+    
+  } catch (error) {
+    console.error('❌ [Heartbeat] 오류:', error);
+    return res.status(500).json({
+      success: false,
+      message: '세션 연장 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

@@ -140,7 +140,7 @@ router.post('/save-project', requireAuth, async (req, res) => {
         // 프로젝트 ID 및 S3 경로 생성
         const projectId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const projectTitle = title || '제목 없음';
-        const s3Key = `${S3_SCRATCH_PATH}/${userID}/${projectId}.sb3`;
+        const s3Key = `${S3_SCRATCH_PATH}/${encodeURIComponent(userID)}/${projectId}.sb3`;
 
         // S3에 프로젝트 업로드
         const uploadParams = {
@@ -159,7 +159,7 @@ router.post('/save-project', requireAuth, async (req, res) => {
                 // data:image/png;base64,XXXXX 형식에서 base64 부분 추출
                 const base64Data = thumbnail.replace(/^data:image\/\w+;base64,/, '');
                 const thumbnailBuffer = Buffer.from(base64Data, 'base64');
-                const thumbnailKey = `${S3_THUMBNAIL_PATH}/${userID}/${projectId}.png`;
+                const thumbnailKey = `${S3_THUMBNAIL_PATH}/${encodeURIComponent(userID)}/${projectId}.png`;
 
                 await s3Client.send(new PutObjectCommand({
                     Bucket: S3_BUCKET,
@@ -180,7 +180,7 @@ router.post('/save-project', requireAuth, async (req, res) => {
 
         // 용량 증가 + UserFiles 테이블에 기록
         await increaseUsage(user.id, user.centerID, fileSize, 'scratch');
-        
+
         const fileId = await recordFile(user.id, user.centerID, {
             category: 'scratch',
             originalName: `${projectTitle}.sb3`,
@@ -290,7 +290,7 @@ router.put('/save-project/:fileId', requireAuth, async (req, res) => {
                 // 기존 stored_name에서 projectId 추출
                 const projectIdMatch = existingFile.stored_name.match(/\/([^/]+)\.sb3$/);
                 const projectId = projectIdMatch ? projectIdMatch[1] : fileId;
-                
+
                 const base64Data = thumbnail.replace(/^data:image\/\w+;base64,/, '');
                 const thumbnailBuffer = Buffer.from(base64Data, 'base64');
                 const thumbnailKey = `${S3_THUMBNAIL_PATH}/${userID}/${projectId}.png`;
@@ -536,7 +536,7 @@ router.delete('/project/:fileId', requireAuth, async (req, res) => {
 router.get('/template/:templateId', async (req, res) => {
     try {
         const { templateId } = req.params;
-        
+
         // 템플릿 파일 경로
         const templatePath = `scratch/templates/${templateId}.sb3`;
 

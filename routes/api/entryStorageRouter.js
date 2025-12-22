@@ -121,7 +121,7 @@ router.post('/save-project', requireAuth, async (req, res) => {
         // 프로젝트 ID 및 S3 경로 생성
         const projectId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const projectTitle = title || '제목 없음';
-        const s3Key = `${S3_ENTRY_PATH}/${userID}/${projectId}.ent`;
+        const s3Key = `${S3_ENTRY_PATH}/${encodeURIComponent(userID)}/${projectId}.ent`;
 
         // S3에 업로드
         const uploadParams = {
@@ -137,15 +137,15 @@ router.post('/save-project', requireAuth, async (req, res) => {
         if (thumbnail) {
             try {
                 const thumbBuffer = Buffer.from(thumbnail.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-                const thumbKey = `${S3_ENTRY_PATH}/${userID}/${projectId}_thumb.png`;
-                
+                const thumbKey = `${S3_ENTRY_PATH}/${encodeURIComponent(userID)}/${projectId}_thumb.png`;
+
                 await s3Client.send(new PutObjectCommand({
                     Bucket: S3_BUCKET,
                     Key: thumbKey,
                     Body: thumbBuffer,
                     ContentType: 'image/png'
                 }));
-                
+
                 console.log(`썸네일 저장 완료: ${thumbKey}`);
             } catch (thumbError) {
                 console.warn('썸네일 저장 실패 (무시):', thumbError.message);
@@ -157,7 +157,7 @@ router.post('/save-project', requireAuth, async (req, res) => {
 
         // 용량 증가 + UserFiles 테이블에 기록
         await increaseUsage(user.id, user.centerID, fileSize, 'entry');
-        
+
         const fileId = await recordFile(user.id, user.centerID, {
             category: 'entry',
             originalName: `${projectTitle}.ent`,
@@ -274,7 +274,7 @@ router.put('/save-project/:fileId', requireAuth, async (req, res) => {
             try {
                 const thumbBuffer = Buffer.from(thumbnail.replace(/^data:image\/\w+;base64,/, ''), 'base64');
                 const thumbKey = existingFile.stored_name.replace('.ent', '_thumb.png');
-                
+
                 await s3Client.send(new PutObjectCommand({
                     Bucket: S3_BUCKET,
                     Key: thumbKey,

@@ -228,12 +228,45 @@ async function performAutoSave(userInfo) {
                 time: lastAutoSaveTime.toLocaleTimeString('ko-KR'),
                 objects: projectData.objects.length
             });
+            
+            // 🔥 자동저장 성공 시 세션 heartbeat 전송
+            sendHeartbeatAfterSave(userInfo, 'entry');
         } else {
             const errorData = await response.json().catch(() => ({}));
             console.error('[AutoSave] ❌ 자동저장 실패:', errorData);
         }
     } catch (error) {
         console.error('[AutoSave] ❌ 자동저장 오류:', error.message);
+    }
+}
+
+// 🔥 자동저장 후 세션 heartbeat 전송 함수
+async function sendHeartbeatAfterSave(userInfo, platform) {
+    try {
+        const baseUrl = userInfo?.baseUrl || window.location.origin || 'https://app.codingnplay.co.kr';
+        const response = await fetch(`${baseUrl}/api/session/heartbeat`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                platform: platform,
+                userID: userInfo?.userID || 'guest',
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        if (response.ok) {
+            console.log(`💓 [${platform}] 세션 Heartbeat 전송 완료 (자동저장 후)`);
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            if (errorData.needsLogin) {
+                console.warn(`⚠️ [${platform}] 세션 만료됨 - 재로그인 필요`);
+            }
+        }
+    } catch (error) {
+        console.error(`❌ [${platform}] Heartbeat 전송 실패:`, error.message);
     }
 }
 
