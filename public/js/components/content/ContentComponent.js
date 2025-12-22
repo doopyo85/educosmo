@@ -997,7 +997,7 @@ class ContentComponent extends Component {
 
                             /* 헤더 스타일 조정 */
                             h1 {
-                               font - size: 2.4em;
+                               font-size: 2.4em;
                             border-bottom: 2px solid #eaecef;
                             padding-bottom: 0.3em;
                             margin-bottom: 30px;
@@ -1005,28 +1005,28 @@ class ContentComponent extends Component {
                             letter-spacing: -0.5px;
         }
                             h2 {
-                               font - size: 1.8em;
+                               font-size: 1.8em;
                             margin-top: 40px;
                             border-bottom: 1px solid #eaecef;
                             padding-bottom: 0.3em;
                             font-weight: 600;
         }
                             h3 {
-                               font - size: 1.5em;
+                               font-size: 1.5em;
                             margin-top: 30px;
                             font-weight: 600;
         }
 
                             /* 본문 텍스트 */
-                            p {margin - bottom: 1.2em; font-size: 16px; }
+                            p {margin-bottom: 1.2em; font-size: 16px; }
 
                             /* 리스트 */
-                            ul, ol {padding - left: 2em; margin-bottom: 1.2em; }
+                            ul, ol {padding-left: 2em; margin-bottom: 1.2em; }
                             li {margin - bottom: 0.5em; }
 
                             /* 테이블 스타일 */
                             table {
-                               border - collapse: collapse;
+                               border-collapse: collapse;
                             width: 100%;
                             margin: 25px 0;
                             border-radius: 8px;
@@ -1035,14 +1035,14 @@ class ContentComponent extends Component {
         }
                             th, td {border: 1px solid #e1e4e8; padding: 12px 15px; }
                             th {
-                               background - color: #f8f9fa;
+                               background-color: #f8f9fa;
                             font-weight: 600;
                             text-align: left;
         }
 
                             /* 인용구 */
                             blockquote {
-                               border - left: 4px solid #0d6efd;
+                               border-left: 4px solid #0d6efd;
                             margin: 20px 0;
                             padding: 15px 20px;
                             color: #555;
@@ -1062,7 +1062,7 @@ class ContentComponent extends Component {
                             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
                             code {
-                               font - family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+                               font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
                             font-size: 14px;
                             line-height: 1.5;
         }
@@ -1102,7 +1102,7 @@ class ContentComponent extends Component {
                             border-color: #0d6efd;
                             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-                            .copy-btn i {font - size: 16px; }
+                            .copy-btn i {font-size: 16px; }
                           </style>
                         </head>
                         <body class="markdown-body">
@@ -1164,7 +1164,7 @@ class ContentComponent extends Component {
                         <head>
                           <style>
                             body {
-                              font - family: 'Noto Sans KR', Arial, sans-serif;
+                              font-family: 'Noto Sans KR', Arial, sans-serif;
                             padding: 20px;
                             text-align: center;
                             color: #666;
@@ -1175,7 +1175,7 @@ class ContentComponent extends Component {
                             margin: 20px 0;
             }
                             .debug-info {
-                              background - color: #f8f9fa;
+                              background-color: #f8f9fa;
                             border: 1px solid #ddd;
                             border-radius: 4px;
                             padding: 10px;
@@ -1209,7 +1209,7 @@ class ContentComponent extends Component {
                             font-family: 'Noto Sans KR', Arial, sans-serif;
             }
                             .loading {
-                              text - align: center;
+                              text-align: center;
             }
                             .spinner {
                               border: 5px solid #f3f3f3;
@@ -1245,7 +1245,7 @@ class ContentComponent extends Component {
                               <meta name="viewport" content="width=device-width, initial-scale=1.0">
                                 <style>
                                   body {
-                                    font - family: 'Noto Sans KR', Arial, sans-serif;
+                                    font-family: 'Noto Sans KR', Arial, sans-serif;
                                   padding: 15px;
                                   padding-bottom: 120px !important;
                                   line-height: 1.6;
@@ -1261,9 +1261,9 @@ class ContentComponent extends Component {
                                   ::-webkit-scrollbar-track {background: #f1f1f1; }
                                   ::-webkit-scrollbar-thumb {background: #888; border-radius: 5px; }
                                   ::-webkit-scrollbar-thumb:hover {background: #555; }
-                                  img {max - width: 100%; height: auto; }
+                                  img {max-width: 100%; height: auto; }
                                   pre, code {
-                                    background - color: #f5f5f5;
+                                    background-color: #f5f5f5;
                                   border: 1px solid #ddd;
                                   border-radius: 4px;
                                   padding: 10px;
@@ -1285,14 +1285,14 @@ class ContentComponent extends Component {
                               <head>
                                 <style>
                                   body {
-                                    font - family: 'Noto Sans KR', Arial, sans-serif;
+                                    font-family: 'Noto Sans KR', Arial, sans-serif;
                                   padding: 20px;
                                   text-align: center;
                                   color: #666;
             }
                                   .error {color: #dc3545; margin: 20px 0; }
                                   .error-details {
-                                    background - color: #f8f9fa;
+                                    background-color: #f8f9fa;
                                   border: 1px solid #ddd;
                                   border-radius: 4px;
                                   padding: 10px;
@@ -1303,7 +1303,7 @@ class ContentComponent extends Component {
                                   margin: 20px auto;
             }
                                   button {
-                                    background - color: #0d6efd;
+                                    background-color: #0d6efd;
                                   color: white;
                                   border: none;
                                   padding: 10px 15px;
