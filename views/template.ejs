@@ -20,7 +20,7 @@
         <link rel="stylesheet" href="/css/common-layout.css?v=1.2">
         <link rel="stylesheet" href="/css/components/navigation.css">
         <link rel="stylesheet" href="/css/common-content.css">
-        <link rel="stylesheet" href="/css/common-ide.css">
+        <link rel="stylesheet" href="/css/common-ide.css?v=1.3">
         <link rel="stylesheet" href="/css/common-quiz.css">
         <link rel="stylesheet" href="/css/ppt-viewer.css">
         <link rel="stylesheet" href="/css/styles.css">
@@ -166,24 +166,28 @@
                                             <% } %>
                                     </div>
 
-                                    <button id="runCodeBtn" class="ide-control-btn ide-btn-run">
+                                    <button id="runCodeBtn" class="ide-control-btn ide-btn-run"
+                                        style="min-width: 100px;">
                                         <i class="bi bi-play-fill me-1"></i> 실행
                                     </button>
 
-                                    <% if (typeof pageType !== 'undefined' && pageType === 'algorithm') { %>
-                                    <button id="submitCodeBtn" class="ide-control-btn ide-btn-submit">
-                                        <i class="bi bi-check-circle-fill me-1"></i> 제출
-                                    </button>
-                                    <% } %>
+                                    <% if (typeof pageType !=='undefined' && pageType==='algorithm' ) { %>
+                                        <button id="submitCodeBtn" class="ide-control-btn ide-btn-submit"
+                                            style="min-width: 100px;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> 제출
+                                        </button>
+                                        <% } %>
 
-                                    <div class="ide-selector ms-2">
-                                        <div class="btn-group btn-group-sm" role="group" aria-label="IDE 선택">
-                                            <button type="button" class="btn btn-outline-primary active" id="ace-btn"
-                                                style="padding: 2px 6px; font-size: 11px;">ACE</button>
-                                            <button type="button" class="btn btn-outline-primary" id="jupyter-btn"
-                                                style="padding: 2px 6px; font-size: 11px;">Jupyter</button>
-                                        </div>
-                                    </div>
+                                            <div class="ide-selector ms-2">
+                                                <div class="btn-group btn-group-sm" role="group" aria-label="IDE 선택">
+                                                    <button type="button" class="btn btn-outline-primary active"
+                                                        id="ace-btn"
+                                                        style="padding: 2px 6px; font-size: 11px;">ACE</button>
+                                                    <button type="button" class="btn btn-outline-primary"
+                                                        id="jupyter-btn"
+                                                        style="padding: 2px 6px; font-size: 11px;">Jupyter</button>
+                                                </div>
+                                            </div>
                                 </div>
                             </div>
 

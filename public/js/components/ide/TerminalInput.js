@@ -67,6 +67,11 @@ class TerminalInput {
    * 입력 필드 생성
    */
   createInputField(promptText = '') {
+    // 🔥 프롬프트가 없으면 기본값 '>>> ' 사용 (User Feedback)
+    if (!promptText) {
+      promptText = '>>> ';
+    }
+
     const inputContainer = document.createElement('div');
     inputContainer.className = 'terminal-input-container';
 
