@@ -37,7 +37,8 @@ s3fs "$BUCKET_NAME" "$MOUNT_POINT" \
     -o mp_umask=002 \
     -o multireq_max=5 \
     -o url="https://s3.$AWS_REGION.amazonaws.com" \
-    -o dbglevel=info 
+    -o dbglevel=info \
+    -o nonempty 
 
 # Check if mount was successful
 if mountpoint -q "$MOUNT_POINT"; then
