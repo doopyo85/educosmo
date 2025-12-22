@@ -2,8 +2,11 @@
  * 🎨 Entry Paint Editor 저장 함수 커스터마이징
  * Paint Editor의 저장하기 버튼을 S3 업로드 API와 연동
  * 
- * 수정일: 2025-12-06
- * - 🔥 extractTransparentImage로 배경 제거 + 트림 처리
+ * 수정일: 2025-12-22
+ * - 🔥 이미지 저장 시 크기/스케일 문제 해결
+ * - 원본 이미지 크기 기준으로 스케일 계산
+ * - 저장 방식 통일 (직접 저장 / 팝업 확인 저장)
+ * - extractTransparentImage로 배경 제거 + 트림 처리
  * - 투명 배경 유지
  * - 팝업 저장 버튼 완전 차단
  * - 저장 전 캔버스 클릭으로 선택 해제
@@ -162,6 +165,54 @@
         }
 
         /**
+         * 🔥 원본 이미지 정보 가져오기 (편집 전 상태)
+         */
+        function getOriginalImageInfo(currentObject, editingPictureId) {
+            const info = {
+                width: 100,
+                height: 100,
+                scaleX: 1,
+                scaleY: 1,
+                stageWidth: 100,  // 무대에서 표시되는 크기
+                stageHeight: 100
+            };
+            
+            try {
+                // 현재 Entity의 스케일 정보
+                if (currentObject && currentObject.entity) {
+                    const entity = currentObject.entity;
+                    info.scaleX = entity.getScaleX() || 1;
+                    info.scaleY = entity.getScaleY() || 1;
+                    info.stageWidth = entity.getWidth() * Math.abs(info.scaleX);
+                    info.stageHeight = entity.getHeight() * Math.abs(info.scaleY);
+                    
+                    console.log('📐 현재 Entity 상태:', {
+                        entityWidth: entity.getWidth(),
+                        entityHeight: entity.getHeight(),
+                        scaleX: info.scaleX,
+                        scaleY: info.scaleY,
+                        stageWidth: info.stageWidth,
+                        stageHeight: info.stageHeight
+                    });
+                }
+                
+                // 편집 중인 Picture의 dimension 정보
+                if (editingPictureId && currentObject && currentObject.pictures) {
+                    const picture = currentObject.pictures.find(p => p.id === editingPictureId);
+                    if (picture && picture.dimension) {
+                        info.width = picture.dimension.width || info.width;
+                        info.height = picture.dimension.height || info.height;
+                        console.log('📐 원본 Picture dimension:', picture.dimension);
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ 원본 정보 가져오기 실패:', e);
+            }
+            
+            return info;
+        }
+
+        /**
          * 🔥 커스텀 이미지 저장 함수
          */
         async function customSaveImage() {
@@ -174,20 +225,29 @@
                 
                 console.log('📋 모드:', { isEditMode, editingPictureId });
                 
+                const currentObject = Entry.playground.object;
+                if (!currentObject) {
+                    throw new Error('현재 오브젝트를 찾을 수 없습니다.');
+                }
+                
+                // 🔥 저장 전에 원본 정보 먼저 수집 (중요!)
+                const originalInfo = getOriginalImageInfo(currentObject, editingPictureId);
+                console.log('📐 원본 정보 수집 완료:', originalInfo);
+                
                 // 🔥 저장 전 캔버스 클릭으로 선택 해제
                 await clickCanvasToDeselect(painter);
                 
                 // 🔥 Paper.js에서 그림만 추출 (배경 제외)
                 let imageData = null;
-                let width = 480;
-                let height = 270;
+                let newWidth = 480;
+                let newHeight = 270;
                 
                 const extractResult = await extractPaperImage(painter);
                 if (extractResult) {
                     imageData = extractResult.dataUrl;
-                    width = extractResult.width;
-                    height = extractResult.height;
-                    console.log('📐 추출된 이미지 크기:', width, 'x', height);
+                    newWidth = extractResult.width;
+                    newHeight = extractResult.height;
+                    console.log('📐 추출된 이미지 크기:', newWidth, 'x', newHeight);
                 }
                 
                 if (!imageData) {
@@ -217,33 +277,30 @@
                 const result = await response.json();
                 console.log('✅ 업로드 성공:', result);
                 
-                const currentObject = Entry.playground.object;
-                if (!currentObject) {
-                    throw new Error('현재 오브젝트를 찾을 수 없습니다.');
-                }
-                
                 // 편집 모드 vs 새로 그리기 모드
                 if (isEditMode && editingPictureId) {
-                    console.log('✏️ 편집 모드');
+                    console.log('✏️ 편집 모드 - 기존 모양 업데이트');
                     const existingPicture = currentObject.pictures?.find(p => p.id === editingPictureId);
                     
                     if (existingPicture) {
+                        // Picture 속성 업데이트
                         existingPicture.filename = result.filename;
                         existingPicture.fileurl = result.fileurl;
                         existingPicture.thumbUrl = result.thumbUrl || result.fileurl;
-                        existingPicture.dimension = { width, height };
+                        existingPicture.dimension = { width: newWidth, height: newHeight };
                         
                         if (Entry.playground.injectPicture) {
                             Entry.playground.injectPicture();
                         }
                         
-                        updateEntitySize(currentObject, width, height, existingPicture);
+                        // 🔥 핵심: 원본 정보를 사용하여 스케일 계산
+                        updateEntityWithScale(currentObject, newWidth, newHeight, existingPicture, originalInfo);
                     } else {
-                        addNewPicture(currentObject, result, width, height, fileInfo?.name);
+                        addNewPicture(currentObject, result, newWidth, newHeight, fileInfo?.name, originalInfo);
                     }
                 } else {
                     console.log('🆕 새로 그리기 모드');
-                    addNewPicture(currentObject, result, width, height);
+                    addNewPicture(currentObject, result, newWidth, newHeight, null, null);
                 }
                 
                 // modified 플래그 해제
@@ -435,33 +492,91 @@
         }
         
         /**
-         * Entity 크기 업데이트
+         * 🔥 Entity 크기/스케일 업데이트 (핵심 수정 함수)
+         * 원본 무대 표시 크기를 유지하면서 새 이미지 적용
          */
-        function updateEntitySize(currentObject, width, height, picture) {
-            if (currentObject.entity) {
-                const entity = currentObject.entity;
-                console.log('📐 Entity 크기 조정 전:', {
+        function updateEntityWithScale(currentObject, newWidth, newHeight, picture, originalInfo) {
+            if (!currentObject || !currentObject.entity) {
+                console.warn('⚠️ Entity를 찾을 수 없습니다.');
+                return;
+            }
+            
+            const entity = currentObject.entity;
+            
+            console.log('📐 ========== Entity 스케일 계산 ==========');
+            console.log('📐 새 이미지 크기:', newWidth, 'x', newHeight);
+            console.log('📐 원본 정보:', originalInfo);
+            
+            // 🔥 핵심 로직: 무대에서 같은 크기로 보이도록 스케일 계산
+            // 무대 표시 크기 = dimension * scale
+            // 원본: stageWidth = originalWidth * originalScaleX
+            // 새로: stageWidth = newWidth * newScaleX
+            // 따라서: newScaleX = stageWidth / newWidth = (originalWidth * originalScaleX) / newWidth
+            
+            let newScaleX = 1;
+            let newScaleY = 1;
+            
+            if (originalInfo && originalInfo.stageWidth && originalInfo.stageHeight) {
+                // 원본 무대 표시 크기를 유지
+                newScaleX = originalInfo.stageWidth / newWidth;
+                newScaleY = originalInfo.stageHeight / newHeight;
+                
+                // 스케일 부호 유지 (좌우/상하 반전된 경우)
+                if (originalInfo.scaleX < 0) newScaleX = -Math.abs(newScaleX);
+                if (originalInfo.scaleY < 0) newScaleY = -Math.abs(newScaleY);
+                
+                console.log('📐 계산된 스케일:', {
+                    newScaleX: newScaleX.toFixed(4),
+                    newScaleY: newScaleY.toFixed(4),
+                    expectedStageWidth: (newWidth * Math.abs(newScaleX)).toFixed(2),
+                    expectedStageHeight: (newHeight * Math.abs(newScaleY)).toFixed(2)
+                });
+            } else {
+                console.log('📐 원본 정보 없음, 스케일 1 사용');
+            }
+            
+            // 🔥 Entry의 setImage 전에 dimension 설정
+            if (picture) {
+                picture.dimension = { width: newWidth, height: newHeight };
+            }
+            
+            // Entity 크기 및 스케일 적용
+            entity.setWidth(newWidth);
+            entity.setHeight(newHeight);
+            
+            // 🔥 이미지 설정 (이 과정에서 Entry가 스케일을 변경할 수 있음)
+            if (picture) {
+                entity.setImage(picture);
+            }
+            
+            // 🔥 setImage 후 스케일 다시 적용 (Entry 자동 조정 무효화)
+            // 약간의 딜레이를 두고 적용
+            setTimeout(() => {
+                entity.setScaleX(newScaleX);
+                entity.setScaleY(newScaleY);
+                
+                console.log('📐 최종 Entity 상태:', {
                     width: entity.getWidth(),
-                    height: entity.getHeight()
+                    height: entity.getHeight(),
+                    scaleX: entity.getScaleX(),
+                    scaleY: entity.getScaleY(),
+                    stageWidth: entity.getWidth() * Math.abs(entity.getScaleX()),
+                    stageHeight: entity.getHeight() * Math.abs(entity.getScaleY())
                 });
                 
-                entity.setWidth(width);
-                entity.setHeight(height);
-                entity.setScaleX(1);
-                entity.setScaleY(1);
-                
-                if (picture) {
-                    entity.setImage(picture);
+                // 스테이지 갱신
+                if (Entry.stage && Entry.stage.update) {
+                    Entry.stage.update();
                 }
-                
-                console.log('📐 Entity 크기 조정 후:', { width, height });
-            }
+            }, 50);
+            
+            console.log('📐 ========== Entity 업데이트 완료 ==========');
         }
         
         /**
          * 새 모양 추가
          */
-        function addNewPicture(currentObject, result, width, height, name) {
+        function addNewPicture(currentObject, result, width, height, name, originalInfo) {
             const picture = {
                 id: Entry.generateHash(),
                 name: name || `새그림_${Date.now()}`,
@@ -481,7 +596,8 @@
                 currentObject.selectPicture(picture.id);
             }
             
-            updateEntitySize(currentObject, width, height, picture);
+            // 새 그림인 경우 스케일 1 적용 (원본 정보가 없으므로)
+            updateEntityWithScale(currentObject, width, height, picture, originalInfo);
         }
         
         // 🔥 모든 저장 경로 오버라이드
