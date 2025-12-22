@@ -481,8 +481,9 @@ class EntFileManager {
                 throw new Error('유효하지 않은 S3 URL입니다.');
             }
 
-            // ENT 파일 확장자 검사
-            if (!s3Url.toLowerCase().endsWith('.ent')) {
+            // ENT 파일 확장자 검사 (쿼리 파라미터 무시)
+            const urlPath = s3Url.split('?')[0];
+            if (!urlPath.toLowerCase().endsWith('.ent')) {
                 throw new Error('ENT 파일이 아닙니다. 파일 확장자를 확인해주세요.');
             }
 
@@ -729,13 +730,13 @@ class EntFileManager {
                                 } catch (e) {
                                     // 디코딩 실패시 원본 사용
                                 }
-                                
+
                                 // 🔥 Windows 로컬 경로 감지 (모든 형태)
-                                const isWindowsPath = decodedUrl.startsWith('file:///') || 
-                                                      decodedUrl.startsWith('C:/') || 
-                                                      decodedUrl.startsWith('C:\\') ||
-                                                      /^[A-Z]:[\\/]/i.test(decodedUrl);
-                                
+                                const isWindowsPath = decodedUrl.startsWith('file:///') ||
+                                    decodedUrl.startsWith('C:/') ||
+                                    decodedUrl.startsWith('C:\\') ||
+                                    /^[A-Z]:[\\/]/i.test(decodedUrl);
+
                                 if (isWindowsPath) {
                                     // 해시 추출: ...temp/a2/b0/image/a2b07059405a83d7c0fcbaa1700cf6be.png
                                     const hashMatch = decodedUrl.match(/([a-f0-9]{32})\.(png|jpg|jpeg|gif|svg|webp|mp3|wav)$/i);
@@ -747,7 +748,7 @@ class EntFileManager {
                                         const assetType = isSound ? 'sound' : 'image';
                                         const folderPath = `${fileHash.substring(0, 2)}/${fileHash.substring(2, 4)}/${assetType}`;
                                         picture.fileurl = `/temp/${folderPath}/${fileHash}.${extension}`;
-                                        
+
                                         console.log(`🔄 Windows경로→서버경로 변환 [${index}-${picIndex}]:`, {
                                             original: decodedUrl.substring(0, 50) + '...',
                                             converted: picture.fileurl
@@ -768,7 +769,7 @@ class EntFileManager {
                                 const imageType = picture.imageType || 'png';
                                 const folderPath = `${filename.substring(0, 2)}/${filename.substring(2, 4)}/image`;
                                 picture.fileurl = `/temp/${folderPath}/${filename}.${imageType}`;
-                                
+
                                 console.log(`📸 이미지 경로 설정 [${index}-${picIndex}]:`, {
                                     filename: filename,
                                     fileurl: picture.fileurl
@@ -776,7 +777,7 @@ class EntFileManager {
                             }
                         });
                     }
-                    
+
                     // 🔥 사운드 경로도 수정
                     if (obj.sprite && obj.sprite.sounds) {
                         obj.sprite.sounds.forEach((sound, soundIndex) => {
@@ -784,13 +785,13 @@ class EntFileManager {
                                 let decodedUrl = sound.fileurl;
                                 try {
                                     decodedUrl = decodeURIComponent(sound.fileurl);
-                                } catch (e) {}
-                                
-                                const isWindowsPath = decodedUrl.startsWith('file:///') || 
-                                                      decodedUrl.startsWith('C:/') || 
-                                                      decodedUrl.startsWith('C:\\') ||
-                                                      /^[A-Z]:[\\/]/i.test(decodedUrl);
-                                
+                                } catch (e) { }
+
+                                const isWindowsPath = decodedUrl.startsWith('file:///') ||
+                                    decodedUrl.startsWith('C:/') ||
+                                    decodedUrl.startsWith('C:\\') ||
+                                    /^[A-Z]:[\\/]/i.test(decodedUrl);
+
                                 if (isWindowsPath) {
                                     const hashMatch = decodedUrl.match(/([a-f0-9]{32})\.(mp3|wav|ogg)$/i);
                                     if (hashMatch) {
@@ -813,13 +814,13 @@ class EntFileManager {
                         let decodedThumb = obj.thumbnail;
                         try {
                             decodedThumb = decodeURIComponent(obj.thumbnail);
-                        } catch (e) {}
-                        
-                        const isWindowsPath = decodedThumb.startsWith('file:///') || 
-                                              decodedThumb.startsWith('C:/') || 
-                                              decodedThumb.startsWith('C:\\') ||
-                                              /^[A-Z]:[\\/]/i.test(decodedThumb);
-                        
+                        } catch (e) { }
+
+                        const isWindowsPath = decodedThumb.startsWith('file:///') ||
+                            decodedThumb.startsWith('C:/') ||
+                            decodedThumb.startsWith('C:\\') ||
+                            /^[A-Z]:[\\/]/i.test(decodedThumb);
+
                         if (isWindowsPath) {
                             const hashMatch = decodedThumb.match(/([a-f0-9]{32})\.(png|jpg|jpeg|gif|svg|webp)$/i);
                             if (hashMatch) {

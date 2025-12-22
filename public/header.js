@@ -215,89 +215,88 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         return originalFetch.apply(this, arguments);
     };
-    return originalFetch.apply(this, arguments);
-};
 
-// 🔥 세션 모니터링 로직 - 프로필 모달 열릴 때 작동
-const profileModalEl = document.getElementById('profileModal');
-let sessionTimerInterval = null;
 
-if (profileModalEl) {
-    profileModalEl.addEventListener('shown.bs.modal', function () {
-        fetchAndDisplaySessionTime();
-        // 1초마다 업데이트 (로컬 카운트다운)
-        sessionTimerInterval = setInterval(updateLocalSessionTime, 1000);
-    });
+    // 🔥 세션 모니터링 로직 - 프로필 모달 열릴 때 작동
+    const profileModalEl = document.getElementById('profileModal');
+    let sessionTimerInterval = null;
 
-    profileModalEl.addEventListener('hidden.bs.modal', function () {
-        if (sessionTimerInterval) {
-            clearInterval(sessionTimerInterval);
-            sessionTimerInterval = null;
-        }
-    });
-}
-
-let currentRemainingMs = 0;
-
-function fetchAndDisplaySessionTime() {
-    const timeDisplay = document.getElementById('sessionRemainingTime');
-    if (!timeDisplay) return;
-
-    timeDisplay.textContent = '불러오는 중...';
-
-    fetch('/api/session/remaining-time')
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                currentRemainingMs = data.remainingTimeMs;
-                updateTimeDisplay(currentRemainingMs);
-            } else {
-                timeDisplay.textContent = '세션 만료됨';
-                currentRemainingMs = 0;
-            }
-        })
-        .catch(err => {
-            console.error('세션 시간 조회 실패:', err);
-            timeDisplay.textContent = '조회 실패';
+    if (profileModalEl) {
+        profileModalEl.addEventListener('shown.bs.modal', function () {
+            fetchAndDisplaySessionTime();
+            // 1초마다 업데이트 (로컬 카운트다운)
+            sessionTimerInterval = setInterval(updateLocalSessionTime, 1000);
         });
-}
 
-function updateLocalSessionTime() {
-    if (currentRemainingMs > 0) {
-        currentRemainingMs -= 1000;
-        if (currentRemainingMs < 0) currentRemainingMs = 0;
-        updateTimeDisplay(currentRemainingMs);
-    }
-}
-
-function updateTimeDisplay(ms) {
-    const timeDisplay = document.getElementById('sessionRemainingTime');
-    if (!timeDisplay) return;
-
-    if (ms <= 0) {
-        timeDisplay.textContent = '만료됨 (로그아웃 예정)';
-        timeDisplay.classList.remove('text-primary');
-        timeDisplay.classList.add('text-danger');
-        return;
+        profileModalEl.addEventListener('hidden.bs.modal', function () {
+            if (sessionTimerInterval) {
+                clearInterval(sessionTimerInterval);
+                sessionTimerInterval = null;
+            }
+        });
     }
 
-    // 분:초 변환
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
+    let currentRemainingMs = 0;
 
-    const formattedTime = `${minutes}분 ${seconds.toString().padStart(2, '0')}초`;
-    timeDisplay.textContent = formattedTime;
+    function fetchAndDisplaySessionTime() {
+        const timeDisplay = document.getElementById('sessionRemainingTime');
+        if (!timeDisplay) return;
 
-    // 5분 미만이면 붉은색 경고
-    if (minutes < 5) {
-        timeDisplay.classList.remove('text-primary');
-        timeDisplay.classList.add('text-danger');
-    } else {
-        timeDisplay.classList.remove('text-danger');
-        timeDisplay.classList.add('text-primary');
+        timeDisplay.textContent = '불러오는 중...';
+
+        fetch('/api/session/remaining-time')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    currentRemainingMs = data.remainingTimeMs;
+                    updateTimeDisplay(currentRemainingMs);
+                } else {
+                    timeDisplay.textContent = '세션 만료됨';
+                    currentRemainingMs = 0;
+                }
+            })
+            .catch(err => {
+                console.error('세션 시간 조회 실패:', err);
+                timeDisplay.textContent = '조회 실패';
+            });
     }
-}
+
+    function updateLocalSessionTime() {
+        if (currentRemainingMs > 0) {
+            currentRemainingMs -= 1000;
+            if (currentRemainingMs < 0) currentRemainingMs = 0;
+            updateTimeDisplay(currentRemainingMs);
+        }
+    }
+
+    function updateTimeDisplay(ms) {
+        const timeDisplay = document.getElementById('sessionRemainingTime');
+        if (!timeDisplay) return;
+
+        if (ms <= 0) {
+            timeDisplay.textContent = '만료됨 (로그아웃 예정)';
+            timeDisplay.classList.remove('text-primary');
+            timeDisplay.classList.add('text-danger');
+            return;
+        }
+
+        // 분:초 변환
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        const formattedTime = `${minutes}분 ${seconds.toString().padStart(2, '0')}초`;
+        timeDisplay.textContent = formattedTime;
+
+        // 5분 미만이면 붉은색 경고
+        if (minutes < 5) {
+            timeDisplay.classList.remove('text-primary');
+            timeDisplay.classList.add('text-danger');
+        } else {
+            timeDisplay.classList.remove('text-danger');
+            timeDisplay.classList.add('text-primary');
+        }
+    }
 });
 
 
