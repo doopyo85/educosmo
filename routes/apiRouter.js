@@ -1550,14 +1550,14 @@ try {
 router.post('/session/heartbeat', (req, res) => {
   try {
     const { platform, userID, timestamp } = req.body;
-    
+
     // 세션이 있으면 TTL 연장 (rolling: true 설정과 함께 동작)
     if (req.session && req.session.is_logined) {
       // 세션 touch로 만료 시간 갱신
       req.session.touch();
-      
+
       console.log(`💓 [Heartbeat] 세션 연장 - platform: ${platform}, user: ${req.session.userID}, time: ${new Date().toLocaleTimeString('ko-KR')}`);
-      
+
       return res.json({
         success: true,
         message: '세션이 연장되었습니다.',
@@ -1566,7 +1566,7 @@ router.post('/session/heartbeat', (req, res) => {
         serverTime: new Date().toISOString()
       });
     }
-    
+
     // 세션이 없거나 로그인되지 않은 경우
     console.log(`⚠️ [Heartbeat] 세션 없음 - platform: ${platform}, userID: ${userID}`);
     return res.status(401).json({
@@ -1574,12 +1574,46 @@ router.post('/session/heartbeat', (req, res) => {
       message: '유효한 세션이 없습니다.',
       needsLogin: true
     });
-    
+
   } catch (error) {
     console.error('❌ [Heartbeat] 오류:', error);
     return res.status(500).json({
       success: false,
       message: '세션 연장 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  }
+});
+
+// 🔥 세션 남은 시간 조회 API
+router.get('/session/remaining-time', (req, res) => {
+  try {
+    if (req.session && req.session.cookie && req.session.cookie.expires) {
+      const now = new Date();
+      const expires = new Date(req.session.cookie.expires);
+      const remainingTimeMs = expires.getTime() - now.getTime();
+
+      // 세션이 아직 유효한 경우
+      if (remainingTimeMs > 0) {
+        return res.json({
+          success: true,
+          remainingTimeMs: remainingTimeMs,
+          expiresAt: expires.toISOString()
+        });
+      }
+    }
+
+    // 세션이 없거나 만료된 경우
+    return res.json({
+      success: false,
+      remainingTimeMs: 0,
+      message: '세션이 만료되었거나 유효하지 않습니다.'
+    });
+
+  } catch (error) {
+    console.error('❌ [Session Time] 오류:', error);
+    return res.status(500).json({
+      success: false,
       error: error.message
     });
   }

@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (userNameElement) userNameElement.textContent = currentUserID;
     if (profileDropdownUserID) profileDropdownUserID.textContent = currentUserID;
     if (profileDropdownRole) profileDropdownRole.textContent = currentUserRole;
- 
+
     // 로그아웃 시 로컬 및 세션 스토리지 초기화
     if (window.location.pathname === '/logout') {
         localStorage.clear();
@@ -37,24 +37,24 @@ document.addEventListener("DOMContentLoaded", function () {
                 credentials: 'include',
                 body: JSON.stringify(data)
             })
-            .then(response => response.json())
-            .then(result => {
-                if (result.error) {
-                    alert(result.error);
-                } else {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    window.location.href = result.redirect;
-                }
-            })
-            .catch(error => {
-                console.error('로그인 오류:', error);
-                alert('로그인 중 오류가 발생했습니다.');
-            });
+                .then(response => response.json())
+                .then(result => {
+                    if (result.error) {
+                        alert(result.error);
+                    } else {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        window.location.href = result.redirect;
+                    }
+                })
+                .catch(error => {
+                    console.error('로그인 오류:', error);
+                    alert('로그인 중 오류가 발생했습니다.');
+                });
         });
     }
 
-         
+
     const cachedProfile = sessionStorage.getItem('userProfileImage');
     if (cachedProfile) {
         if (profileImage) profileImage.src = cachedProfile;
@@ -62,35 +62,35 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // 사용자 세션 정보 가져오기
-    fetch('/api/get-user-session', { 
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json'
-      }
+    fetch('/api/get-user-session', {
+        credentials: 'include',
+        headers: {
+            'Accept': 'application/json'
+        }
     })
-    .then(response => {
-      console.log('세션 API 응답 상태:', response.status);
-      return response.json();
-    })
-    .then(data => {
-      console.log('세션 API 응답 데이터:', data);
-      
-      if (data.is_logined && data.userID) {
-        if (userNameElement) userNameElement.textContent = data.userID;
-        if (profileDropdownUserID) profileDropdownUserID.textContent = data.userID;
-        if (profileDropdownRole) profileDropdownRole.textContent = data.role || currentUserRole;
-      } else {
-        console.warn('로그인 정보 없음:', data);
-        if (userNameElement) userNameElement.textContent = currentUserID;
-        if (profileDropdownUserID) profileDropdownUserID.textContent = currentUserID;
-      }
-    })
-    .catch(error => {
-      console.error('사용자 정보 가져오기 오류:', error);
-      // 오류 발생 시 서버에서 받은 기본값 사용
-      if (userNameElement) userNameElement.textContent = currentUserID;
-      if (profileDropdownUserID) profileDropdownUserID.textContent = currentUserID;
-    });
+        .then(response => {
+            console.log('세션 API 응답 상태:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('세션 API 응답 데이터:', data);
+
+            if (data.is_logined && data.userID) {
+                if (userNameElement) userNameElement.textContent = data.userID;
+                if (profileDropdownUserID) profileDropdownUserID.textContent = data.userID;
+                if (profileDropdownRole) profileDropdownRole.textContent = data.role || currentUserRole;
+            } else {
+                console.warn('로그인 정보 없음:', data);
+                if (userNameElement) userNameElement.textContent = currentUserID;
+                if (profileDropdownUserID) profileDropdownUserID.textContent = currentUserID;
+            }
+        })
+        .catch(error => {
+            console.error('사용자 정보 가져오기 오류:', error);
+            // 오류 발생 시 서버에서 받은 기본값 사용
+            if (userNameElement) userNameElement.textContent = currentUserID;
+            if (profileDropdownUserID) profileDropdownUserID.textContent = currentUserID;
+        });
 
     fetch('/api/get-profile-info')
         .then(response => response.json())
@@ -163,23 +163,23 @@ document.addEventListener("DOMContentLoaded", function () {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ profilePath: profilePath })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                if (profileImage) profileImage.src = profilePath;
-                if (profileDropdownImage) profileDropdownImage.src = profilePath;
-                sessionStorage.setItem('userProfileImage', profilePath);
-                const modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
-                if (modal) modal.hide();
-                alert('프로필이 저장되었습니다.');
-            } else {
-                alert('프로필 저장 실패: ' + (data.message || '알 수 없는 오류'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('프로필 저장 중 오류가 발생했습니다.');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (profileImage) profileImage.src = profilePath;
+                    if (profileDropdownImage) profileDropdownImage.src = profilePath;
+                    sessionStorage.setItem('userProfileImage', profilePath);
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
+                    if (modal) modal.hide();
+                    alert('프로필이 저장되었습니다.');
+                } else {
+                    alert('프로필 저장 실패: ' + (data.message || '알 수 없는 오류'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('프로필 저장 중 오류가 발생했습니다.');
+            });
     }
 
     // 🕒 idle 타이머 기반 로그아웃
@@ -215,6 +215,89 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         return originalFetch.apply(this, arguments);
     };
+    return originalFetch.apply(this, arguments);
+};
+
+// 🔥 세션 모니터링 로직 - 프로필 모달 열릴 때 작동
+const profileModalEl = document.getElementById('profileModal');
+let sessionTimerInterval = null;
+
+if (profileModalEl) {
+    profileModalEl.addEventListener('shown.bs.modal', function () {
+        fetchAndDisplaySessionTime();
+        // 1초마다 업데이트 (로컬 카운트다운)
+        sessionTimerInterval = setInterval(updateLocalSessionTime, 1000);
+    });
+
+    profileModalEl.addEventListener('hidden.bs.modal', function () {
+        if (sessionTimerInterval) {
+            clearInterval(sessionTimerInterval);
+            sessionTimerInterval = null;
+        }
+    });
+}
+
+let currentRemainingMs = 0;
+
+function fetchAndDisplaySessionTime() {
+    const timeDisplay = document.getElementById('sessionRemainingTime');
+    if (!timeDisplay) return;
+
+    timeDisplay.textContent = '불러오는 중...';
+
+    fetch('/api/session/remaining-time')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                currentRemainingMs = data.remainingTimeMs;
+                updateTimeDisplay(currentRemainingMs);
+            } else {
+                timeDisplay.textContent = '세션 만료됨';
+                currentRemainingMs = 0;
+            }
+        })
+        .catch(err => {
+            console.error('세션 시간 조회 실패:', err);
+            timeDisplay.textContent = '조회 실패';
+        });
+}
+
+function updateLocalSessionTime() {
+    if (currentRemainingMs > 0) {
+        currentRemainingMs -= 1000;
+        if (currentRemainingMs < 0) currentRemainingMs = 0;
+        updateTimeDisplay(currentRemainingMs);
+    }
+}
+
+function updateTimeDisplay(ms) {
+    const timeDisplay = document.getElementById('sessionRemainingTime');
+    if (!timeDisplay) return;
+
+    if (ms <= 0) {
+        timeDisplay.textContent = '만료됨 (로그아웃 예정)';
+        timeDisplay.classList.remove('text-primary');
+        timeDisplay.classList.add('text-danger');
+        return;
+    }
+
+    // 분:초 변환
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    const formattedTime = `${minutes}분 ${seconds.toString().padStart(2, '0')}초`;
+    timeDisplay.textContent = formattedTime;
+
+    // 5분 미만이면 붉은색 경고
+    if (minutes < 5) {
+        timeDisplay.classList.remove('text-primary');
+        timeDisplay.classList.add('text-danger');
+    } else {
+        timeDisplay.classList.remove('text-danger');
+        timeDisplay.classList.add('text-primary');
+    }
+}
 });
 
 
@@ -245,7 +328,7 @@ function openMyProfile() {
     const height = 800;
     const left = (screen.width - width) / 2;
     const top = (screen.height - height) / 2;
-    
+
     window.open(
         '/my-profile',
         'myProfile',

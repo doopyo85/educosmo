@@ -242,6 +242,17 @@
                 <div class="d-flex flex-wrap justify-content-center mb-4" id="defaultProfileContainer">
                     <!-- 기본 프로필 이미지들이 JS로 동적으로 추가됩니다 -->
                 </div>
+
+                <!-- 🔥 세션 정보 표시 (Heartbeat 확인용) -->
+                <div class="mt-4 pt-3 border-top">
+                    <h6 class="mb-2 text-muted" style="font-size: 0.9rem;">
+                        <i class="bi bi-clock-history me-1"></i>세션 정보
+                    </h6>
+                    <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded">
+                        <span class="text-secondary small">남은 세션 시간:</span>
+                        <span id="sessionRemainingTime" class="fw-bold text-primary">확인 중...</span>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
