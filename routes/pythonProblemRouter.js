@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 // Phase 1: Judge0 Integration
-// const PythonRunner = require('../lib_execution/PythonRunner');
-const Judge0Adapter = require('../lib_execution/Judge0Adapter');
+const PythonRunner = require('../lib_execution/PythonRunner');
+// const Judge0Adapter = require('../lib_execution/Judge0Adapter');
 
 const PythonProblemManager = require('../lib_problem/PythonProblemManager');
 const db = require('../lib_login/db'); // 🔥 Add DB module
 
-// const runner = new PythonRunner();
-const runner = new Judge0Adapter(); // Judge0Adapter implements same interface for executeWithInput
+const runner = new PythonRunner();
+// const runner = new Judge0Adapter(); // Judge0Adapter implements same interface for executeWithInput
 const problemManager = new PythonProblemManager();
 
 // 1. List Problems
