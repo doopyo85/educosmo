@@ -207,6 +207,17 @@ async function performAutoSave(userInfo) {
         
         console.log(`[AutoSave] 💾 자동저장 시작: ${autoSaveFileName}`);
         
+        // 🔥 썸네일 캡처
+        let thumbnailBase64 = null;
+        try {
+            thumbnailBase64 = await captureEntryThumbnail();
+            if (thumbnailBase64) {
+                console.log('[AutoSave] 📸 썸네일 캡처 성공');
+            }
+        } catch (thumbError) {
+            console.warn('[AutoSave] 썸네일 캡처 실패 (무시):', thumbError.message);
+        }
+        
         const baseUrl = userInfo?.baseUrl || window.location.origin || 'https://app.codingnplay.co.kr';
         
         const response = await fetch(`${baseUrl}/entry/api/save-project`, {
@@ -223,7 +234,8 @@ async function performAutoSave(userInfo) {
                 userID: userInfo.userID,
                 centerID: userInfo.centerID,
                 saveType: 'autosave',  // 🔥 자동저장 타입 명시
-                isAutoSave: true
+                isAutoSave: true,
+                thumbnailBase64: thumbnailBase64  // 🔥 썸네일 추가
             })
         });
         
@@ -494,6 +506,17 @@ async function saveProjectToS3(projectData, projectName) {
         const userInfo = window.EDUCODINGNPLAY_USER;
         console.log('💾 프로젝트 S3 저장 시도:', projectName);
         
+        // 🔥 썸네일 캡처
+        let thumbnailBase64 = null;
+        try {
+            thumbnailBase64 = await captureEntryThumbnail();
+            if (thumbnailBase64) {
+                console.log('📸 썸네일 캡처 성공');
+            }
+        } catch (thumbError) {
+            console.warn('썸네일 캡처 실패 (무시):', thumbError.message);
+        }
+        
         const response = await fetch(`${userInfo?.baseUrl || window.location.origin}/entry/api/save-project`, {
             method: 'POST',
             credentials: 'include',
@@ -506,7 +529,8 @@ async function saveProjectToS3(projectData, projectName) {
                 projectData: projectData,
                 projectName: projectName,
                 userID: userInfo.userID,
-                centerID: userInfo.centerID
+                centerID: userInfo.centerID,
+                thumbnailBase64: thumbnailBase64  // 🔥 썸네일 추가
             })
         });
         
@@ -527,6 +551,75 @@ async function saveProjectToS3(projectData, projectName) {
         return null;
     }
 }
+
+// =================================================================
+// 🔥 Entry 스테이지 썸네일 캡처 함수
+// =================================================================
+
+/**
+ * Entry 스테이지를 캔버스로 캡처하여 Base64 이미지로 반환
+ * @returns {Promise<string|null>} Base64 이미지 데이터 (data:image/png;base64,...)
+ */
+async function captureEntryThumbnail() {
+    return new Promise((resolve) => {
+        try {
+            // 방법 1: Entry.captureStage() 사용
+            if (Entry && typeof Entry.captureStage === 'function') {
+                const dataUrl = Entry.captureStage();
+                if (dataUrl) {
+                    console.log('[Thumbnail] Entry.captureStage() 사용');
+                    resolve(dataUrl);
+                    return;
+                }
+            }
+            
+            // 방법 2: Entry.container의 canvas 직접 캡처
+            if (Entry && Entry.stage && Entry.stage.canvas) {
+                const canvas = Entry.stage.canvas.canvas || Entry.stage.canvas;
+                if (canvas && typeof canvas.toDataURL === 'function') {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    console.log('[Thumbnail] Entry.stage.canvas 사용');
+                    resolve(dataUrl);
+                    return;
+                }
+            }
+            
+            // 방법 3: #entryCanvasWrapper 내부 canvas 찾기
+            const canvasWrapper = document.getElementById('entryCanvasWrapper');
+            if (canvasWrapper) {
+                const canvas = canvasWrapper.querySelector('canvas');
+                if (canvas) {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    console.log('[Thumbnail] entryCanvasWrapper canvas 사용');
+                    resolve(dataUrl);
+                    return;
+                }
+            }
+            
+            // 방법 4: 전체 문서에서 canvas 찾기 (Entry 스테이지 크기 기준)
+            const allCanvases = document.querySelectorAll('canvas');
+            for (const canvas of allCanvases) {
+                // Entry 스테이지는 보통 480x270 또는 유사한 비율
+                if (canvas.width >= 400 && canvas.height >= 200) {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    console.log(`[Thumbnail] 일반 canvas 사용 (${canvas.width}x${canvas.height})`);
+                    resolve(dataUrl);
+                    return;
+                }
+            }
+            
+            console.warn('[Thumbnail] 적합한 canvas를 찾지 못함');
+            resolve(null);
+            
+        } catch (error) {
+            console.error('[Thumbnail] 캡처 오류:', error);
+            resolve(null);
+        }
+    });
+}
+
+// 전역 함수로 노출
+window.captureEntryThumbnail = captureEntryThumbnail;
 
 // 알림 메시지 표시
 function showNotification(message, type = 'info') {

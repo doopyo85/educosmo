@@ -18,9 +18,7 @@
    ============================================================ */
 
 /* 모든 IDE 컴포넌트가 제대로 로드되었는지 확인 */
-.ide-container {
-  /* 기본 설정은 ide-core.css에서 처리 */
-}
+/* .ide-container는 ide-core.css에서 처리됨 */
 
 /* 디버깅용 - 개발 환경에서만 사용 */
 .debug-ide .ide-container * {
@@ -29,63 +27,74 @@
 }
 
 /* ============================================================
-   🔥 IDE Control Buttons (Run / Submit)
+   🔥 IDE Control Buttons (Run / Submit) - VSCode Style
    ============================================================ */
 .ide-control-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 16px;
-  height: 34px;
-  /* A bit taller for better touch target/aesthetics */
+  padding: 4px 8px;
+  /* Compact padding like VSCode toolbar */
+  height: 28px;
   font-size: 13px;
-  font-weight: 600;
-  border-radius: 8px;
-  /* Softer corners */
+  font-weight: 500;
+  /* Lighter weight */
+  border-radius: 4px;
+  /* Slightly rounded, but mostly square */
   border: none;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: transparent;
+  /* Flat background */
+  color: #cccccc;
+  /* VSCode standard foreground */
+  transition: background-color 0.1s ease;
+  /* Quick hover transition */
+  box-shadow: none;
+  /* No shadow */
   white-space: nowrap;
-  width: auto !important;
-  /* Override inline styles if any leak */
-  min-width: 80px;
-  letter-spacing: 0.3px;
+  min-width: unset;
+  /* Allow it to be smaller */
+  letter-spacing: normal;
+  margin-right: 2px;
 }
 
 .ide-control-btn i {
-  font-size: 14px;
+  font-size: 16px;
+  /* Slightly larger icons */
   margin-right: 6px;
 }
 
 .ide-control-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background-color: rgba(255, 255, 255, 0.1);
+  /* Standard dark mode hover */
+  transform: none;
+  /* No movement */
+  box-shadow: none;
 }
 
 .ide-control-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: none;
 }
 
-/* Run Button - Apple Blue */
+/* Run Button - VSCode Green Icon */
 .ide-btn-run {
-  background: linear-gradient(135deg, #0071e3 0%, #147ce5 100%);
-  color: white;
+  background: transparent;
+  color: #cccccc;
 }
 
-.ide-btn-run:hover {
-  background: linear-gradient(135deg, #147ce5 0%, #2c8cf0 100%);
-  color: white;
+.ide-btn-run i {
+  color: #89d185;
+  /* VSCode Play Green */
 }
 
-/* Submit Button - Apple Green */
+/* Submit Button - VSCode Blue Check */
 .ide-btn-submit {
-  background: linear-gradient(135deg, #34c759 0%, #30b350 100%);
-  color: white;
+  background: transparent;
+  color: #cccccc;
 }
 
-.ide-btn-submit:hover {
-  background: linear-gradient(135deg, #32d74b 0%, #2dc245 100%);
-  color: white;
+.ide-btn-submit i {
+  color: #4fc1ff;
+  /* VSCode Light Blue */
 }
