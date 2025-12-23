@@ -659,9 +659,9 @@ class IDEComponent extends Component {
           height: 100%; /* Ensure it fills height if needed */
         }
         .apple-header {
-          width: 300px; /* 🔥 Fixed width for left panel */
+          width: 220px; /* 🔥 Fixed width for left panel (Reduced) */
           flex-shrink: 0;
-          padding: 40px 20px;
+          padding: 30px 15px; /* Reduced padding */
           text-align: center;
           background: linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%);
           border-right: 1px solid rgba(0,0,0,0.06); /* Changed bottom to right */
@@ -671,16 +671,16 @@ class IDEComponent extends Component {
           justify-content: center;
         }
         .apple-status-text {
-          font-size: 24px; 
+          font-size: 20px; /* Reduced font size */
           font-weight: 700;
           letter-spacing: -0.02em;
-          margin-top: 20px;
-          margin-bottom: 10px;
+          margin-top: 15px;
+          margin-bottom: 8px;
           color: #1d1d1f;
           word-break: break-word;
         }
         .apple-subtext {
-          font-size: 14px;
+          font-size: 13px; /* Reduced font size */
           color: #86868b;
           font-weight: 500;
           word-break: break-word;
@@ -696,7 +696,7 @@ class IDEComponent extends Component {
           flex-direction: column;
         }
         .apple-list-item {
-          padding: 15px 20px;
+          padding: 10px 20px; /* 🔥 Reduced vertical padding */
           border-bottom: 1px solid rgba(0,0,0,0.06);
           display: flex;
           gap: 15px; 
@@ -725,7 +725,7 @@ class IDEComponent extends Component {
           padding: 6px 10px; /* 🔥 Reduced padding */
           font-size: 12px; /* 🔥 Reduced font size */
           color: #1d1d1f;
-          margin-top: 4px; /* 🔥 Reduced margin */
+          margin-top: 2px; /* 🔥 Reduced margin */
           word-break: break-all;
           white-space: pre-wrap; 
         }
