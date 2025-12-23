@@ -52,8 +52,8 @@
   box-shadow: none;
   /* No shadow */
   white-space: nowrap;
-  min-width: 120px !important;
-  /* Restored min-width for consistent size */
+  min-width: 240px !important;
+  /* Double width as requested */
   letter-spacing: normal;
   margin-right: 4px;
 }
