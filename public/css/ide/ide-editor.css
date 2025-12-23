@@ -231,15 +231,15 @@
 }
 
 /* ============================================================
-   실행/제출 버튼 - 직사각형 스타일 (내용에 맞는 크기)
+   실행/제출 버튼 - 직사각형 스타일 (80px 고정)
    ============================================================ */
 
 /* 코드실행 버튼 - 강조 스타일 */
 .ide-container #runCodeBtn {
-  /* 🔥 크기: 내용에 맞게 + flex 늘어남 방지 */
-  width: fit-content !important;
-  min-width: 70px !important;
-  max-width: 120px !important;
+  /* 🔥 크기: 80px 고정 */
+  width: 80px !important;
+  min-width: 80px !important;
+  max-width: 80px !important;
   height: 32px !important;
   flex-grow: 0 !important;
   flex-shrink: 0 !important;
@@ -248,7 +248,7 @@
   background-color: var(--vscode-accent) !important;
   color: white !important;
   border: none !important;
-  padding: 6px 14px !important;
+  padding: 6px 12px !important;
   border-radius: var(--vscode-border-radius) !important;
   cursor: pointer !important;
   font-family: var(--vscode-font-ui) !important;
@@ -276,10 +276,10 @@
 
 /* 제출 버튼 - 실행 버튼과 동일한 직사각형 스타일 */
 .ide-container #submitCodeBtn {
-  /* 🔥 크기: 내용에 맞게 + flex 늘어남 방지 */
-  width: fit-content !important;
-  min-width: 70px !important;
-  max-width: 120px !important;
+  /* 🔥 크기: 80px 고정 */
+  width: 80px !important;
+  min-width: 80px !important;
+  max-width: 80px !important;
   height: 32px !important;
   flex-grow: 0 !important;
   flex-shrink: 0 !important;
@@ -288,7 +288,7 @@
   background-color: #28a745 !important;
   color: white !important;
   border: none !important;
-  padding: 6px 14px !important;
+  padding: 6px 12px !important;
   border-radius: var(--vscode-border-radius) !important;
   cursor: pointer !important;
   font-family: var(--vscode-font-ui) !important;
