@@ -27,6 +27,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 ENV MPLCONFIGDIR=/etc/matplotlib
 COPY matplotlibrc /etc/matplotlib/matplotlibrc
 
+# Font Configuration (Alias Malgun Gothic -> NanumGothic)
+COPY local.conf /etc/fonts/local.conf
+
 # Install updated Node.js (needed if this container runs node scripts, but primarily it's python now)
 # If this container is purely for Jupyter, we might not need Node.js explicitly unless extensions require it.
 # Keeping it minimal for now.
