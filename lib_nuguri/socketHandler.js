@@ -290,7 +290,8 @@ const initSocket = (server) => {
                             id: skt.userData.id,
                             name: skt.userData.name || skt.userData.id,
                             role: skt.userData.role,
-                            centerID: skt.userData.centerID
+                            centerID: skt.userData.centerID,
+                            centerName: skt.userData.centerName
                         });
                     }
                 }

@@ -35,7 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentUser = {
         id: container.dataset.userId || 'Guest',
         role: container.dataset.userRole || 'guest',
-        centerID: container.dataset.centerId || ''
+        centerID: container.dataset.centerId || '',
+        centerName: container.dataset.centerName || ''
     };
 
     let isOpen = false;
@@ -253,7 +254,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: currentUser.id,
                 name: currentUser.id,
                 role: currentUser.role,
-                centerID: currentUser.centerID
+                centerID: currentUser.centerID,
+                centerName: currentUser.centerName
             });
 
             // If teacher, join secret room
@@ -421,6 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="user-info">
                     <div class="user-name">
                         ${escapeHtml(user.name)} 
+                        ${user.centerName ? `<span style="font-size: 11px; color: #999; margin-left: 4px;">${escapeHtml(user.centerName)}</span>` : ''}
                         ${isMe ? '<span style="color:#ff9f1c; font-size:11px;">(나)</span>' : ''}
                     </div>
                     <div class="user-status">온라인</div>
