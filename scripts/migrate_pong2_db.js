@@ -42,6 +42,14 @@ async function migrate() {
             `);
         }
 
+        if (!columnNames.includes('is_public')) {
+            console.log('Adding is_public column...');
+            await queryDatabase(`
+                ALTER TABLE board_posts
+                ADD COLUMN is_public TINYINT(1) NOT NULL DEFAULT 1
+            `);
+        }
+
         // 3. Add Index
         console.log('Adding index idx_posts_type_public...');
         try {
