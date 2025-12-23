@@ -53,6 +53,8 @@
   /* No shadow */
   white-space: nowrap;
   min-width: 240px !important;
+  width: 240px !important;
+  flex: 0 0 240px !important;
   /* Double width as requested */
   letter-spacing: normal;
   margin-right: 4px;

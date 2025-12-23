@@ -479,28 +479,24 @@ class IDEComponent extends Component {
     const nextNum = parseInt(this.state.currentProblemNumber) + 1;
     console.log(`Auto-navigating to problem ${nextNum}`);
 
-    // Update State
-    this.state.currentProblemNumber = nextNum;
-
     // Hide Modal
     this.hideResultView();
 
-    // Trigger Problem Change Logic
-    // 1. Update UI (Sidebar?) - This is hard to reach from here without global event.
-    // Try EventBus if available
-    if (window.EventBus) {
-      // Assuming there is a listener that handles 'problemSelection' or similar
-      // For now, let's try to reload the editor content manually as a fallback
+    // 🔥 Delegate to ContentComponent (This triggers 'problemChanged' event)
+    if (window.ComponentSystem && window.ComponentSystem.components && window.ComponentSystem.components.content) {
+      console.log('Delegating navigation to ContentComponent');
+      window.ComponentSystem.components.content.navigateToProblem(nextNum);
+      return;
     }
 
-    // 2. Reload Code
+    // Fallback: Manual Update (if ContentComponent not found)
+    console.warn('ContentComponent not found, using fallback navigation');
+    this.state.currentProblemNumber = nextNum;
+
+    // Reload Code
     if (this.modules.codeEditor) {
       this.modules.codeEditor.loadExampleCodeFromAPI(this.state.currentExamName, nextNum);
     }
-
-
-    // 3. Update URL if possible (optional, might require page reload if heavy)
-    // alert('Next Problem!'); 
   }
 
   // 🔥 Terminal Swap Logic -> Now Bottom Sheet Modal
@@ -920,6 +916,11 @@ class IDEComponent extends Component {
     if (window.EventBus) {
       window.EventBus.subscribe('problemChanged', (data) => {
         console.log('IDEComponent: Problem changed', data);
+
+        // 🔥 Sync State with ContentComponent
+        if (data.examName) this.state.currentExamName = data.examName;
+        if (data.problemNumber) this.state.currentProblemNumber = data.problemNumber;
+
         this.updateProblemBankUI(data.answerType);
       });
     }
