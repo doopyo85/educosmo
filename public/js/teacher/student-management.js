@@ -700,11 +700,22 @@ const StudentManagement = {
             if (holidayName) dayClass += ' holiday-text';
 
             // Attendance List
+            // Attendance List
             const attendees = attendanceMap[d] || [];
             let attendeesHtml = '';
-            attendees.forEach(att => {
+
+            // Limit to 3 items
+            const maxDisplay = 3;
+            const displayList = attendees.slice(0, maxDisplay);
+
+            displayList.forEach(att => {
                 attendeesHtml += `<div class="attendance-item" onclick="event.stopPropagation(); StudentManagement.openStudentModal('${att.id}', '${att.name}')" title="${att.name} (${att.time})">${att.name} <span style="font-size:0.7em; color:#888;">${att.time}</span></div>`;
             });
+
+            // Show "..." if more than 3
+            if (attendees.length > maxDisplay) {
+                attendeesHtml += `<div class="attendance-item text-center text-muted p-0" style="line-height:1.2; background:none; border:none;">...</div>`;
+            }
 
             $calendar.append(`
                 <div class="calendar-day ${todayClass}" onclick="StudentManagement.openDailyModal(${year}, ${month}, ${d})" style="cursor: pointer;">
