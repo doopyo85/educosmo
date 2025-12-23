@@ -483,6 +483,7 @@ app.use('/api', require('./routes/apiRouter'));
 app.use('/api/board', require('./routes/api/boardApiRouter'));
 // app.use('/api/jupyter', require('./routes/api/jupyterRouter')); // 🔥 Handled by apiRouter
 app.use('/api', require('./routes/api/observatoryRouter')); // 🔥 Observatory API
+app.use('/api/pong2', require('./routes/api/pong2Router')); // 🔥 Pong2 API
 
 // 🔥 스크래치 API 라우터 (8601 스크래치 GUI 계정 연동용)
 if (isMain || SERVICE_TYPE === 'scratch') {

@@ -76,6 +76,10 @@ const CORS = {
     'http://www.cosmoedu.co.kr',
     'http://app.cosmoedu.co.kr',
 
+    // 🔥 Pong2 App
+    'https://pong2.app',
+    'https://www.pong2.app',
+
     undefined  // 같은 origin 요청 허용
   ],
 };
