@@ -231,24 +231,24 @@
 }
 
 /* ============================================================
-   실행/제출 버튼 - 직사각형 스타일 (80px 고정)
+   실행/제출 버튼 - 직사각형 스타일 (70px 고정)
    ============================================================ */
 
-/* 코드실행 버튼 - 강조 스타일 */
+/* 코드실행 버튼 - 파란색 강조 스타일 */
 .ide-container #runCodeBtn {
-  /* 🔥 크기: 80px 고정 */
-  width: 80px !important;
-  min-width: 80px !important;
-  max-width: 80px !important;
+  /* 크기: 70px 고정 */
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
   height: 32px !important;
   flex-grow: 0 !important;
   flex-shrink: 0 !important;
   
-  /* 스타일 */
+  /* 스타일 - 파란색 */
   background-color: var(--vscode-accent) !important;
-  color: white !important;
+  color: #ffffff !important;
   border: none !important;
-  padding: 6px 12px !important;
+  padding: 6px 10px !important;
   border-radius: var(--vscode-border-radius) !important;
   cursor: pointer !important;
   font-family: var(--vscode-font-ui) !important;
@@ -260,7 +260,12 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 4px !important;
+  gap: 3px !important;
+}
+
+/* 실행 버튼 아이콘 - 흰색 */
+.ide-container #runCodeBtn i {
+  color: #ffffff !important;
 }
 
 .ide-container #runCodeBtn:hover:not(:disabled) {
@@ -274,21 +279,21 @@
   transform: none !important;
 }
 
-/* 제출 버튼 - 실행 버튼과 동일한 직사각형 스타일 */
+/* 제출 버튼 - 주황색 스타일 */
 .ide-container #submitCodeBtn {
-  /* 🔥 크기: 80px 고정 */
-  width: 80px !important;
-  min-width: 80px !important;
-  max-width: 80px !important;
+  /* 크기: 70px 고정 */
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
   height: 32px !important;
   flex-grow: 0 !important;
   flex-shrink: 0 !important;
   
-  /* 스타일 - 녹색 계열로 구분 */
-  background-color: #28a745 !important;
-  color: white !important;
+  /* 스타일 - 주황색 */
+  background-color: #f39c12 !important;
+  color: #ffffff !important;
   border: none !important;
-  padding: 6px 12px !important;
+  padding: 6px 10px !important;
   border-radius: var(--vscode-border-radius) !important;
   cursor: pointer !important;
   font-family: var(--vscode-font-ui) !important;
@@ -300,11 +305,16 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 4px !important;
+  gap: 3px !important;
+}
+
+/* 제출 버튼 아이콘 - 흰색 */
+.ide-container #submitCodeBtn i {
+  color: #ffffff !important;
 }
 
 .ide-container #submitCodeBtn:hover:not(:disabled) {
-  background-color: #218838 !important;
+  background-color: #e67e22 !important;
   transform: translateY(-1px) !important;
 }
 
