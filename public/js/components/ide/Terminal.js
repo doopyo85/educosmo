@@ -566,7 +566,7 @@ class Terminal {
       runButton.classList.add('btn-stop-execution'); // 스타일링 클래스
     } else {
       runButton.disabled = false;
-      runButton.innerHTML = '<i class="bi bi-play-fill"></i> 코드 실행';
+      runButton.innerHTML = '<i class="bi bi-play-fill me-1"></i> 실행';
       runButton.classList.remove('btn-stop-execution');
     }
   }
