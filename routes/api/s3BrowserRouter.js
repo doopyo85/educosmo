@@ -153,6 +153,8 @@ router.get('/browse', authenticateUser, async (req, res) => {
 
     // 1. 역할별 scope 및 필터링 목록 결정
     let scope, allowedUserIDs;
+    // 🔥 유저 이름 매핑 (ID -> Name)
+    const userNameMap = new Map();
 
     if (userRole === 'admin') {
       // Admin: 모든 파일 접근
@@ -163,24 +165,44 @@ router.get('/browse', authenticateUser, async (req, res) => {
       // Teacher/Manager: 본인 + 소속 학생
       scope = 'center';
 
-      // centerID로 학생 목록 조회
+      // centerID로 학생 목록 조회 (이름 포함)
       const students = await db.queryDatabase(
-        'SELECT userID FROM Users WHERE centerID = ? AND role = "student"',
+        'SELECT userID, name FROM Users WHERE centerID = ? AND role = "student"',
         [centerID]
       );
 
-      // 본인 포함
+      // 본인 정보 조회 (이름 포함)
+      const [me] = await db.queryDatabase(
+        'SELECT userID, name FROM Users WHERE userID = ?',
+        [userID]
+      );
+
+      // 매핑 생성
+      if (me) userNameMap.set(me.userID, me.name);
+      students.forEach(s => userNameMap.set(s.userID, s.name));
+
+      // 본인 + 학생들
       allowedUserIDs = [userID, ...students.map(s => s.userID)];
 
     } else if (userRole === 'student') {
       // Student: 본인 + 소속 선생님/매니저
-      scope = 'center'; // 개념상 center scope 내의 특정 유저들
+      scope = 'center';
 
-      // 같은 센터의 관리자 조회
+      // 같은 센터의 관리자 조회 (이름 포함)
       const managers = await db.queryDatabase(
-        'SELECT userID FROM Users WHERE centerID = ? AND role IN ("teacher", "manager")',
+        'SELECT userID, name FROM Users WHERE centerID = ? AND role IN ("teacher", "manager")',
         [centerID]
       );
+
+      // 본인 정보 조회 (이름 포함)
+      const [me] = await db.queryDatabase(
+        'SELECT userID, name FROM Users WHERE userID = ?',
+        [userID]
+      );
+
+      // 매핑 생성
+      if (me) userNameMap.set(me.userID, me.name);
+      managers.forEach(m => userNameMap.set(m.userID, m.name));
 
       // 본인 + 선생님들
       allowedUserIDs = [userID, ...managers.map(m => m.userID)];
@@ -220,6 +242,13 @@ router.get('/browse', authenticateUser, async (req, res) => {
           fullPath: `users/${uid}/`,
           isEmpty: true  // 빈 폴더 표시
         });
+      });
+
+      // 🔥 유저 이름 추가 및 정렬
+      result.folders.forEach(folder => {
+        if (userNameMap.has(folder.name)) {
+          folder.userName = userNameMap.get(folder.name);
+        }
       });
 
       // 폴더 이름 정렬

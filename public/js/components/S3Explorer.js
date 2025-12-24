@@ -320,11 +320,13 @@ class S3Explorer {
       // 🔥 서버에서 이미 디코딩되어 왔으므로 그대로 사용
       const displayName = folder.name;
       const emptyBadge = folder.isEmpty ? ' <small class="text-muted">(비어있음)</small>' : '';
+      // 🔥 유저 식별용 이름 표시
+      const userNameBadge = folder.userName ? ` <span class="text-secondary small ms-1" style="font-size: 0.85em;">(${folder.userName})</span>` : '';
 
       return `
         <div class="folder-item" onclick="window.s3Explorer.loadFolder('${folder.fullPath}')">
           <span class="folder-icon">📁</span>
-          <span class="folder-name">${displayName}${emptyBadge}</span>
+          <span class="folder-name">${displayName}${userNameBadge}${emptyBadge}</span>
         </div>
       `;
     }).join('');
