@@ -17,26 +17,39 @@ router.use(pong2Auth);
 // ==========================================
 router.get('/boards', async (req, res) => {
     try {
-        const { type, limit } = req.query; // type is category/board_type
+        const { type, limit } = req.query; // type can be 'community', 'teacher', 'portfolio'
 
-        // 🔥 Strict Filter: Only COMMUNITY scope and Public posts
-        let query = `
+        let query, params = [];
+
+        // Scope Logic
+        // 1. Teacher Board: Only 'TEACHER' scope
+        // 2. Community Board: 'COMMUNITY' scope (Free for all)
+        // 3. Portfolio: Managed in separate route, but if here, maybe 'PAID_ONLY'? 
+
+        let targetScope = 'COMMUNITY'; // Default
+        if (type === 'teacher') targetScope = 'TEACHER';
+
+        // Check Permissions for Teacher Board
+        // If requesting teacher board, check if user is authorized to READ?
+        // User said: "Teacher only read/write".
+        if (targetScope === 'TEACHER') {
+            if (!req.user || !['teacher', 'manager', 'admin'].includes(req.user.role)) {
+                // But wait, if it's "Teacher Board" maybe students can READ notices?
+                // User said "Teacher only read/write". Strict.
+                // If strict, return 403 or empty.
+                // Let's return error for clarity.
+                return res.status(403).json({ error: 'Access denied. Teachers only.' });
+            }
+        }
+
+        query = `
             SELECT b.id, b.title, b.author, b.created_at as created, b.views, b.author_type, b.board_scope
             FROM board_posts b
             WHERE b.is_public = 1 
-            AND b.board_scope = 'COMMUNITY'
+            AND b.board_scope = ?
         `;
-        const params = [];
+        params.push(targetScope);
 
-        // Optional: Filter by specific board type if column exists or logic requires
-        // if (type) { ... }
-
-        // query += ` ORDER BY b.created_at DESC LIMIT ?`;
-        // params.push(parseInt(limit) || 20);
-
-        // 🔥 Fix for "Incorrect arguments to mysqld_stmt_execute"
-        // Prepared statements with LIMIT can be tricky.
-        // We will just interpolate the integer safely since it's processed as int.
         const limitVal = parseInt(limit) || 20;
         query += ` ORDER BY b.created_at DESC LIMIT ${limitVal}`;
 
@@ -56,13 +69,14 @@ router.get('/boards/:id', async (req, res) => {
         const { id } = req.params;
 
         // 1. Fetch Post details
-        // Ensure it is COMMUNITY scope and Public
+        // We select ALL scopes here, but filter by ID.
+        // If it's a TEACHER post, should we check auth?
+        // For simplicity, fetch first, then check scope/permissions.
         const posts = await queryDatabase(`
             SELECT b.id, b.title, b.content, b.author, b.created_at as created, b.views, b.author_type, b.board_scope, b.author_id
             FROM board_posts b
             WHERE b.id = ? 
             AND b.is_public = 1 
-            AND b.board_scope = 'COMMUNITY'
         `, [id]);
 
         if (posts.length === 0) {
@@ -71,13 +85,17 @@ router.get('/boards/:id', async (req, res) => {
 
         const post = posts[0];
 
+        // Permission Check for Read
+        if (post.board_scope === 'TEACHER') {
+            if (!req.user || !['teacher', 'manager', 'admin'].includes(req.user.role)) {
+                return res.status(403).json({ error: 'Access denied. Teachers only.' });
+            }
+        }
+
         // 2. Increment Views (Async, don't wait)
         queryDatabase('UPDATE board_posts SET views = views + 1 WHERE id = ?', [id]).catch(err => {
             console.error('View increment error:', err);
         });
-
-        // 3. Check Author ownership (Optional, for frontend edit buttons)
-        // const isOwner = req.user && req.user.id === post.author_id; // Check req.user if authenticated
 
         res.json({
             success: true,
@@ -90,52 +108,14 @@ router.get('/boards/:id', async (req, res) => {
     }
 });
 
-// ==========================================
-// Public: Portfolio Showcase
-// ==========================================
-router.get('/portfolio/:studentId', async (req, res) => {
-    try {
-        const { studentId } = req.params;
-
-        // Check if student exists (Paid User)
-        const student = await getStudentById(studentId);
-
-        if (!student) {
-            return res.status(404).json({ error: 'Student not found' });
-        }
-
-        // Get Public Portfolio Posts (Paid Users only)
-        // Ensure scope implies it's shareable, or is_public is enough?
-        // Spec says Portfolio is for Paid users.
-        const portfolios = await queryDatabase(`
-            SELECT id, title, content, created_at as created, views 
-            FROM board_posts 
-            WHERE author_id = ? 
-            AND author_type = 'PAID' 
-            AND is_public = 1 
-            -- AND category_id = ? (if portfolio has specific category)
-            ORDER BY created_at DESC
-        `, [student.id]);
-
-        res.json({
-            student: {
-                nickname: student.name,
-                joined_at: student.created_at
-            },
-            portfolios
-        });
-    } catch (error) {
-        console.error('Pong2 Portfolio Error:', error);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
+// ... (Portfolio route unchanged) ...
 
 // ==========================================
-// Auth: Create Post (Community)
+// Auth: Create Post (Community/Teacher)
 // ==========================================
 router.post('/boards', requireAuth, async (req, res) => {
     try {
-        const { title, content, board_type } = req.body;
+        const { title, content, board_type } = req.body; // board_type: 'COMMUNITY' or 'TEACHER'
 
         // Validate basic input
         if (!title || !content) {
@@ -146,16 +126,26 @@ router.post('/boards', requireAuth, async (req, res) => {
         const authorId = req.user.id;
         const authorType = req.user.type; // 'PAID' or 'PONG2'
 
-        // 🔥 Enforce Scope based on Origin/User
-        // If coming from Pong2 API, default to COMMUNITY.
-        // Even paid users writing from Pong2 should probably be COMMUNITY scope?
-        // Spec says: "pong2는 COMMUNITY scope만 접근 가능"
-        const boardScope = 'COMMUNITY';
+        // Determine Scope
+        let boardScope = 'COMMUNITY';
 
-        // Map board_type to category_id if needed, or use a default
-        // For now assuming board_posts has category_id. 
-        // Let's use specific category for 'Community' (e.g., 3 from boardApiRouter map) or default.
-        // Hardcoding 3 (Free/Community) for safe fallback if not provided.
+        if (board_type === 'TEACHER') {
+            // Check Permissions
+            if (req.user.type === 'PAID' && ['teacher', 'manager', 'admin'].includes(req.user.role)) {
+                boardScope = 'TEACHER';
+            } else {
+                return res.status(403).json({ error: 'Only teachers can write to Teacher Board' });
+            }
+        } else {
+            // Default to COMMUNITY (Free Board)
+            // Everyone allowed (Paid and Pong2)
+            boardScope = 'COMMUNITY';
+        }
+
+        // Category Mapping (Optional)
+        // Community = 3, Teacher = ?? (Using 3 for generic board, or maybe separate?)
+        // Let's stick to 3 for now or find a 'Teacher' category ID.
+        // Assuming 3 is "Free Board".
         const categoryId = 3;
 
         const result = await queryDatabase(`

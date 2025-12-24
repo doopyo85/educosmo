@@ -1,6 +1,7 @@
 /**
  * 통합 프로젝트 저장소 모달 컴포넌트
  * 스크래치, 엔트리, 파이썬 등 여러 플랫폼에서 공용으로 사용
+ * 🔥 화이트 톤 통일 UI (2025-12-25)
  * 
  * 사용법:
  * const modal = new ProjectStorageModal({ platform: 'scratch' });
@@ -18,39 +19,51 @@ class ProjectStorageModal {
         // 플랫폼별 API 엔드포인트 설정
         this.apiEndpoints = this._getApiEndpoints();
         
-        // 플랫폼별 설정
+        // 🔥 플랫폼별 설정 (통일된 화이트 톤)
         this.platformConfig = {
             scratch: {
                 name: '스크래치',
                 extension: '.sb3',
-                icon: 'bi-puzzle',
-                color: '#FF8C1A'
+                icon: 'bi-puzzle-fill',
+                iconColor: '#FF8C1A'  // 아이콘만 색상 유지
             },
             entry: {
                 name: '엔트리',
                 extension: '.ent',
-                icon: 'bi-box',
-                color: '#00B894'
+                icon: 'bi-box-fill',
+                iconColor: '#00B894'
             },
             python: {
                 name: '파이썬',
                 extension: '.py',
-                icon: 'bi-file-code',
-                color: '#3776AB'
+                icon: 'bi-file-code-fill',
+                iconColor: '#3776AB'
             },
             appinventor: {
                 name: '앱인벤터',
                 extension: '.aia',
-                icon: 'bi-phone',
-                color: '#A4C639'
+                icon: 'bi-phone-fill',
+                iconColor: '#A4C639'
             }
+        };
+        
+        // 🔥 통일된 UI 색상
+        this.uiColors = {
+            primary: '#4A90D9',      // 메인 버튼 색상
+            primaryHover: '#357ABD',
+            danger: '#DC3545',
+            secondary: '#6c757d',
+            border: '#dee2e6',
+            background: '#f8f9fa',
+            text: '#333333',
+            textMuted: '#6c757d'
         };
         
         // 상태
         this.state = {
             projects: [],
-            currentFileId: null,        // 현재 열린 프로젝트 ID (덮어쓰기용)
-            currentProjectTitle: '',    // 현재 프로젝트 제목
+            currentFileId: null,
+            currentProjectTitle: '',
             isLoading: false,
             selectedProjectId: null
         };
@@ -64,7 +77,6 @@ class ProjectStorageModal {
      * 플랫폼별 API 엔드포인트 반환
      */
     _getApiEndpoints() {
-        // 🔥 Entry는 별도 라우터 사용 (/entry/api/)
         if (this.platform === 'entry') {
             return {
                 list: '/entry/api/user-projects',
@@ -97,29 +109,32 @@ class ProjectStorageModal {
         if (this.initialized) return;
         
         const config = this.platformConfig[this.platform] || this.platformConfig.scratch;
+        const colors = this.uiColors;
+        
+        // 🔥 통일된 스타일 CSS 주입
+        this._injectStyles();
         
         const modalHtml = `
         <div class="modal fade" id="projectStorageModal-${this.platform}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header" style="background: ${config.color}; color: white;">
-                        <h5 class="modal-title">
-                            <i class="bi ${config.icon} me-2"></i>
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content psm-modal-content">
+                    <!-- 🔥 화이트 톤 헤더 -->
+                    <div class="modal-header psm-header">
+                        <h5 class="modal-title psm-title">
+                            <i class="bi ${config.icon} me-2" style="color: ${config.iconColor};"></i>
                             <span id="storageModalTitle-${this.platform}">${config.name} 프로젝트</span>
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
-                        <!-- 🔥 상단 버튼 영역 (불러오기 모드용) -->
-                        <div id="topButtons-${this.platform}" class="mb-3 pb-3 border-bottom" style="display: none;">
+                    
+                    <div class="modal-body psm-body">
+                        <!-- 🔥 상단 버튼 영역 -->
+                        <div id="topButtons-${this.platform}" class="psm-top-buttons" style="display: none;">
                             <div class="d-flex justify-content-end gap-2">
-                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                                <button type="button" class="btn psm-btn-secondary" data-bs-dismiss="modal">
                                     <i class="bi bi-x-lg"></i> 취소
                                 </button>
-                                <button type="button" class="btn btn-danger btn-sm" id="deleteBtnTop-${this.platform}" style="display: none;">
-                                    <i class="bi bi-trash"></i> 삭제
-                                </button>
-                                <button type="button" class="btn btn-primary btn-sm" id="confirmBtnTop-${this.platform}" style="background: ${config.color}; border-color: ${config.color};">
+                                <button type="button" class="btn psm-btn-primary" id="confirmBtnTop-${this.platform}">
                                     <i class="bi bi-folder2-open"></i> <span id="confirmBtnTextTop-${this.platform}">불러오기</span>
                                 </button>
                             </div>
@@ -128,18 +143,18 @@ class ProjectStorageModal {
                         <!-- 저장 모드 UI -->
                         <div id="saveMode-${this.platform}" style="display: none;">
                             <div class="mb-3">
-                                <label class="form-label">프로젝트 이름</label>
-                                <input type="text" class="form-control" id="projectTitleInput-${this.platform}" placeholder="프로젝트 이름을 입력하세요">
+                                <label class="form-label psm-label">프로젝트 이름</label>
+                                <input type="text" class="form-control psm-input" id="projectTitleInput-${this.platform}" placeholder="프로젝트 이름을 입력하세요">
                             </div>
                             <div class="mb-3">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="overwriteCheck-${this.platform}">
-                                    <label class="form-check-label" for="overwriteCheck-${this.platform}">
+                                    <label class="form-check-label psm-label" for="overwriteCheck-${this.platform}">
                                         기존 프로젝트에 덮어쓰기
                                     </label>
                                 </div>
                             </div>
-                            <div id="overwriteInfo-${this.platform}" style="display: none;" class="alert alert-info">
+                            <div id="overwriteInfo-${this.platform}" style="display: none;" class="alert alert-info psm-alert">
                                 <i class="bi bi-info-circle me-2"></i>
                                 <span id="overwriteFileName-${this.platform}"></span>에 덮어씁니다.
                             </div>
@@ -148,38 +163,40 @@ class ProjectStorageModal {
                         <!-- 불러오기 모드 UI -->
                         <div id="loadMode-${this.platform}" style="display: none;">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="text-muted" id="projectCount-${this.platform}">0개 프로젝트</span>
-                                <button class="btn btn-outline-secondary btn-sm" id="refreshBtn-${this.platform}">
+                                <span class="psm-count" id="projectCount-${this.platform}">0개 프로젝트</span>
+                                <button class="btn psm-btn-outline" id="refreshBtn-${this.platform}">
                                     <i class="bi bi-arrow-clockwise"></i> 새로고침
                                 </button>
                             </div>
                         </div>
                         
                         <!-- 로딩 상태 -->
-                        <div id="loadingState-${this.platform}" style="display: none;" class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
+                        <div id="loadingState-${this.platform}" style="display: none;" class="psm-loading">
+                            <div class="spinner-border" style="color: ${colors.primary};" role="status">
                                 <span class="visually-hidden">로딩중...</span>
                             </div>
-                            <p class="mt-2 text-muted">프로젝트를 불러오는 중...</p>
+                            <p class="mt-2">프로젝트를 불러오는 중...</p>
                         </div>
                         
                         <!-- 빈 상태 -->
-                        <div id="emptyState-${this.platform}" style="display: none;" class="text-center py-5">
-                            <i class="bi bi-folder2-open" style="font-size: 3rem; color: #ccc;"></i>
-                            <p class="mt-3 text-muted">저장된 프로젝트가 없습니다.</p>
+                        <div id="emptyState-${this.platform}" style="display: none;" class="psm-empty">
+                            <i class="bi bi-folder2-open"></i>
+                            <p>저장된 프로젝트가 없습니다.</p>
                         </div>
                         
-                        <!-- 프로젝트 목록 -->
-                        <div id="projectGrid-${this.platform}" class="row g-3">
+                        <!-- 🔥 프로젝트 목록 (통일된 그리드) -->
+                        <div id="projectGrid-${this.platform}" class="psm-grid">
                             <!-- 프로젝트 카드들이 여기에 동적으로 추가됨 -->
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-                        <button type="button" class="btn btn-danger" id="deleteBtn-${this.platform}" style="display: none;">
+                    
+                    <!-- 🔥 통일된 푸터 -->
+                    <div class="modal-footer psm-footer">
+                        <button type="button" class="btn psm-btn-secondary" data-bs-dismiss="modal">취소</button>
+                        <button type="button" class="btn psm-btn-danger" id="deleteBtn-${this.platform}" style="display: none;">
                             <i class="bi bi-trash"></i> 삭제
                         </button>
-                        <button type="button" class="btn btn-primary" id="confirmBtn-${this.platform}" style="background: ${config.color}; border-color: ${config.color};">
+                        <button type="button" class="btn psm-btn-primary" id="confirmBtn-${this.platform}">
                             <i class="bi bi-check-lg"></i> <span id="confirmBtnText-${this.platform}">확인</span>
                         </button>
                     </div>
@@ -198,6 +215,312 @@ class ProjectStorageModal {
         
         this.initialized = true;
         console.log(`✅ ProjectStorageModal 초기화 완료 (${this.platform})`);
+    }
+    
+    /**
+     * 🔥 통일된 스타일 CSS 주입
+     */
+    _injectStyles() {
+        if (document.getElementById('psm-unified-styles')) return;
+        
+        const colors = this.uiColors;
+        
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'psm-unified-styles';
+        styleSheet.textContent = `
+            /* ========================================
+               ProjectStorageModal 통일 스타일
+               ======================================== */
+            
+            /* 모달 컨텐츠 */
+            .psm-modal-content {
+                border: none;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+                overflow: hidden;
+            }
+            
+            /* 헤더 - 화이트 톤 */
+            .psm-header {
+                background: #ffffff;
+                border-bottom: 1px solid ${colors.border};
+                padding: 16px 20px;
+            }
+            
+            .psm-title {
+                font-size: 18px;
+                font-weight: 600;
+                color: ${colors.text};
+                margin: 0;
+                display: flex;
+                align-items: center;
+            }
+            
+            /* 바디 */
+            .psm-body {
+                background: #ffffff;
+                padding: 20px;
+                max-height: 60vh;
+                overflow-y: auto;
+            }
+            
+            /* 상단 버튼 영역 */
+            .psm-top-buttons {
+                margin-bottom: 16px;
+                padding-bottom: 16px;
+                border-bottom: 1px solid ${colors.border};
+            }
+            
+            /* 푸터 */
+            .psm-footer {
+                background: #ffffff;
+                border-top: 1px solid ${colors.border};
+                padding: 12px 20px;
+            }
+            
+            /* ========================================
+               버튼 스타일 (통일)
+               ======================================== */
+            
+            .psm-btn-primary {
+                background: ${colors.primary};
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                font-size: 14px;
+                font-weight: 500;
+                border-radius: 6px;
+                transition: all 0.2s;
+            }
+            
+            .psm-btn-primary:hover {
+                background: ${colors.primaryHover};
+                color: white;
+            }
+            
+            .psm-btn-secondary {
+                background: #ffffff;
+                border: 1px solid ${colors.border};
+                color: ${colors.text};
+                padding: 8px 16px;
+                font-size: 14px;
+                font-weight: 500;
+                border-radius: 6px;
+                transition: all 0.2s;
+            }
+            
+            .psm-btn-secondary:hover {
+                background: ${colors.background};
+                color: ${colors.text};
+            }
+            
+            .psm-btn-danger {
+                background: ${colors.danger};
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                font-size: 14px;
+                font-weight: 500;
+                border-radius: 6px;
+                transition: all 0.2s;
+            }
+            
+            .psm-btn-danger:hover {
+                background: #c82333;
+                color: white;
+            }
+            
+            .psm-btn-outline {
+                background: transparent;
+                border: 1px solid ${colors.border};
+                color: ${colors.textMuted};
+                padding: 6px 12px;
+                font-size: 13px;
+                border-radius: 6px;
+                transition: all 0.2s;
+            }
+            
+            .psm-btn-outline:hover {
+                background: ${colors.background};
+                border-color: ${colors.secondary};
+            }
+            
+            /* ========================================
+               입력 필드
+               ======================================== */
+            
+            .psm-label {
+                font-size: 14px;
+                font-weight: 500;
+                color: ${colors.text};
+                margin-bottom: 6px;
+            }
+            
+            .psm-input {
+                border: 1px solid ${colors.border};
+                border-radius: 6px;
+                padding: 10px 12px;
+                font-size: 14px;
+                transition: border-color 0.2s;
+            }
+            
+            .psm-input:focus {
+                border-color: ${colors.primary};
+                box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+            }
+            
+            .psm-alert {
+                border-radius: 6px;
+                font-size: 14px;
+            }
+            
+            /* ========================================
+               프로젝트 그리드 (통일)
+               ======================================== */
+            
+            .psm-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+            }
+            
+            @media (max-width: 768px) {
+                .psm-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+            
+            @media (max-width: 480px) {
+                .psm-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            
+            /* ========================================
+               프로젝트 카드 (통일)
+               ======================================== */
+            
+            .psm-card {
+                background: #ffffff;
+                border: 1px solid ${colors.border};
+                border-radius: 8px;
+                overflow: hidden;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            
+            .psm-card:hover {
+                border-color: ${colors.primary};
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                transform: translateY(-2px);
+            }
+            
+            .psm-card.selected {
+                border-color: ${colors.primary};
+                box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.2);
+            }
+            
+            /* 썸네일 영역 (통일된 높이) */
+            .psm-thumbnail {
+                width: 100%;
+                height: 140px;
+                background: ${colors.background};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+            }
+            
+            .psm-thumbnail img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            
+            .psm-thumbnail-icon {
+                font-size: 48px;
+                color: #ccc;
+            }
+            
+            /* 카드 내용 */
+            .psm-card-body {
+                padding: 12px;
+            }
+            
+            .psm-card-title {
+                font-size: 14px;
+                font-weight: 600;
+                color: ${colors.text};
+                margin: 0 0 4px 0;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .psm-card-meta {
+                font-size: 12px;
+                color: ${colors.textMuted};
+                margin: 0;
+            }
+            
+            /* ========================================
+               상태 표시
+               ======================================== */
+            
+            .psm-count {
+                font-size: 14px;
+                color: ${colors.textMuted};
+            }
+            
+            .psm-loading {
+                text-align: center;
+                padding: 40px;
+            }
+            
+            .psm-loading p {
+                color: ${colors.textMuted};
+                font-size: 14px;
+            }
+            
+            .psm-empty {
+                text-align: center;
+                padding: 60px 20px;
+            }
+            
+            .psm-empty i {
+                font-size: 48px;
+                color: #ddd;
+            }
+            
+            .psm-empty p {
+                margin-top: 16px;
+                color: ${colors.textMuted};
+                font-size: 14px;
+            }
+            
+            /* ========================================
+               스크롤바 스타일
+               ======================================== */
+            
+            .psm-body::-webkit-scrollbar {
+                width: 6px;
+            }
+            
+            .psm-body::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            
+            .psm-body::-webkit-scrollbar-thumb {
+                background: #ddd;
+                border-radius: 3px;
+            }
+            
+            .psm-body::-webkit-scrollbar-thumb:hover {
+                background: #ccc;
+            }
+        `;
+        
+        document.head.appendChild(styleSheet);
     }
     
     /**
@@ -226,18 +549,13 @@ class ProjectStorageModal {
             this._handleConfirm();
         });
         
-        // 🔥 확인 버튼 (상단)
+        // 확인 버튼 (상단)
         document.getElementById(`confirmBtnTop-${platform}`)?.addEventListener('click', () => {
             this._handleConfirm();
         });
         
-        // 삭제 버튼 (하단)
+        // 삭제 버튼
         document.getElementById(`deleteBtn-${platform}`)?.addEventListener('click', () => {
-            this._handleDelete();
-        });
-        
-        // 🔥 삭제 버튼 (상단)
-        document.getElementById(`deleteBtnTop-${platform}`)?.addEventListener('click', () => {
             this._handleDelete();
         });
         
@@ -267,7 +585,6 @@ class ProjectStorageModal {
             const data = await response.json();
             
             if (data.success) {
-                // 🔥 Entry API 응답 필드명 매핑 (projectName → title, id → fileId)
                 let projects = data.projects || [];
                 if (this.platform === 'entry') {
                     projects = projects.map(p => ({
@@ -295,7 +612,7 @@ class ProjectStorageModal {
     }
     
     /**
-     * 프로젝트 목록 렌더링
+     * 🔥 프로젝트 목록 렌더링 (통일된 카드 스타일)
      */
     _renderProjects() {
         const platform = this.platform;
@@ -315,37 +632,46 @@ class ProjectStorageModal {
         }
         
         emptyState.style.display = 'none';
-        grid.style.display = 'flex';
+        grid.style.display = 'grid';
         countEl.textContent = `${this.state.projects.length}개 프로젝트`;
         
         const config = this.platformConfig[platform] || this.platformConfig.scratch;
         
         this.state.projects.forEach(project => {
             const card = document.createElement('div');
-            card.className = 'col-md-4 col-sm-6';
+            card.className = 'psm-card';
+            card.dataset.fileId = project.fileId;
+            
+            // 🔥 통일된 썸네일 처리 (없으면 아이콘, 로드 실패 시 아이콘)
+            const thumbnailHtml = project.thumbnailUrl 
+                ? `<img src="${project.thumbnailUrl}" alt="${project.title}" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                   <div class="psm-thumbnail-icon" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                       <i class="bi ${config.icon}" style="color: ${config.iconColor};"></i>
+                   </div>`
+                : `<i class="bi ${config.icon} psm-thumbnail-icon" style="color: ${config.iconColor};"></i>`;
+            
             card.innerHTML = `
-                <div class="card project-card h-100" data-file-id="${project.fileId}" style="cursor: pointer; transition: all 0.2s;">
-                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
-                         style="height: 120px; overflow: hidden;">
-                        ${project.thumbnailUrl 
-                            ? `<img src="${project.thumbnailUrl}" alt="${project.title}" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.parentElement.innerHTML='<i class=\\'bi ${config.icon}\\' style=\\'font-size: 3rem; color: ${config.color};\\'>'">`
-                            : `<i class="bi ${config.icon}" style="font-size: 3rem; color: ${config.color};"></i>`
-                        }
-                    </div>
-                    <div class="card-body p-2">
-                        <h6 class="card-title mb-1 text-truncate" title="${project.title}">${project.title}</h6>
-                        <small class="text-muted">
-                            ${this._formatDate(project.createdAt)}
-                            ${project.size ? ` · ${this._formatSize(project.size)}` : ''}
-                        </small>
-                    </div>
+                <div class="psm-thumbnail">
+                    ${thumbnailHtml}
+                </div>
+                <div class="psm-card-body">
+                    <h6 class="psm-card-title" title="${project.title}">${project.title}</h6>
+                    <p class="psm-card-meta">
+                        ${this._formatDate(project.createdAt)}${project.size ? ` · ${this._formatSize(project.size)}` : ''}
+                    </p>
                 </div>
             `;
             
             // 클릭 이벤트
-            const cardEl = card.querySelector('.project-card');
-            cardEl.addEventListener('click', () => {
+            card.addEventListener('click', () => {
                 this._selectProject(project.fileId);
+            });
+            
+            // 더블클릭으로 바로 불러오기
+            card.addEventListener('dblclick', () => {
+                this._selectProject(project.fileId);
+                this._handleConfirm();
             });
             
             grid.appendChild(card);
@@ -359,24 +685,21 @@ class ProjectStorageModal {
         const platform = this.platform;
         
         // 이전 선택 해제
-        document.querySelectorAll(`#projectGrid-${platform} .project-card`).forEach(card => {
-            card.classList.remove('border-primary');
-            card.style.boxShadow = '';
+        document.querySelectorAll(`#projectGrid-${platform} .psm-card`).forEach(card => {
+            card.classList.remove('selected');
         });
         
         // 새 선택
-        const selectedCard = document.querySelector(`#projectGrid-${platform} .project-card[data-file-id="${fileId}"]`);
+        const selectedCard = document.querySelector(`#projectGrid-${platform} .psm-card[data-file-id="${fileId}"]`);
         if (selectedCard) {
-            selectedCard.classList.add('border-primary');
-            selectedCard.style.boxShadow = '0 0 0 3px rgba(13, 110, 253, 0.25)';
+            selectedCard.classList.add('selected');
         }
         
         this.state.selectedProjectId = fileId;
         
-        // 삭제 버튼 표시 (불러오기 모드일 때) - 🔥 상단/하단 모두
+        // 삭제 버튼 표시 (불러오기 모드일 때)
         if (this.mode === 'load') {
             document.getElementById(`deleteBtn-${platform}`).style.display = 'inline-block';
-            document.getElementById(`deleteBtnTop-${platform}`).style.display = 'inline-block';
         }
     }
     
@@ -429,14 +752,11 @@ class ProjectStorageModal {
             const data = await response.json();
             
             if (data.success) {
-                // 저장 성공
                 this.state.currentFileId = data.fileId;
                 this.state.currentProjectTitle = title;
                 
-                // 모달 닫기
                 this._closeModal();
                 
-                // 콜백 호출
                 if (this.onSave) {
                     this.onSave({
                         fileId: data.fileId,
@@ -466,7 +786,7 @@ class ProjectStorageModal {
             return;
         }
         
-        // 🔥 Entry는 s3Url로 에디터 이동 (페이지 리디렉트)
+        // Entry는 s3Url로 에디터 이동
         if (this.platform === 'entry') {
             const project = this.state.projects.find(p => p.fileId === this.state.selectedProjectId);
             if (!project || !project.s3Url) {
@@ -474,7 +794,6 @@ class ProjectStorageModal {
                 return;
             }
             
-            // 에디터로 이동
             const editorUrl = `/entry/entry_editor?s3Url=${encodeURIComponent(project.s3Url)}&projectId=${project.fileId}&projectName=${encodeURIComponent(project.title || '내작품')}`;
             console.log('✅ Entry 에디터로 이동:', editorUrl);
             window.location.href = editorUrl;
@@ -492,14 +811,11 @@ class ProjectStorageModal {
             const data = await response.json();
             
             if (data.success) {
-                // 불러오기 성공
                 this.state.currentFileId = data.project.fileId;
                 this.state.currentProjectTitle = data.project.title;
                 
-                // 모달 닫기
                 this._closeModal();
                 
-                // 콜백 호출
                 if (this.onLoad) {
                     this.onLoad({
                         fileId: data.project.fileId,
@@ -545,20 +861,15 @@ class ProjectStorageModal {
             const data = await response.json();
             
             if (data.success) {
-                // 목록에서 제거
                 this.state.projects = this.state.projects.filter(
                     p => p.fileId !== this.state.selectedProjectId
                 );
                 this.state.selectedProjectId = null;
                 
-                // 삭제 버튼 숨기기 - 🔥 상단/하단 모두
                 document.getElementById(`deleteBtn-${this.platform}`).style.display = 'none';
-                document.getElementById(`deleteBtnTop-${this.platform}`).style.display = 'none';
                 
-                // 목록 다시 렌더링
                 this._renderProjects();
                 
-                // 콜백 호출
                 if (this.onDelete) {
                     this.onDelete({ fileId: this.state.selectedProjectId });
                 }
@@ -592,9 +903,8 @@ class ProjectStorageModal {
         document.getElementById(`confirmBtnText-${platform}`).textContent = '불러오기';
         document.getElementById(`deleteBtn-${platform}`).style.display = 'none';
         
-        // 🔥 상단 버튼 영역 표시
+        // 상단 버튼 영역 표시
         document.getElementById(`topButtons-${platform}`).style.display = 'block';
-        document.getElementById(`deleteBtnTop-${platform}`).style.display = 'none';
         document.getElementById(`confirmBtnTextTop-${platform}`).textContent = '불러오기';
         
         // 프로젝트 목록 로드
@@ -606,8 +916,6 @@ class ProjectStorageModal {
     
     /**
      * 저장 모달 열기
-     * @param {*} projectData - 저장할 프로젝트 데이터 (Base64 또는 JSON)
-     * @param {string} thumbnail - 썸네일 이미지 (Base64 data URL)
      */
     openSaveModal(projectData, thumbnail = null) {
         if (!this.initialized) this.init();
@@ -628,7 +936,7 @@ class ProjectStorageModal {
         document.getElementById(`confirmBtnText-${platform}`).textContent = '저장';
         document.getElementById(`deleteBtn-${platform}`).style.display = 'none';
         
-        // 🔥 상단 버튼 영역 숨기기 (저장 모드에서는 불필요)
+        // 상단 버튼 영역 숨기기
         document.getElementById(`topButtons-${platform}`).style.display = 'none';
         
         // 현재 프로젝트 제목 설정
@@ -721,8 +1029,8 @@ class ProjectStorageModal {
         const emptyState = document.getElementById(`emptyState-${platform}`);
         
         emptyState.innerHTML = `
-            <i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: #dc3545;"></i>
-            <p class="mt-3 text-danger">${message}</p>
+            <i class="bi bi-exclamation-triangle" style="font-size: 48px; color: ${this.uiColors.danger};"></i>
+            <p style="color: ${this.uiColors.danger};">${message}</p>
         `;
         emptyState.style.display = 'block';
     }
@@ -735,11 +1043,8 @@ class ProjectStorageModal {
         this.pendingProjectData = null;
         this.pendingThumbnail = null;
         
-        // 🔥 상단/하단 삭제 버튼 숨기기
         const platform = this.platform;
-        const deleteBtnTop = document.getElementById(`deleteBtnTop-${platform}`);
         const deleteBtn = document.getElementById(`deleteBtn-${platform}`);
-        if (deleteBtnTop) deleteBtnTop.style.display = 'none';
         if (deleteBtn) deleteBtn.style.display = 'none';
     }
     
@@ -751,7 +1056,7 @@ class ProjectStorageModal {
         const date = new Date(dateString);
         return date.toLocaleDateString('ko-KR', {
             year: 'numeric',
-            month: 'short',
+            month: 'long',
             day: 'numeric'
         });
     }
@@ -770,4 +1075,4 @@ class ProjectStorageModal {
 // 전역 등록
 window.ProjectStorageModal = ProjectStorageModal;
 
-console.log('✅ ProjectStorageModal 컴포넌트 로드 완료');
+console.log('✅ ProjectStorageModal 컴포넌트 로드 완료 (화이트 톤 통일 UI)');
