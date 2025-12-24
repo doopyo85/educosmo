@@ -31,14 +31,20 @@ router.get('/boards', async (req, res) => {
         // Optional: Filter by specific board type if column exists or logic requires
         // if (type) { ... }
 
-        query += ` ORDER BY b.created_at DESC LIMIT ?`;
-        params.push(parseInt(limit) || 20);
+        // query += ` ORDER BY b.created_at DESC LIMIT ?`;
+        // params.push(parseInt(limit) || 20);
+
+        // 🔥 Fix for "Incorrect arguments to mysqld_stmt_execute"
+        // Prepared statements with LIMIT can be tricky.
+        // We will just interpolate the integer safely since it's processed as int.
+        const limitVal = parseInt(limit) || 20;
+        query += ` ORDER BY b.created_at DESC LIMIT ${limitVal}`;
 
         const posts = await queryDatabase(query, params);
         res.json(posts);
     } catch (error) {
         console.error('Pong2 Board List Error:', error);
-        res.status(500).json({ error: 'Database error' });
+        res.status(500).json({ error: 'Database error', details: error.message });
     }
 });
 
