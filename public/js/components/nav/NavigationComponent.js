@@ -110,9 +110,6 @@ class NavigationComponent extends Component {
           // 🔥 추가: 사이드바 토글 버튼 생성
           self.createSidebarToggleButton();
 
-          // 🔥 추가: 사이드바 하단 (아이콘 + 로그인) 생성
-          self.createSidebarBottom();
-
           // 메뉴 데이터 처리
           if (menuData) {
             self.menuData = menuData;
@@ -601,58 +598,7 @@ class NavigationComponent extends Component {
     }
   }
 
-  /**
-   * 사이드바 하단 영역 생성 (아이콘 그룹 + 로그인 버튼)
-   */
-  createSidebarBottom() {
-    if (document.querySelector('.sidebar-bottom')) return;
 
-    var bottomSection = document.createElement('div');
-    bottomSection.className = 'sidebar-bottom';
-
-    // 1. 아이콘 그룹 (4개)
-    var iconGroup = document.createElement('div');
-    iconGroup.className = 'sidebar-icon-group';
-
-    // 아이콘 데이터 (예시)
-    var icons = [
-      { icon: 'bi-grid-fill', label: 'Dashboard' },
-      { icon: 'bi-gear-fill', label: 'Settings' },
-      { icon: 'bi-bell-fill', label: 'Notifications' },
-      { icon: 'bi-question-circle-fill', label: 'Help' }
-    ];
-
-    icons.forEach(function (item) {
-      var iconBtn = document.createElement('button');
-      iconBtn.className = 'sidebar-icon-btn';
-      iconBtn.title = item.label;
-      iconBtn.innerHTML = '<i class="bi ' + item.icon + '"></i>';
-      iconGroup.appendChild(iconBtn);
-    });
-
-    bottomSection.appendChild(iconGroup);
-
-    // 2. 로그인 섹션
-    var loginSection = document.createElement('div');
-    loginSection.className = 'sidebar-login-section';
-
-    var loginBtn = document.createElement('button');
-    loginBtn.className = 'btn btn-primary w-100 sidebar-login-btn';
-    loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Login';
-
-    // 로그인 페이지로 이동
-    loginBtn.onclick = function () {
-      window.location.href = '/auth/login';
-    };
-
-    loginSection.appendChild(loginBtn);
-    bottomSection.appendChild(loginSection);
-
-    // navContainer의 마지막에 추가
-    if (this.navList && this.navList.parentElement) {
-      this.navList.parentElement.appendChild(bottomSection);
-    }
-  }
 
   /**
    * 사이드바 토글
