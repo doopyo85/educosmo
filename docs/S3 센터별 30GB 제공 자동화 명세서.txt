@@ -1,0 +1,475 @@
+S3 센터별 30GB 제공 자동화 명세서
+1. 목표
+
+센터(학원) 1곳당 S3 저장공간 30GB를 제공한다.
+
+센터 생성/삭제/정산/경고까지 운영자 수동 작업 없이 자동화한다.
+
+보안상 센터가 AWS 자격증명(IAM Key)을 직접 가지지 않는다.
+
+2. 시스템 구성 개요
+2.1 핵심 원칙
+
+센터 단위 분리: “센터 = 독립된 저장공간”
+
+하드쿼터는 앱에서 통제: S3는 용량 제한을 직접 못 거므로 업로드 전 용량 체크로 30GB 강제
+
+AWS 키는 서버만 보유: 업로드는 서버 경유 또는 Presigned URL 방식
+
+2.2 권장 아키텍처(권장안)
+
+단일 AWS 계정
+
+센터별 S3 버킷 1개 자동 생성
+
+업로드는 Presigned URL로 클라이언트 직업 업로드(대용량/부하 감소)
+
+용량/과금/알림은 서버가 집계 및 통제
+
+3. 데이터 모델(DB) 명세
+3.1 centers 테이블
+
+center_id (PK)
+
+center_name
+
+plan_type (예: S3_30GB)
+
+storage_limit_bytes (기본 30GB)
+
+s3_bucket_name
+
+status (ACTIVE/SUSPENDED/DELETED)
+
+created_at, updated_at
+
+3.2 center_storage_usage 테이블(집계 캐시)
+
+center_id (FK)
+
+used_bytes (최근 집계값)
+
+object_count
+
+last_calculated_at
+
+calc_version (집계 방식 변경 대비)
+
+3.3 audit_log (권장)
+
+누가/언제 센터 생성, 정책 변경, 차단 발생 등 기록
+
+4. S3 네이밍/정책 명세
+4.1 버킷 네이밍 규칙
+
+academy-center-{center_id}
+예: academy-center-c_00123
+
+center_name은 버킷명에 넣지 않음(변경/중복/노출 리스크)
+
+4.2 버킷 기본 설정(자동 적용)
+
+Public Access Block: ON (모두 차단)
+
+Encryption: SSE-S3 또는 SSE-KMS (선택)
+
+Versioning: 선택(기본 OFF 권장: 용량 증가 방지)
+
+Lifecycle Rule: 선택(예: 30일 후 IA 이동)
+
+CORS: Presigned 업로드/다운로드 필요 시 설정
+
+5. API/업무 흐름 명세
+5.1 센터 생성(Create Center)
+
+트리거: 관리자/본사에서 센터 등록
+
+서버 처리 순서
+
+center_id 생성
+
+S3 버킷 생성(서울 리전)
+
+버킷 보안 설정(Public Block, 암호화 등) 적용
+
+DB에 centers.s3_bucket_name 저장
+
+기본 용량 제한 30GB 저장
+
+실패 롤백 규칙
+
+버킷 생성 성공 후 DB 저장 실패 → 버킷 삭제
+
+DB 저장 성공 후 정책 적용 실패 → 버킷 삭제 + DB 롤백(또는 status=SUSPENDED)
+
+5.2 업로드(Upload) — 30GB 강제
+
+권장 방식: Presigned URL
+
+흐름
+
+클라이언트가 POST /centers/{id}/upload-url 요청(파일명, 파일크기 포함)
+
+서버가 DB에서 used_bytes 조회(없으면 즉시 계산 또는 최근값 사용)
+
+used_bytes + file_size > 30GB 이면 거절(409/403)
+
+통과 시 Presigned PUT URL 발급
+
+클라이언트가 S3에 직접 업로드
+
+업로드 완료 콜백(선택): POST /upload-complete → usage 캐시 업데이트(추정치 반영)
+
+주의
+
+동시 업로드(여러 파일)로 초과할 수 있으니
+“예약(reserved_bytes)” 방식을 권장:
+
+URL 발급 시 reserved_bytes += file_size
+
+완료/만료 시 차감
+
+5.3 다운로드(Download)
+
+다운로드가 거의 없다고 하셨으니 기본은:
+
+필요할 때만 Presigned GET URL 발급
+
+혹은 서버 프록시(트래픽 비용/권한 통제를 위해 선택)
+
+5.4 센터 삭제(Delete Center)
+
+센터 status=DELETING
+
+버킷 내 객체 전체 삭제(배치)
+
+버킷 삭제
+
+DB에서 center 삭제 또는 status=DELETED
+
+중요: 버킷은 “비워야 삭제 가능” → 대량이면 배치/큐 필요
+
+6. 사용량 계산(30GB 판단 기준)
+6.1 집계 방식(권장)
+
+일 1회(또는 6시간 1회) 배치 집계로 정확한 used_bytes 계산
+
+업로드 직후에는 reserved_bytes + 추정치로 즉시 차단 반영
+
+집계 구현
+
+S3 ListObjectsV2로 size 합산 (센터별 버킷이라 단순)
+
+객체 수가 커질 수 있으니 페이지네이션 처리
+
+7. 모니터링/알림 정책
+7.1 임계치
+
+80% (24GB): 경고 알림
+
+95% (28.5GB): 강경고 + 업로드 주의
+
+100% (30GB): 업로드 차단
+
+7.2 알림 채널
+
+본사 관리자 대시보드
+
+센터 관리자 이메일/문자(선택)
+
+내부 슬랙/카톡(선택)
+
+8. 보안/권한(필수)
+8.1 IAM 설계
+
+서버(백엔드)용 IAM Role/User 1개
+
+권한은 최소화:
+
+s3:CreateBucket, s3:PutBucketPolicy, s3:PutEncryptionConfiguration …
+
+s3:ListBucket, s3:GetObject, s3:PutObject, s3:DeleteObject
+
+버킷 prefix 제한을 걸기 어려우니(버킷 분리로 해결)
+서버는 “센터 버킷만” 다루도록 코드 레벨에서 강제
+
+8.2 보안 정책
+
+S3 Public access 전면 차단
+
+업로드/다운로드는 항상 Presigned 또는 서버 경유
+
+파일명에 개인정보 노출 금지(권장: UUID 파일명)
+
+9. 해야 할 일 체크리스트(실행 순서)
+A. AWS 준비
+
+ 서울 리전에 S3 사용
+
+ 서버용 IAM 생성/권한 정책 작성
+
+ (선택) KMS 키 생성(암호화 강화 시)
+
+B. DB/서버 개발
+
+ centers / usage / audit 테이블 생성
+
+ 센터 생성 API: 버킷 자동 생성 + 정책 자동 적용 + 롤백
+
+ 업로드 URL 발급 API: 30GB 제한 + reserved 처리
+
+ 업로드 완료 처리(선택): reserved 정리
+
+ 센터 삭제 API: 객체 삭제 배치 + 버킷 삭제
+
+C. 배치/스케줄러
+
+ 사용량 집계 배치(6~24시간 주기)
+
+ 임계치 알림 배치
+
+D. 관리자 UI
+
+ 센터별 사용량 바(used/30GB)
+
+ 알림 기록 / 차단 기록
+
+ 파일 정리(대용량 상위 파일 표시) 기능(권장)
+
+E. 운영 정책
+
+ 30GB 초과 시 업로드 차단 문구/가이드
+
+ 센터 종료 시 데이터 보관 기간 정책(예: 30일 후 삭제)
+
+10. 확장/대안(센터 수가 많아질 때)
+
+센터가 100개를 넘어갈 수 있으면:
+
+ 버킷 개수 제한 상향 요청 고려
+
+또는 대안으로 “단일 버킷 + center prefix”로 전환 가능(집계/권한 난이도 상승)
+
+원하시면 다음까지 “코드 포함”으로 바로 완성해드릴게요.
+
+(1) Express 라우트: 센터 생성/삭제/업로드URL 발급 전체 예시
+
+(2) IAM 정책 JSON(최소권한)
+
+(3) 사용량 집계 배치 스크립트 (node cron 기준)
+
+지금 서버가 educodingnplay Express 환경이니까, 그 구조에 맞춰서 바로 붙일까요?
+
+30gb(기본) / 100 gb (옵션) 으로 어드민이 센터들의 용량제한을 조절할 수 있는 스위치를 구현하는 로직까지 추가해줘. 
+
+좋아요. 그럼 기존 「센터별 S3 자동화 + 30GB 기본 제공」 명세에
+👉 **“어드민이 30GB ↔ 100GB를 실시간으로 전환할 수 있는 스위치 로직”**을 정식 확장 명세로 추가할게요.
+
+아래 문서는 구현 기준으로 바로 개발 가능한 수준입니다.
+
+S3 센터 용량 제한
+30GB (기본) / 100GB (옵션)
+어드민 제어 스위치 포함 자동화 명세서 (확장판)
+1. 정책 정의
+1.1 용량 플랜 정의
+플랜	용량	용도
+BASIC	30GB	기본 제공
+PRO	100GB	유료 옵션 / 확장
+
+⚠️ AWS S3에는 하드 제한이 없으므로
+“플랜 = 서버 로직에서 적용되는 논리적 제한값”
+
+2. DB 스키마 확장
+2.1 centers 테이블 (중요)
+centers
+- center_id (PK)
+- center_name
+- storage_plan          -- 'BASIC' | 'PRO'
+- storage_limit_bytes   -- 32212254720 (30GB) / 107374182400 (100GB)
+- s3_bucket_name
+- status                -- ACTIVE / SUSPENDED
+- created_at
+- updated_at
+
+
+📌 storage_plan과 storage_limit_bytes는 반드시 분리
+
+이유:
+
+나중에 50GB / 200GB 같은 요금제 추가 대비
+
+임시 프로모션(예: +10GB) 대응 가능
+
+2.2 storage_usage (동일)
+center_storage_usage
+- center_id
+- used_bytes
+- reserved_bytes
+- last_calculated_at
+
+3. 어드민 스위치 UI 명세
+3.1 관리자 화면 구성
+[센터명]  [용량 플랜]
+──────────────────────
+서울강남센터   (●) 30GB   (○) 100GB
+부산해운대센터 (○) 30GB   (●) 100GB
+
+
+또는 토글:
+
+[30GB BASIC] ──────●────── [100GB PRO]
+
+4. 어드민 → 서버 로직
+4.1 용량 변경 API
+PATCH /admin/centers/{center_id}/storage-plan
+
+요청 바디
+{
+  "plan": "PRO"
+}
+
+4.2 서버 처리 로직 (핵심)
+① 플랜 → 용량 매핑
+const PLAN_LIMITS = {
+  BASIC: 30 * 1024 ** 3,
+  PRO: 100 * 1024 ** 3
+};
+
+② 변경 처리 순서
+1. center 조회
+2. 현재 사용량(used_bytes) 조회
+3. 새 플랜 용량과 비교
+4. 상태 판단
+5. DB 업데이트
+6. 후처리(알림)
+
+4.3 상태 분기 로직 (중요)
+▶ 30GB → 100GB (확장)
+- 무조건 허용
+- storage_plan = PRO
+- storage_limit_bytes = 100GB
+- 업로드 즉시 허용
+
+
+✔ 즉시 반영
+✔ 아무 제약 없음
+
+▶ 100GB → 30GB (축소)
+IF used_bytes <= 30GB
+  → 즉시 BASIC 전환
+ELSE
+  → 상태 = SUSPENDED
+  → 업로드 차단
+  → 파일 정리 요청
+
+
+📌 데이터는 절대 삭제하지 않음
+📌 “정리될 때까지 업로드만 제한”
+
+5. 업로드 로직 (플랜 반영)
+5.1 업로드 URL 발급 시 체크 로직
+const totalAfterUpload =
+  usage.used_bytes +
+  usage.reserved_bytes +
+  uploadFileSize;
+
+if (totalAfterUpload > center.storage_limit_bytes) {
+  throw new Error("STORAGE_LIMIT_EXCEEDED");
+}
+
+5.2 센터 상태에 따른 처리
+상태	업로드
+ACTIVE	허용
+SUSPENDED	❌ 차단
+
+SUSPENDED는 “용량 초과로 인한 일시 정지” 의미
+(센터 자체 정지와 구분)
+
+6. 자동 복구 로직 (중요)
+6.1 사용량 재계산 배치
+
+6시간 or 1일 1회
+
+S3 실제 용량 재집계
+
+6.2 복구 조건
+IF center.status == SUSPENDED
+AND used_bytes <= storage_limit_bytes
+THEN
+  status = ACTIVE
+
+
+👉 센터가 파일 정리하면 자동 복구
+👉 운영자 개입 ❌
+
+7. 알림 정책 (플랜 연동)
+7.1 용량 경고 기준 (플랜별 자동 적용)
+플랜	경고	강경고
+30GB	24GB	28.5GB
+100GB	80GB	95GB
+7.2 알림 대상
+
+센터 관리자
+
+본사 어드민
+
+로그 기록 (audit_log)
+
+8. 비용/정산 연계 (옵션)
+8.1 billing_history 테이블 (선택)
+billing_history
+- center_id
+- plan
+- applied_at
+- price_monthly
+
+
+👉 100GB 전환 시 자동 과금 연결 가능
+
+9. 예외/안전 장치
+9.1 절대 자동 삭제 금지
+
+플랜 축소 시:
+
+❌ 파일 자동 삭제
+
+❌ 강제 정리
+
+✔ 업로드만 차단
+
+9.2 관리자가 직접 개입 가능한 버튼
+
+“강제 100GB 전환”
+
+“임시 +20GB 부여(7일)”
+
+10. 전체 흐름 요약 (한 장)
+센터 생성
+ → S3 버킷 자동 생성
+ → BASIC (30GB)
+
+어드민 스위치 ON
+ → PRO (100GB)
+ → 즉시 업로드 허용
+
+어드민 스위치 OFF
+ → 사용량 체크
+   ├─ 30GB 이하 → 즉시 전환
+   └─ 초과 → SUSPENDED (정리 유도)
+
+정리 완료
+ → 자동 ACTIVE 복구
+
+11. 다음 단계 (바로 코드화 가능)
+
+원하시면 바로 이어서:
+
+Express API 전체 코드
+
+어드민 토글 프론트엔드 예시(Vue/React/Vanilla)
+
+usage 집계 배치 스크립트
+
+에러 코드 & UX 메시지 명세
+
+👉 다음으로 어디까지 구현할지 정해볼까요?
