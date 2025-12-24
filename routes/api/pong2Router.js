@@ -12,25 +12,32 @@ router.use(pong2Auth);
 // ==========================================
 // Public: Board List
 // ==========================================
+// ==========================================
+// Public: Board List (Viewer)
+// ==========================================
 router.get('/boards', async (req, res) => {
     try {
-        const { type, limit } = req.query;
+        const { type, limit } = req.query; // type is category/board_type
+
+        // 🔥 Strict Filter: Only COMMUNITY scope and Public posts
         let query = `
-            SELECT b.id, b.title, b.author, b.created, b.views, b.author_type, b.is_public
+            SELECT b.id, b.title, b.author, b.created_at as created, b.views, b.author_type, b.board_scope
             FROM board_posts b
-            WHERE b.is_public = 1
+            WHERE b.is_public = 1 
+            AND b.board_scope = 'COMMUNITY'
         `;
         const params = [];
 
-        // Filter by board type (community, portfolio, etc.) if needed
-        // For now, simple list
+        // Optional: Filter by specific board type if column exists or logic requires
+        // if (type) { ... }
 
-        query += ` ORDER BY b.created DESC LIMIT ?`;
+        query += ` ORDER BY b.created_at DESC LIMIT ?`;
         params.push(parseInt(limit) || 20);
 
         const posts = await queryDatabase(query, params);
         res.json(posts);
     } catch (error) {
+        console.error('Pong2 Board List Error:', error);
         res.status(500).json({ error: 'Database error' });
     }
 });
@@ -43,30 +50,34 @@ router.get('/portfolio/:studentId', async (req, res) => {
         const { studentId } = req.params;
 
         // Check if student exists (Paid User)
-        // Adjust logic if studentId is numeric or username
-        // Assuming integer ID for simplicity, or username query
         const student = await getStudentById(studentId);
 
         if (!student) {
             return res.status(404).json({ error: 'Student not found' });
         }
 
-        // Get Public Portfolio Posts
+        // Get Public Portfolio Posts (Paid Users only)
+        // Ensure scope implies it's shareable, or is_public is enough?
+        // Spec says Portfolio is for Paid users.
         const portfolios = await queryDatabase(`
-            SELECT id, title, content, created, views 
+            SELECT id, title, content, created_at as created, views 
             FROM board_posts 
-            WHERE author_id = ? AND author_type = 'PAID' AND is_public = 1 AND board_type = 'portfolio'
-            ORDER BY created DESC
+            WHERE author_id = ? 
+            AND author_type = 'PAID' 
+            AND is_public = 1 
+            -- AND category_id = ? (if portfolio has specific category)
+            ORDER BY created_at DESC
         `, [student.id]);
 
         res.json({
             student: {
-                nickname: student.name, // or proper nickname field
+                nickname: student.name,
                 joined_at: student.created_at
             },
             portfolios
         });
     } catch (error) {
+        console.error('Pong2 Portfolio Error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -78,24 +89,37 @@ router.post('/boards', requireAuth, async (req, res) => {
     try {
         const { title, content, board_type } = req.body;
 
-        // Only allow community for now, or specific rules
-        if (!['community', 'QnA'].includes(board_type)) {
-            return res.status(400).json({ error: 'Invalid board type' });
+        // Validate basic input
+        if (!title || !content) {
+            return res.status(400).json({ error: 'Title and content are required' });
         }
 
         const authorName = req.user.nickname || req.user.name;
         const authorId = req.user.id;
         const authorType = req.user.type; // 'PAID' or 'PONG2'
 
+        // 🔥 Enforce Scope based on Origin/User
+        // If coming from Pong2 API, default to COMMUNITY.
+        // Even paid users writing from Pong2 should probably be COMMUNITY scope?
+        // Spec says: "pong2는 COMMUNITY scope만 접근 가능"
+        const boardScope = 'COMMUNITY';
+
+        // Map board_type to category_id if needed, or use a default
+        // For now assuming board_posts has category_id. 
+        // Let's use specific category for 'Community' (e.g., 3 from boardApiRouter map) or default.
+        // Hardcoding 3 (Free/Community) for safe fallback if not provided.
+        const categoryId = 3;
+
         const result = await queryDatabase(`
-            INSERT INTO board_posts (title, content, author, author_id, author_type, board_type, created, is_public)
-            VALUES (?, ?, ?, ?, ?, ?, NOW(), 1)
-        `, [title, content, authorName, authorId, authorType, board_type]);
+            INSERT INTO board_posts 
+            (category_id, title, content, author, author_id, author_type, board_scope, is_public, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
+        `, [categoryId, title, content, authorName, authorId, authorType, boardScope]);
 
         res.json({ success: true, postId: result.insertId });
 
     } catch (error) {
-        console.error(error);
+        console.error('Pong2 Create Post Error:', error);
         res.status(500).json({ error: 'Failed to create post' });
     }
 });

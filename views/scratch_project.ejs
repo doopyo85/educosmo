@@ -69,23 +69,22 @@
         <script>
             /**
              * 🔥 Scratch 프로젝트 불러오기 (ProjectStorageModal 사용)
+             * - scratch-gui는 project_file 파라미터로 S3 URL을 받아 프로젝트를 로드함
+             * - API에서 presigned URL을 받아 project_file로 전달
              */
             function openScratchProjectLoadModal() {
                 const modal = new ProjectStorageModal({
                     platform: 'scratch',
                     onLoad: (data) => {
                         console.log('📂 Scratch 프로젝트 선택됨:', data);
-                        if (data.projectId || data.fileId) {
-                            // 프로젝트 ID를 사용하여 Scratch 에디터 열기
-                            const projectId = data.projectId || data.fileId;
-                            const scratchEditorUrl = `/scratch?projectId=${projectId}`;
-                            window.open(scratchEditorUrl, '_blank');
-                        } else if (data.url) {
-                            // S3 URL을 사용하여 Scratch 에디터 열기
-                            const scratchEditorUrl = `/scratch?s3Url=${encodeURIComponent(data.url)}`;
+                        
+                        // presigned URL이 있으면 project_file 파라미터로 전달
+                        if (data.url) {
+                            const scratchEditorUrl = `/scratch?project_file=${encodeURIComponent(data.url)}`;
+                            console.log('🚀 Scratch 에디터 URL:', scratchEditorUrl);
                             window.open(scratchEditorUrl, '_blank');
                         } else {
-                            alert('프로젝트를 찾을 수 없습니다.');
+                            alert('프로젝트 URL을 가져올 수 없습니다.');
                         }
                     }
                 });
