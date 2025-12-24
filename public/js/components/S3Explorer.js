@@ -318,15 +318,20 @@ class S3Explorer {
 
     container.innerHTML = folders.map(folder => {
       // 🔥 서버에서 이미 디코딩되어 왔으므로 그대로 사용
-      const displayName = folder.name;
-      const emptyBadge = folder.isEmpty ? ' <small class="text-muted">(비어있음)</small>' : '';
-      // 🔥 유저 식별용 이름 표시
-      const userNameBadge = folder.userName ? ` <span class="text-secondary small ms-1" style="font-size: 0.85em;">(${folder.userName})</span>` : '';
+      const displayName = folder.name; // ID
+
+      // 🔥 유저 식별용 이름 표시 (이름이 앞으로)
+      // 예: (홍길동) student_id
+      let folderLabel = displayName;
+
+      if (folder.userName) {
+        folderLabel = `<span class="fw-bold text-primary me-1">(${folder.userName})</span> <span class="text-dark">${displayName}</span>`;
+      }
 
       return `
         <div class="folder-item" onclick="window.s3Explorer.loadFolder('${folder.fullPath}')">
           <span class="folder-icon">📁</span>
-          <span class="folder-name">${displayName}${userNameBadge}${emptyBadge}</span>
+          <span class="folder-name">${folderLabel}</span>
         </div>
       `;
     }).join('');
