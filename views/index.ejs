@@ -433,6 +433,8 @@
             // Pong2 Fallback Logic
             window.handlePong2Click = function (e) {
                 e.preventDefault();
+                e.stopPropagation(); // Prevents bubbling if clicked from inner button
+
                 const pong2Url = 'https://pong2.app/';
 
                 // Optimistic Navigation: Directly open pong2.app
