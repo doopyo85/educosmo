@@ -91,6 +91,24 @@ class Pong2APIClient {
     }
 
     /**
+     * Get Single Post
+     */
+    async getPost(id) {
+        try {
+            const url = `${this.baseUrl}${this.endpoints.BOARDS}/${id}`;
+            const response = await fetch(url, {
+                headers: this.getAuthHeaders()
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch post');
+            return await response.json();
+        } catch (error) {
+            console.error('Fetch post error:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Get Portfolio
      */
     async getPortfolio(studentId) {

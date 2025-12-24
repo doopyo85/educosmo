@@ -49,6 +49,48 @@ router.get('/boards', async (req, res) => {
 });
 
 // ==========================================
+// Public: Single Board Post (Read)
+// ==========================================
+router.get('/boards/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Fetch Post details
+        // Ensure it is COMMUNITY scope and Public
+        const posts = await queryDatabase(`
+            SELECT b.id, b.title, b.content, b.author, b.created_at as created, b.views, b.author_type, b.board_scope, b.author_id
+            FROM board_posts b
+            WHERE b.id = ? 
+            AND b.is_public = 1 
+            AND b.board_scope = 'COMMUNITY'
+        `, [id]);
+
+        if (posts.length === 0) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        const post = posts[0];
+
+        // 2. Increment Views (Async, don't wait)
+        queryDatabase('UPDATE board_posts SET views = views + 1 WHERE id = ?', [id]).catch(err => {
+            console.error('View increment error:', err);
+        });
+
+        // 3. Check Author ownership (Optional, for frontend edit buttons)
+        // const isOwner = req.user && req.user.id === post.author_id; // Check req.user if authenticated
+
+        res.json({
+            success: true,
+            post
+        });
+
+    } catch (error) {
+        console.error('Pong2 Get Post Error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// ==========================================
 // Public: Portfolio Showcase
 // ==========================================
 router.get('/portfolio/:studentId', async (req, res) => {
