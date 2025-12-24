@@ -122,6 +122,28 @@ class Pong2APIClient {
             throw error;
         }
     }
+
+    /**
+     * Create Post
+     */
+    async createPost(title, content, boardType = 'COMMUNITY') {
+        try {
+            const url = `${this.baseUrl}${this.endpoints.BOARDS}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({ title, content, board_type: boardType })
+            });
+
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Failed to create post');
+
+            return { success: true, postId: result.postId };
+        } catch (error) {
+            console.error('Create post error:', error);
+            return { success: false, error: error.message };
+        }
+    }
 }
 
 // Global Instance

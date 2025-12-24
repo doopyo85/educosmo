@@ -21,36 +21,24 @@ class CardLinkManager {
         await this.switchMode('portal');
     }
 
-    /**
-     * 메인 메뉴 이벤트 리스너 설정
-     */
     setupMainMenuListeners() {
-        // Changed selector to match new index.html structure
         const links = document.querySelectorAll('.mode-icons .icon-btn');
         links.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                // UI Update
                 links.forEach(l => l.classList.remove('active'));
-
-                // Handle click on icon or container
                 const target = e.currentTarget;
                 target.classList.add('active');
-
                 const mode = target.dataset.mode;
                 this.switchMode(mode);
             });
         });
     }
 
-    /**
-     * 모드 전환 및 데이터 로드
-     */
     async switchMode(mode) {
         this.currentMode = mode;
         this.showLoading();
 
-        // Update Sub-menu Title
         const titleEl = document.querySelector('.sub-menu-title');
         if (titleEl) {
             const titles = {
@@ -63,69 +51,40 @@ class CardLinkManager {
         }
 
         try {
-            // Load Data based on Mode
             if (mode === 'portal') {
-                // Portal: Fetch from Google Sheet (Tab 1)
                 const data = await window.googleSheetsAPI.getData('PORTAL');
                 this.currentData = data;
                 this.extractCategoriesForPortal(data);
             }
             else if (mode === 'community') {
-                // Community: Fetch Boards from API
                 const boards = await window.pong2API.getBoards('community', 50);
-                this.currentData = boards.map(b => [
-                    '전체글',
-                    b.title,
-                    `작성자: ${b.author} | 조회수: ${b.views}`,
-                    `/boards/${b.id}`,
-                    '/resource/default-image.png'
-                ]);
+                this.currentData = boards;
                 this.categories = new Set(['전체글', '공지사항']);
             }
             else if (mode === 'youtube') {
-                // YouTube: Fetch from Google Sheet (Tab 2 - pongtube)
-                // Columns: [0]Category, [1]Title, [2]Desc, [3]URL, [4]ImgURL, [5]Tags, [6]Note
                 const data = await window.googleSheetsAPI.getData('YOUTUBE');
-
-                // Pre-process data for YouTube specifics
                 this.currentData = data.map(row => {
-                    // 1. Title Fallback: Title -> Note -> "YouTube Video"
-                    if (!row[1] || row[1].trim() === '') {
-                        row[1] = row[6] || 'YouTube Video';
-                    }
-
-                    // 2. Thumbnail Auto-generation
+                    if (!row[1] || row[1].trim() === '') row[1] = row[6] || 'YouTube Video';
                     if (!row[4] || row[4].trim() === '') {
                         const ytId = this.extractYouTubeId(row[3]);
-                        if (ytId) {
-                            row[4] = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
-                        }
+                        if (ytId) row[4] = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
                     }
                     return row;
                 });
-
                 this.extractCategoriesForPortal(this.currentData);
             }
             else if (mode === 'portfolio') {
-                // Feature 4: Portfolio
                 const boards = await window.pong2API.getBoards('portfolio', 50);
-                this.currentData = boards.map(b => [
-                    'Student Works',
-                    b.title,
-                    `Made by ${b.author}`,
-                    `/boards/${b.id}`,
-                    '/resource/default-image.png'
-                ]);
+                this.currentData = boards;
                 this.categories = new Set(['Student Works']);
             }
 
-            // Render
-            this.createTabs();
-            this.renderTabContents();
-
-            // Auto-select first tab
-            const firstTab = document.querySelector('#categoryTabs .nav-link');
-            if (firstTab) firstTab.click();
+            if (['community', 'portfolio'].includes(mode)) {
+                this.renderCommunityList();
+            } else {
+                this.createTabs();
+                this.renderTabContents();
+            }
 
         } catch (error) {
             console.error('Mode switch error:', error);
@@ -133,9 +92,188 @@ class CardLinkManager {
         }
     }
 
-    /**
-     * Extract YouTube ID from URL (Standard, Short, etc.)
-     */
+    // ==========================================
+    // Community & Portfolio Logic
+    // ==========================================
+
+    renderCommunityList() {
+        const container = document.getElementById('content-container');
+        if (!container) return;
+
+        let html = `
+            <div class="d-flex justify-content-between align-items-center mb-4 text-white">
+                <h2 class="fw-bold">${this.currentMode === 'portfolio' ? 'Student Portfolio' : 'Community Board'}</h2>
+                ${this.currentMode === 'community' ?
+                `<button class="btn btn-primary" onclick="window.cardManager.renderWritePage()">
+                     <i class="bi bi-pencil-square me-2"></i>글쓰기
+                   </button>` : ''}
+            </div>
+            <div class="row">
+        `;
+
+        if (this.currentData.length === 0) {
+            html += '<div class="col-12 text-center text-muted p-5">게시글이 없습니다.</div>';
+        } else {
+            html += this.currentData.map(post => {
+                const date = new Date(post.created).toLocaleDateString();
+                const clickAction = `window.cardManager.showPostDetail(${post.id})`;
+                let thumbUrl = post.content && post.content.match(/<img[^>]+src="([^">]+)"/)
+                    ? post.content.match(/<img[^>]+src="([^">]+)"/)[1]
+                    : '/resource/default-image.png';
+
+                return `
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                        <div class="card h-100 shadow-sm border-0" onclick="${clickAction}" style="cursor:pointer; transition: transform 0.2s;">
+                            <img src="${thumbUrl}" class="card-img-top object-fit-cover" style="height: 160px;" alt="${post.title}" 
+                                 onerror="this.src='/resource/default-image.png'">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold text-truncate">${post.title}</h6>
+                                <p class="card-text small text-secondary mb-2">
+                                    <i class="bi bi-person me-1"></i>${post.author}
+                                </p>
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>${date}</span>
+                                    <span><i class="bi bi-eye me-1"></i>${post.views || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+
+        container.querySelectorAll('.card').forEach(card => {
+            card.onmouseenter = () => card.style.transform = 'translateY(-5px)';
+            card.onmouseleave = () => card.style.transform = 'translateY(0)';
+        });
+    }
+
+    async showPostDetail(id) {
+        this.showLoading();
+        try {
+            const result = await window.pong2API.getPost(id);
+            const post = result.post;
+            const container = document.getElementById('content-container');
+            const date = new Date(post.created).toLocaleString();
+
+            container.innerHTML = `
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                             <h2 class="fw-bold mb-0 text-dark">${post.title}</h2>
+                             <button class="btn btn-outline-secondary btn-sm" onclick="window.cardManager.switchMode('${this.currentMode}')">
+                                <i class="bi bi-x-lg"></i>
+                             </button>
+                        </div>
+                        <div class="text-muted small mt-2">
+                            <span class="me-3"><i class="bi bi-person-circle me-1"></i> ${post.author}</span>
+                            <span class="me-3"><i class="bi bi-calendar3 me-1"></i> ${date}</span>
+                            <span><i class="bi bi-eye me-1"></i> ${post.views}</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-4 bg-light" style="min-height: 400px;">
+                        <div class="post-content text-dark">
+                            ${post.content}
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white p-3 text-end">
+                        <button class="btn btn-secondary px-4" onclick="window.cardManager.switchMode('${this.currentMode}')">목록으로</button>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error(error);
+            this.showError('게시글을 불러오는데 실패했습니다.');
+        }
+    }
+
+    async renderWritePage() {
+        const user = window.pong2API.getCurrentUser();
+        if (!user) {
+            alert('로그인이 필요한 서비스입니다.');
+            const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+            loginModal.show();
+            return;
+        }
+
+        const container = document.getElementById('content-container');
+        container.innerHTML = `
+            <div class="card shadow border-0">
+                <div class="card-body p-4">
+                    <h3 class="fw-bold mb-4 text-dark">글쓰기</h3>
+                    <form id="pong2-post-form">
+                        <div class="mb-3">
+                            <input type="text" id="post-title" class="form-control form-control-lg" placeholder="제목을 입력하세요" required>
+                        </div>
+                        <div class="mb-3">
+                            <div id="editor"></div>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary me-2" onclick="window.cardManager.switchMode('community')">취소</button>
+                            <button type="submit" class="btn btn-primary px-4">등록</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        if (typeof ClassicEditor === 'undefined') {
+            await this.loadCKEditor();
+        }
+
+        try {
+            this.editor = await ClassicEditor.create(document.querySelector('#editor'), {
+                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote'],
+                placeholder: '내용을 즐겁게 작성해주세요!'
+            });
+            document.querySelector('.ck-editor__editable').style.minHeight = '300px';
+            document.querySelector('.ck-editor__editable').style.color = 'black';
+            this.setupWritePostListeners();
+        } catch (error) {
+            console.error('Editor init error:', error);
+            this.showError('에디터 로딩 실패');
+        }
+    }
+
+    loadCKEditor() {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    setupWritePostListeners() {
+        const form = document.getElementById('pong2-post-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('post-title').value;
+            const content = this.editor.getData();
+
+            if (!title.trim() || !content.trim()) {
+                alert('제목과 내용을 모두 입력해주세요.');
+                return;
+            }
+
+            try {
+                const result = await window.pong2API.createPost(title, content, 'PONG2');
+                if (result.success) {
+                    await this.switchMode('community');
+                } else {
+                    alert('글 등록 실패: ' + result.error);
+                }
+            } catch (error) {
+                console.error(error);
+                alert('오류가 발생했습니다.');
+            }
+        });
+    }
+
     extractYouTubeId(url) {
         if (!url) return null;
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
@@ -143,9 +281,6 @@ class CardLinkManager {
         return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    /**
-     * 포털용 카테고리 추출 (기존 로직)
-     */
     extractCategoriesForPortal(data) {
         this.categories.clear();
         data.forEach(row => {
@@ -154,26 +289,17 @@ class CardLinkManager {
         });
     }
 
-    /**
-     * Extracts unique tags from current data (Column index 5)
-     */
     extractTags(category) {
         const tags = new Set();
         const categoryData = this.currentData.filter(row => (row[0] || '기타') === category);
-
         categoryData.forEach(row => {
-            // Tags are in index 5, comma separated
             if (row[5]) {
                 const rowTags = row[5].split(',').map(t => t.trim());
-                rowTags.forEach(t => {
-                    if (t) tags.add(t);
-                });
+                rowTags.forEach(t => tags.add(t));
             }
         });
         return Array.from(tags).sort();
     }
-
-    // --- (이하 기존 Card Render 로직 재사용) ---
 
     showLoading() {
         const container = document.getElementById('content-container');
@@ -193,8 +319,7 @@ class CardLinkManager {
 
         const tabs = Array.from(this.categories).map((category, index) => {
             const tabId = `tab-${this.sanitizeId(category)}`;
-            const icon = this.getCategoryIcon(category); // Optional: Add icons based on category name
-
+            const icon = this.getCategoryIcon(category);
             return `
                 <li class="nav-item">
                     <button class="nav-link w-100 text-start" 
@@ -207,14 +332,11 @@ class CardLinkManager {
                 </li>
             `;
         }).join('');
-
         tabContainer.innerHTML = tabs;
     }
 
     getCategoryIcon(category) {
-        // Simple mapping for icons
-        let iconName = 'bi-caret-right-fill'; // Default
-
+        let iconName = 'bi-caret-right-fill';
         if (category.includes('마우스')) iconName = 'bi-mouse';
         else if (category.includes('키보드')) iconName = 'bi-keyboard';
         else if (category.includes('엔트리')) iconName = 'bi-code-square';
@@ -226,7 +348,6 @@ class CardLinkManager {
         else if (category.includes('머신러닝')) iconName = 'bi-cpu';
         else if (category.includes('오피스')) iconName = 'bi-file-earmark-text';
         else if (category.includes('데이터과학')) iconName = 'bi-bar-chart-fill';
-
         return `<i class="bi ${iconName} me-2"></i>`;
     }
 
@@ -234,11 +355,28 @@ class CardLinkManager {
         const container = document.getElementById('content-container');
         if (!container) return;
 
+        if (this.currentMode === 'youtube') {
+            const cards = this.createSwiperSlidesForYouTube();
+            container.innerHTML = `
+                <div class="col-12 text-center mb-4">
+                    <h2 class="fw-bold text-white">PongTube <span class="badge bg-danger">Shorts</span></h2>
+                </div>
+                <div class="swiper pongtube-swiper pongtube-container">
+                    <div class="swiper-wrapper">
+                        ${cards}
+                    </div>
+                    <div class="swiper-pagination"></div>
+                </div>
+             `;
+            this.initSwiper();
+            return;
+        }
+
         const contentHTML = Array.from(this.categories).map((category, index) => {
             const tabId = `tab-${this.sanitizeId(category)}`;
             const tags = this.extractTags(category);
             const tagFilterHTML = this.createTagFilterHTML(category, tags);
-            const cards = this.createCardsForCategory(category, null); // Initially no tag filter
+            const cards = this.createCardsForCategory(category, null);
 
             return `
                 <div class="tab-pane fade" id="${tabId}">
@@ -255,39 +393,11 @@ class CardLinkManager {
             `;
         }).join('');
 
-        // Special handling for YouTube Mode: Single Swiper Container ALL Content
-        if (this.currentMode === 'youtube') {
-            // For YouTube, we ignore tabs for now or treat "ALL" as the main view
-            // Aggregate all cards into one Swiper for the intuitive "Coverflow" feel.
-
-            const cards = this.createSwiperSlidesForYouTube();
-
-            contentHTML = `
-                <div class="col-12 text-center mb-4">
-                    <h2 class="fw-bold text-white">PongTube <span class="badge bg-danger">Shorts</span></h2>
-                </div>
-                <div class="swiper pongtube-swiper pongtube-container">
-                    <div class="swiper-wrapper">
-                        ${cards}
-                    </div>
-                    <div class="swiper-pagination"></div>
-                </div>
-             `;
-        }
-
         container.innerHTML = contentHTML;
         this.attachTagListeners();
-
-        // Initialize Swiper if we are in YouTube mode
-        if (this.currentMode === 'youtube') {
-            this.initSwiper();
-        }
     }
 
     initSwiper() {
-        // Destroy existing instance if any (though currently we re-render full HTML)
-
-        // Initialize Swiper with 3D Coverflow effect
         new Swiper('.pongtube-swiper', {
             effect: 'coverflow',
             grabCursor: true,
@@ -303,18 +413,15 @@ class CardLinkManager {
             pagination: {
                 el: '.swiper-pagination',
             },
-            // Initial slide to center
             initialSlide: 1,
         });
     }
 
     createTagFilterHTML(category, tags) {
         if (!tags || tags.length === 0) return '';
-
         const tagButtons = tags.map(tag =>
             `<button class="tag-btn" data-category="${category}" data-tag="${tag}">#${tag}</button>`
         ).join('');
-
         return `
             <div class="col-12">
                 <div class="tag-container">
@@ -330,13 +437,9 @@ class CardLinkManager {
             btn.addEventListener('click', (e) => {
                 const category = e.target.dataset.category;
                 const tag = e.target.dataset.tag;
-
-                // Update active state
                 const container = e.target.closest('.tag-container');
                 container.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
-
-                // Filter cards
                 const cardContainer = document.getElementById(`cards-${this.sanitizeId(category)}`);
                 if (cardContainer) {
                     cardContainer.innerHTML = this.createCardsForCategory(category, tag === 'ALL' ? null : tag);
@@ -347,43 +450,23 @@ class CardLinkManager {
 
     createCardsForCategory(category, filterTag) {
         let filtered = this.currentData.filter(row => (row[0] || '기타') === category);
-
         if (filterTag) {
             filtered = filtered.filter(row => {
                 const tags = row[5] ? row[5].split(',').map(t => t.trim()) : [];
                 return tags.includes(filterTag);
             });
         }
-
         if (filtered.length === 0) {
             return '<div class="col-12 text-center text-muted p-5">콘텐츠가 없습니다.</div>';
         }
-
         return filtered.map(row => {
             const title = row[1];
             const description = row[2];
             let linkUrl = row[3] || '#';
             const imageUrl = row[4];
-
-            // Fix Protocol
-            if (linkUrl !== '#' && !linkUrl.startsWith('http')) {
-                linkUrl = 'https://' + linkUrl;
-            }
-
+            if (linkUrl !== '#' && !linkUrl.startsWith('http')) linkUrl = 'https://' + linkUrl;
             const tags = row[5] ? row[5].split(',').map(t => `<span class="badge bg-light text-secondary border me-1">#${t.trim()}</span>`).join('') : '';
-
-            // Click Handler
-            let clickAction = '';
-            if (this.currentMode === 'youtube') {
-                const videoId = this.extractYouTubeId(linkUrl);
-                if (videoId) {
-                    clickAction = `window.cardManager.openVideoModal('${videoId}')`;
-                } else {
-                    clickAction = `window.open('${linkUrl}', '_blank')`;
-                }
-            } else {
-                clickAction = `window.open('${linkUrl}', '_blank')`;
-            }
+            const clickAction = `window.open('${linkUrl}', '_blank')`;
 
             return `
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
@@ -405,23 +488,16 @@ class CardLinkManager {
         if (this.currentData.length === 0) {
             return '<div class="swiper-slide text-white">콘텐츠가 없습니다.</div>';
         }
-
         return this.currentData.map(row => {
             const title = row[1];
             const description = row[2] || '';
             let linkUrl = row[3] || '#';
             const imageUrl = row[4];
-
-            // Fix Protocol
-            if (linkUrl !== '#' && !linkUrl.startsWith('http')) {
-                linkUrl = 'https://' + linkUrl;
-            }
-
+            if (linkUrl !== '#' && !linkUrl.startsWith('http')) linkUrl = 'https://' + linkUrl;
             const videoId = this.extractYouTubeId(linkUrl);
             const clickAction = videoId
                 ? `window.cardManager.openVideoModal('${videoId}')`
                 : `window.open('${linkUrl}', '_blank')`;
-
             return `
                 <div class="swiper-slide pongtube-slide" onclick="${clickAction}">
                     <img src="${imageUrl}" alt="${title}" onerror="this.src='/resource/default-image.png'">
@@ -438,12 +514,9 @@ class CardLinkManager {
         const modalEl = document.getElementById('videoModal');
         const player = document.getElementById('videoPlayer');
         if (modalEl && player) {
-            // rel=0 strictly limits related videos to the same channel
             player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
             const modal = new bootstrap.Modal(modalEl);
             modal.show();
-
-            // Stop video on close
             modalEl.addEventListener('hidden.bs.modal', () => {
                 player.src = '';
             });
@@ -452,17 +525,6 @@ class CardLinkManager {
 
     sanitizeId(str) {
         return str.replace(/[^a-zA-Z0-9가-힣]/g, '-').toLowerCase();
-    }
-
-    /**
-     * Extract YouTube ID from URL (Standard, Short, etc.)
-     */
-    extractYouTubeId(url) {
-        if (!url) return null;
-        // Updated Regex to support shorts
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
     }
 }
 
