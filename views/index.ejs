@@ -52,7 +52,7 @@
                                 <!-- 코딩앤플레이 초등 컨텐츠 -->
                                 <!-- 카드 1: 컴퓨터 기초활용 -->
                                 <div class="col-md-3 mb-4">
-                                    <div class="card h-100" onclick="handleCardClick(event, 'https://pong2.app/')">
+                                    <div class="card h-100" onclick="window.handlePong2Click(event)">
                                         <div class="card-img-box">
                                             <img src="/resource/computer_basic_400x300.webp" class="card-img-top"
                                                 alt="컴퓨터 기초활용">
@@ -60,7 +60,8 @@
                                         <div class="card-text-box">
                                             <h5 class="card-title">컴퓨터 기초활용</h5>
                                             <p class="card-text">컴퓨터 기초 지식을 배우고 실생활에서 활용하는 방법을 익혀보세요.</p>
-                                            <a href="https://pong2.app/" target="_blank" class="btn btn-primary">기초활용
+                                            <a href="#" onclick="window.handlePong2Click(event)"
+                                                class="btn btn-primary">기초활용
                                                 학습하기</a>
                                         </div>
                                     </div>
@@ -172,8 +173,7 @@
                                     <% } else { %>
                                         <!-- 기본 컨텐츠 (기존 코딩앤플레이와 동일) -->
                                         <div class="col-md-3 mb-4">
-                                            <div class="card h-100"
-                                                onclick="window.open('https://pong2.app/', '_blank')">
+                                            <div class="card h-100" onclick="window.handlePong2Click(event)">
                                                 <div class="card-img-box">
                                                     <img src="/resource/computer_basic_400x300.webp"
                                                         class="card-img-top" alt="컴퓨터 기초활용">
@@ -181,7 +181,7 @@
                                                 <div class="card-text-box">
                                                     <h5 class="card-title">컴퓨터 기초활용</h5>
                                                     <p class="card-text">컴퓨터 기초 지식을 배우고 실생활에서 활용하는 방법을 익혀보세요.</p>
-                                                    <a href="https://pong2.app/" target="_blank"
+                                                    <a href="#" onclick="window.handlePong2Click(event)"
                                                         class="btn btn-primary">기초활용 학습하기</a>
                                                 </div>
                                             </div>
@@ -428,6 +428,23 @@
                     }
                 });
             });
+
+            // Pong2 Fallback Logic
+            window.handlePong2Click = function (e) {
+                e.preventDefault();
+                const pong2Url = 'https://pong2.app/';
+
+                // Try to fetch (head request if possible, or just no-cors mode)
+                fetch(pong2Url, { mode: 'no-cors' })
+                    .then(() => {
+                        // Success (or at least reachable)
+                        window.open(pong2Url, '_blank');
+                    })
+                    .catch(() => {
+                        // Failed (Network error, DNS error, etc.)
+                        window.location.href = '/computer';
+                    });
+            };
         </script>
 </body>
 <%- include('partials/footer') %>
