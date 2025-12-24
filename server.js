@@ -487,7 +487,7 @@ app.use('/api/pong2', require('./routes/api/pong2Router')); // 🔥 Pong2 API
 
 // 🔥 스크래치 API 라우터 (8601 스크래치 GUI 계정 연동용)
 if (isMain || SERVICE_TYPE === 'scratch') {
-  app.use('/api', require('./routes/api/scratchRouter'));
+  app.use('/api/scratch', require('./routes/api/scratchRouter'));
 }
 // app.use('/api/entry-project', authenticateUser, require('./routes/api/entryProjectAPI')); // ❌ deprecated - 통합 projectRouter 사용
 

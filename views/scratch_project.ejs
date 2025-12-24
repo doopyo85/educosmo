@@ -35,10 +35,17 @@
                 <!-- 🔥 버튼 및 탭 통합 그룹 (Apple Style) -->
                 <div class="apple-toolbar-container">
                     <!-- 고정 버튼 (왼쪽) -->
-                    <div class="d-flex align-items-center">
-                        <a href="/scratch" class="apple-btn-primary" target="_blank">
+                    <div class="d-flex align-items-center gap-2">
+                        <button id="newProjectBtn" class="apple-btn-primary">
                             <i class="bi bi-plus-lg"></i> 새로 시작하기
+                        </button>
+                        <a href="https://scratch.mit.edu" target="_blank" class="apple-btn-primary">
+                            <i class="bi bi-box-arrow-up-right"></i> scratch.mit.edu
                         </a>
+                        <!-- 🔥 불러오기 버튼 추가 -->
+                        <button onclick="openScratchProjectLoadModal()" class="apple-btn-primary">
+                            <i class="bi bi-folder2-open"></i> 불러오기
+                        </button>
                         <div class="apple-divider mx-3"></div>
                     </div>
 
@@ -56,7 +63,60 @@
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="/js/card_project.js"></script>
+        <!-- 🔥 통합 저장소 모달 -->
+        <script src="/js/components/storage/ProjectStorageModal.js"></script>
 
+        <script>
+            /**
+             * 🔥 Scratch 프로젝트 불러오기 (ProjectStorageModal 사용)
+             */
+            function openScratchProjectLoadModal() {
+                const modal = new ProjectStorageModal({
+                    platform: 'scratch',
+                    onLoad: (data) => {
+                        console.log('📂 Scratch 프로젝트 선택됨:', data);
+                        if (data.projectId || data.fileId) {
+                            // 프로젝트 ID를 사용하여 Scratch 에디터 열기
+                            const projectId = data.projectId || data.fileId;
+                            const scratchEditorUrl = `/scratch?projectId=${projectId}`;
+                            window.open(scratchEditorUrl, '_blank');
+                        } else if (data.url) {
+                            // S3 URL을 사용하여 Scratch 에디터 열기
+                            const scratchEditorUrl = `/scratch?s3Url=${encodeURIComponent(data.url)}`;
+                            window.open(scratchEditorUrl, '_blank');
+                        } else {
+                            alert('프로젝트를 찾을 수 없습니다.');
+                        }
+                    }
+                });
+                modal.openLoadModal();
+            }
+
+            // 🔥 새로 시작하기 버튼
+            document.getElementById('newProjectBtn').addEventListener('click', function () {
+                console.log('🎯 새로 시작하기 버튼 클릭');
+
+                // Scratch 에디터로 이동 (자체 서버)
+                window.open('/scratch', '_blank');
+
+                // 학습 활동 기록
+                try {
+                    fetch('/learning/log', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'scratch_new_project',
+                            data: {
+                                userID: document.getElementById('user-id').value,
+                                timestamp: new Date().toISOString()
+                            }
+                        })
+                    });
+                } catch (error) {
+                    console.error('로그 기록 오류:', error);
+                }
+            });
+        </script>
 </body>
 
 </html>
