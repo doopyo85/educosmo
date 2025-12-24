@@ -430,20 +430,21 @@
             });
 
             // Pong2 Fallback Logic
+            // Pong2 Fallback Logic
             window.handlePong2Click = function (e) {
                 e.preventDefault();
                 const pong2Url = 'https://pong2.app/';
 
-                // Try to fetch (head request if possible, or just no-cors mode)
-                fetch(pong2Url, { mode: 'no-cors' })
-                    .then(() => {
-                        // Success (or at least reachable)
-                        window.open(pong2Url, '_blank');
-                    })
-                    .catch(() => {
-                        // Failed (Network error, DNS error, etc.)
-                        window.location.href = '/computer';
-                    });
+                // Optimistic Navigation: Directly open pong2.app
+                // The previous fetch check validation was causing false negatives due to CORS/Network policies.
+                // Since pong2.app is a static site with high availability, we prioritize direct access.
+                const newWin = window.open(pong2Url, '_blank');
+
+                // Backup: If popup is blocked, try redirecting current window (though _blank is preferred)
+                if (!newWin || newWin.closed || typeof newWin.closed == 'undefined') {
+                    // Fallback to local computer section if popup failed
+                    window.location.href = '/computer';
+                }
             };
         </script>
 </body>
