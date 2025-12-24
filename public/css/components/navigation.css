@@ -70,9 +70,12 @@
   /* Reduced padding for alignment */
   border-bottom: none;
   /* 회색 줄 제거 후 가상 요소로 대체 */
-  margin-bottom: 8px;
+  margin-bottom: 0px;
+  /* Reduced margin */
   position: relative;
   /* For the separator positioning */
+  flex-shrink: 0;
+  /* Prevent shrinking */
 }
 
 /* Header Separator Line (Open ends) */
@@ -118,10 +121,12 @@
   margin: 0;
   width: 100%;
   box-sizing: border-box;
-  flex: 1;
+  flex: 1 1 auto;
   /* Take remaining height */
   overflow-y: auto;
   /* Scroll independently */
+  min-height: 0;
+  /* Webkit flex scroll fix */
 }
 
 
@@ -440,4 +445,118 @@
   .nav-toggle-btn {
     display: none;
   }
+}
+
+
+/* ===================================
+   사이드바 하단 영역 (New)
+   =================================== */
+.sidebar-bottom {
+  padding: 16px 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background-color: rgba(249, 250, 251, 0.5);
+  /* Slightly different bg */
+  flex-shrink: 0;
+  /* Prevent shrinking */
+  margin-top: auto;
+  /* Push to bottom if space allows */
+}
+
+/* 아이콘 그룹 */
+.sidebar-icon-group {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 0 4px;
+  /* Ensure alignment */
+}
+
+.sidebar-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: white;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.sidebar-icon-btn:hover {
+  background: #f3f4f6;
+  color: #007aff;
+  border-color: rgba(0, 122, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* 로그인 섹션 */
+.sidebar-login-section {
+  width: 100%;
+}
+
+.sidebar-login-btn {
+  border-radius: 12px;
+  padding: 10px;
+  font-weight: 600;
+  background: #111827;
+  /* Dark theme login */
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.sidebar-login-btn:hover {
+  background: #374151;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 접힌 상태 하단 스타일 */
+.nav-container.collapsed .sidebar-bottom {
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nav-container.collapsed .sidebar-icon-group {
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+  width: 100%;
+  align-items: center;
+}
+
+.nav-container.collapsed .sidebar-icon-btn {
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+}
+
+.nav-container.collapsed .sidebar-login-btn {
+  width: 36px !important;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.nav-container.collapsed .sidebar-login-btn i {
+  margin-right: 0 !important;
+}
+
+/* 텍스트 숨기기 in collapsed mode */
+.nav-container.collapsed .sidebar-login-btn {
+  font-size: 0;
+}
+
+.nav-container.collapsed .sidebar-login-btn i {
+  font-size: 1.1rem;
 }
