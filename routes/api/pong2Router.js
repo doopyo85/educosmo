@@ -10,6 +10,48 @@ const { JWT } = require('../../config');
 router.use(pong2Auth);
 
 // ==========================================
+// DB Initialization (Auto-Migration)
+// ==========================================
+async function initPong2Tables() {
+    try {
+        await queryDatabase(`
+            CREATE TABLE IF NOT EXISTS BoardComments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                post_id INT NOT NULL,
+                parent_id INT DEFAULT NULL,
+                content TEXT NOT NULL,
+                author_name VARCHAR(255) NOT NULL,
+                author_id INT NOT NULL,
+                author_type VARCHAR(50) NOT NULL, 
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                is_deleted BOOLEAN DEFAULT 0,
+                FOREIGN KEY (post_id) REFERENCES board_posts(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('BoardComments table checked/created');
+
+        await queryDatabase(`
+            CREATE TABLE IF NOT EXISTS BoardReactions (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                user_type VARCHAR(50) NOT NULL,
+                reaction_type VARCHAR(20) NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_reaction (post_id, user_id, user_type, reaction_type),
+                FOREIGN KEY (post_id) REFERENCES board_posts(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('BoardReactions table checked/created');
+    } catch (error) {
+        console.error('Pong2 Table Init Error:', error);
+    }
+}
+// Run init
+initPong2Tables();
+
+
+// ==========================================
 // Public: Board List
 // ==========================================
 // ==========================================
@@ -17,43 +59,42 @@ router.use(pong2Auth);
 // ==========================================
 router.get('/boards', async (req, res) => {
     try {
-        const { type, limit } = req.query; // type can be 'community', 'teacher', 'portfolio'
+        const { type, limit, nestId } = req.query; // type can be 'community', 'teacher', 'portfolio'
 
         let query, params = [];
-
-        // Scope Logic
-        // 1. Teacher Board: Only 'TEACHER' scope
-        // 2. Community Board: 'COMMUNITY' scope (Free for all)
-        // 3. Portfolio: Managed in separate route, but if here, maybe 'PAID_ONLY'? 
-
         let targetScope = 'COMMUNITY'; // Default
+
         if (type === 'teacher') targetScope = 'TEACHER';
 
-        // Check Permissions for Teacher Board
-        // If requesting teacher board, check if user is authorized to READ?
-        // User said: "Teacher only read/write".
+        // Permission Check for Teacher Board
         if (targetScope === 'TEACHER') {
             if (!req.user || !['teacher', 'manager', 'admin'].includes(req.user.role)) {
-                // But wait, if it's "Teacher Board" maybe students can READ notices?
-                // User said "Teacher only read/write". Strict.
-                // If strict, return 403 or empty.
-                // Let's return error for clarity.
                 return res.status(403).json({ error: 'Access denied. Teachers only.' });
             }
         }
 
         query = `
-            SELECT b.id, b.title, b.author, b.created_at as created, b.views, b.author_type, b.board_scope
+            SELECT b.id, b.title, b.author, b.created_at as created, b.views, b.author_type, b.board_scope, b.category_id as nest_id
             FROM board_posts b
             WHERE b.is_public = 1 
             AND b.board_scope = ?
         `;
         params.push(targetScope);
 
+        // Nest Filtering
+        if (type === 'community' && nestId) {
+            query += ` AND b.category_id = ?`;
+            params.push(nestId);
+        }
+
         const limitVal = parseInt(limit) || 20;
         query += ` ORDER BY b.created_at DESC LIMIT ${limitVal}`;
 
         const posts = await queryDatabase(query, params);
+
+        // Enhance with comment/reaction counts? (Optional for list view performance)
+        // For now, keep it simple.
+
         res.json(posts);
     } catch (error) {
         console.error('Pong2 Board List Error:', error);
@@ -69,11 +110,8 @@ router.get('/boards/:id', async (req, res) => {
         const { id } = req.params;
 
         // 1. Fetch Post details
-        // We select ALL scopes here, but filter by ID.
-        // If it's a TEACHER post, should we check auth?
-        // For simplicity, fetch first, then check scope/permissions.
         const posts = await queryDatabase(`
-            SELECT b.id, b.title, b.content, b.author, b.created_at as created, b.views, b.author_type, b.board_scope, b.author_id
+            SELECT b.id, b.title, b.content, b.author, b.created_at as created, b.views, b.author_type, b.board_scope, b.author_id, b.category_id as nest_id
             FROM board_posts b
             WHERE b.id = ? 
             AND b.is_public = 1 
@@ -85,21 +123,54 @@ router.get('/boards/:id', async (req, res) => {
 
         const post = posts[0];
 
-        // Permission Check for Read
+        // Permission Check
         if (post.board_scope === 'TEACHER') {
             if (!req.user || !['teacher', 'manager', 'admin'].includes(req.user.role)) {
                 return res.status(403).json({ error: 'Access denied. Teachers only.' });
             }
         }
 
-        // 2. Increment Views (Async, don't wait)
+        // 2. Fetch Comments
+        const comments = await queryDatabase(`
+            SELECT id, parent_id, content, author_name, author_id, author_type, created_at
+            FROM BoardComments
+            WHERE post_id = ? AND is_deleted = 0
+            ORDER BY created_at ASC
+        `, [id]);
+
+        // 3. Fetch Reactions
+        // Aggregate by type
+        const reactionsRaw = await queryDatabase(`
+            SELECT reaction_type, COUNT(*) as count 
+            FROM BoardReactions 
+            WHERE post_id = ? 
+            GROUP BY reaction_type
+        `, [id]);
+
+        const reactions = {};
+        reactionsRaw.forEach(r => reactions[r.reaction_type] = r.count);
+
+        // Check if current user reacted (if logged in)
+        let myReactions = [];
+        if (req.user) {
+            const myRaw = await queryDatabase(`
+                SELECT reaction_type FROM BoardReactions
+                WHERE post_id = ? AND user_id = ? AND user_type = ?
+            `, [id, req.user.id, req.user.type || 'PONG2']); // Handle potentially undefined type
+            myReactions = myRaw.map(r => r.reaction_type);
+        }
+
+        // 4. Increment Views (Async)
         queryDatabase('UPDATE board_posts SET views = views + 1 WHERE id = ?', [id]).catch(err => {
             console.error('View increment error:', err);
         });
 
         res.json({
             success: true,
-            post
+            post,
+            comments,
+            reactions,
+            myReactions
         });
 
     } catch (error) {
@@ -115,7 +186,7 @@ router.get('/boards/:id', async (req, res) => {
 // ==========================================
 router.post('/boards', requireAuth, async (req, res) => {
     try {
-        const { title, content, board_type } = req.body; // board_type: 'COMMUNITY' or 'TEACHER'
+        const { title, content, board_type, nest_id } = req.body; // board_type: 'COMMUNITY' or 'TEACHER'
 
         // Validate basic input
         if (!title || !content) {
@@ -126,27 +197,18 @@ router.post('/boards', requireAuth, async (req, res) => {
         const authorId = req.user.id;
         const authorType = req.user.type; // 'PAID' or 'PONG2'
 
-        // Determine Scope
+        // Determine Scope AND Category
         let boardScope = 'COMMUNITY';
+        let categoryId = nest_id || 3; // Default to 3 (Game/Free) if not provided, but frontend should force it.
 
         if (board_type === 'TEACHER') {
-            // Check Permissions
             if (req.user.type === 'PAID' && ['teacher', 'manager', 'admin'].includes(req.user.role)) {
                 boardScope = 'TEACHER';
+                categoryId = 99; // Special ID for Teacher? Or just ignore category for Teacher board.
             } else {
                 return res.status(403).json({ error: 'Only teachers can write to Teacher Board' });
             }
-        } else {
-            // Default to COMMUNITY (Free Board)
-            // Everyone allowed (Paid and Pong2)
-            boardScope = 'COMMUNITY';
         }
-
-        // Category Mapping (Optional)
-        // Community = 3, Teacher = ?? (Using 3 for generic board, or maybe separate?)
-        // Let's stick to 3 for now or find a 'Teacher' category ID.
-        // Assuming 3 is "Free Board".
-        const categoryId = 3;
 
         const result = await queryDatabase(`
             INSERT INTO board_posts 
@@ -159,6 +221,71 @@ router.post('/boards', requireAuth, async (req, res) => {
     } catch (error) {
         console.error('Pong2 Create Post Error:', error);
         res.status(500).json({ error: 'Failed to create post' });
+    }
+});
+
+// ==========================================
+// New: Comments & Reactions
+// ==========================================
+
+// Add Comment
+router.post('/boards/:id/comments', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { content, parent_id } = req.body;
+        const authorName = req.user.nickname || req.user.name;
+
+        // Depth Check
+        if (parent_id) {
+            const parents = await queryDatabase('SELECT parent_id FROM BoardComments WHERE id = ?', [parent_id]);
+            if (parents.length > 0 && parents[0].parent_id) {
+                return res.status(400).json({ error: 'Max comment depth exceeded (Level 2 max)' });
+            }
+        }
+
+        await queryDatabase(`
+            INSERT INTO BoardComments (post_id, parent_id, content, author_name, author_id, author_type)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `, [id, parent_id || null, content, authorName, req.user.id, req.user.type]);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to add comment' });
+    }
+});
+
+// Toggle Reaction
+router.post('/boards/:id/react', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { type } = req.body; // 'like', 'laugh', 'heart'
+
+        if (!['like', 'laugh', 'heart'].includes(type)) {
+            return res.status(400).json({ error: 'Invalid reaction type' });
+        }
+
+        // Toggle: Check if exists
+        const existing = await queryDatabase(`
+            SELECT id FROM BoardReactions 
+            WHERE post_id = ? AND user_id = ? AND user_type = ? AND reaction_type = ?
+        `, [id, req.user.id, req.user.type, type]);
+
+        if (existing.length > 0) {
+            // Remove
+            await queryDatabase('DELETE FROM BoardReactions WHERE id = ?', [existing[0].id]);
+            res.json({ success: true, action: 'removed' });
+        } else {
+            // Add
+            await queryDatabase(`
+                INSERT INTO BoardReactions (post_id, user_id, user_type, reaction_type)
+                VALUES (?, ?, ?, ?)
+            `, [id, req.user.id, req.user.type, type]);
+            res.json({ success: true, action: 'added' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Reaction failed' });
     }
 });
 
