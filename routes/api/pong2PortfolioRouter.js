@@ -198,7 +198,7 @@ router.get('/user/:userId', async (req, res) => {
               AND is_deleted = 0
         `;
         
-        const queryParams = [userId];
+        const queryParams = [userInfo.id];  // userInfo.id 사용 (문자열 userID를 숫자 ID로 변환)
         
         // 플랫폼 필터
         if (platform && PLATFORM_CONFIG[platform]) {
@@ -239,9 +239,9 @@ router.get('/user/:userId', async (req, res) => {
                 },
                 projects: formattedProjects,
                 pagination: {
-                    limit: parseInt(limit),
-                    offset: parseInt(offset),
-                    hasMore: projects.length === parseInt(limit)
+                    limit: limitNum,
+                    offset: offsetNum,
+                    hasMore: projects.length === limitNum
                 }
             }
         });
