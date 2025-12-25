@@ -128,18 +128,6 @@ class ProjectStorageModal {
                     </div>
                     
                     <div class="modal-body psm-body">
-                        <!-- 🔥 상단 버튼 영역 -->
-                        <div id="topButtons-${this.platform}" class="psm-top-buttons" style="display: none;">
-                            <div class="d-flex justify-content-end gap-2">
-                                <button type="button" class="btn psm-btn-secondary" data-bs-dismiss="modal">
-                                    <i class="bi bi-x-lg"></i> 취소
-                                </button>
-                                <button type="button" class="btn psm-btn-primary" id="confirmBtnTop-${this.platform}">
-                                    <i class="bi bi-folder2-open"></i> <span id="confirmBtnTextTop-${this.platform}">불러오기</span>
-                                </button>
-                            </div>
-                        </div>
-                        
                         <!-- 저장 모드 UI -->
                         <div id="saveMode-${this.platform}" style="display: none;">
                             <div class="mb-3">
@@ -264,16 +252,9 @@ class ProjectStorageModal {
                 overflow-y: auto;
             }
             
-            /* 상단 버튼 영역 */
-            .psm-top-buttons {
-                margin-bottom: 16px;
-                padding-bottom: 16px;
-                border-bottom: 1px solid ${colors.border};
-            }
-            
-            /* 푸터 */
+            /* 푸터 - 밝은 회색 배경 */
             .psm-footer {
-                background: #ffffff;
+                background: #f5f5f5;
                 border-top: 1px solid ${colors.border};
                 padding: 12px 20px;
             }
@@ -549,11 +530,7 @@ class ProjectStorageModal {
             this._handleConfirm();
         });
         
-        // 확인 버튼 (상단)
-        document.getElementById(`confirmBtnTop-${platform}`)?.addEventListener('click', () => {
-            this._handleConfirm();
-        });
-        
+
         // 삭제 버튼
         document.getElementById(`deleteBtn-${platform}`)?.addEventListener('click', () => {
             this._handleDelete();
@@ -903,9 +880,7 @@ class ProjectStorageModal {
         document.getElementById(`confirmBtnText-${platform}`).textContent = '불러오기';
         document.getElementById(`deleteBtn-${platform}`).style.display = 'none';
         
-        // 상단 버튼 영역 표시
-        document.getElementById(`topButtons-${platform}`).style.display = 'block';
-        document.getElementById(`confirmBtnTextTop-${platform}`).textContent = '불러오기';
+
         
         // 프로젝트 목록 로드
         this._loadProjects();
@@ -936,8 +911,7 @@ class ProjectStorageModal {
         document.getElementById(`confirmBtnText-${platform}`).textContent = '저장';
         document.getElementById(`deleteBtn-${platform}`).style.display = 'none';
         
-        // 상단 버튼 영역 숨기기
-        document.getElementById(`topButtons-${platform}`).style.display = 'none';
+
         
         // 현재 프로젝트 제목 설정
         const titleInput = document.getElementById(`projectTitleInput-${platform}`);
