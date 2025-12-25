@@ -150,6 +150,7 @@ router.get('/users', async (req, res) => {
 // ============================================================
 // API 2: 특정 학생의 공개 프로젝트 목록
 // GET /api/pong2/portfolio/user/:userId
+// :userId는 숫자 ID 또는 userID(문자열) 모두 지원
 // ============================================================
 router.get('/user/:userId', async (req, res) => {
     try {
@@ -160,11 +161,23 @@ router.get('/user/:userId', async (req, res) => {
         const limitNum = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 100);
         const offsetNum = Math.max(parseInt(req.query.offset) || 0, 0);
         
-        // 사용자 정보 조회
-        const [userInfo] = await db.queryDatabase(
-            'SELECT id, userID, name, profile_image FROM Users WHERE id = ?',
-            [userId]
-        );
+        // 사용자 정보 조회 - 숫자 ID 또는 userID(문자열) 지원
+        let userInfo;
+        const isNumericId = /^\d+$/.test(userId);
+        
+        if (isNumericId) {
+            // 숫자 ID로 조회
+            [userInfo] = await db.queryDatabase(
+                'SELECT id, userID, name, profile_image FROM Users WHERE id = ?',
+                [userId]
+            );
+        } else {
+            // userID(문자열)로 조회
+            [userInfo] = await db.queryDatabase(
+                'SELECT id, userID, name, profile_image FROM Users WHERE userID = ?',
+                [userId]
+            );
+        }
         
         if (!userInfo) {
             return res.status(404).json({
