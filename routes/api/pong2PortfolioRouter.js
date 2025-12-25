@@ -113,10 +113,12 @@ router.get('/users', async (req, res) => {
         
         const users = await db.queryDatabase(query);
         
-        // 프로필 이미지 기본값 처리
+        // 프로필 이미지 기본값 처리 + 프론트엔드 형식으로 변환
         const formattedUsers = users.map(user => ({
             id: user.id,
-            userID: user.userID,
+            userId: user.userID,           // 소문자 d (card_link.js 요구사항)
+            userID: user.userID,           // 대문자 D (호환성)
+            userName: user.name || user.userID,
             name: user.name || user.userID,
             profileImage: user.profile_image || '/resource/profiles/default.webp',
             projectCount: user.project_count,
