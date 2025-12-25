@@ -93,6 +93,15 @@ try {
   console.error('❌ EntryDataApiRouter 로드 실패:', error);
 }
 
+// 🔥 Pong2 포트폴리오 API 라우터 연결 (공개 API - pong2.app용)
+try {
+  const pong2PortfolioRouter = require('./api/pong2PortfolioRouter');
+  router.use('/pong2/portfolio', pong2PortfolioRouter);
+  console.log('✅ Pong2PortfolioRouter 등록 완료');
+} catch (error) {
+  console.error('❌ Pong2PortfolioRouter 로드 실패:', error);
+}
+
 router.use('/s3', s3BrowserRouter);
 router.use('/game', gameScoreRouter);
 router.use('/jupyter', jupyterRouter);
