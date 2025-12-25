@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= targetUserId %>님의 갤러리 - 코딩앤플레이</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .gallery-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* 유저 프로필 헤더 */
+        .user-profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            color: white;
+        }
+        
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .profile-info h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .profile-info .user-id {
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+        
+        .profile-stats {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        /* 뒤로가기 */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #667eea;
+            text-decoration: none;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        
+        .back-link:hover {
+            color: #764ba2;
+        }
+        
+        /* 플랫폼 필터 */
+        .platform-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .platform-tab {
+            padding: 0.5rem 1.2rem;
+            border-radius: 20px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .platform-tab:hover {
+            border-color: #667eea;
+        }
+        
+        .platform-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        /* 프로젝트 카드 그리드 */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .project-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+        
+        .project-thumbnail {
+            width: 100%;
+            height: 160px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #adb5bd;
+            position: relative;
+        }
+        
+        .project-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .platform-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .platform-badge.scratch { background: #ff9a00; }
+        .platform-badge.entry { background: #00c4b4; }
+        .platform-badge.python { background: #306998; }
+        
+        .project-info {
+            padding: 1rem;
+        }
+        
+        .project-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .project-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .project-stats {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .project-stats span {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        /* 모달 */
+        .project-modal .modal-dialog {
+            max-width: 900px;
+        }
+        
+        .project-modal .modal-body {
+            padding: 0;
+        }
+        
+        .project-modal iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+        
+        .modal-project-info {
+            padding: 1rem 1.5rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* 로딩 */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .user-profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .profile-stats {
+                justify-content: center;
+            }
+            
+            .projects-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+    
+    <div class="gallery-container">
+        <a href="/gallery" class="back-link">
+            <i class="bi bi-arrow-left"></i> 갤러리로 돌아가기
+        </a>
+        
+        <!-- 유저 프로필 헤더 -->
+        <div class="user-profile-header" id="profileHeader">
+            <div class="profile-avatar" id="profileAvatar">
+                <div class="loading-spinner"></div>
+            </div>
+            <div class="profile-info">
+                <h1 id="profileName">로딩 중...</h1>
+                <div class="user-id" id="profileId">@<%= targetUserId %></div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statProjects">-</div>
+                        <div class="stat-label">작품</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statViews">-</div>
+                        <div class="stat-label">조회</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statLikes">-</div>
+                        <div class="stat-label">좋아요</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 플랫폼 필터 -->
+        <div class="platform-tabs">
+            <button class="platform-tab active" data-category="">전체</button>
+            <button class="platform-tab" data-category="scratch">스크래치</button>
+            <button class="platform-tab" data-category="entry">엔트리</button>
+            <button class="platform-tab" data-category="python">파이썬</button>
+        </div>
+        
+        <!-- 로딩 -->
+        <div class="loading-container" id="loading">
+            <div class="loading-spinner"></div>
+        </div>
+        
+        <!-- 프로젝트 그리드 -->
+        <div class="projects-grid" id="projectsGrid" style="display: none;"></div>
+        
+        <!-- 빈 상태 -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <i class="bi bi-folder2-open"></i>
+            <h4>공유된 작품이 없어요</h4>
+            <p>이 친구는 아직 작품을 공유하지 않았어요</p>
+        </div>
+    </div>
+    
+    <!-- 프로젝트 모달 -->
+    <div class="modal fade project-modal" id="projectModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">프로젝트</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <iframe id="projectFrame" src=""></iframe>
+                </div>
+                <div class="modal-project-info">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div id="modalStats"></div>
+                        <a id="modalOpenBtn" href="#" target="_blank" class="btn btn-primary btn-sm">
+                            <i class="bi bi-box-arrow-up-right"></i> 새 창에서 열기
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const targetUserId = '<%= targetUserId %>';
+        let currentCategory = '';
+        let projectModal;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            projectModal = new bootstrap.Modal(document.getElementById('projectModal'));
+            loadUserGallery();
+            setupFilters();
+        });
+        
+        function setupFilters() {
+            document.querySelectorAll('.platform-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentCategory = tab.dataset.category;
+                    loadUserGallery();
+                });
+            });
+        }
+        
+        async function loadUserGallery() {
+            const loading = document.getElementById('loading');
+            const grid = document.getElementById('projectsGrid');
+            const empty = document.getElementById('emptyState');
+            
+            loading.style.display = 'flex';
+            grid.style.display = 'none';
+            empty.style.display = 'none';
+            
+            try {
+                let url = `/api/scratch/gallery/user/${targetUserId}`;
+                if (currentCategory) {
+                    url += `?category=${currentCategory}`;
+                }
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderProfile(result.data.user, result.data.stats);
+                    
+                    if (result.data.projects.length > 0) {
+                        renderProjects(result.data.projects);
+                        grid.style.display = 'grid';
+                    } else {
+                        empty.style.display = 'block';
+                    }
+                } else {
+                    empty.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('갤러리 로드 오류:', error);
+                empty.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        function renderProfile(user, stats) {
+            const avatar = document.getElementById('profileAvatar');
+            const name = document.getElementById('profileName');
+            
+            if (user.profile_image) {
+                avatar.innerHTML = `<img src="${user.profile_image}" alt="${user.name || user.userID}" onerror="this.parentElement.textContent='${(user.name || user.userID).charAt(0).toUpperCase()}'">`;
+            } else {
+                avatar.textContent = (user.name || user.userID).charAt(0).toUpperCase();
+            }
+            
+            name.textContent = user.name || user.userID;
+            
+            document.getElementById('statProjects').textContent = formatNumber(stats.project_count || 0);
+            document.getElementById('statViews').textContent = formatNumber(stats.total_views || 0);
+            document.getElementById('statLikes').textContent = formatNumber(stats.total_likes || 0);
+        }
+        
+        function renderProjects(projects) {
+            const grid = document.getElementById('projectsGrid');
+            
+            grid.innerHTML = projects.map(project => {
+                const platformNames = {
+                    scratch: '스크래치',
+                    entry: '엔트리',
+                    python: '파이썬'
+                };
+                const platformIcons = {
+                    scratch: 'bi-puzzle-fill',
+                    entry: 'bi-box-fill',
+                    python: 'bi-code-slash'
+                };
+                
+                const thumbnail = project.thumbnail_url 
+                    ? `<img src="${project.thumbnail_url}" alt="${project.original_name}">`
+                    : `<i class="bi ${platformIcons[project.file_category] || 'bi-file-code'}"></i>`;
+                
+                return `
+                    <div class="project-card" onclick="openProject(${project.id}, '${project.original_name}', '${project.file_category}', '${project.s3_url || ''}')">
+                        <div class="project-thumbnail">
+                            ${thumbnail}
+                            <span class="platform-badge ${project.file_category}">${platformNames[project.file_category] || project.file_category}</span>
+                        </div>
+                        <div class="project-info">
+                            <div class="project-title">${escapeHtml(project.original_name)}</div>
+                            <div class="project-meta">
+                                <span>${formatDate(project.shared_at)}</span>
+                                <div class="project-stats">
+                                    <span><i class="bi bi-eye"></i> ${formatNumber(project.view_count || 0)}</span>
+                                    <span><i class="bi bi-heart"></i> ${formatNumber(project.like_count || 0)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        async function openProject(id, name, category, url) {
+            // 조회수 증가
+            fetch(`/api/scratch/gallery/${id}/view`, { method: 'POST' });
+            
+            document.getElementById('modalTitle').textContent = name;
+            
+            let embedUrl = '';
+            if (category === 'scratch' && url) {
+                embedUrl = `/scratch/?project_url=${encodeURIComponent(url)}`;
+            } else if (category === 'entry') {
+                embedUrl = `/entry_editor?fileId=${id}`;
+            } else if (category === 'python') {
+                embedUrl = `/python/view?fileId=${id}`;
+            }
+            
+            document.getElementById('projectFrame').src = embedUrl;
+            document.getElementById('modalOpenBtn').href = embedUrl;
+            document.getElementById('modalStats').innerHTML = `
+                <span class="text-muted"><i class="bi bi-eye"></i> 조회 중...</span>
+            `;
+            
+            projectModal.show();
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return '방금 전';
+            if (diff < 3600000) return Math.floor(diff / 60000) + '분 전';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '시간 전';
+            if (diff < 604800000) return Math.floor(diff / 86400000) + '일 전';
+            
+            return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+    
+    <%- include('partials/footer') %>
+</body>
+</html>

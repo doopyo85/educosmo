@@ -563,4 +563,296 @@ router.get('/template/:templateId', async (req, res) => {
     }
 });
 
+// =====================================================================
+// 갤러리 공유 API
+// =====================================================================
+
+/**
+ * 프로젝트를 갤러리에 공유/공유해제
+ * PUT /api/scratch/share/:fileId
+ */
+router.put('/share/:fileId', requireAuth, async (req, res) => {
+    try {
+        const { fileId } = req.params;
+        const userID = req.session.userID;
+
+        // DB user.id 조회
+        const user = await getUserDbId(userID);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
+        // 파일 소유권 확인
+        const [file] = await db.queryDatabase(
+            'SELECT * FROM UserFiles WHERE id = ? AND user_id = ? AND file_category = ? AND is_deleted = FALSE',
+            [fileId, user.id, 'scratch']
+        );
+
+        if (!file) {
+            return res.status(404).json({
+                success: false,
+                message: '프로젝트를 찾을 수 없거나 권한이 없습니다.'
+            });
+        }
+
+        // 공유 상태 토글
+        const currentPublic = file.is_public || false;
+        const newPublic = !currentPublic;
+
+        await db.queryDatabase(
+            `UPDATE UserFiles 
+             SET is_public = ?, 
+                 shared_at = ${newPublic ? 'NOW()' : 'NULL'}
+             WHERE id = ?`,
+            [newPublic, fileId]
+        );
+
+        console.log(`스크래치 프로젝트 공유 상태 변경: fileId=${fileId}, isPublic=${newPublic}`);
+
+        res.json({
+            success: true,
+            message: newPublic ? '갤러리에 공유되었습니다!' : '갤러리 공유가 해제되었습니다.',
+            isPublic: newPublic
+        });
+
+    } catch (error) {
+        console.error('갤러리 공유 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '공유 처리 중 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * 공개된 프로젝트 목록 조회 (갤러리용)
+ * GET /api/scratch/gallery
+ */
+router.get('/gallery', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+        const { userId, category } = req.query;
+
+        let whereClause = 'uf.is_public = TRUE AND uf.is_deleted = FALSE';
+        let params = [];
+
+        // 카테고리 필터 (scratch, entry, python)
+        if (category) {
+            whereClause += ' AND uf.file_category = ?';
+            params.push(category);
+        } else {
+            whereClause += " AND uf.file_category IN ('scratch', 'entry', 'python')";
+        }
+
+        // 특정 유저 필터
+        if (userId) {
+            whereClause += ' AND u.userID = ?';
+            params.push(userId);
+        }
+
+        // 공개된 프로젝트 조회
+        const projects = await db.queryDatabase(
+            `SELECT 
+                uf.id,
+                uf.original_name,
+                uf.s3_url,
+                uf.thumbnail_url,
+                uf.file_size,
+                uf.file_category,
+                uf.shared_at,
+                uf.view_count,
+                uf.like_count,
+                u.id as authorId,
+                u.userID,
+                u.name as userName,
+                u.profile_image
+             FROM UserFiles uf
+             JOIN Users u ON uf.user_id = u.id
+             WHERE ${whereClause}
+             ORDER BY uf.shared_at DESC
+             LIMIT ${limit} OFFSET ${offset}`,
+            params
+        );
+
+        // 전체 개수
+        const [countResult] = await db.queryDatabase(
+            `SELECT COUNT(*) as total 
+             FROM UserFiles uf
+             JOIN Users u ON uf.user_id = u.id
+             WHERE ${whereClause}`,
+            params
+        );
+
+        res.json({
+            success: true,
+            data: {
+                projects,
+                pagination: {
+                    page,
+                    limit,
+                    total: countResult.total,
+                    totalPages: Math.ceil(countResult.total / limit)
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('갤러리 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '갤러리 조회 중 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * 갤러리 프로젝트 조회수 증가
+ * POST /api/scratch/gallery/:fileId/view
+ */
+router.post('/gallery/:fileId/view', async (req, res) => {
+    try {
+        const { fileId } = req.params;
+
+        await db.queryDatabase(
+            'UPDATE UserFiles SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ? AND is_public = TRUE',
+            [fileId]
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * 갤러리에 공개한 유저 목록 (프로필 격자용)
+ * GET /api/scratch/gallery/users
+ */
+router.get('/gallery/users', async (req, res) => {
+    try {
+        const { category } = req.query;
+        
+        let categoryFilter = "uf.file_category IN ('scratch', 'entry', 'python')";
+        if (category) {
+            categoryFilter = 'uf.file_category = ?';
+        }
+
+        const users = await db.queryDatabase(
+            `SELECT 
+                u.id,
+                u.userID,
+                u.name,
+                u.profile_image,
+                COUNT(uf.id) as project_count,
+                SUM(COALESCE(uf.view_count, 0)) as total_views,
+                SUM(COALESCE(uf.like_count, 0)) as total_likes,
+                MAX(uf.shared_at) as last_shared
+             FROM Users u
+             JOIN UserFiles uf ON u.id = uf.user_id
+             WHERE uf.is_public = TRUE AND uf.is_deleted = FALSE AND ${categoryFilter}
+             GROUP BY u.id
+             ORDER BY last_shared DESC`,
+            category ? [category] : []
+        );
+
+        res.json({
+            success: true,
+            data: users
+        });
+
+    } catch (error) {
+        console.error('갤러리 유저 목록 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '유저 목록 조회 중 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * 특정 유저의 공개 프로젝트 조회
+ * GET /api/scratch/gallery/user/:userId
+ */
+router.get('/gallery/user/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { category } = req.query;
+
+        // 유저 정보 조회
+        const [targetUser] = await db.queryDatabase(
+            'SELECT id, userID, name, profile_image FROM Users WHERE userID = ?',
+            [userId]
+        );
+
+        if (!targetUser) {
+            return res.status(404).json({
+                success: false,
+                message: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
+        let categoryFilter = "uf.file_category IN ('scratch', 'entry', 'python')";
+        let params = [targetUser.id];
+        
+        if (category) {
+            categoryFilter = 'uf.file_category = ?';
+            params.push(category);
+        }
+
+        // 해당 유저의 공개 프로젝트 조회
+        const projects = await db.queryDatabase(
+            `SELECT 
+                uf.id,
+                uf.original_name,
+                uf.s3_url,
+                uf.thumbnail_url,
+                uf.file_size,
+                uf.file_category,
+                uf.shared_at,
+                uf.view_count,
+                uf.like_count
+             FROM UserFiles uf
+             WHERE uf.user_id = ? AND uf.is_public = TRUE AND uf.is_deleted = FALSE AND ${categoryFilter}
+             ORDER BY uf.shared_at DESC`,
+            params
+        );
+
+        // 통계
+        const [stats] = await db.queryDatabase(
+            `SELECT 
+                COUNT(*) as project_count,
+                SUM(COALESCE(view_count, 0)) as total_views,
+                SUM(COALESCE(like_count, 0)) as total_likes
+             FROM UserFiles
+             WHERE user_id = ? AND is_public = TRUE AND is_deleted = FALSE`,
+            [targetUser.id]
+        );
+
+        res.json({
+            success: true,
+            data: {
+                user: targetUser,
+                projects,
+                stats
+            }
+        });
+
+    } catch (error) {
+        console.error('유저 갤러리 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '유저 갤러리 조회 중 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;
