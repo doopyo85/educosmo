@@ -1,0 +1,140 @@
+Sheet Names: ['디지털인재양성테이블', '로드맵', '교재별CT(주니어)', '교재별CT(EPL,파이썬)', '코스모에듀벤처']
+
+--- Sheet: 디지털인재양성테이블 ---
+      💡 가치   🏠 기숙사        ❓ 핵심 질문         🎯 학습 태도         📘 전공 계층         🧬 적성 (MBTI) 🎓 관련 전공 학과     💼 관련 직업
+0     🎮 재미   크리에이터  무엇이 나에겐 재밌는가?        - 표현에 도전      - 인터랙티브 아트  ENFP / INFP / ESFP      디자인학과   콘텐츠 크리에이터
+1      NaN     NaN            NaN  - 실패를 두려워하지 않음     - 스토리텔링 콘텐츠                 NaN    디지털미디어학  UX/UI 디자이너
+2      NaN     NaN            NaN      - 감정 기반 몰입  - 게임/애니메이션 디자인                 NaN     애니메이션과      게임 기획자
+3      NaN     NaN            NaN             NaN         - UX/UI                 NaN   콘텐츠디자인학과       영상 PD
+4      NaN     NaN            NaN             NaN             NaN                 NaN        NaN    인터랙티브 작가
+5   ⚙️ 자동화    엔지니어  무엇을 어떻게 압축할까?         - 원리 탐구       - 피지컬 컴퓨팅  ISTJ / INTP / ESTJ      컴퓨터공학  소프트웨어 엔지니어
+6      NaN     NaN            NaN     - 체계적 문제 해결         - 로봇 제어                 NaN       전자공학      로봇 개발자
+7      NaN     NaN            NaN        - 구조적 사고        - 백엔드 개발                 NaN       로봇공학   하드웨어 엔지니어
+8      NaN     NaN            NaN             NaN       - 알고리즘 설계                 NaN    소프트웨어학과    시스템 아키텍트
+9     🌐 연결  데이터분석가  무엇과 무엇을 연결할까?        - 관찰과 해석       - 데이터 시각화  INTJ / INFJ / ISTP    데이터사이언스     데이터 분석가
+10     NaN     NaN            NaN         - 맥락 이해       - 인사이트 도출                 NaN       AI학과      AI 리서처
+11     NaN     NaN            NaN        - 실생활 적용      - AI 기반 분석                 NaN        통계학      UX 리서처
+12     NaN     NaN            NaN             NaN  - 사회 이슈 데이터 해석                 NaN       산업공학     마케팅 전략가
+13     NaN     NaN            NaN             NaN             NaN                 NaN        사회학   정책/사회 연구가
+--- Sheet: 로드맵 ---
+   코딩앤플레이 커리큘럼 로드맵 (1+3 시스템)       Unnamed: 1     Unnamed: 2   Unnamed: 3  Unnamed: 4   Unnamed: 5   Unnamed: 6      Unnamed: 7      Unnamed: 8 Unnamed: 9 Unnamed: 10
+0                        NaN              NaN            NaN          NaN         NaN          NaN          NaN             NaN             NaN        NaN         NaN
+1                         구분              NaN             유아           초1          초2           초3           초4              초5              초6         중등          고등
+2                        NaN              NaN           CT30         CT50         NaN         CT70          NaN            CT90             NaN     CT120+         NaN
+3                    CT\nAIT             프리스쿨           프리스쿨          NaN         NaN          NaN          NaN             NaN             NaN        NaN         NaN
+4                        NaN           프리스쿨AI         프리스쿨AI       프리스쿨AI         NaN          NaN          NaN             NaN             NaN        NaN         NaN
+5                        NaN             주니어1            NaN         주니어1        주니어1          NaN          NaN             NaN             NaN        NaN         NaN
+6                        NaN             주니어2            NaN          NaN        주니어2         주니어2          NaN             NaN             NaN        NaN         NaN
+7                        NaN              CPE            NaN          NaN         NaN          CPE          CPE             CPE             NaN        NaN         NaN
+8                        NaN              CPA            NaN          NaN         NaN          CPA          CPA             CPA             CPA        CPA         NaN
+9                        NaN    CPS-CPD(단종예정)            NaN          NaN         NaN          CPS          CPS             CPS             CPS        CPS         NaN
+10                       NaN             앱인벤터            NaN          NaN         NaN          NaN          NaN            앱인벤터            앱인벤터       앱인벤터        앱인벤터
+11                       NaN              파이썬            NaN          NaN         NaN          NaN          NaN             파이썬             파이썬   파이썬 프로젝트      파이썬 AI
+12                       NaN              TCP            NaN        TCP4급       TCP3급     TCP3급/2급        TCP2급             NaN             NaN        NaN         NaN
+13                    LAB 코딩            컴퓨터활용            NaN        마우스연습    타자연습(한글)          NaN     타자연습(영어)             오피스             오피스        NaN         NaN
+14                       NaN            코그리AR            NaN        코그리JR       코그리JR        코그리JR          NaN             NaN             NaN        NaN         NaN
+15                       NaN             코드모스   코드모스\n(키즈동화)  코드모스\n(에듀팜)  코드모스\n(행성)   코드모스\n(행성)   코드모스\n(행성)  코드모스\n(온라인 져지)  코드모스\n(온라인 져지)        NaN         NaN
+16                       NaN             코드몽키            NaN          NaN         NaN          NaN          NaN          코딩어드벤처          코딩어드벤처        파이썬         NaN
+17                       NaN              COS            NaN          NaN         NaN        COS4급        COS3급           COS2급           COS1급    COS PRO     COS PRO
+18                    스토리 코딩            나이스코딩  나이스\n(스크래치jr)     나이스(알버트)    나이스(알버트)  나이스\n(스크래치)  나이스\n(스크래치)             NaN             NaN        NaN         NaN
+19                       NaN  VRWARE/ TOONING          스토리빌더        스토리빌더       스토리빌더     VR 에듀 스쿨     VR 에듀 스쿨         TOONING         TOONING        NaN         NaN
+20                       NaN     1book Series            NaN          NaN         NaN    유튜브 크리에이터          NaN         메타버스ZEP            챗GPT        NaN         NaN
+21                    메이커 코딩             아이키로            NaN      아이키로1,2     아이키로3,4          NaN          NaN             NaN             NaN        NaN         NaN
+22                       NaN             네오쏘코            NaN          NaN         NaN         네오쏘코         네오쏘코            네오쏘코             NaN        NaN         NaN
+23                       NaN             아두이노            NaN          NaN         NaN          NaN          NaN             NaN            할로코드       할로코드        할로코드
+--- Sheet: 교재별CT(주니어) ---
+          레벨    호       C.T                                                   개념  S(과학)      T(기술)      E(공학)      A(예술)      M(수학)
+0   주니어\n1레벨   1호     자료 수집                        문제 해결을 위해 필요한 자료를 모으는 것을 말해요.    NaN        NaN        NaN        NaN  J1-1, ①언플
+1        NaN  NaN     순차 나열                  문제 해결하는 방법을 간단한 정렬 구조로 나열하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+2        NaN  NaN        측정               다양한 도구를 이용해 범위를 계산한 후 결과를 도출하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+3        NaN  NaN      (기초)                                                  NaN    NaN        NaN        NaN        NaN        NaN
+4        NaN  NaN    신호 보내기         주어진 알고리즘을 동일하게 만들어 실행하거나 일부 수정하여 프로그래밍하는 것을     NaN        NaN        NaN        NaN        NaN
+5        NaN  NaN      (기초)                                                 말해요.    NaN        NaN        NaN        NaN        NaN
+6   주니어\n1레벨   2호     자료 분석            문제 해결에 중요한 요소를 추출하여 문제를 단순화할 수 있는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+7        NaN  NaN      알고리즘     문제를 파악하여 문제 해결 과정을 그림이나 순서도, 의사 코드로 나타내는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+8        NaN  NaN       반복문          자료를 분석해 반복 구조를 인지하고 알고리즘을 설계해서 실행하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+9        NaN  NaN      (패턴)                                                  NaN    NaN        NaN        NaN        NaN        NaN
+10       NaN  NaN     소리 재생  문제 해결 절차에 필요한 여러 가지 알고리즘 표현법 중에 소리로 프로그래밍하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+11  주니어\n1레벨   3호     문제 분해        복잡하거나 어려운 문제를 해결 가능한 단위로 작게 나누어 하나씩 해결하는 과정을     NaN        NaN        NaN        NaN        NaN
+12       NaN  NaN       NaN                                                 말해요.    NaN        NaN        NaN        NaN        NaN
+13       NaN  NaN    순차적 실행                  작성된 명령을 정해진 순서에 따라 차례로 실행하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+14       NaN  NaN      공간의        공간 내에서 특정 사물을 기준으로 위치와 방향을 인식해 프로그래밍하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+15       NaN  NaN     기초 개념                                                  NaN    NaN        NaN        NaN        NaN        NaN
+16       NaN  NaN    신호 보내기    주어진 알고리즘을 동일하게 만들어 실행하거나, 일부 수정하여 프로그래밍하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+17       NaN  NaN      (기초)                                                  NaN    NaN        NaN        NaN        NaN        NaN
+18  주니어\n1레벨   4호  문제 탐색 활동            제시된 문제를 이해하고 분석하여 다양한 해결 방법을 모색하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+19       NaN  NaN   반복문(패턴)          자료를 분석해 반복 구조를 인지하고 알고리즘을 설계해서 실행하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+20       NaN  NaN     소리 활용      제시된 소리 또는 직접 입력한 다양한 소리를 상황에 맞게 프로그래밍하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+21       NaN  NaN       디버깅           시뮬레이션 후 오류를 인지하여 바른 알고리즘의 형태로 수정하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+22       NaN  NaN   (오류 수정)                                                  NaN    NaN        NaN        NaN        NaN        NaN
+23  주니어\n1레벨   5호       도형의         기본 도형들의 차이점을 알고 변별하여 이와 관련지어 프로그래밍하는 것을 말해요.    NaN        NaN  J1-5, ③언플        NaN  J1-5, ①언플
+24       NaN  NaN     기초 개념                                                  NaN    NaN        NaN        NaN        NaN        NaN
+25       NaN  NaN     문제 분해    복잡하거나 어려운 문제를 해결 가능한 단위로 작게 나누어 하나씩 해결하는 과정을 말해요.    NaN        NaN        NaN        NaN        NaN
+26       NaN  NaN    신호 보내기          제시된 신호를 확장하거나 다양한 방법으로 변형하여 프로그래밍하는 것을 말해요.    NaN        NaN        NaN        NaN        NaN
+27       NaN  NaN      (응용)                                                  NaN    NaN        NaN        NaN        NaN        NaN
+28       NaN  NaN       이벤트             프로그램이 반응하도록 사용자가 생성하는 동작 또는 소리의 발생을 말해요.    NaN        NaN        NaN        NaN        NaN
+29  주니어\n1레벨   6호     자료 분석           문제 해결에 중요한 요소를 추출하여 문제를 단 순화할 수 있는 것을 말해요.    NaN  J1-6, ②워크        NaN  J1-6, ④언플        NaN
+--- Sheet: 교재별CT(EPL,파이썬) ---
+    Unnamed: 0     Unnamed: 1    Unnamed: 2 Unnamed: 3  Unnamed: 4 Unnamed: 5       Unnamed: 6  Unnamed: 7 Unnamed: 8 Unnamed: 9 Unnamed: 10
+0          NaN  ■ CPS 목차 및 내용           NaN        NaN         NaN        NaN              NaN         NaN        NaN        NaN         NaN
+1          NaN              호            제목         차시         NaN      C.T요소  Training Points         NaN        NaN        NaN         NaN
+2          NaN             1호      Beginner        1차시         NaN        이벤트       스프라이트 움직이기         NaN        NaN        NaN         NaN
+3          NaN            NaN           NaN        2차시         NaN     순차적 실행   배경과 스프라이트 표현하기         NaN        NaN        NaN         NaN
+4          NaN            NaN           NaN        3차시         NaN    X, Y 좌표       애니메이션 표현하기         NaN        NaN        NaN         NaN
+5          NaN            NaN           NaN        4차시         NaN      소리 활용           소리재생하기         NaN        NaN        NaN         NaN
+6          NaN             2호  Intermediate        1차시         NaN         감지          반복 실행하기         NaN        NaN        NaN         NaN
+7          NaN            NaN           NaN        2차시         NaN         반복          조건 설정하기         NaN        NaN        NaN         NaN
+8          NaN            NaN           NaN        3차시         NaN     신호 보내기          신호 주고받기         NaN        NaN        NaN         NaN
+9          NaN            NaN           NaN        4차시         NaN         조건           펜 사용하기         NaN        NaN        NaN         NaN
+10         NaN             3호  Intermediate        1차시         NaN        레이어           변수 만들기         NaN        NaN        NaN         NaN
+11         NaN            NaN           NaN        2차시         NaN         변수        무작위로 선택하기         NaN        NaN        NaN         NaN
+12         NaN            NaN           NaN        3차시         NaN         함수       추가 블록 정의하기         NaN        NaN        NaN         NaN
+13         NaN            NaN           NaN        4차시         NaN      무작위 수          시간 측정하기         NaN        NaN        NaN         NaN
+14         NaN             4호      Advanced        1차시         NaN       연주기능        연주기능 활용하기         NaN        NaN        NaN         NaN
+15         NaN            NaN           NaN        2차시         NaN         복제             복제하기         NaN        NaN        NaN         NaN
+16         NaN            NaN           NaN        3차시         NaN         픽셀      픽셀 탐색과 색 설정         NaN        NaN        NaN         NaN
+17         NaN            NaN           NaN        4차시         NaN        이진수      이진수 개념 이용하기         NaN        NaN        NaN         NaN
+18         NaN             5호      Advanced        1차시         NaN        리스트          리스트 만들기         NaN        NaN        NaN         NaN
+19         NaN            NaN           NaN        2차시         NaN        리스트          이야기 만들기         NaN        NaN        NaN         NaN
+20         NaN            NaN           NaN        3차시         NaN        추상화       픽셀 색 켜고 끄기         NaN        NaN        NaN         NaN
+21         NaN            NaN           NaN        4차시         NaN        추상화     아이콘과 문자 나타내기         NaN        NaN        NaN         NaN
+22         NaN             6호        Expert        1차시         NaN         연산            수와 연산         NaN        NaN        NaN         NaN
+23         NaN            NaN           NaN        2차시         NaN      문제 분해            과학 실험         NaN        NaN        NaN         NaN
+24         NaN            NaN           NaN        3차시         NaN      결과 예측          생활 속 코딩         NaN        NaN        NaN         NaN
+25         NaN            NaN           NaN        4차시         NaN      결과 예측          프로그램 설계         NaN        NaN        NaN         NaN
+26         NaN            NaN           NaN        NaN         NaN        NaN              NaN         NaN        NaN        NaN         NaN
+27         NaN            NaN           NaN        NaN         NaN        NaN              NaN         NaN        NaN        NaN         NaN
+28         NaN  ■ CPE 목차 및 내용           NaN        NaN         NaN        NaN              NaN         NaN        NaN        NaN         NaN
+29         NaN              호            제목         차시         NaN      C.T요소  Training Points         NaN       네오쏘코        차시명          유형
+--- Sheet: 코스모에듀벤처 ---
+    Unnamed: 0     Unnamed: 1         Unnamed: 2                                   Unnamed: 3                                                                    Unnamed: 4
+0          NaN  ■ CTR파이썬 프로젝트                NaN                                          NaN                                                                           NaN
+1          NaN             차시              세부 과제                                     사용 함수/문법                                                                         학습 목표
+2          NaN    포켓몬배틀: 게임시작          1. 타이틀 출력                                      print()          화면에 “포켓몬 배틀”이라는 제목을 테두리와 함께 출력하세요. / 사용 문법: print() 함수, 문자열 반복 연산자 *
+3          NaN            NaN         2. 이름 입력받기                                      input()                                         사용자에게 이름을 입력받으세요. / 사용 문법: input() 함수
+4          NaN            NaN       3. 인사 메시지 출력                      print(), f-string, 딕셔너리                                  입력한 이름을 활용하여 환영 인사를 출력하세요. / 사용 문법: f-string
+5          NaN            NaN     4. 포켓몬 리스트 만들기                                 print(), 리스트                                       포켓몬 이름을 리스트에 담아보세요. / 사용 문법: 리스트 자료형 []
+6          NaN            NaN          5. 리스트 조작                                      print()             리스트를 정렬하고, 마지막 요소를 다시 추가해보세요. / 사용 문법: sort(), remove(), append()
+7          NaN            NaN   6~8. 스타팅 포켓몬 고르기        딕셔너리, f-string, print(), input(), 리스트  리스트에서 스타팅 포켓몬을 출력하고 사용자로부터 입력받으세요. / 사용 문법: 인덱스 접근, input(), int(), f-string
+8          NaN            NaN  9~11. 포켓몬 능력치와 함수  딕셔너리, f-string, 함수 정의, print(), 리스트, if 조건문                         딕셔너리와 함수를 사용해 포켓몬 정보를 출력하세요. / 사용 문법: 딕셔너리 {}, 함수 def
+9          NaN            NaN   12~13. 배틀 시작 딜레이                    print(), time 모듈, for 반복문                            시간 지연을 주며 배틀을 준비하세요. / 사용 문법: import, time.sleep()
+10         NaN            NaN   14~15. 야생 포켓몬 등장                           print(), random 모듈                랜덤으로 야생 포켓몬을 등장시켜보세요. / 사용 문법: import random, randint(), 함수 호출
+11         NaN             차시              세부 과제                                     사용 함수/문법                                                                         학습 목표
+12         NaN  포켓몬배틀: \n배틀로직        1. 체력 변수 설정                                          NaN                      사용자의 포켓몬과 야생 포켓몬의 체력을 변수에 저장하세요. / 사용 문법: 변수 생성, 딕셔너리 접근
+13         NaN            NaN           2. 체력 출력                      print(), f-string, 딕셔너리                           현재 양쪽 포켓몬의 체력을 출력하세요. / 사용 문법: print() 함수, f-string
+14         NaN            NaN        3. 공격 시작 대기                                      input()                                [Enter] 키 입력으로 공격 시작 대기 처리 / 사용 문법: input() 함수
+15         NaN            NaN        4. 상대 체력 감소                                          NaN                    사용자의 포켓몬 공격력만큼 야생 포켓몬의 hp를 감소시키세요. / 사용 문법: 딕셔너리 접근, 변수 연산
+16         NaN            NaN        5. 체력 감소 출력                      print(), f-string, 딕셔너리                                          체력 감소 결과를 출력하세요. / 사용 문법: print() 함수
+17         NaN            NaN         6. 체력 0 확인                              print(), if 조건문                          야생 포켓몬의 체력이 0 이하이면 전투 종료 메시지를 출력하세요. / 사용 문법: 조건문 if
+18         NaN            NaN          7. 공격 딜레이                             print(), time 모듈                                      딜레이를 넣어 몰입감을 높이세요. / 사용 문법: time.sleep()
+19         NaN            NaN    8. 반격 공격력 랜덤 생성           print(), f-string, 딕셔너리, random 모듈                         야생 포켓몬이 랜덤한 공격력을 생성하도록 하세요. / 사용 문법: random.randint()
+20         NaN            NaN       9. 사용자 체력 감소                      print(), f-string, 딕셔너리                                       랜덤 공격력만큼 사용자 체력을 감소시키세요. / 사용 문법: 변수 연산
+21         NaN            NaN      10. 사용자 패배 조건                              print(), if 조건문                                체력이 0 이하가 되면 게임 종료 메시지를 출력하세요. / 사용 문법: 조건문 if
+22         NaN            NaN          11. 전투 반복                                    while 반복문                                 서로 체력이 남아 있는 동안 전투를 반복하세요. / 사용 문법: while 반복문
+23         NaN            NaN         12. 함수로 분리                                   리스트, 함수 정의                                           공격 로직을 함수로 만드세요. / 사용 문법: 함수 정의 def
+24         NaN            NaN    13. 전투 루프 종료 조건                                       if 조건문                                    체력이 0 이하일 때 반복을 종료하세요. / 사용 문법: 조건문, break
+25         NaN            NaN     14. break 문 사용                                          NaN                                            승패가 결정되면 반복을 중단하세요. / 사용 문법: break
+26         NaN            NaN          15. 결과 출력                              print(), if 조건문                                          승자 또는 패자의 결과를 출력하세요. / 사용 문법: 조건문 if
+27         NaN             차시              세부 과제                                     사용 함수/문법                                                                         학습 목표
+28         NaN     단어 맞추기: 행맨      1. 단어 리스트 만들기                               random 모듈, 리스트              정답이 될 단어들을 미리 리스트로 만들어 놓습니다. / 출력 예: 단어 리스트에 16개의 나라가 포함되어 있습니다.
+29         NaN            NaN   2. 정답 단어 랜덤 선택하기                   random 모듈, random.choice()                            리스트 중에서 하나의 단어를 무작위로 선택합니다. / 출력 예: 선택된 단어는: korea
