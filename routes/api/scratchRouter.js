@@ -568,6 +568,52 @@ router.get('/template/:templateId', async (req, res) => {
 // =====================================================================
 
 /**
+ * 프로젝트 공개 상태 조회
+ * GET /api/scratch/project/:fileId/status
+ */
+router.get('/project/:fileId/status', requireAuth, async (req, res) => {
+    try {
+        const { fileId } = req.params;
+        const userID = req.session.userID;
+
+        // DB user.id 조회
+        const user = await getUserDbId(userID);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
+        // 파일 조회 (소유권 확인)
+        const [file] = await db.queryDatabase(
+            'SELECT id, is_public FROM UserFiles WHERE id = ? AND user_id = ? AND file_category = ? AND is_deleted = FALSE',
+            [fileId, user.id, 'scratch']
+        );
+
+        if (!file) {
+            return res.status(404).json({
+                success: false,
+                message: '프로젝트를 찾을 수 없거나 권한이 없습니다.'
+            });
+        }
+
+        res.json({
+            success: true,
+            isPublic: file.is_public || false
+        });
+
+    } catch (error) {
+        console.error('프로젝트 상태 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '상태 조회 중 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
+/**
  * 프로젝트를 갤러리에 공유/공유해제
  * PUT /api/scratch/share/:fileId
  */
