@@ -85,7 +85,9 @@ const PLATFORM_CONFIG = {
 // ============================================================
 router.get('/users', async (req, res) => {
     try {
-        const { limit = 50, offset = 0 } = req.query;
+        // 파라미터 정수 변환 (LIMIT/OFFSET은 직접 삽입)
+        const limitNum = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 100);
+        const offsetNum = Math.max(parseInt(req.query.offset) || 0, 0);
         
         // 공개 프로젝트가 있는 학생만 조회
         const query = `
@@ -106,10 +108,10 @@ router.get('/users', async (req, res) => {
             GROUP BY u.id
             HAVING project_count > 0
             ORDER BY latest_project_at DESC
-            LIMIT ? OFFSET ?
+            LIMIT ${limitNum} OFFSET ${offsetNum}
         `;
         
-        const users = await db.queryDatabase(query, [parseInt(limit), parseInt(offset)]);
+        const users = await db.queryDatabase(query);
         
         // 프로필 이미지 기본값 처리
         const formattedUsers = users.map(user => ({
@@ -127,9 +129,9 @@ router.get('/users', async (req, res) => {
             success: true,
             data: formattedUsers,
             pagination: {
-                limit: parseInt(limit),
-                offset: parseInt(offset),
-                hasMore: users.length === parseInt(limit)
+                limit: limitNum,
+                offset: offsetNum,
+                hasMore: users.length === limitNum
             }
         });
         
@@ -150,7 +152,11 @@ router.get('/users', async (req, res) => {
 router.get('/user/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const { limit = 20, offset = 0, platform } = req.query;
+        const { platform } = req.query;
+        
+        // 파라미터 정수 변환
+        const limitNum = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 100);
+        const offsetNum = Math.max(parseInt(req.query.offset) || 0, 0);
         
         // 사용자 정보 조회
         const [userInfo] = await db.queryDatabase(
@@ -185,8 +191,7 @@ router.get('/user/:userId', async (req, res) => {
             queryParams.push(platform);
         }
         
-        projectQuery += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-        queryParams.push(parseInt(limit), parseInt(offset));
+        projectQuery += ` ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
         
         const projects = await db.queryDatabase(projectQuery, queryParams);
         
