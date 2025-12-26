@@ -327,12 +327,12 @@ router.get('/api/load-project', authenticateUser, async (req, res) => {
 });
 
 // =============================================================================
-// 🔥 프로젝트 저장 API (quotaChecker 연동)
+// 🔥 프로젝트 저장 API (병렬 저장 모델: UserFiles + ProjectSubmissions)
 // =============================================================================
 
 router.post('/api/save-project', authenticateUser, async (req, res) => {
     try {
-        const { projectData, projectName, userID: clientUserID, centerID: clientCenterID, isUpdate, projectId, saveType, thumbnailBase64 } = req.body;
+        const { projectData, projectName, userID: clientUserID, centerID: clientCenterID, isUpdate, projectId, userFileId, saveType, thumbnailBase64 } = req.body;
         const userID = clientUserID || req.session.userID;
         
         if (!projectData) {
@@ -345,6 +345,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
         const db = require('../lib_login/db');
         const quotaChecker = require('../lib_storage/quotaChecker');
         const S3Manager = require('../lib_storage/s3Manager');
+        const parallelSave = require('../lib_storage/parallelSave');
         const s3Manager = new S3Manager();
 
         // 1. 사용자 DB ID 조회
@@ -364,35 +365,11 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
         const centerId = clientCenterID || user.centerID || req.session.centerID;
         const actualSaveType = saveType || 'projects';
 
-        // 🔥 자동저장 특별 처리: 기존 autosave 레코드가 있으면 UPDATE로 전환
-        let effectiveIsUpdate = isUpdate;
-        let effectiveProjectId = projectId;
-
-        if (actualSaveType === 'autosave') {
-            // 해당 사용자의 기존 autosave 레코드 검색
-            const existingAutosave = await db.queryDatabase(
-                `SELECT id, file_size_kb FROM ProjectSubmissions 
-                 WHERE user_id = ? AND platform = 'entry' AND save_type = 'autosave'
-                   AND (is_deleted = FALSE OR is_deleted IS NULL)
-                 ORDER BY updated_at DESC LIMIT 1`,
-                [userId]
-            );
-            
-            if (existingAutosave.length > 0) {
-                // 기존 autosave가 있으면 UPDATE 모드로 전환
-                effectiveIsUpdate = true;
-                effectiveProjectId = existingAutosave[0].id;
-                console.log(`🔄 [자동저장] 기존 autosave 발견 (ID: ${effectiveProjectId}), UPDATE 모드로 전환`);
-            } else {
-                console.log(`➕ [자동저장] 기존 autosave 없음, 새로 생성`);
-            }
-        }
-
         console.log('💾 [Entry 저장] 요청:', {
             userID,
             projectName,
-            isUpdate: effectiveIsUpdate,
-            projectId: effectiveProjectId,
+            isUpdate,
+            projectId,
             saveType: actualSaveType
         });
 
@@ -403,34 +380,35 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 
         console.log(`📊 파일 크기: ${(fileSize / 1024).toFixed(2)} KB`);
 
-        // 3. 🔥 용량 체크 (quotaChecker)
-        let oldFileSize = 0;
-        if (effectiveIsUpdate && effectiveProjectId) {
-            // 덮어쓰기인 경우 기존 파일 크기 조회
-            const [oldProject] = await db.queryDatabase(
-                'SELECT file_size_kb FROM ProjectSubmissions WHERE id = ? AND user_id = ?',
-                [effectiveProjectId, userId]
-            );
-            if (oldProject) {
-                oldFileSize = (oldProject.file_size_kb || 0) * 1024;
+        // 3. 🔥 용량 체크 (자동저장 제외, projects/submitted만)
+        if (actualSaveType !== 'autosave') {
+            let oldFileSize = 0;
+            if (isUpdate && projectId) {
+                const [oldProject] = await db.queryDatabase(
+                    'SELECT file_size_kb FROM ProjectSubmissions WHERE id = ? AND user_id = ?',
+                    [projectId, userId]
+                );
+                if (oldProject) {
+                    oldFileSize = (oldProject.file_size_kb || 0) * 1024;
+                }
             }
-        }
 
-        const netFileSize = fileSize - oldFileSize; // 순증가분만 체크
-        
-        if (netFileSize > 0) {
-            const canSave = await quotaChecker.canUpload(userId, centerId, netFileSize);
-            if (!canSave.allowed) {
-                return res.status(413).json({
-                    success: false,
-                    error: 'QUOTA_EXCEEDED',
-                    message: canSave.message || '저장 공간이 부족합니다.',
-                    details: {
-                        currentUsage: canSave.currentUsage,
-                        limit: canSave.limit,
-                        required: netFileSize
-                    }
-                });
+            const netFileSize = fileSize - oldFileSize;
+            
+            if (netFileSize > 0) {
+                const canSave = await quotaChecker.canUpload(userId, centerId, netFileSize);
+                if (!canSave.allowed) {
+                    return res.status(413).json({
+                        success: false,
+                        error: 'QUOTA_EXCEEDED',
+                        message: canSave.message || '저장 공간이 부족합니다.',
+                        details: {
+                            currentUsage: canSave.currentUsage,
+                            limit: canSave.limit,
+                            required: netFileSize
+                        }
+                    });
+                }
             }
         }
 
@@ -447,109 +425,70 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
         
         console.log(`✅ S3 업로드 완료: ${s3Url}`);
 
-        // 🔥 5-1. 썸네일 업로드 (있는 경우)
+        // 5-1. 썸네일 업로드 (있는 경우)
         let thumbnailUrl = null;
         if (thumbnailBase64) {
             try {
-                // Base64 데이터에서 헤더 제거 (data:image/png;base64, 부분)
                 const base64Data = thumbnailBase64.replace(/^data:image\/\w+;base64,/, '');
                 const thumbnailBuffer = Buffer.from(base64Data, 'base64');
-                
-                // 썸네일 S3 키 생성
                 const thumbKey = `users/${userID}/entry/${actualSaveType}/thumbnails/${safeName}_${timestamp}.png`;
-                
-                // S3에 썸네일 업로드
                 thumbnailUrl = await s3Manager.uploadProject(thumbKey, thumbnailBuffer, 'image/png');
-                
                 console.log(`📸 썸네일 업로드 완료: ${thumbnailUrl}`);
             } catch (thumbError) {
                 console.warn(`⚠️ 썸네일 업로드 실패 (무시하고 계속):`, thumbError.message);
-                // 썸네일 실패해도 저장은 계속 진행
             }
         }
 
-        // 6. DB 저장 (ProjectSubmissions)
-        let dbProjectId;
+        // 6. 프로젝트 분석
+        const analysis = parallelSave.analyzeEntryProject(projectData);
+
+        // 7. 🔥 병렬 저장 (UserFiles + ProjectSubmissions)
+        let result;
         
-        // 프로젝트 분석 (블록 수, 오브젝트 수 등)
-        const blocksCount = projectData.objects?.reduce((sum, obj) => {
-            return sum + (obj.script?.length || 0);
-        }, 0) || 0;
-        const spritesCount = projectData.objects?.length || 0;
-
-        if (effectiveIsUpdate && effectiveProjectId) {
-            // 덮어쓰기: 기존 레코드 업데이트 (🔥 썸네일 포함)
-            await db.queryDatabase(`
-                UPDATE ProjectSubmissions 
-                SET project_name = ?,
-                    s3_url = ?,
-                    s3_key = ?,
-                    file_size_kb = ?,
-                    blocks_count = ?,
-                    sprites_count = ?,
-                    thumbnail_url = COALESCE(?, thumbnail_url),
-                    updated_at = NOW()
-                WHERE id = ? AND user_id = ?
-            `, [
-                projectName || 'Untitled',
-                s3Url,
-                s3Key,
-                Math.ceil(fileSize / 1024),
-                blocksCount,
-                spritesCount,
-                thumbnailUrl,
-                effectiveProjectId,
-                userId
-            ]);
-            
-            dbProjectId = effectiveProjectId;
-            console.log(`✅ DB 업데이트 완료: ID ${dbProjectId}`);
-
-            // 용량 차이 업데이트
-            if (netFileSize !== 0) {
-                if (netFileSize > 0) {
-                    await quotaChecker.increaseUsage(userId, centerId, netFileSize, 'entry');
-                } else {
-                    await quotaChecker.decreaseUsage(userId, centerId, Math.abs(netFileSize), 'entry');
-                }
-            }
-            
-        } else {
-            // 새 저장: INSERT (🔥 썸네일 포함)
-            const insertResult = await db.queryDatabase(`
-                INSERT INTO ProjectSubmissions 
-                (user_id, center_id, platform, project_name, save_type, s3_url, s3_key, file_size_kb, blocks_count, sprites_count, thumbnail_url, created_at, updated_at)
-                VALUES (?, ?, 'entry', ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-            `, [
+        if (isUpdate && projectId) {
+            // 덮어쓰기
+            result = await parallelSave.updateProjectParallel({
                 userId,
                 centerId,
-                projectName || 'Untitled',
-                actualSaveType,
+                platform: 'entry',
+                projectId,
+                userFileId,
+                projectName: projectName || 'Untitled',
                 s3Url,
                 s3Key,
-                Math.ceil(fileSize / 1024),
-                blocksCount,
-                spritesCount,
-                thumbnailUrl
-            ]);
-            
-            dbProjectId = insertResult.insertId;
-            console.log(`✅ DB INSERT 완료: ID ${dbProjectId}`);
-
-            // 🔥 용량 증가
-            await quotaChecker.increaseUsage(userId, centerId, fileSize, 'entry');
+                fileSize,
+                mimeType: 'application/json',
+                thumbnailUrl,
+                analysis
+            });
+        } else {
+            // 새 저장 (autosave 포함)
+            result = await parallelSave.saveProjectParallel({
+                userId,
+                centerId,
+                platform: 'entry',
+                projectName: projectName || 'Untitled',
+                saveType: actualSaveType,
+                s3Url,
+                s3Key,
+                fileSize,
+                mimeType: 'application/json',
+                thumbnailUrl,
+                analysis
+            });
         }
 
         res.json({
             success: true,
-            projectId: dbProjectId,
+            projectId: result.submissionId || result.projectId,
+            userFileId: result.userFileId || null,
             fileName: fileName,
             s3Url: s3Url,
             s3Key: s3Key,
             fileSize: fileSize,
             fileSizeKb: Math.ceil(fileSize / 1024),
-            thumbnailUrl: thumbnailUrl,  // 🔥 썸네일 URL 추가
-            message: effectiveIsUpdate ? '프로젝트가 업데이트되었습니다.' : '프로젝트가 저장되었습니다.'
+            thumbnailUrl: thumbnailUrl,
+            message: isUpdate ? '프로젝트가 업데이트되었습니다.' : '프로젝트가 저장되었습니다.'
         });
 
     } catch (error) {
@@ -562,24 +501,13 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 });
 
 // =============================================================================
-// 🔥 프로젝트 삭제 API (소프트 삭제 지원 + quotaChecker 용량 반환)
+// 🔥 프로젝트 삭제 API (병렬 삭제 모델: UserFiles + ProjectSubmissions)
 // =============================================================================
-
-// S3 URL에서 키 추출 헬퍼 함수
-function extractS3KeyFromUrl(s3Url) {
-    if (!s3Url) return null;
-    try {
-        const url = new URL(s3Url);
-        return url.pathname.substring(1); // 앞의 / 제거
-    } catch (e) {
-        return s3Url;
-    }
-}
 
 router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
     try {
         const { projectId } = req.params;
-        const { permanent } = req.query; // ?permanent=true 면 하드 삭제
+        const { permanent, userFileId } = req.query;
         const userID = req.session.userID;
         
         if (!projectId) {
@@ -592,9 +520,7 @@ router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
         console.log(`🗑️ [Entry 삭제] 요청: projectId=${projectId}, userID=${userID}, permanent=${permanent}`);
 
         const db = require('../lib_login/db');
-        const quotaChecker = require('../lib_storage/quotaChecker');
-        const S3Manager = require('../lib_storage/s3Manager');
-        const s3Manager = new S3Manager();
+        const parallelSave = require('../lib_storage/parallelSave');
 
         // 1. 사용자 DB ID 조회
         const [user] = await db.queryDatabase(
@@ -612,80 +538,25 @@ router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
         const userId = user.id;
         const centerId = user.centerID;
 
-        // 2. 프로젝트 정보 조회 (삭제되지 않은 항목만)
-        const [project] = await db.queryDatabase(
-            `SELECT id, s3_key, s3_url, file_size_kb 
-             FROM ProjectSubmissions 
-             WHERE id = ? AND user_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)`,
-            [projectId, userId]
-        );
+        // 2. 🔥 병렬 삭제 (UserFiles + ProjectSubmissions)
+        const result = await parallelSave.deleteProjectParallel({
+            userId,
+            centerId,
+            platform: 'entry',
+            projectId: parseInt(projectId),
+            userFileId: userFileId ? parseInt(userFileId) : null,
+            permanent: permanent === 'true'
+        });
 
-        if (!project) {
-            return res.status(404).json({ 
-                success: false, 
-                error: '프로젝트를 찾을 수 없거나 삭제 권한이 없습니다.' 
-            });
-        }
-
-        const fileSize = (project.file_size_kb || 0) * 1024;
-
-        if (permanent === 'true') {
-            // 🔥 하드 삭제: S3 파일 + DB 레코드 완전 삭제
-            const s3KeyToDelete = project.s3_key || extractS3KeyFromUrl(project.s3_url);
-            if (s3KeyToDelete) {
-                try {
-                    await s3Manager.deleteProject(s3KeyToDelete);
-                    console.log(`✅ S3 파일 삭제: ${s3KeyToDelete}`);
-                } catch (s3Error) {
-                    console.warn(`⚠️ S3 파일 삭제 실패 (무시하고 계속):`, s3Error.message);
-                }
-            }
-
-            await db.queryDatabase(
-                'DELETE FROM ProjectSubmissions WHERE id = ? AND user_id = ?',
-                [projectId, userId]
-            );
-            
-            console.log(`✅ DB 하드 삭제 완료: ID ${projectId}`);
-
-            if (fileSize > 0) {
-                await quotaChecker.decreaseUsage(userId, centerId, fileSize, 'entry');
-                console.log(`💾 용량 반환: ${(fileSize / 1024).toFixed(2)} KB`);
-            }
-
-            res.json({
-                success: true,
-                message: '프로젝트가 완전히 삭제되었습니다.',
-                deletedId: projectId,
-                freedSpace: fileSize,
-                deleteType: 'permanent'
-            });
-
-        } else {
-            // 🔥 소프트 삭제: is_deleted = TRUE, deleted_at = NOW()
-            await db.queryDatabase(
-                `UPDATE ProjectSubmissions 
-                 SET is_deleted = TRUE, deleted_at = NOW() 
-                 WHERE id = ? AND user_id = ?`,
-                [projectId, userId]
-            );
-            
-            console.log(`✅ DB 소프트 삭제 완료: ID ${projectId}`);
-
-            // 용량 반환 (소프트 삭제에서도 용량은 반환)
-            if (fileSize > 0) {
-                await quotaChecker.decreaseUsage(userId, centerId, fileSize, 'entry');
-                console.log(`💾 용량 반환: ${(fileSize / 1024).toFixed(2)} KB`);
-            }
-
-            res.json({
-                success: true,
-                message: '프로젝트가 휴지통으로 이동되었습니다.',
-                deletedId: projectId,
-                freedSpace: fileSize,
-                deleteType: 'soft'
-            });
-        }
+        res.json({
+            success: true,
+            message: result.deleteType === 'permanent' 
+                ? '프로젝트가 완전히 삭제되었습니다.' 
+                : '프로젝트가 휴지통으로 이동되었습니다.',
+            deletedId: projectId,
+            freedSpace: result.freedSpace,
+            deleteType: result.deleteType
+        });
 
     } catch (error) {
         console.error('❌ [Entry 삭제] 오류:', error);
