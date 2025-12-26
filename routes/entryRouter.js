@@ -1291,6 +1291,371 @@ router.get('/api/center-usage', authenticateUser, async (req, res) => {
 });
 
 // =============================================================================
+// 🌐 갤러리 공유 기능 API
+// =============================================================================
+
+// 📌 공유 상태 조회
+router.get('/api/project/:projectId/status', authenticateUser, async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const userID = req.session.userID;
+        
+        const db = require('../lib_login/db');
+        
+        // 사용자 DB ID 조회
+        const [user] = await db.queryDatabase(
+            'SELECT id FROM Users WHERE userID = ?', 
+            [userID]
+        );
+        
+        if (!user) {
+            return res.status(404).json({ success: false, error: '사용자를 찾을 수 없습니다.' });
+        }
+        
+        // 프로젝트 조회 (본인 프로젝트만)
+        const [project] = await db.queryDatabase(
+            `SELECT id, is_public, shared_at, view_count, like_count 
+             FROM ProjectSubmissions 
+             WHERE id = ? AND user_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)`,
+            [projectId, user.id]
+        );
+        
+        if (!project) {
+            return res.status(404).json({ success: false, error: '프로젝트를 찾을 수 없습니다.' });
+        }
+        
+        res.json({
+            success: true,
+            projectId: project.id,
+            isPublic: project.is_public || false,
+            sharedAt: project.shared_at,
+            viewCount: project.view_count || 0,
+            likeCount: project.like_count || 0
+        });
+        
+    } catch (error) {
+        console.error('❌ [공유 상태 조회] 오류:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 📌 공유 토글 (공개/비공개 전환)
+router.put('/api/share/:projectId', authenticateUser, async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const userID = req.session.userID;
+        
+        const db = require('../lib_login/db');
+        
+        // 사용자 DB ID 조회
+        const [user] = await db.queryDatabase(
+            'SELECT id FROM Users WHERE userID = ?', 
+            [userID]
+        );
+        
+        if (!user) {
+            return res.status(404).json({ success: false, error: '사용자를 찾을 수 없습니다.' });
+        }
+        
+        // 프로젝트 조회 (본인 프로젝트만)
+        const [project] = await db.queryDatabase(
+            `SELECT id, is_public, project_name 
+             FROM ProjectSubmissions 
+             WHERE id = ? AND user_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)`,
+            [projectId, user.id]
+        );
+        
+        if (!project) {
+            return res.status(404).json({ success: false, error: '프로젝트를 찾을 수 없습니다.' });
+        }
+        
+        // 현재 상태 반전
+        const currentPublic = project.is_public || false;
+        const newPublic = !currentPublic;
+        
+        // 상태 업데이트
+        await db.queryDatabase(
+            `UPDATE ProjectSubmissions 
+             SET is_public = ?, 
+                 shared_at = ${newPublic ? 'NOW()' : 'NULL'}
+             WHERE id = ?`,
+            [newPublic, projectId]
+        );
+        
+        console.log(`🌐 [갤러리 공유] ${newPublic ? '공개' : '비공개'} 전환: ${project.project_name} (ID: ${projectId})`);
+        
+        res.json({
+            success: true,
+            message: newPublic ? '갤러리에 공개되었습니다.' : '갤러리에서 비공개로 전환되었습니다.',
+            projectId: projectId,
+            isPublic: newPublic,
+            sharedAt: newPublic ? new Date().toISOString() : null
+        });
+        
+    } catch (error) {
+        console.error('❌ [공유 토글] 오류:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 📌 갤러리 목록 조회 (공개 프로젝트)
+router.get('/api/gallery', async (req, res) => {
+    try {
+        const { page = 1, limit = 20, userId, category, sort = 'recent' } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+        
+        const db = require('../lib_login/db');
+        
+        // 기본 쿼리 - Entry 플랫폼의 공개 프로젝트만
+        let whereClause = `ps.platform = 'entry' AND ps.is_public = TRUE AND (ps.is_deleted = FALSE OR ps.is_deleted IS NULL)`;
+        const params = [];
+        
+        // userId 필터 (특정 사용자의 프로젝트만)
+        if (userId) {
+            whereClause += ` AND u.userID = ?`;
+            params.push(userId);
+        }
+        
+        // save_type 필터 (autosave 제외, projects만)
+        whereClause += ` AND ps.save_type = 'projects'`;
+        
+        // 정렬 옵션
+        let orderClause = 'ps.shared_at DESC'; // 기본: 최신 공유순
+        if (sort === 'views') {
+            orderClause = 'ps.view_count DESC, ps.shared_at DESC';
+        } else if (sort === 'likes') {
+            orderClause = 'ps.like_count DESC, ps.shared_at DESC';
+        }
+        
+        // 전체 개수 조회
+        const countQuery = `
+            SELECT COUNT(*) as total 
+            FROM ProjectSubmissions ps
+            JOIN Users u ON ps.user_id = u.id
+            WHERE ${whereClause}
+        `;
+        const [countResult] = await db.queryDatabase(countQuery, params);
+        const totalCount = countResult?.total || 0;
+        
+        // 프로젝트 목록 조회
+        const listQuery = `
+            SELECT 
+                ps.id,
+                ps.project_name,
+                ps.thumbnail_url,
+                ps.s3_url,
+                ps.file_size_kb,
+                ps.blocks_count,
+                ps.sprites_count,
+                ps.view_count,
+                ps.like_count,
+                ps.shared_at,
+                ps.created_at,
+                u.userID as author_id,
+                u.name as author_name,
+                u.profile_image as author_profile
+            FROM ProjectSubmissions ps
+            JOIN Users u ON ps.user_id = u.id
+            WHERE ${whereClause}
+            ORDER BY ${orderClause}
+            LIMIT ? OFFSET ?
+        `;
+        
+        const projects = await db.queryDatabase(listQuery, [...params, parseInt(limit), offset]);
+        
+        res.json({
+            success: true,
+            data: {
+                projects: projects.map(p => ({
+                    id: p.id,
+                    projectName: p.project_name,
+                    thumbnailUrl: p.thumbnail_url,
+                    s3Url: p.s3_url,
+                    fileSizeKb: p.file_size_kb,
+                    blocksCount: p.blocks_count,
+                    spritesCount: p.sprites_count,
+                    viewCount: p.view_count || 0,
+                    likeCount: p.like_count || 0,
+                    sharedAt: p.shared_at,
+                    createdAt: p.created_at,
+                    author: {
+                        id: p.author_id,
+                        name: p.author_name || p.author_id,
+                        profileImage: p.author_profile
+                    }
+                })),
+                pagination: {
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    total: totalCount,
+                    totalPages: Math.ceil(totalCount / parseInt(limit))
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ [갤러리 목록] 오류:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 📌 조회수 증가
+router.post('/api/gallery/:projectId/view', async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        
+        const db = require('../lib_login/db');
+        
+        // 공개 프로젝트인지 확인 후 조회수 증가
+        const result = await db.queryDatabase(
+            `UPDATE ProjectSubmissions 
+             SET view_count = COALESCE(view_count, 0) + 1
+             WHERE id = ? AND is_public = TRUE AND (is_deleted = FALSE OR is_deleted IS NULL)`,
+            [projectId]
+        );
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, error: '프로젝트를 찾을 수 없습니다.' });
+        }
+        
+        res.json({ success: true, message: '조회수가 증가했습니다.' });
+        
+    } catch (error) {
+        console.error('❌ [조회수 증가] 오류:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 📌 갤러리 공개 유저 목록
+router.get('/api/gallery/users', async (req, res) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+        
+        const db = require('../lib_login/db');
+        
+        // 공개 프로젝트가 있는 유저 목록
+        const query = `
+            SELECT 
+                u.userID,
+                u.name,
+                u.profile_image,
+                COUNT(ps.id) as project_count,
+                SUM(COALESCE(ps.view_count, 0)) as total_views,
+                MAX(ps.shared_at) as last_shared
+            FROM Users u
+            JOIN ProjectSubmissions ps ON u.id = ps.user_id
+            WHERE ps.platform = 'entry' 
+              AND ps.is_public = TRUE 
+              AND ps.save_type = 'projects'
+              AND (ps.is_deleted = FALSE OR ps.is_deleted IS NULL)
+            GROUP BY u.id, u.userID, u.name, u.profile_image
+            HAVING project_count > 0
+            ORDER BY total_views DESC, project_count DESC
+            LIMIT ? OFFSET ?
+        `;
+        
+        const users = await db.queryDatabase(query, [parseInt(limit), offset]);
+        
+        res.json({
+            success: true,
+            data: {
+                users: users.map(u => ({
+                    userId: u.userID,
+                    name: u.name || u.userID,
+                    profileImage: u.profile_image,
+                    projectCount: u.project_count,
+                    totalViews: u.total_views || 0,
+                    lastShared: u.last_shared
+                }))
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ [갤러리 유저 목록] 오류:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 📌 특정 유저의 공개 프로젝트 목록
+router.get('/api/gallery/user/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { page = 1, limit = 20 } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+        
+        const db = require('../lib_login/db');
+        
+        // 유저 정보 조회
+        const [user] = await db.queryDatabase(
+            'SELECT id, userID, name, profile_image FROM Users WHERE userID = ?',
+            [userId]
+        );
+        
+        if (!user) {
+            return res.status(404).json({ success: false, error: '사용자를 찾을 수 없습니다.' });
+        }
+        
+        // 해당 유저의 공개 프로젝트 목록
+        const projects = await db.queryDatabase(`
+            SELECT 
+                id, project_name, thumbnail_url, s3_url, file_size_kb,
+                blocks_count, sprites_count, view_count, like_count,
+                shared_at, created_at
+            FROM ProjectSubmissions
+            WHERE user_id = ? 
+              AND platform = 'entry' 
+              AND is_public = TRUE 
+              AND save_type = 'projects'
+              AND (is_deleted = FALSE OR is_deleted IS NULL)
+            ORDER BY shared_at DESC
+            LIMIT ? OFFSET ?
+        `, [user.id, parseInt(limit), offset]);
+        
+        // 총 개수
+        const [countResult] = await db.queryDatabase(`
+            SELECT COUNT(*) as total FROM ProjectSubmissions
+            WHERE user_id = ? AND platform = 'entry' AND is_public = TRUE 
+              AND save_type = 'projects' AND (is_deleted = FALSE OR is_deleted IS NULL)
+        `, [user.id]);
+        
+        res.json({
+            success: true,
+            data: {
+                user: {
+                    userId: user.userID,
+                    name: user.name || user.userID,
+                    profileImage: user.profile_image
+                },
+                projects: projects.map(p => ({
+                    id: p.id,
+                    projectName: p.project_name,
+                    thumbnailUrl: p.thumbnail_url,
+                    s3Url: p.s3_url,
+                    fileSizeKb: p.file_size_kb,
+                    blocksCount: p.blocks_count,
+                    spritesCount: p.sprites_count,
+                    viewCount: p.view_count || 0,
+                    likeCount: p.like_count || 0,
+                    sharedAt: p.shared_at,
+                    createdAt: p.created_at
+                })),
+                pagination: {
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    total: countResult?.total || 0,
+                    totalPages: Math.ceil((countResult?.total || 0) / parseInt(limit))
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ [유저 갤러리] 오류:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// =============================================================================
 // 📊 사용자 저장공간 사용량 요약 (본인용)
 // =============================================================================
 

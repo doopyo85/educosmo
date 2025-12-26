@@ -88,7 +88,9 @@ router.get('/boards', async (req, res) => {
         }
 
         const limitVal = parseInt(limit) || 20;
-        query += ` ORDER BY b.created_at DESC LIMIT ${limitVal}`;
+        const offsetVal = parseInt(req.query.offset) || 0;
+
+        query += ` ORDER BY b.created_at DESC LIMIT ${limitVal} OFFSET ${offsetVal}`;
 
         const posts = await queryDatabase(query, params);
 
