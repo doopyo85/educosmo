@@ -3,8 +3,9 @@ const bcrypt = require('bcrypt');
 const router = express.Router();
 const template = require('./template.js');
 const { google } = require('googleapis');
+const jwt = require('jsonwebtoken'); // 🔥 JWT 추가
 const { queryDatabase } = require('./db');
-const { BASE_URL, API_ENDPOINTS, Roles } = require('../config');
+const { BASE_URL, API_ENDPOINTS, Roles, JWT } = require('../config'); // 🔥 JWT Config 추가
 
 // 구글 시트 데이터 가져오기
 async function fetchCentersFromSheet() {
@@ -19,28 +20,28 @@ async function fetchCentersFromSheet() {
 // 로그인 페이지 렌더링
 router.get('/login', (req, res) => {
     const title = '로그인';
-    
+
     // 🔥 서비스 타입 확인 (도메인 기반)
     const hostname = req.get('host') || '';
     const isCosmoedu = hostname.includes('cosmoedu');
-    
+
     // 🔥 서비스별 로고 선택
     const logoSrc = isCosmoedu ? '/resource/rocket.webp' : '/resource/logo.png';
     const logoAlt = isCosmoedu ? '코스모에듀 로고' : '코딩앤플레이 로고';
-    
+
     // 세션에서 로그인 메시지 가져오기
     const loginMessage = req.session.loginMessage || '';
-    
+
     // 메시지 표시 후 세션에서 삭제
     delete req.session.loginMessage;
-    
+
     // 알림 메시지 HTML (메시지가 있을 경우에만 표시)
-    const alertHTML = loginMessage ? 
-      `<div class="alert" style="background-color: #fff3cd; color: #856404; padding: 12px; border-radius: 4px; margin-bottom: 15px; text-align: center;">
+    const alertHTML = loginMessage ?
+        `<div class="alert" style="background-color: #fff3cd; color: #856404; padding: 12px; border-radius: 4px; margin-bottom: 15px; text-align: center;">
          ${loginMessage}
          <button type="button" onclick="this.parentElement.style.display='none'" style="background: none; border: none; float: right; font-weight: bold; cursor: pointer;">&times;</button>
        </div>` : '';
-    
+
     const body = `
       <div style="text-align: center;">
         <img src="${logoSrc}" alt="${logoAlt}" style="width: 80px; height: auto; margin-bottom: 20px;"/>
@@ -130,7 +131,7 @@ router.get('/login', (req, res) => {
 // 로그인 처리
 router.post('/login_process', async (req, res) => {
     const { userID, password } = req.body;
-    
+
     // 로그인 시도 로깅
     console.log(`[LOGIN ATTEMPT] 사용자 ID: ${userID}, IP: ${req.ip}, UserAgent: ${req.get('User-Agent')}`);
     console.log(`[LOGIN ATTEMPT] 세션 ID: ${req.sessionID}, 기존 세션 상태:`, req.session);
@@ -145,7 +146,7 @@ router.post('/login_process', async (req, res) => {
         // 사용자 조회
         const query = 'SELECT * FROM Users WHERE userID = ?';
         const users = await queryDatabase(query, [userID]);
-        
+
         console.log(`[LOGIN] DB 조회 결과: ${users ? users.length : 0}개 사용자 발견`);
 
         if (!users || users.length === 0) {
@@ -159,7 +160,7 @@ router.post('/login_process', async (req, res) => {
         // 비밀번호 검증
         const passwordMatch = await bcrypt.compare(password, user.password);
         console.log(`[LOGIN] 비밀번호 일치: ${passwordMatch}`);
-        
+
         if (!passwordMatch) {
             console.log('[LOGIN ERROR] 비밀번호 불일치');
             return res.status(401).json({ success: false, error: '비밀번호가 올바르지 않습니다.' });
@@ -167,7 +168,7 @@ router.post('/login_process', async (req, res) => {
 
         // 세션 설정 전 로깅
         console.log('[LOGIN] 세션 설정 시작...');
-        
+
         // 세션 데이터 설정
         req.session.is_logined = true;
         req.session.userID = user.userID;
@@ -190,7 +191,7 @@ router.post('/login_process', async (req, res) => {
                 console.error('[LOGIN ERROR] 세션 저장 실패:', err);
                 return res.status(500).json({ success: false, error: '세션 저장 중 오류가 발생했습니다.' });
             }
-            
+
             console.log('[LOGIN SUCCESS] 세션 저장 성공');
 
             // 역할별 리다이렉트 URL 설정
@@ -198,13 +199,28 @@ router.post('/login_process', async (req, res) => {
             if (user.role === 'kinder') {
                 redirectUrl = '/kinder';
             }
-            
+
             console.log(`[LOGIN SUCCESS] 리다이렉트 URL: ${redirectUrl}`);
 
             // 성공 응답 전송
-            res.json({ success: true, redirect: redirectUrl });
+            // 🔥 JWT 토큰 생성
+            const token = jwt.sign(
+                {
+                    userID: user.userID,
+                    role: user.role,
+                    centerID: user.centerID,
+                    userType: req.session.userType // Add userType if needed
+                },
+                JWT.SECRET,
+                { expiresIn: JWT.EXPIRES_IN }
+            );
+
+            // 🔥 쿠키에 토큰 설정 (옵션: Pong2 같은 외부 앱은 JSON 응답 사용, 브라우저는 쿠키 사용)
+            // res.cookie('token', token, { httpOnly: true, secure: false }); // 필요시 사용
+
+            res.json({ success: true, redirect: redirectUrl, token: token }); // 🔥 토큰 반환
         });
-        
+
     } catch (error) {
         console.error('[LOGIN ERROR] 로그인 처리 예외 발생:', error);
         res.status(500).json({ success: false, error: '로그인 처리 중 오류가 발생했습니다.' });
@@ -214,7 +230,7 @@ router.post('/login_process', async (req, res) => {
 // 회원가입 페이지 렌더링
 router.get('/register', async (req, res) => {
     const title = '회원가입';
-    
+
     try {
         const centers = await fetchCentersFromSheet();
         const centerOptions = centers
@@ -364,7 +380,7 @@ router.post('/register', async (req, res) => {
         // userID 중복 체크 추가
         const checkDuplicateQuery = 'SELECT id FROM Users WHERE userID = ?';
         const existingUser = await queryDatabase(checkDuplicateQuery, [userID]);
-        
+
         if (existingUser.length > 0) {
             return res.status(400).json({ error: '이미 사용 중인 아이디입니다.' });
         }
@@ -373,7 +389,7 @@ router.post('/register', async (req, res) => {
         if (email && email.trim() !== '') {
             const checkEmailQuery = 'SELECT id FROM Users WHERE email = ?';
             const existingEmail = await queryDatabase(checkEmailQuery, [email]);
-            
+
             if (existingEmail.length > 0) {
                 return res.status(400).json({ error: '이미 사용 중인 이메일입니다.' });
             }

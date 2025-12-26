@@ -2,6 +2,9 @@
  * pong2 포트폴리오 API 라우터
  * pong2.app에서 호출하는 공개 포트폴리오 조회 API
  * 
+ * ⚠️ 2024-12-26 수정: ProjectSubmissions → UserFiles 테이블로 변경
+ * scratchRouter.js와 동일한 UserFiles 테이블 사용
+ * 
  * 엔드포인트:
  * GET  /api/pong2/portfolio/users              - 공개 프로젝트 보유 학생 목록
  * GET  /api/pong2/portfolio/user/:userId       - 특정 학생의 공개 프로젝트
@@ -79,6 +82,9 @@ const PLATFORM_CONFIG = {
     }
 };
 
+// 지원하는 플랫폼 목록 (file_category 값)
+const SUPPORTED_PLATFORMS = ['scratch', 'entry', 'python', 'appinventor', 'jupyter'];
+
 // ============================================================
 // API 1: 공개 프로젝트 보유 학생 목록
 // GET /api/pong2/portfolio/users
@@ -89,21 +95,22 @@ router.get('/users', async (req, res) => {
         const limitNum = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 100);
         const offsetNum = Math.max(parseInt(req.query.offset) || 0, 0);
         
-        // 공개 프로젝트가 있는 학생만 조회
+        // 공개 프로젝트가 있는 학생만 조회 (UserFiles 테이블 사용)
         const query = `
             SELECT 
                 u.id,
                 u.userID,
                 u.name,
                 u.profile_image,
-                COUNT(ps.id) as project_count,
-                MAX(ps.created_at) as latest_project_at,
-                SUM(ps.view_count) as total_views,
-                SUM(ps.like_count) as total_likes
+                COUNT(uf.id) as project_count,
+                MAX(uf.shared_at) as latest_project_at,
+                SUM(COALESCE(uf.view_count, 0)) as total_views,
+                SUM(COALESCE(uf.like_count, 0)) as total_likes
             FROM Users u
-            INNER JOIN ProjectSubmissions ps ON u.id = ps.user_id
-            WHERE ps.is_public = 1 
-              AND ps.is_deleted = 0
+            INNER JOIN UserFiles uf ON u.id = uf.user_id
+            WHERE uf.is_public = TRUE 
+              AND uf.is_deleted = FALSE
+              AND uf.file_category IN ('scratch', 'entry', 'python', 'appinventor', 'jupyter')
               AND u.role = 'student'
             GROUP BY u.id
             HAVING project_count > 0
@@ -186,27 +193,36 @@ router.get('/user/:userId', async (req, res) => {
             });
         }
         
-        // 프로젝트 목록 조회
+        // 프로젝트 목록 조회 (UserFiles 테이블 사용)
         let projectQuery = `
             SELECT 
-                id, platform, project_name, description, thumbnail_url,
-                s3_url, file_size_kb, blocks_count, sprites_count,
-                view_count, like_count, created_at, updated_at
-            FROM ProjectSubmissions
+                id, 
+                file_category as platform, 
+                original_name as project_name, 
+                thumbnail_url,
+                s3_url, 
+                stored_name,
+                file_size,
+                view_count, 
+                like_count, 
+                created_at, 
+                shared_at as updated_at
+            FROM UserFiles
             WHERE user_id = ?
-              AND is_public = 1
-              AND is_deleted = 0
+              AND is_public = TRUE
+              AND is_deleted = FALSE
+              AND file_category IN ('scratch', 'entry', 'python', 'appinventor', 'jupyter')
         `;
         
-        const queryParams = [userInfo.id];  // userInfo.id 사용 (문자열 userID를 숫자 ID로 변환)
+        const queryParams = [userInfo.id];
         
         // 플랫폼 필터
         if (platform && PLATFORM_CONFIG[platform]) {
-            projectQuery += ' AND platform = ?';
+            projectQuery += ' AND file_category = ?';
             queryParams.push(platform);
         }
         
-        projectQuery += ` ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+        projectQuery += ` ORDER BY shared_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
         
         const projects = await db.queryDatabase(projectQuery, queryParams);
         
@@ -216,12 +232,10 @@ router.get('/user/:userId', async (req, res) => {
             platform: project.platform,
             platformInfo: PLATFORM_CONFIG[project.platform] || {},
             projectName: project.project_name,
-            description: project.description || '',
+            description: '',  // UserFiles에는 description 필드 없음
             thumbnailUrl: project.thumbnail_url || getDefaultThumbnail(project.platform),
             s3Url: project.s3_url,
-            fileSizeKb: project.file_size_kb,
-            blocksCount: project.blocks_count,
-            spritesCount: project.sprites_count,
+            fileSizeKb: Math.round((project.file_size || 0) / 1024),
             viewCount: project.view_count || 0,
             likeCount: project.like_count || 0,
             createdAt: project.created_at,
@@ -264,18 +278,30 @@ router.get('/project/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
-        // 프로젝트 + 작성자 정보 조회
+        // 프로젝트 + 작성자 정보 조회 (UserFiles 테이블 사용)
         const query = `
             SELECT 
-                ps.*,
+                uf.id,
+                uf.file_category as platform,
+                uf.original_name as project_name,
+                uf.thumbnail_url,
+                uf.s3_url,
+                uf.stored_name,
+                uf.file_size,
+                uf.file_type,
+                uf.view_count,
+                uf.like_count,
+                uf.created_at,
+                uf.shared_at,
+                uf.user_id,
                 u.userID as author_userID,
                 u.name as author_name,
                 u.profile_image as author_profile_image
-            FROM ProjectSubmissions ps
-            INNER JOIN Users u ON ps.user_id = u.id
-            WHERE ps.id = ?
-              AND ps.is_public = 1
-              AND ps.is_deleted = 0
+            FROM UserFiles uf
+            INNER JOIN Users u ON uf.user_id = u.id
+            WHERE uf.id = ?
+              AND uf.is_public = TRUE
+              AND uf.is_deleted = FALSE
         `;
         
         const [project] = await db.queryDatabase(query, [id]);
@@ -290,18 +316,6 @@ router.get('/project/:id', async (req, res) => {
         // 임베드 정보 생성
         const embedInfo = generateEmbedInfo(project);
         
-        // metadata JSON 파싱
-        let parsedMetadata = null;
-        if (project.metadata) {
-            try {
-                parsedMetadata = typeof project.metadata === 'string' 
-                    ? JSON.parse(project.metadata) 
-                    : project.metadata;
-            } catch (e) {
-                console.error('metadata 파싱 오류:', e);
-            }
-        }
-        
         res.json({
             success: true,
             data: {
@@ -309,20 +323,15 @@ router.get('/project/:id', async (req, res) => {
                 platform: project.platform,
                 platformInfo: PLATFORM_CONFIG[project.platform] || {},
                 projectName: project.project_name,
-                description: project.description || '',
+                description: '',  // UserFiles에는 description 필드 없음
                 thumbnailUrl: project.thumbnail_url || getDefaultThumbnail(project.platform),
                 
                 // 파일 정보
                 s3Url: project.s3_url,
-                s3Key: project.s3_key,
-                fileSizeKb: project.file_size_kb,
-                originalFilename: project.original_filename,
-                
-                // 프로젝트 분석 정보
-                blocksCount: project.blocks_count,
-                spritesCount: project.sprites_count,
-                complexityScore: project.complexity_score,
-                metadata: parsedMetadata,
+                s3Key: project.stored_name,
+                fileSizeKb: Math.round((project.file_size || 0) / 1024),
+                originalFilename: project.project_name,
+                fileType: project.file_type,
                 
                 // 통계
                 viewCount: project.view_count || 0,
@@ -330,7 +339,7 @@ router.get('/project/:id', async (req, res) => {
                 
                 // 시간
                 createdAt: project.created_at,
-                updatedAt: project.updated_at,
+                updatedAt: project.shared_at,
                 
                 // 작성자 정보
                 author: {
@@ -363,15 +372,15 @@ router.post('/project/:id/view', async (req, res) => {
     try {
         const { id } = req.params;
         
-        // 조회수 증가
+        // 조회수 증가 (UserFiles 테이블 사용)
         await db.queryDatabase(
-            'UPDATE ProjectSubmissions SET view_count = view_count + 1 WHERE id = ? AND is_public = 1',
+            'UPDATE UserFiles SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ? AND is_public = TRUE',
             [id]
         );
         
         // 현재 조회수 반환
         const [result] = await db.queryDatabase(
-            'SELECT view_count FROM ProjectSubmissions WHERE id = ?',
+            'SELECT view_count FROM UserFiles WHERE id = ?',
             [id]
         );
         
@@ -400,31 +409,40 @@ router.get('/featured', async (req, res) => {
         let orderBy;
         switch (sort) {
             case 'recent':
-                orderBy = 'ps.created_at DESC';
+                orderBy = 'uf.shared_at DESC';
                 break;
             case 'views':
-                orderBy = 'ps.view_count DESC';
+                orderBy = 'uf.view_count DESC';
                 break;
             case 'likes':
-                orderBy = 'ps.like_count DESC';
+                orderBy = 'uf.like_count DESC';
                 break;
             case 'popular':
             default:
                 // 인기도 = 조회수 + (좋아요 * 3) + 최근성 보정
-                orderBy = '(ps.view_count + ps.like_count * 3) DESC, ps.created_at DESC';
+                orderBy = '(COALESCE(uf.view_count, 0) + COALESCE(uf.like_count, 0) * 3) DESC, uf.shared_at DESC';
                 break;
         }
         
+        // UserFiles 테이블 사용
         const query = `
             SELECT 
-                ps.id, ps.platform, ps.project_name, ps.description, 
-                ps.thumbnail_url, ps.view_count, ps.like_count, ps.created_at,
-                u.id as author_id, u.userID as author_userID, 
-                u.name as author_name, u.profile_image as author_profile_image
-            FROM ProjectSubmissions ps
-            INNER JOIN Users u ON ps.user_id = u.id
-            WHERE ps.is_public = 1
-              AND ps.is_deleted = 0
+                uf.id, 
+                uf.file_category as platform, 
+                uf.original_name as project_name, 
+                uf.thumbnail_url, 
+                uf.view_count, 
+                uf.like_count, 
+                uf.shared_at as created_at,
+                u.id as author_id, 
+                u.userID as author_userID, 
+                u.name as author_name, 
+                u.profile_image as author_profile_image
+            FROM UserFiles uf
+            INNER JOIN Users u ON uf.user_id = u.id
+            WHERE uf.is_public = TRUE
+              AND uf.is_deleted = FALSE
+              AND uf.file_category IN ('scratch', 'entry', 'python', 'appinventor', 'jupyter')
             ORDER BY ${orderBy}
             LIMIT ?
         `;
@@ -436,7 +454,7 @@ router.get('/featured', async (req, res) => {
             platform: project.platform,
             platformInfo: PLATFORM_CONFIG[project.platform] || {},
             projectName: project.project_name,
-            description: project.description || '',
+            description: '',  // UserFiles에는 description 필드 없음
             thumbnailUrl: project.thumbnail_url || getDefaultThumbnail(project.platform),
             viewCount: project.view_count || 0,
             likeCount: project.like_count || 0,
@@ -504,7 +522,7 @@ function generateEmbedInfo(project) {
                 type: 'iframe',
                 canEmbed: true,
                 // Entry 서버로 로드
-                iframeUrl: `https://app.codingnplay.co.kr/entry_editor?project=${encodeURIComponent(project.s3_key)}`,
+                iframeUrl: `https://app.codingnplay.co.kr/entry_editor?project=${encodeURIComponent(project.stored_name)}`,
                 downloadUrl: project.s3_url,
                 instructions: '엔트리 프로젝트를 실행하려면 시작 버튼을 클릭하세요.'
             };
