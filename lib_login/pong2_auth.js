@@ -11,9 +11,14 @@ const { JWT } = require('../config');
 async function pong2Auth(req, res, next) {
     try {
         // 1. Check for existing session (Paid User)
-        if (req.session && req.session.user) {
+        // Matches apiRouter.js session structure
+        if (req.session && (req.session.userID || req.session.user)) {
             req.user = {
-                ...req.session.user,
+                id: req.session.userID || req.session.user.id,
+                name: req.session.username || (req.session.user ? req.session.user.name : 'Unknown'),
+                nickname: req.session.userNickname || (req.session.user ? req.session.user.nickname : req.session.userID),
+                role: req.session.role || (req.session.user ? req.session.user.role : 'student'),
+                centerID: req.session.centerID || (req.session.user ? req.session.user.centerID : null),
                 type: 'PAID'
             };
             return next();

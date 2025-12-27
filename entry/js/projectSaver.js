@@ -1,6 +1,7 @@
 /**
  * 💾 Entry 프로젝트 저장 클라이언트
- * 🔄 기존 API 사용: /entry/api/ (ProjectSubmissions 테이블)
+ * 🔥 병렬 저장 모델: UserFiles + ProjectSubmissions 동시 기록
+ * 🔥 fileId(UserFiles.id) 기반 업데이트/삭제
  * 
  * 📋 정책 문서: /docs/플랫폼_통합저장소_정책명세서.md
  */
@@ -12,8 +13,9 @@ class EntryProjectSaver {
     this.userID = options.userID || window.EDUCODINGNPLAY_USER?.userID || 'anonymous';
     this.role = options.role || window.EDUCODINGNPLAY_USER?.role || 'student';
     
-    // 🔥 불러온 프로젝트 ID 추적 (덮어쓰기용)
-    this.loadedProjectId = null;
+    // 🔥 불러온 프로젝트 추적 (병렬 저장 모델)
+    this.loadedProjectId = null;      // ProjectSubmissions.id
+    this.loadedFileId = null;         // 🔥 UserFiles.id (업데이트/삭제용)
     this.loadedProjectName = null;
     
     // 🔥 기존 API 베이스 URL
@@ -24,8 +26,12 @@ class EntryProjectSaver {
         userID: this.userID,
         role: this.role,
         loadedProjectId: this.loadedProjectId,
+        loadedFileId: this.loadedFileId,
         apiBase: this.apiBase
     });
+    
+    // URL에서 fileId 복원 (새로고침 대비)
+    this.checkUrlForProjectId();
   }
 
   /**
@@ -94,39 +100,55 @@ class EntryProjectSaver {
   }
 
   /**
-   * URL에서 projectId 파라미터 확인 (새로고침 대비)
+   * 🔥 URL에서 projectId, fileId 파라미터 확인 (새로고침 대비)
    */
   checkUrlForProjectId() {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const projectIdParam = urlParams.get('projectId');
+      const fileIdParam = urlParams.get('fileId');
       const projectNameParam = urlParams.get('projectName');
       
       if (projectIdParam && !this.loadedProjectId) {
         this.loadedProjectId = parseInt(projectIdParam, 10);
-        this.loadedProjectName = projectNameParam || null;
         console.log(`🔄 URL에서 projectId 복원: ${this.loadedProjectId}`);
       }
+      
+      // 🔥 fileId 복원 (핵심!)
+      if (fileIdParam && !this.loadedFileId) {
+        this.loadedFileId = parseInt(fileIdParam, 10);
+        console.log(`🔄 URL에서 fileId 복원: ${this.loadedFileId}`);
+      }
+      
+      if (projectNameParam && !this.loadedProjectName) {
+        this.loadedProjectName = decodeURIComponent(projectNameParam);
+      }
     } catch (error) {
-      console.warn('⚠️ URL projectId 확인 실패:', error);
+      console.warn('⚠️ URL 파라미터 확인 실패:', error);
     }
   }
   
   /**
-   * URL에 projectId 파라미터 추가
+   * 🔥 URL에 projectId, fileId 파라미터 추가
    */
   updateUrlWithProjectId() {
     try {
-      if (!this.loadedProjectId) return;
+      if (!this.loadedProjectId && !this.loadedFileId) return;
       
       const url = new URL(window.location.href);
-      url.searchParams.set('projectId', this.loadedProjectId);
+      
+      if (this.loadedProjectId) {
+        url.searchParams.set('projectId', this.loadedProjectId);
+      }
+      if (this.loadedFileId) {
+        url.searchParams.set('fileId', this.loadedFileId);
+      }
       if (this.loadedProjectName) {
         url.searchParams.set('projectName', this.loadedProjectName);
       }
       
       window.history.replaceState({}, '', url.toString());
-      console.log(`🔗 URL 업데이트 완료`);
+      console.log(`🔗 URL 업데이트 완료 (projectId=${this.loadedProjectId}, fileId=${this.loadedFileId})`);
     } catch (error) {
       console.warn('⚠️ URL 업데이트 실패:', error);
     }
@@ -279,8 +301,9 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 프로젝트 저장 (기존 API 사용)
-   * POST /entry/api/save-project
+   * 🔥 프로젝트 저장 (병렬 저장 모델)
+   * - 새 프로젝트: POST /entry/api/save-project
+   * - 기존 프로젝트: PUT /entry/api/save-project/:fileId
    */
   async saveProject() {
     if (this.saveInProgress) {
@@ -307,7 +330,7 @@ class EntryProjectSaver {
         hasThumbnail: !!thumbnailBase64
       });
 
-      // URL에서 projectId 확인 (새로고침 대비)
+      // URL에서 fileId 확인 (새로고침 대비)
       this.checkUrlForProjectId();
       
       // 2. 프로젝트명 결정
@@ -322,11 +345,25 @@ class EntryProjectSaver {
         return;
       }
 
-      console.log(`📤 서버로 전송 중: ${this.apiBase}/save-project`);
+      // 🔥 3. 저장 방식 결정: 새 저장 vs 업데이트
+      let url;
+      let method;
       
-      // 3. 🔥 기존 API 호출 (썸네일 포함)
-      const response = await fetch(`${this.apiBase}/save-project`, {
-        method: 'POST',
+      if (this.loadedFileId) {
+        // 🔥 기존 프로젝트: fileId로 업데이트
+        url = `${this.apiBase}/save-project/${this.loadedFileId}`;
+        method = 'PUT';
+        console.log(`📤 업데이트 요청: PUT ${url} (fileId=${this.loadedFileId})`);
+      } else {
+        // 새 프로젝트 생성
+        url = `${this.apiBase}/save-project`;
+        method = 'POST';
+        console.log(`📤 새 저장 요청: POST ${url}`);
+      }
+      
+      // 4. 🔥 API 호출
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'X-User-ID': this.userID,
@@ -338,9 +375,7 @@ class EntryProjectSaver {
           projectName: projectName,
           userID: this.userID,
           centerID: window.EDUCODINGNPLAY_USER?.centerID || null,
-          isUpdate: !!this.loadedProjectId,
-          projectId: this.loadedProjectId,
-          thumbnailBase64: thumbnailBase64  // 🔥 썸네일 데이터 추가
+          thumbnailBase64: thumbnailBase64
         })
       });
 
@@ -349,14 +384,17 @@ class EntryProjectSaver {
       if (result.success) {
         console.log('✅ 저장 성공:', result);
         
-        // 새 저장 시 projectId 저장 (다음 저장부터 덮어쓰기)
+        // 🔥 projectId와 fileId 모두 저장 (다음 저장부터 덮어쓰기)
         if (result.projectId) {
           this.loadedProjectId = result.projectId;
-          this.loadedProjectName = projectName;
-          console.log(`📌 프로젝트 ID 저장: ${this.loadedProjectId}`);
-          
-          this.updateUrlWithProjectId();
         }
+        if (result.fileId) {
+          this.loadedFileId = result.fileId;
+          console.log(`📌 fileId 저장됨: ${this.loadedFileId}`);
+        }
+        this.loadedProjectName = projectName;
+        
+        this.updateUrlWithProjectId();
         
         this.showNotification(`💾 저장 완료!`, 'success');
         return result;
@@ -374,7 +412,7 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 프로젝트 목록 불러오기 모달 (기존 API 사용)
+   * 🔥 프로젝트 목록 불러오기 모달
    * GET /entry/api/user-projects
    */
   async showLoadProjectModal() {
@@ -519,9 +557,10 @@ class EntryProjectSaver {
         if (e.target.closest('.delete-btn')) return;
         
         const projectId = item.getAttribute('data-project-id');
+        const fileId = item.getAttribute('data-file-id');  // 🔥 fileId 추가
         const projectName = item.getAttribute('data-project-name');
         const s3Url = item.getAttribute('data-s3-url');
-        await this.loadProject(projectId, projectName, s3Url);
+        await this.loadProject(projectId, fileId, projectName, s3Url);
         document.body.removeChild(modal);
       };
     });
@@ -531,8 +570,9 @@ class EntryProjectSaver {
       btn.onclick = async (e) => {
         e.stopPropagation();
         const projectId = btn.getAttribute('data-project-id');
+        const fileId = btn.getAttribute('data-file-id');  // 🔥 fileId 사용
         const projectName = btn.getAttribute('data-project-name');
-        await this.deleteProject(projectId, projectName, modal);
+        await this.deleteProject(fileId, projectName, modal);
       };
     });
     
@@ -540,7 +580,7 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 프로젝트 카드 HTML 생성 (썸네일 + 삭제 버튼)
+   * 🔥 프로젝트 카드 HTML 생성 (썸네일 + 삭제 버튼 + fileId)
    */
   createProjectCard(project, isAutosave) {
     const borderColor = isAutosave ? '#FF9800' : '#e0e0e0';
@@ -556,6 +596,7 @@ class EntryProjectSaver {
     return `
       <div class="project-item" 
            data-project-id="${project.id}" 
+           data-file-id="${project.fileId || ''}"
            data-project-name="${project.projectName}"
            data-s3-url="${project.s3Url || ''}"
            style="
@@ -571,6 +612,7 @@ class EntryProjectSaver {
         <!-- 🔥 삭제 버튼 (hover 시 표시) -->
         <button class="delete-btn" 
                 data-project-id="${project.id}" 
+                data-file-id="${project.fileId || ''}"
                 data-project-name="${project.projectName}"
                 style="
           position: absolute;
@@ -620,14 +662,20 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 프로젝트 삭제
+   * 🔥 프로젝트 삭제 (fileId 기반)
    */
-  async deleteProject(projectId, projectName, modal) {
+  async deleteProject(fileId, projectName, modal) {
+    if (!fileId) {
+      this.showNotification('❌ 삭제할 수 없습니다: 파일 ID가 없습니다.', 'error');
+      return;
+    }
+    
     const confirmed = confirm(`"${projectName}" 프로젝트를 삭제하시겠습니까?\n\n삭제된 프로젝트는 휴지통으로 이동됩니다.`);
     if (!confirmed) return;
     
     try {
-      const response = await fetch(`${this.apiBase}/project/${projectId}`, {
+      // 🔥 fileId로 삭제 요청
+      const response = await fetch(`${this.apiBase}/project/${fileId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -640,6 +688,13 @@ class EntryProjectSaver {
       
       if (result.success) {
         this.showNotification(`🗑️ "${projectName}" 삭제됨`, 'success');
+        
+        // 현재 열려있는 프로젝트가 삭제된 경우 초기화
+        if (this.loadedFileId == fileId) {
+          this.loadedProjectId = null;
+          this.loadedFileId = null;
+          this.loadedProjectName = null;
+        }
         
         // 모달 새로고침
         if (modal && modal.parentNode) {
@@ -656,25 +711,26 @@ class EntryProjectSaver {
   }
 
   /**
-   * 🔥 프로젝트 불러오기 (기존 API 사용)
+   * 🔥 프로젝트 불러오기 (fileId 포함)
    * 에디터로 이동하여 S3 URL에서 프로젝트 로드
    */
-  async loadProject(projectId, projectName, s3Url) {
+  async loadProject(projectId, fileId, projectName, s3Url) {
     try {
-      console.log(`📂 프로젝트 불러오기 시작: ID ${projectId}, URL: ${s3Url}`);
+      console.log(`📂 프로젝트 불러오기 시작: projectId=${projectId}, fileId=${fileId}, URL: ${s3Url}`);
       
       if (!s3Url) {
         throw new Error('프로젝트 URL이 없습니다.');
       }
       
-      // 불러온 프로젝트 ID 저장 (덮어쓰기용)
+      // 🔥 projectId와 fileId 모두 저장 (덮어쓰기용)
       this.loadedProjectId = projectId;
+      this.loadedFileId = fileId;
       this.loadedProjectName = projectName;
       
-      // 에디터로 이동 (S3 URL 사용)
-      const editorUrl = `/entry/entry_editor?s3Url=${encodeURIComponent(s3Url)}&projectId=${projectId}&projectName=${encodeURIComponent(projectName)}&userID=${this.userID}&role=${this.role}`;
+      // 🔥 에디터로 이동 (fileId 포함)
+      const editorUrl = `/entry/entry_editor?s3Url=${encodeURIComponent(s3Url)}&projectId=${projectId}&fileId=${fileId}&projectName=${encodeURIComponent(projectName)}&userID=${this.userID}&role=${this.role}`;
       
-      console.log(`✅ 에디터로 이동`);
+      console.log(`✅ 에디터로 이동 (fileId=${fileId})`);
       window.location.href = editorUrl;
       
     } catch (error) {
@@ -953,4 +1009,4 @@ class EntryProjectSaver {
 // 전역에서 사용 가능하도록 노출
 window.EntryProjectSaver = EntryProjectSaver;
 
-console.log('✅ EntryProjectSaver 로드 완료 (기존 API: /entry/api/)');
+console.log('✅ EntryProjectSaver 로드 완료 (병렬 저장 모델: fileId 기반)');

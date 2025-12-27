@@ -439,15 +439,25 @@
 
                 try {
                     // Try to generate SSO token
+                    console.log('🔄 Fetching SSO token...');
                     const response = await fetch('/api/pong2/auth/sso-token');
+                    console.log('🔄 SSO Response status:', response.status);
+
                     if (response.ok) {
                         const data = await response.json();
+                        console.log('🔄 SSO Data:', data);
                         if (data.success && data.token) {
                             pong2Url += `?token=${data.token}`;
+                            console.log('✅ Token appended to URL');
+                        } else {
+                            console.warn('⚠️ Token generation failed:', data.error);
                         }
+                    } else {
+                        const text = await response.text();
+                        console.warn('⚠️ SSO Fetch Error:', response.status, text);
                     }
                 } catch (error) {
-                    console.warn('SSO Token fetch failed:', error);
+                    console.warn('❌ SSO Token fetch exception:', error);
                 }
 
                 // Optimistic Navigation
