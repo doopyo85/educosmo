@@ -43,6 +43,22 @@ async function initPong2Tables() {
             )
         `);
         console.log('BoardReactions table checked/created');
+
+        await queryDatabase(`
+            CREATE TABLE IF NOT EXISTS UserActivityLogs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT,
+                center_id INT,
+                action_type VARCHAR(50),
+                url VARCHAR(255),
+                ip_address VARCHAR(50),
+                user_agent TEXT,
+                action_detail TEXT,
+                status VARCHAR(50),
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('UserActivityLogs table checked/created');
     } catch (error) {
         console.error('Pong2 Table Init Error:', error);
     }
@@ -384,7 +400,7 @@ router.get('/auth/sso-token', requireAuth, (req, res) => {
                 role: req.user.role
             },
             JWT.SECRET,
-            { expiresIn: '5m' }
+            { expiresIn: JWT.EXPIRES_IN }
         );
 
         res.json({ success: true, token });
