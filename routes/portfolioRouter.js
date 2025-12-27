@@ -613,12 +613,12 @@ router.get('/student/:id', checkSameCenter, async (req, res) => {
       [studentId]
     );
 
-    // 모달용 뷰 렌더링 (Header/Footer 없이)
-    res.render('teacher/student-detail', {
+    // 포트폴리오 페이지 렌더링
+    res.render('portfolio', {
       student,
       logs,
-      activityLogs,
-      layout: false // Express-ejs-layouts나 유사 미들웨어가 있다면 적용, 없으면 무시됨
+      activityLogs, // 포트폴리오 뷰에서 사용하는 로그 데이터
+      readOnly: true // 교사가 볼 때는 읽기 전용 (업로드/삭제 불가)
     });
 
   } catch (error) {

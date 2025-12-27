@@ -374,14 +374,8 @@ const StudentManagement = {
     },
 
     openTimelineModal(userId, userName) {
-        const iframe = document.getElementById('timelineBrowserFrame');
-        const title = document.getElementById('timelineBrowserTitle');
-
-        title.innerText = `${userName}님의 학습 타임라인`;
-        iframe.src = `/portfolio/student/${userId}`;
-
-        const modal = new bootstrap.Modal(document.getElementById('timelineBrowserModal'));
-        modal.show();
+        // 교사 대시보드에서 포트폴리오 페이지로 이동
+        window.location.href = `/portfolio/student/${userId}`;
     },
 
     generateDots(completed, total) {

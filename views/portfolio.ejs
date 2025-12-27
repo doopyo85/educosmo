@@ -225,10 +225,12 @@
                                         <i class="bi bi-folder2-open fs-1 mb-3"></i>
                                         <h4>프로젝트를 선택하세요</h4>
                                         <p>좌측 타임라인에서 프로젝트를 클릭하여 상세 내용을 확인하세요.</p>
-                                        <button class="btn btn-primary mt-3" data-bs-toggle="modal"
-                                            data-bs-target="#uploadModal">
-                                            <i class="bi bi-plus-lg me-2"></i>새 프로젝트 추가
-                                        </button>
+                                        <% if (!locals.readOnly) { %>
+                                            <button class="btn btn-primary mt-3" data-bs-toggle="modal"
+                                                data-bs-target="#uploadModal">
+                                                <i class="bi bi-plus-lg me-2"></i>새 프로젝트 추가
+                                            </button>
+                                            <% } %>
                                     </div>
                                 </div>
                             </div>
@@ -278,6 +280,7 @@
                                     <script>
                                         // Server-side data injected into client
                                         const clientLogs = <% - JSON.stringify(activityLogs || []) %>;
+                                        const isReadOnly = <%= locals.readOnly || false %>;
 
                                         function uploadProjectModal() {
                                             const fileInput = document.getElementById('mProjectFile');
@@ -298,13 +301,17 @@
                                                 body: formData
                                             })
                                                 .then(res => res.json())
-                                                .then(data => {
-                                                    if (data.success) {
-                                                        alert('업로드 성공!');
+                                                .then(result => {
+                                                    if (result.success) {
+                                                        alert('업로드 완료');
                                                         location.reload();
                                                     } else {
-                                                        alert('실패: ' + data.message);
+                                                        alert('업로드 실패: ' + result.message);
                                                     }
+                                                })
+                                                .catch(err => {
+                                                    console.error(err);
+                                                    alert('오류 발생');
                                                 });
                                         }
 
@@ -326,6 +333,11 @@
                                                 const projectId = detail.projectId;
                                                 const img = detail.thumbnail || '/resource/pygame-default.png';
 
+                                                const deleteButton = !isReadOnly ? `
+                                                    <button class="btn btn-outline-danger px-4 py-2" onclick="deleteProject('${projectId}')">
+                                                        <i class="bi bi-trash me-2"></i>Delete
+                                                    </button>` : '';
+
                                                 content = `
                     <div class="fade-in p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -342,9 +354,7 @@
                                     <button class="btn btn-primary px-4 py-2" onclick="location.href='/portfolio/run/${projectId}'">
                                         <i class="bi bi-play-fill me-2"></i>Play Game
                                     </button>
-                                    <button class="btn btn-outline-danger px-4 py-2" onclick="deleteProject('${projectId}')">
-                                        <i class="bi bi-trash me-2"></i>Delete
-                                    </button>
+                                    ${deleteButton}
                                 </div>
                             </div>
                         </div>
