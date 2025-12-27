@@ -315,7 +315,7 @@
 
                                     <script>
                                         // Server-side data injected into client
-                                        const clientLogs = <% - JSON.stringify(activityLogs || []) %>;
+                                        const clientLogs = <%- JSON.stringify(activityLogs || []) %>;
                                         const isReadOnly = <%= locals.readOnly || false %>;
 
                                         function uploadProjectModal() {
