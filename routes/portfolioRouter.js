@@ -62,10 +62,18 @@ router.get('/', async (req, res) => {
       if (users.length > 0) {
         const dbId = users[0].id;
         // Fetch activity logs
+        // Fetch activity logs (Filtering for meaningful activities)
         activityLogs = await db.queryDatabase(`
                   SELECT created_at, action_type, url, action_detail, status 
                   FROM UserActivityLogs 
                   WHERE user_id = ? 
+                  AND (
+                    action_type = 'portfolio_upload' 
+                    OR action_type LIKE '%entry%' 
+                    OR action_type LIKE '%scratch%' 
+                    OR action_type LIKE '%pong%'
+                    OR action_type IN ('login', 'logout')
+                  )
                   ORDER BY created_at DESC 
                   LIMIT 100
               `, [dbId]);
