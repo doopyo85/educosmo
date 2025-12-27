@@ -5,20 +5,20 @@ const { authenticateUser, checkPageAccess } = require('../lib_login/authMiddlewa
 
 // 🔥 디버깅: 모든 entryRouter 요청 로깅
 router.use((req, res, next) => {
-   console.log('\n=== ENTRY ROUTER DEBUG ===');
-   console.log('🔍 [entryRouter] 요청 도착:', {
-       method: req.method,
-       path: req.path,
-       originalUrl: req.originalUrl,
-       baseUrl: req.baseUrl,
-       fullUrl: req.protocol + '://' + req.get('host') + req.originalUrl,
-       query: req.query,
-       sessionID: req.session?.userID || 'guest',
-       isLoggedIn: req.session?.is_logined || false,
-       timestamp: new Date().toISOString()
-   });
-   console.log('========================\n');
-   next();
+    console.log('\n=== ENTRY ROUTER DEBUG ===');
+    console.log('🔍 [entryRouter] 요청 도착:', {
+        method: req.method,
+        path: req.path,
+        originalUrl: req.originalUrl,
+        baseUrl: req.baseUrl,
+        fullUrl: req.protocol + '://' + req.get('host') + req.originalUrl,
+        query: req.query,
+        sessionID: req.session?.userID || 'guest',
+        isLoggedIn: req.session?.is_logined || false,
+        timestamp: new Date().toISOString()
+    });
+    console.log('========================\n');
+    next();
 });
 
 // 🔄 기본 경로 핸들러 (/entry)
@@ -35,8 +35,8 @@ router.get('/',
                 const EntFileManager = require('../lib_entry/entFileManager');
                 const entFileManager = new EntFileManager();
                 const result = await entFileManager.loadProjectFromS3(
-                    s3Url, 
-                    req.session.userID, 
+                    s3Url,
+                    req.session.userID,
                     req.sessionID
                 );
 
@@ -46,7 +46,7 @@ router.get('/',
                         sessionID: result.sessionID,
                         userSessionPath: result.userSessionPath
                     });
-                    
+
                     // 🔍 이미지 경로 디버깅 로그
                     if (result.projectData?.objects && result.projectData.objects.length > 0) {
                         const firstObj = result.projectData.objects[0];
@@ -58,7 +58,7 @@ router.get('/',
                             thumbnail: firstObj.thumbnail || 'none'
                         });
                     }
-                    
+
                     const projectDataEncoded = Buffer.from(JSON.stringify(result.projectData)).toString('base64');
                     // 🔥 중요: userID, role을 앞에 배치 (URL 길이 제한으로 인한 잘림 방지)
                     const entryServerUrl = `https://app.codingnplay.co.kr/entry_editor/?userID=${req.session.userID}&role=${req.session.role}&sessionID=${result.sessionID}&project=${projectDataEncoded}`;
@@ -106,8 +106,8 @@ router.get('/entry_editor',
                 const EntFileManager = require('../lib_entry/entFileManager');
                 const entFileManager = new EntFileManager();
                 const result = await entFileManager.loadProjectFromS3(
-                    s3Url, 
-                    userID, 
+                    s3Url,
+                    userID,
                     req.sessionID
                 );
 
@@ -117,7 +117,7 @@ router.get('/entry_editor',
                         sessionID: result.sessionID,
                         userSessionPath: result.userSessionPath
                     });
-                    
+
                     // 🔥 중요: userID, role을 앞에 배치
                     const entryServerUrl = `https://app.codingnplay.co.kr/entry_editor/?userID=${userID}&role=${role}&sessionID=${result.sessionID}&s3Url=${encodeURIComponent(s3Url)}`;
                     return res.redirect(entryServerUrl);
@@ -158,14 +158,14 @@ router.delete('/api/session/:sessionID', authenticateUser, async (req, res) => {
     try {
         const { sessionID } = req.params;
         const userID = req.session.userID;
-        
+
         const sessionPath = path.join(__dirname, '../temp/ent_files/users', `${userID}_${sessionID}`);
-        
+
         const fs = require('fs').promises;
         await fs.rm(sessionPath, { recursive: true, force: true });
-        
+
         console.log(`수동 세션 정리 완료: ${sessionPath}`);
-        
+
         res.json({
             success: true,
             message: '세션이 정리되었습니다.',
@@ -184,20 +184,20 @@ router.get('/api/sessions', authenticateUser, async (req, res) => {
     try {
         const userID = req.session.userID;
         const usersDir = path.join(__dirname, '../temp/ent_files/users');
-        
+
         const fs = require('fs').promises;
-        
+
         try {
             const userSessions = await fs.readdir(usersDir);
             const activeSessions = [];
-            
+
             for (const sessionDir of userSessions) {
                 if (sessionDir.startsWith(`${userID}_`)) {
                     const sessionPath = path.join(usersDir, sessionDir);
                     try {
                         const stats = await fs.stat(sessionPath);
                         const sessionID = sessionDir.split('_').slice(1).join('_');
-                        
+
                         activeSessions.push({
                             sessionID: sessionID,
                             createdAt: stats.birthtime,
@@ -209,7 +209,7 @@ router.get('/api/sessions', authenticateUser, async (req, res) => {
                     }
                 }
             }
-            
+
             res.json({
                 success: true,
                 userID: userID,
@@ -237,14 +237,14 @@ router.post('/api/cleanup-expired-sessions', authenticateUser, async (req, res) 
     try {
         const EntFileManager = require('../lib_entry/entFileManager');
         const entFileManager = new EntFileManager();
-        
+
         // 만료된 파일들 정리
         const cleanedCount = await entFileManager.cleanupExpiredFiles();
-        
+
         // 사용자별 오래된 세션들 정리
         const userID = req.session.userID;
         await entFileManager.cleanupUserSessions(userID, 2); // 최대 2개만 유지
-        
+
         res.json({
             success: true,
             message: '만료된 세션 정리 완료',
@@ -334,7 +334,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
     try {
         const { projectData, projectName, userID: clientUserID, centerID: clientCenterID, isUpdate, projectId, userFileId, saveType, thumbnailBase64 } = req.body;
         const userID = clientUserID || req.session.userID;
-        
+
         if (!projectData) {
             return res.status(400).json({
                 success: false,
@@ -350,14 +350,14 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 
         // 1. 사용자 DB ID 조회
         const [user] = await db.queryDatabase(
-            'SELECT id, centerID FROM Users WHERE userID = ?', 
+            'SELECT id, centerID FROM Users WHERE userID = ?',
             [userID]
         );
-        
+
         if (!user) {
-            return res.status(404).json({ 
-                success: false, 
-                error: '사용자를 찾을 수 없습니다.' 
+            return res.status(404).json({
+                success: false,
+                error: '사용자를 찾을 수 없습니다.'
             });
         }
 
@@ -394,7 +394,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
             }
 
             const netFileSize = fileSize - oldFileSize;
-            
+
             if (netFileSize > 0) {
                 const canSave = await quotaChecker.canUpload(userId, centerId, netFileSize);
                 if (!canSave.allowed) {
@@ -422,7 +422,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 
         // 5. S3 업로드
         const s3Url = await s3Manager.uploadProject(s3Key, projectBuffer, 'application/json');
-        
+
         console.log(`✅ S3 업로드 완료: ${s3Url}`);
 
         // 5-1. 썸네일 업로드 (있는 경우)
@@ -444,7 +444,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 
         // 7. 🔥 병렬 저장 (UserFiles + ProjectSubmissions)
         let result;
-        
+
         if (isUpdate && projectId) {
             // 덮어쓰기
             result = await parallelSave.updateProjectParallel({
@@ -481,6 +481,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
         res.json({
             success: true,
             projectId: result.submissionId || result.projectId,
+            fileId: result.userFileId || null,
             userFileId: result.userFileId || null,
             fileName: fileName,
             s3Url: s3Url,
@@ -493,9 +494,9 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 
     } catch (error) {
         console.error('❌ [Entry 저장] 오류:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 });
@@ -509,7 +510,7 @@ router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
         const { projectId } = req.params;
         const { permanent, userFileId } = req.query;
         const userID = req.session.userID;
-        
+
         if (!projectId) {
             return res.status(400).json({
                 success: false,
@@ -524,14 +525,14 @@ router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
 
         // 1. 사용자 DB ID 조회
         const [user] = await db.queryDatabase(
-            'SELECT id, centerID FROM Users WHERE userID = ?', 
+            'SELECT id, centerID FROM Users WHERE userID = ?',
             [userID]
         );
-        
+
         if (!user) {
-            return res.status(404).json({ 
-                success: false, 
-                error: '사용자를 찾을 수 없습니다.' 
+            return res.status(404).json({
+                success: false,
+                error: '사용자를 찾을 수 없습니다.'
             });
         }
 
@@ -550,8 +551,8 @@ router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
 
         res.json({
             success: true,
-            message: result.deleteType === 'permanent' 
-                ? '프로젝트가 완전히 삭제되었습니다.' 
+            message: result.deleteType === 'permanent'
+                ? '프로젝트가 완전히 삭제되었습니다.'
                 : '프로젝트가 휴지통으로 이동되었습니다.',
             deletedId: projectId,
             freedSpace: result.freedSpace,
@@ -560,9 +561,9 @@ router.delete('/api/project/:projectId', authenticateUser, async (req, res) => {
 
     } catch (error) {
         console.error('❌ [Entry 삭제] 오류:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 });
@@ -658,66 +659,66 @@ router.post('/data/upload-drawing', authenticateUser, async (req, res) => {
         const { imageData, fileName } = req.body;
         const userID = req.session?.userID || 'anonymous';
         const sessionID = req.query.sessionID || Date.now().toString();
-        
+
         if (!imageData) {
             return res.status(400).json({
                 success: false,
                 error: '이미지 데이터가 필요합니다.'
             });
         }
-        
+
         console.log('🎨 [페인트 에디터] 이미지 업로드 요청:', {
             userID,
             sessionID,
             fileName,
             dataLength: imageData.length
         });
-        
+
         // Base64 데이터에서 헤더 제거 (data:image/png;base64, 부분)
         const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
         const imageBuffer = Buffer.from(base64Data, 'base64');
-        
+
         // 파일명 생성
         const timestamp = Date.now();
         const finalFileName = `${timestamp}_drawing_${sessionID}.png`;
-        
+
         const fs = require('fs').promises;
         const localPath = require('path');
-        
+
         // 🔥 S3Manager 사용 (IAM Role 지원)
         let s3Url = null;
         let s3Key = null;
-        
+
         try {
             const S3Manager = require('../lib_storage/s3Manager');
             const s3Manager = new S3Manager();
-            
+
             // S3 키 생성 - ent/uploads 경로 사용 (CORS 설정된 경로)
             s3Key = `ent/uploads/${userID}_${sessionID}/${finalFileName}`;
-            
+
             // S3Manager의 uploadProject 메서드 사용
             s3Url = await s3Manager.uploadProject(s3Key, imageBuffer, 'image/png');
-            
+
             console.log(`✅ S3 업로드 완료 (S3Manager): ${s3Url}`);
-            
+
         } catch (s3Error) {
             console.error('⚠️ S3 업로드 실패, 로컬 저장으로 폴백:', s3Error.message);
-            
+
             // 🔥 S3 실패 시에만 고정 경로(current)에 로컬 저장
             const tempDir = '/var/www/html/temp/ent_files/current';
             await fs.mkdir(tempDir, { recursive: true });
-            
+
             const localFilePath = localPath.join(tempDir, finalFileName);
             await fs.writeFile(localFilePath, imageBuffer);
             console.log(`✅ 로컬 임시 파일 저장: ${localFilePath}`);
         }
-        
+
         // Entry가 접근할 수 있는 URL 생성
         const localUrl = `/entry/temp/${finalFileName}`;
         const finalUrl = s3Url || localUrl;
-        
+
         console.log(`🖼️ 최종 이미지 URL: ${finalUrl}`);
-        
+
         res.json({
             success: true,
             filename: finalFileName,
@@ -730,7 +731,7 @@ router.post('/data/upload-drawing', authenticateUser, async (req, res) => {
             },
             message: '이미지 업로드 성공'
         });
-        
+
     } catch (error) {
         console.error('❌ 이미지 업로드 오류:', error);
         res.status(500).json({
@@ -748,11 +749,11 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
     try {
         const userID = req.session.userID;
         const { saveType } = req.query; // 선택적 필터: 'autosave', 'projects' 등
-        
+
         if (!userID) {
-            return res.status(400).json({ 
-                success: false, 
-                error: '사용자 ID가 필요합니다.' 
+            return res.status(400).json({
+                success: false,
+                error: '사용자 ID가 필요합니다.'
             });
         }
 
@@ -767,9 +768,9 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
         const [user] = await db.queryDatabase(userQuery, [userID]);
 
         if (!user) {
-            return res.status(404).json({ 
-                success: false, 
-                error: '사용자를 찾을 수 없습니다.' 
+            return res.status(404).json({
+                success: false,
+                error: '사용자를 찾을 수 없습니다.'
             });
         }
 
@@ -800,15 +801,15 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
               AND platform = 'entry'
               AND (is_deleted = FALSE OR is_deleted IS NULL)
         `;
-        
+
         const params = [userId];
-        
+
         // saveType 필터 적용 (선택적)
         if (saveType) {
             query += ` AND save_type = ?`;
             params.push(saveType);
         }
-        
+
         query += ` ORDER BY updated_at DESC LIMIT 100`;
 
         const projects = await db.queryDatabase(query, params);
@@ -823,7 +824,7 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
         console.log(`✅ [불러오기] 조회 결과:`);
         console.log(`   📊 총 ${projects.length}개 프로젝트`);
         console.log(`   📁 save_type별 개수:`, saveTypeCounts);
-        
+
         // 최근 autosave 정보 출력
         const latestAutosave = projects.find(p => p.save_type === 'autosave');
         if (latestAutosave) {
@@ -857,9 +858,9 @@ router.get('/api/user-projects', authenticateUser, async (req, res) => {
 
     } catch (error) {
         console.error('❌ [불러오기] 프로젝트 목록 조회 오류:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 });
@@ -880,9 +881,9 @@ const soundUpload = multer({
         // 허용하는 오디오 확장자
         const allowedTypes = ['audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm', 'audio/x-m4a', 'audio/mp4'];
         const allowedExtensions = ['.mp3', '.wav', '.ogg', '.webm', '.m4a'];
-        
+
         const ext = path.extname(file.originalname).toLowerCase();
-        
+
         if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(ext)) {
             cb(null, true);
         } else {
@@ -895,14 +896,14 @@ router.post('/api/upload-sound', authenticateUser, soundUpload.single('sound'), 
     try {
         const userID = req.session?.userID || 'anonymous';
         const sessionID = req.query.sessionID || Date.now().toString();
-        
+
         if (!req.file) {
             return res.status(400).json({
                 success: false,
                 error: '소리 파일이 필요합니다.'
             });
         }
-        
+
         const file = req.file;
         console.log('🔊 [소리 업로드] 요청:', {
             userID,
@@ -911,44 +912,44 @@ router.post('/api/upload-sound', authenticateUser, soundUpload.single('sound'), 
             size: file.size,
             mimetype: file.mimetype
         });
-        
+
         // 파일명 생성
         const timestamp = Date.now();
         const ext = path.extname(file.originalname).toLowerCase() || '.mp3';
         const baseName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9가-힣_-]/g, '_');
         const finalFileName = `${timestamp}_${baseName}${ext}`;
-        
+
         const fs = require('fs').promises;
-        
+
         let s3Url = null;
-        
+
         try {
             // 🔥 S3Manager 사용 (IAM Role 지원)
             const S3Manager = require('../lib_storage/s3Manager');
             const s3Manager = new S3Manager();
-            
+
             // S3 키 생성 - ent/uploads 경로 사용
             const s3Key = `ent/uploads/${userID}_${sessionID}/sounds/${finalFileName}`;
-            
+
             // S3Manager의 uploadProject 메서드 사용
             s3Url = await s3Manager.uploadProject(s3Key, file.buffer, file.mimetype);
-            
+
             console.log(`✅ S3 업로드 완료: ${s3Url}`);
-            
+
         } catch (s3Error) {
             console.error('⚠️ S3 업로드 실패, 로컬 저장으로 폴백:', s3Error.message);
-            
+
             // 로컬 저장
             const tempDir = '/var/www/html/temp/ent_files/current/sounds';
             await fs.mkdir(tempDir, { recursive: true });
-            
+
             const localFilePath = path.join(tempDir, finalFileName);
             await fs.writeFile(localFilePath, file.buffer);
-            
+
             s3Url = `/entry/temp/sounds/${finalFileName}`;
             console.log(`✅ 로컬 저장 완료: ${s3Url}`);
         }
-        
+
         res.json({
             success: true,
             filename: finalFileName,
@@ -960,7 +961,7 @@ router.post('/api/upload-sound', authenticateUser, soundUpload.single('sound'), 
             size: file.size,
             message: '소리 파일 업로드 성공'
         });
-        
+
     } catch (error) {
         console.error('❌ 소리 업로드 오류:', error);
         res.status(500).json({
@@ -978,16 +979,16 @@ router.post('/api/save-sound', authenticateUser, async (req, res) => {
     try {
         const userID = req.session?.userID || 'anonymous';
         const sessionID = req.query.sessionID || Date.now().toString();
-        
+
         const { name, source, ext, duration } = req.body;
-        
+
         if (!source) {
             return res.status(400).json({
                 success: false,
                 error: '소리 데이터가 필요합니다.'
             });
         }
-        
+
         console.log('💾 [소리 저장] 요청:', {
             userID,
             sessionID,
@@ -996,7 +997,7 @@ router.post('/api/save-sound', authenticateUser, async (req, res) => {
             duration,
             sourceLength: typeof source === 'string' ? source.length : 'ArrayBuffer'
         });
-        
+
         // Base64 또는 ArrayBuffer 처리
         let audioBuffer;
         if (typeof source === 'string') {
@@ -1012,25 +1013,25 @@ router.post('/api/save-sound', authenticateUser, async (req, res) => {
                 error: '지원하지 않는 소리 데이터 형식입니다.'
             });
         }
-        
+
         // 파일명 생성
         const timestamp = Date.now();
         const finalExt = ext || '.mp3';
         const baseName = (name || 'edited_sound').replace(/[^a-zA-Z0-9가-힣_-]/g, '_');
         const finalFileName = `${timestamp}_${baseName}${finalExt}`;
-        
+
         const fs = require('fs').promises;
-        
+
         let s3Url = null;
-        
+
         try {
             // 🔥 S3Manager 사용
             const S3Manager = require('../lib_storage/s3Manager');
             const s3Manager = new S3Manager();
-            
+
             // S3 키 생성
             const s3Key = `ent/uploads/${userID}_${sessionID}/sounds/${finalFileName}`;
-            
+
             // MIME 타입 결정
             const mimeTypes = {
                 '.mp3': 'audio/mpeg',
@@ -1040,25 +1041,25 @@ router.post('/api/save-sound', authenticateUser, async (req, res) => {
                 '.m4a': 'audio/mp4'
             };
             const mimeType = mimeTypes[finalExt] || 'audio/mpeg';
-            
+
             s3Url = await s3Manager.uploadProject(s3Key, audioBuffer, mimeType);
-            
+
             console.log(`✅ S3 저장 완료: ${s3Url}`);
-            
+
         } catch (s3Error) {
             console.error('⚠️ S3 저장 실패, 로컬 저장으로 폴백:', s3Error.message);
-            
+
             // 로컬 저장
             const tempDir = '/var/www/html/temp/ent_files/current/sounds';
             await fs.mkdir(tempDir, { recursive: true });
-            
+
             const localFilePath = path.join(tempDir, finalFileName);
             await fs.writeFile(localFilePath, audioBuffer);
-            
+
             s3Url = `/entry/temp/sounds/${finalFileName}`;
             console.log(`✅ 로컬 저장 완료: ${s3Url}`);
         }
-        
+
         res.json({
             success: true,
             filename: finalFileName,
@@ -1068,7 +1069,7 @@ router.post('/api/save-sound', authenticateUser, async (req, res) => {
             duration: duration || 1,
             message: '편집된 소리 저장 성공'
         });
-        
+
     } catch (error) {
         console.error('❌ 소리 저장 오류:', error);
         res.status(500).json({
@@ -1085,20 +1086,20 @@ router.post('/api/save-sound', authenticateUser, async (req, res) => {
 router.get('/api/center-usage', authenticateUser, async (req, res) => {
     try {
         const { role, centerID: sessionCenterId } = req.session;
-        
+
         // 권한 체크
         if (!['admin', 'manager', 'teacher'].includes(role)) {
-            return res.status(403).json({ 
-                success: false, 
-                error: '권한이 없습니다.' 
+            return res.status(403).json({
+                success: false,
+                error: '권한이 없습니다.'
             });
         }
 
         const db = require('../lib_login/db');
-        
+
         // admin은 모든 센터, 나머지는 자기 센터만
         let query, params;
-        
+
         if (role === 'admin') {
             query = `
                 SELECT 
@@ -1129,9 +1130,9 @@ router.get('/api/center-usage', authenticateUser, async (req, res) => {
             `;
             params = [sessionCenterId];
         }
-        
+
         const results = await db.queryDatabase(query, params);
-        
+
         // 포맷팅 함수
         const formatSize = (bytes) => {
             if (!bytes) return '0 B';
@@ -1139,7 +1140,7 @@ router.get('/api/center-usage', authenticateUser, async (req, res) => {
             if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
             return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
         };
-        
+
         res.json({
             success: true,
             centerUsage: results.map(r => ({
@@ -1154,9 +1155,9 @@ router.get('/api/center-usage', authenticateUser, async (req, res) => {
 
     } catch (error) {
         console.error('❌ [센터별 사용량] 오류:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 });
@@ -1170,19 +1171,19 @@ router.get('/api/project/:projectId/status', authenticateUser, async (req, res) 
     try {
         const { projectId } = req.params;
         const userID = req.session.userID;
-        
+
         const db = require('../lib_login/db');
-        
+
         // 사용자 DB ID 조회
         const [user] = await db.queryDatabase(
-            'SELECT id FROM Users WHERE userID = ?', 
+            'SELECT id FROM Users WHERE userID = ?',
             [userID]
         );
-        
+
         if (!user) {
             return res.status(404).json({ success: false, error: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         // 프로젝트 조회 (본인 프로젝트만)
         const [project] = await db.queryDatabase(
             `SELECT id, is_public, shared_at, view_count, like_count 
@@ -1190,11 +1191,11 @@ router.get('/api/project/:projectId/status', authenticateUser, async (req, res) 
              WHERE id = ? AND user_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)`,
             [projectId, user.id]
         );
-        
+
         if (!project) {
             return res.status(404).json({ success: false, error: '프로젝트를 찾을 수 없습니다.' });
         }
-        
+
         res.json({
             success: true,
             projectId: project.id,
@@ -1203,7 +1204,7 @@ router.get('/api/project/:projectId/status', authenticateUser, async (req, res) 
             viewCount: project.view_count || 0,
             likeCount: project.like_count || 0
         });
-        
+
     } catch (error) {
         console.error('❌ [공유 상태 조회] 오류:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -1215,19 +1216,19 @@ router.put('/api/share/:projectId', authenticateUser, async (req, res) => {
     try {
         const { projectId } = req.params;
         const userID = req.session.userID;
-        
+
         const db = require('../lib_login/db');
-        
+
         // 사용자 DB ID 조회
         const [user] = await db.queryDatabase(
-            'SELECT id FROM Users WHERE userID = ?', 
+            'SELECT id FROM Users WHERE userID = ?',
             [userID]
         );
-        
+
         if (!user) {
             return res.status(404).json({ success: false, error: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         // 프로젝트 조회 (본인 프로젝트만)
         const [project] = await db.queryDatabase(
             `SELECT id, is_public, project_name 
@@ -1235,15 +1236,15 @@ router.put('/api/share/:projectId', authenticateUser, async (req, res) => {
              WHERE id = ? AND user_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)`,
             [projectId, user.id]
         );
-        
+
         if (!project) {
             return res.status(404).json({ success: false, error: '프로젝트를 찾을 수 없습니다.' });
         }
-        
+
         // 현재 상태 반전
         const currentPublic = project.is_public || false;
         const newPublic = !currentPublic;
-        
+
         // 상태 업데이트
         await db.queryDatabase(
             `UPDATE ProjectSubmissions 
@@ -1252,9 +1253,9 @@ router.put('/api/share/:projectId', authenticateUser, async (req, res) => {
              WHERE id = ?`,
             [newPublic, projectId]
         );
-        
+
         console.log(`🌐 [갤러리 공유] ${newPublic ? '공개' : '비공개'} 전환: ${project.project_name} (ID: ${projectId})`);
-        
+
         res.json({
             success: true,
             message: newPublic ? '갤러리에 공개되었습니다.' : '갤러리에서 비공개로 전환되었습니다.',
@@ -1262,7 +1263,7 @@ router.put('/api/share/:projectId', authenticateUser, async (req, res) => {
             isPublic: newPublic,
             sharedAt: newPublic ? new Date().toISOString() : null
         });
-        
+
     } catch (error) {
         console.error('❌ [공유 토글] 오류:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -1274,22 +1275,22 @@ router.get('/api/gallery', async (req, res) => {
     try {
         const { page = 1, limit = 20, userId, category, sort = 'recent' } = req.query;
         const offset = (parseInt(page) - 1) * parseInt(limit);
-        
+
         const db = require('../lib_login/db');
-        
+
         // 기본 쿼리 - Entry 플랫폼의 공개 프로젝트만
         let whereClause = `ps.platform = 'entry' AND ps.is_public = TRUE AND (ps.is_deleted = FALSE OR ps.is_deleted IS NULL)`;
         const params = [];
-        
+
         // userId 필터 (특정 사용자의 프로젝트만)
         if (userId) {
             whereClause += ` AND u.userID = ?`;
             params.push(userId);
         }
-        
+
         // save_type 필터 (autosave 제외, projects만)
         whereClause += ` AND ps.save_type = 'projects'`;
-        
+
         // 정렬 옵션
         let orderClause = 'ps.shared_at DESC'; // 기본: 최신 공유순
         if (sort === 'views') {
@@ -1297,7 +1298,7 @@ router.get('/api/gallery', async (req, res) => {
         } else if (sort === 'likes') {
             orderClause = 'ps.like_count DESC, ps.shared_at DESC';
         }
-        
+
         // 전체 개수 조회
         const countQuery = `
             SELECT COUNT(*) as total 
@@ -1307,7 +1308,7 @@ router.get('/api/gallery', async (req, res) => {
         `;
         const [countResult] = await db.queryDatabase(countQuery, params);
         const totalCount = countResult?.total || 0;
-        
+
         // 프로젝트 목록 조회
         const listQuery = `
             SELECT 
@@ -1331,9 +1332,9 @@ router.get('/api/gallery', async (req, res) => {
             ORDER BY ${orderClause}
             LIMIT ? OFFSET ?
         `;
-        
+
         const projects = await db.queryDatabase(listQuery, [...params, parseInt(limit), offset]);
-        
+
         res.json({
             success: true,
             data: {
@@ -1363,7 +1364,7 @@ router.get('/api/gallery', async (req, res) => {
                 }
             }
         });
-        
+
     } catch (error) {
         console.error('❌ [갤러리 목록] 오류:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -1374,9 +1375,9 @@ router.get('/api/gallery', async (req, res) => {
 router.post('/api/gallery/:projectId/view', async (req, res) => {
     try {
         const { projectId } = req.params;
-        
+
         const db = require('../lib_login/db');
-        
+
         // 공개 프로젝트인지 확인 후 조회수 증가
         const result = await db.queryDatabase(
             `UPDATE ProjectSubmissions 
@@ -1384,13 +1385,13 @@ router.post('/api/gallery/:projectId/view', async (req, res) => {
              WHERE id = ? AND is_public = TRUE AND (is_deleted = FALSE OR is_deleted IS NULL)`,
             [projectId]
         );
-        
+
         if (result.affectedRows === 0) {
             return res.status(404).json({ success: false, error: '프로젝트를 찾을 수 없습니다.' });
         }
-        
+
         res.json({ success: true, message: '조회수가 증가했습니다.' });
-        
+
     } catch (error) {
         console.error('❌ [조회수 증가] 오류:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -1402,9 +1403,9 @@ router.get('/api/gallery/users', async (req, res) => {
     try {
         const { page = 1, limit = 20 } = req.query;
         const offset = (parseInt(page) - 1) * parseInt(limit);
-        
+
         const db = require('../lib_login/db');
-        
+
         // 공개 프로젝트가 있는 유저 목록
         const query = `
             SELECT 
@@ -1425,9 +1426,9 @@ router.get('/api/gallery/users', async (req, res) => {
             ORDER BY total_views DESC, project_count DESC
             LIMIT ? OFFSET ?
         `;
-        
+
         const users = await db.queryDatabase(query, [parseInt(limit), offset]);
-        
+
         res.json({
             success: true,
             data: {
@@ -1441,7 +1442,7 @@ router.get('/api/gallery/users', async (req, res) => {
                 }))
             }
         });
-        
+
     } catch (error) {
         console.error('❌ [갤러리 유저 목록] 오류:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -1454,19 +1455,19 @@ router.get('/api/gallery/user/:userId', async (req, res) => {
         const { userId } = req.params;
         const { page = 1, limit = 20 } = req.query;
         const offset = (parseInt(page) - 1) * parseInt(limit);
-        
+
         const db = require('../lib_login/db');
-        
+
         // 유저 정보 조회
         const [user] = await db.queryDatabase(
             'SELECT id, userID, name, profile_image FROM Users WHERE userID = ?',
             [userId]
         );
-        
+
         if (!user) {
             return res.status(404).json({ success: false, error: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         // 해당 유저의 공개 프로젝트 목록
         const projects = await db.queryDatabase(`
             SELECT 
@@ -1482,14 +1483,14 @@ router.get('/api/gallery/user/:userId', async (req, res) => {
             ORDER BY shared_at DESC
             LIMIT ? OFFSET ?
         `, [user.id, parseInt(limit), offset]);
-        
+
         // 총 개수
         const [countResult] = await db.queryDatabase(`
             SELECT COUNT(*) as total FROM ProjectSubmissions
             WHERE user_id = ? AND platform = 'entry' AND is_public = TRUE 
               AND save_type = 'projects' AND (is_deleted = FALSE OR is_deleted IS NULL)
         `, [user.id]);
-        
+
         res.json({
             success: true,
             data: {
@@ -1519,7 +1520,7 @@ router.get('/api/gallery/user/:userId', async (req, res) => {
                 }
             }
         });
-        
+
     } catch (error) {
         console.error('❌ [유저 갤러리] 오류:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -1533,23 +1534,23 @@ router.get('/api/gallery/user/:userId', async (req, res) => {
 router.get('/api/storage-usage', authenticateUser, async (req, res) => {
     try {
         const userID = req.session.userID;
-        
+
         const db = require('../lib_login/db');
         const quotaChecker = require('../lib_storage/quotaChecker');
-        
+
         // 사용자 DB ID 조회
         const [user] = await db.queryDatabase(
-            'SELECT id, centerID FROM Users WHERE userID = ?', 
+            'SELECT id, centerID FROM Users WHERE userID = ?',
             [userID]
         );
-        
+
         if (!user) {
-            return res.status(404).json({ 
-                success: false, 
-                error: '사용자를 찾을 수 없습니다.' 
+            return res.status(404).json({
+                success: false,
+                error: '사용자를 찾을 수 없습니다.'
             });
         }
-        
+
         // Entry 프로젝트 통계 (삭제되지 않은 것만)
         const [entryStats] = await db.queryDatabase(`
             SELECT 
@@ -1560,7 +1561,7 @@ router.get('/api/storage-usage', authenticateUser, async (req, res) => {
               AND platform = 'entry'
               AND (is_deleted = FALSE OR is_deleted IS NULL)
         `, [user.id]);
-        
+
         // 전체 사용량 (모든 플랫폼)
         let totalUsage = { total_usage: 0 };
         try {
@@ -1568,7 +1569,7 @@ router.get('/api/storage-usage', authenticateUser, async (req, res) => {
         } catch (e) {
             console.warn('용량 조회 실패:', e.message);
         }
-        
+
         // 제한 용량 조회
         let limit = 500 * 1024 * 1024; // 기본 500MB
         try {
@@ -1576,7 +1577,7 @@ router.get('/api/storage-usage', authenticateUser, async (req, res) => {
         } catch (e) {
             console.warn('제한 조회 실패:', e.message);
         }
-        
+
         const formatSize = (bytes) => {
             if (!bytes) return '0 B';
             if (bytes < 1024) return bytes + ' B';
@@ -1584,10 +1585,10 @@ router.get('/api/storage-usage', authenticateUser, async (req, res) => {
             if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
             return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
         };
-        
+
         const totalBytes = totalUsage.total_usage || 0;
         const usagePercent = limit > 0 ? Math.round((totalBytes / limit) * 100) : 0;
-        
+
         res.json({
             success: true,
             usage: {
@@ -1608,9 +1609,9 @@ router.get('/api/storage-usage', authenticateUser, async (req, res) => {
 
     } catch (error) {
         console.error('❌ [사용량 조회] 오류:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 });
