@@ -199,63 +199,35 @@
                                         <div class="timeline-line"></div>
 
                                         <% if (locals.activityLogs && activityLogs.length> 0) { %>
-                                            <% activityLogs.forEach((log, index)=> {
-                                                // 1. Data Parsing & Title Logic
-                                                let isProject = log.action_type === 'portfolio_upload';
-                                                let isMeaningful = isProject;
-                                                // Additional logic for 'meaningful' items (e.g. detailed view
-                                                available)
-
-                                                let title = log.action_type;
-                                                let desc = '';
-                                                let rawDetail = {};
-                                                try { rawDetail = JSON.parse(log.action_detail); } catch(e) { rawDetail
-                                                = {}; }
-
-                                                // --- Log Translation Logic ---
-                                                if (isProject) {
-                                                title = rawDetail.projectName || 'Project Upload';
-                                                desc = 'Portfolio Submission';
-                                                } else if (log.action_type === 'login') {
-                                                title = '로그인 (Login)';
-                                                desc = 'System Access';
-                                                } else if (log.action_type === 'logout') {
-                                                title = '로그아웃 (Logout)';
-                                                desc = 'System Exit';
-                                                } else if (log.action_type.startsWith('GET /')) {
-                                                // Parse readable path
-                                                const path = log.action_type.replace('GET ', '');
-                                                if (path.includes('/content/')) {
-                                                const parts = path.split('/');
-                                                const contentName = parts[parts.length - 1]; // e.g., cospro_1-1
-                                                title = `학습: ${contentName}`;
-                                                desc = 'Learning Activity';
-                                                isMeaningful = false; // Usually just viewing
-                                                } else if (path.includes('page')) {
-                                                title = '페이지 방문';
-                                                desc = path;
-                                                } else {
-                                                title = '페이지 조회';
-                                                desc = path;
-                                                }
-                                                } else {
-                                                // Fallback for other custom types
-                                                desc = log.action_detail ? (typeof log.action_detail === 'string' ?
-                                                log.action_detail : 'Detail info') : '';
-                                                }
-
-                                                // Date Formatting (Single Line: MM.DD HH:mm)
-                                                const dateObj = new Date(log.created_at);
-                                                const dateStr = (dateObj.getMonth() + 1).toString().padStart(2, '0') +
-                                                '.' +
-                                                dateObj.getDate().toString().padStart(2, '0');
-                                                const timeStr = dateObj.getHours().toString().padStart(2, '0') + ':' +
-                                                dateObj.getMinutes().toString().padStart(2, '0');
-                                                const dateTimeStr = `${dateStr} ${timeStr}`;
-                                                %>
+                                            <% activityLogs.forEach(function(log, index) { // 1. Data Parsing & Title
+                                                Logic let isProject=log.action_type==='portfolio_upload' ; let
+                                                isMeaningful=isProject; // Additional logic for 'meaningful' items (e.g.
+                                                detailed view available) let title=log.action_type; let desc='' ; let
+                                                rawDetail={}; try { rawDetail=JSON.parse(log.action_detail); } catch(e)
+                                                { rawDetail={}; } // --- Log Translation Logic --- if (isProject) {
+                                                title=rawDetail.projectName || 'Project Upload' ;
+                                                desc='Portfolio Submission' ; } else if (log.action_type==='login' ) {
+                                                title='로그인 (Login)' ; desc='System Access' ; } else if
+                                                (log.action_type==='logout' ) { title='로그아웃 (Logout)' ;
+                                                desc='System Exit' ; } else if (log.action_type.startsWith('GET /')) {
+                                                // Parse readable path const path=log.action_type.replace('GET ', '');
+                                                if (path.includes(' /content/')) { const parts=path.split('/'); const
+                                                contentName=parts[parts.length - 1]; // e.g., cospro_1-1 title=`학습:
+                                                ${contentName}`; desc='Learning Activity' ; isMeaningful=false; //
+                                                Usually just viewing } else if (path.includes('page')) { title='페이지 방문'
+                                                ; desc=path; } else { title='페이지 조회' ; desc=path; } } else { // Fallback
+                                                for other custom types desc=log.action_detail ? (typeof
+                                                log.action_detail==='string' ? log.action_detail : 'Detail info' ) : ''
+                                                ; } // Date Formatting (Single Line: MM.DD HH:mm) const dateObj=new
+                                                Date(log.created_at); const dateStr=(dateObj.getMonth() +
+                                                1).toString().padStart(2, '0' ) + '.' +
+                                                dateObj.getDate().toString().padStart(2, '0' ); const
+                                                timeStr=dateObj.getHours().toString().padStart(2, '0' ) + ':' +
+                                                dateObj.getMinutes().toString().padStart(2, '0' ); const
+                                                dateTimeStr=`${dateStr} ${timeStr}`; %>
 
                                                 <div class="timeline-node <%= isMeaningful ? 'meaningful' : '' %>"
-                                                    onclick="<%= isMeaningful ? `selectActivity(this, ${index})` : '' %>">
+                                                    onclick="<%= isMeaningful ? 'selectActivity(this, ' + index + ')' : '' %>">
                                                     <div class="timeline-station"></div>
 
                                                     <div class="timeline-content">
