@@ -343,7 +343,9 @@ const StudentManagement = {
                         <div class="small text-muted" style="line-height:1;">${storageUsage}</div>
                     </td>
                     <td class="text-center">
-                        <div class="d-flex flex-column align-items-center justify-content-center">
+                        <div class="d-flex flex-column align-items-center justify-content-center" 
+                             onclick="StudentManagement.openTimelineModal('${student.user_id}', '${student.name}')"
+                             style="cursor: pointer;" title="타임라인 보기">
                             <i class="bi bi-clock-history fs-5 text-secondary mb-1"></i>
                             <span class="text-muted small" style="line-height:1;">
                                 ${student.last_learning_at ? new Date(student.last_learning_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }) : '-'}
@@ -364,6 +366,22 @@ const StudentManagement = {
         $(window).off('scroll.popover').on('scroll.popover', () => {
             this.closeAllPopovers();
         });
+
+        // Modal Cleanup
+        document.getElementById('timelineBrowserModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('timelineBrowserFrame').src = '';
+        });
+    },
+
+    openTimelineModal(userId, userName) {
+        const iframe = document.getElementById('timelineBrowserFrame');
+        const title = document.getElementById('timelineBrowserTitle');
+
+        title.innerText = `${userName}님의 학습 타임라인`;
+        iframe.src = `/portfolio/student/${userId}`;
+
+        const modal = new bootstrap.Modal(document.getElementById('timelineBrowserModal'));
+        modal.show();
     },
 
     generateDots(completed, total) {

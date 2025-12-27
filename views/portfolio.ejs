@@ -144,162 +144,189 @@
 </head>
 
 <body>
-    <%- include('partials/header') %>
+    <% if (locals.isModal) { %>
+        <style>
+            .timeline-container,
+            .viewer-container {
+                height: 100vh !important;
+                border: none !important;
+            }
 
-        <div class="container-fluid py-4">
-            <div class="row">
-                <!-- Left Column: Compact Timeline -->
-                <div class="col-md-3 timeline-container simple-scrollbar">
-                    <div class="d-flex justify-content-between align-items-center mb-3 ps-2">
-                        <h5 class="m-0 fw-bold"><i class="bi bi-clock-history me-2"></i>History</h5>
-                    </div>
+            body {
+                background: white;
+            }
 
-                    <div class="timeline-list">
-                        <div class="timeline-line"></div>
+            .container-fluid {
+                padding-top: 0 !important;
+            }
+        </style>
+        <% } %>
 
-                        <% if (locals.activityLogs && activityLogs.length> 0) { %>
-                            <% activityLogs.forEach((log, index)=> {
-                                let isProject = log.action_type === 'portfolio_upload';
-                                let isMeaningful = isProject;
-                                // Add check for other meaningful types if needed (e.g. 'entry_save')
+            <% if (!locals.isModal) { %>
+                <%- include('partials/header') %>
+                    <% } %>
 
-                                let title = log.action_type;
-                                let icon = '';
-
-                                if (isProject) {
-                                let detail = {};
-                                try { detail = JSON.parse(log.action_detail); } catch(e) {}
-                                title = detail.projectName || 'Project Upload';
-                                icon = '<i class="bi bi-controller text-primary me-1"></i>';
-                                } else if (log.action_type === 'login') {
-                                title = '로그인';
-                                } else if (log.action_type === 'logout') {
-                                title = '로그아웃';
-                                }
-                                %>
-                                <div class="timeline-node <%= isMeaningful ? 'meaningful' : '' %>"
-                                    onclick="<%= isMeaningful ? `selectActivity(this, ${index})` : '' %>">
-                                    <div class="timeline-station"></div>
-                                    <div class="timeline-date">
-                                        <%= new Date(log.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' ,
-                                            month: '2-digit' , day: '2-digit' , hour: '2-digit' , minute:'2-digit' }) %>
+                        <div class="container-fluid py-4">
+                            <div class="row">
+                                <!-- Left Column: Compact Timeline -->
+                                <div class="col-md-3 timeline-container simple-scrollbar">
+                                    <div class="d-flex justify-content-between align-items-center mb-3 ps-2">
+                                        <h5 class="m-0 fw-bold"><i class="bi bi-clock-history me-2"></i>History</h5>
                                     </div>
-                                    <div class="timeline-text">
-                                        <%- icon %>
-                                            <%= title %>
+
+                                    <div class="timeline-list">
+                                        <div class="timeline-line"></div>
+
+                                        <% if (locals.activityLogs && activityLogs.length> 0) { %>
+                                            <% activityLogs.forEach((log, index)=> {
+                                                let isProject = log.action_type === 'portfolio_upload';
+                                                let isMeaningful = isProject;
+                                                // Add check for other meaningful types if needed (e.g. 'entry_save')
+
+                                                let title = log.action_type;
+                                                let icon = '';
+
+                                                if (isProject) {
+                                                let detail = {};
+                                                try { detail = JSON.parse(log.action_detail); } catch(e) {}
+                                                title = detail.projectName || 'Project Upload';
+                                                icon = '<i class="bi bi-controller text-primary me-1"></i>';
+                                                } else if (log.action_type === 'login') {
+                                                title = '로그인';
+                                                } else if (log.action_type === 'logout') {
+                                                title = '로그아웃';
+                                                }
+                                                %>
+                                                <div class="timeline-node <%= isMeaningful ? 'meaningful' : '' %>"
+                                                    onclick="<%= isMeaningful ? `selectActivity(this, ${index})` : '' %>">
+                                                    <div class="timeline-station"></div>
+                                                    <div class="timeline-date">
+                                                        <%= new Date(log.created_at).toLocaleString('ko-KR', {
+                                                            timeZone: 'Asia/Seoul' , month: '2-digit' , day: '2-digit' ,
+                                                            hour: '2-digit' , minute:'2-digit' }) %>
+                                                    </div>
+                                                    <div class="timeline-text">
+                                                        <%- icon %>
+                                                            <%= title %>
+                                                    </div>
+                                                </div>
+                                                <% }); %>
+                                                    <% } else { %>
+                                                        <div class="text-center py-4 text-muted small">
+                                                            기록 없음
+                                                        </div>
+                                                        <% } %>
                                     </div>
                                 </div>
-                                <% }); %>
-                                    <% } else { %>
-                                        <div class="text-center py-4 text-muted small">
-                                            기록 없음
+
+                                <!-- Right Column: Content Viewer -->
+                                <div class="col-md-9 viewer-container simple-scrollbar" id="viewerPanel">
+                                    <div class="empty-state">
+                                        <i class="bi bi-folder2-open fs-1 mb-3"></i>
+                                        <h4>프로젝트를 선택하세요</h4>
+                                        <p>좌측 타임라인에서 프로젝트를 클릭하여 상세 내용을 확인하세요.</p>
+                                        <button class="btn btn-primary mt-3" data-bs-toggle="modal"
+                                            data-bs-target="#uploadModal">
+                                            <i class="bi bi-plus-lg me-2"></i>새 프로젝트 추가
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Modal -->
+                        <div class="modal fade" id="uploadModal" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">새 프로젝트 업로드</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="text-muted small">Pygame 프로젝트 ZIP 파일을 업로드하세요 (main.py 포함).</p>
+                                        <div class="mb-3">
+                                            <label class="form-label">프로젝트 이름</label>
+                                            <input type="text" class="form-control" id="mProjectName">
                                         </div>
-                                        <% } %>
-                    </div>
-                </div>
-
-                <!-- Right Column: Content Viewer -->
-                <div class="col-md-9 viewer-container simple-scrollbar" id="viewerPanel">
-                    <div class="empty-state">
-                        <i class="bi bi-folder2-open fs-1 mb-3"></i>
-                        <h4>프로젝트를 선택하세요</h4>
-                        <p>좌측 타임라인에서 프로젝트를 클릭하여 상세 내용을 확인하세요.</p>
-                        <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                            <i class="bi bi-plus-lg me-2"></i>새 프로젝트 추가
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Upload Modal -->
-        <div class="modal fade" id="uploadModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">새 프로젝트 업로드</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="text-muted small">Pygame 프로젝트 ZIP 파일을 업로드하세요 (main.py 포함).</p>
-                        <div class="mb-3">
-                            <label class="form-label">프로젝트 이름</label>
-                            <input type="text" class="form-control" id="mProjectName">
+                                        <div class="mb-3">
+                                            <label class="form-label">설명</label>
+                                            <textarea class="form-control" id="mProjectDesc"></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">파일 (ZIP)</label>
+                                            <input type="file" class="form-control" id="mProjectFile" accept=".zip">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">닫기</button>
+                                        <button type="button" class="btn btn-primary"
+                                            onclick="uploadProjectModal()">업로드</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">설명</label>
-                            <textarea class="form-control" id="mProjectDesc"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">파일 (ZIP)</label>
-                            <input type="file" class="form-control" id="mProjectFile" accept=".zip">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-                        <button type="button" class="btn btn-primary" onclick="uploadProjectModal()">업로드</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <%- include('partials/footer') %>
+                        <% if (!locals.isModal) { %>
+                            <%- include('partials/footer') %>
+                                <% } %>
 
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                                    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                                    <script
+                                        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-            <script>
-                // Server-side data injected into client
-                const clientLogs = <% - JSON.stringify(activityLogs || []) %>;
+                                    <script>
+                                        // Server-side data injected into client
+                                        const clientLogs = <% - JSON.stringify(activityLogs || []) %>;
 
-                function uploadProjectModal() {
-                    const fileInput = document.getElementById('mProjectFile');
-                    const nameInput = document.getElementById('mProjectName');
-                    const descInput = document.getElementById('mProjectDesc');
+                                        function uploadProjectModal() {
+                                            const fileInput = document.getElementById('mProjectFile');
+                                            const nameInput = document.getElementById('mProjectName');
+                                            const descInput = document.getElementById('mProjectDesc');
 
-                    if (!fileInput.files.length) return alert('파일을 선택해주세요.');
+                                            if (!fileInput.files.length) return alert('파일을 선택해주세요.');
 
-                    const formData = new FormData();
-                    formData.append('projectFile', fileInput.files[0]);
-                    formData.append('projectName', nameInput.value);
-                    formData.append('projectDesc', descInput.value);
+                                            const formData = new FormData();
+                                            formData.append('projectFile', fileInput.files[0]);
+                                            formData.append('projectName', nameInput.value);
+                                            formData.append('projectDesc', descInput.value);
 
-                    // Show loading spinner or disable button here if needed
+                                            // Show loading spinner or disable button here if needed
 
-                    fetch('/api/portfolio/upload', {
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert('업로드 성공!');
-                                location.reload();
-                            } else {
-                                alert('실패: ' + data.message);
-                            }
-                        });
-                }
+                                            fetch('/api/portfolio/upload', {
+                                                method: 'POST',
+                                                body: formData
+                                            })
+                                                .then(res => res.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        alert('업로드 성공!');
+                                                        location.reload();
+                                                    } else {
+                                                        alert('실패: ' + data.message);
+                                                    }
+                                                });
+                                        }
 
-                function selectActivity(element, index) {
-                    const log = clientLogs[index];
-                    if (!log) return;
+                                        function selectActivity(element, index) {
+                                            const log = clientLogs[index];
+                                            if (!log) return;
 
-                    // UI Selection Update
-                    document.querySelectorAll('.timeline-node').forEach(el => el.classList.remove('active'));
-                    element.classList.add('active');
+                                            // UI Selection Update
+                                            document.querySelectorAll('.timeline-node').forEach(el => el.classList.remove('active'));
+                                            element.classList.add('active');
 
-                    const viewer = document.getElementById('viewerPanel');
-                    let content = '';
+                                            const viewer = document.getElementById('viewerPanel');
+                                            let content = '';
 
-                    let detail = {};
-                    try { detail = JSON.parse(log.action_detail); } catch (e) { detail = { raw: log.action_detail }; }
+                                            let detail = {};
+                                            try { detail = JSON.parse(log.action_detail); } catch (e) { detail = { raw: log.action_detail }; }
 
-                    if (log.action_type === 'portfolio_upload') {
-                        const projectId = detail.projectId;
-                        const img = detail.thumbnail || '/resource/pygame-default.png';
+                                            if (log.action_type === 'portfolio_upload') {
+                                                const projectId = detail.projectId;
+                                                const img = detail.thumbnail || '/resource/pygame-default.png';
 
-                        content = `
+                                                content = `
                     <div class="fade-in p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h2 class="fw-bold text-dark">${detail.projectName}</h2>
@@ -323,32 +350,32 @@
                         </div>
                     </div>
                 `;
-                    }
-                    // Add other types if meaningful
+                                            }
+                                            // Add other types if meaningful
 
-                    viewer.innerHTML = content;
-                }
+                                            viewer.innerHTML = content;
+                                        }
 
-                function deleteProject(projectId) {
-                    if (!confirm('정말 삭제하시겠습니까?')) return;
-                    fetch(`/api/portfolio/delete/${projectId}`, { method: 'DELETE' })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert('삭제되었습니다.');
-                                location.reload();
-                            } else {
-                                alert('삭제 실패: ' + data.message);
-                            }
-                        });
-                }
+                                        function deleteProject(projectId) {
+                                            if (!confirm('정말 삭제하시겠습니까?')) return;
+                                            fetch(`/api/portfolio/delete/${projectId}`, { method: 'DELETE' })
+                                                .then(res => res.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        alert('삭제되었습니다.');
+                                                        location.reload();
+                                                    } else {
+                                                        alert('삭제 실패: ' + data.message);
+                                                    }
+                                                });
+                                        }
 
-                // Auto-select first project if exists
-                document.addEventListener('DOMContentLoaded', () => {
-                    const firstProject = document.querySelector('.timeline-node.meaningful');
-                    if (firstProject) firstProject.click();
-                });
-            </script>
+                                        // Auto-select first project if exists
+                                        document.addEventListener('DOMContentLoaded', () => {
+                                            const firstProject = document.querySelector('.timeline-node.meaningful');
+                                            if (firstProject) firstProject.click();
+                                        });
+                                    </script>
 </body>
 
 </html>
