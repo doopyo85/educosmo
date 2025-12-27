@@ -111,6 +111,15 @@ try {
   console.error('❌ Pong2PortfolioRouter 로드 실패:', error);
 }
 
+// 🔥 갤러리 API 라우터 연결 (공유 프로젝트 시스템)
+try {
+  const galleryApiRouter = require('./api/galleryApiRouter');
+  router.use('/gallery', galleryApiRouter);
+  console.log('✅ GalleryApiRouter 등록 완료');
+} catch (error) {
+  console.error('❌ GalleryApiRouter 로드 실패:', error);
+}
+
 router.use('/s3', s3BrowserRouter);
 router.use('/game', gameScoreRouter);
 router.use('/jupyter', jupyterRouter);
