@@ -47,12 +47,13 @@ async function pong2Auth(req, res, next) {
 
                     // Optimization: If we need nickname/name populated for everything, query DB.
                     // Let's query DB to be safe and consistent with session-based user.
-                    const users = await queryDatabase('SELECT id, name, nickname, role, centerID FROM Users WHERE id = ?', [decoded.id]);
+                    // FIX: Process 'nickname' column error - Users table might not have nickname
+                    const users = await queryDatabase('SELECT id, name, role, centerID FROM Users WHERE id = ?', [decoded.id]);
                     if (users.length > 0) {
                         req.user = {
                             ...req.user,
                             name: users[0].name,
-                            nickname: users[0].nickname,
+                            nickname: users[0].name, // Use name as nickname for Paid Users
                             role: users[0].role,
                             centerID: users[0].centerID
                         };
