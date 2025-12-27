@@ -93,6 +93,15 @@ try {
   console.error('❌ EntryDataApiRouter 로드 실패:', error);
 }
 
+// 🔥 Pong2 메인 API 라우터 연결 (SSO, Auth, Boards - pong2.app용)
+try {
+  const pong2Router = require('./api/pong2Router');
+  router.use('/pong2', pong2Router);
+  console.log('✅ Pong2Router 등록 완료');
+} catch (error) {
+  console.error('❌ Pong2Router 로드 실패:', error);
+}
+
 // 🔥 Pong2 포트폴리오 API 라우터 연결 (공개 API - pong2.app용)
 try {
   const pong2PortfolioRouter = require('./api/pong2PortfolioRouter');
