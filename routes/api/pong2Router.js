@@ -413,6 +413,8 @@ router.get('/auth/sso-token', requireAuth, (req, res) => {
 // 2. Get Current User (For Pong2 to validate token)
 router.get('/auth/me', requireAuth, async (req, res) => {
     try {
+        console.log('🔍 [Pong2] /auth/me requested', req.user ? `by ${req.user.id}` : 'no user');
+
         // req.user is already populated by pong2Auth middleware
         const user = {
             id: req.user.id,
@@ -421,12 +423,10 @@ router.get('/auth/me', requireAuth, async (req, res) => {
             role: req.user.role || 'student'
         };
 
-        // If PAID user, we might want to fetch latest details from DB?
-        // For now, session/token data is sufficient.
-
+        console.log('✅ [Pong2] /auth/me responding with:', user);
         res.json({ success: true, user });
     } catch (error) {
-        console.error('Get Me Error:', error);
+        console.error('❌ [Pong2] Get Me Error:', error);
         res.status(500).json({ error: 'Failed to get user info' });
     }
 });
