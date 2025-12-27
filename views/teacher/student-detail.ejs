@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,31 +16,37 @@
             overflow-y: auto;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
         }
+
         .container {
             max-width: 900px;
             background: white;
             border-radius: 10px;
             padding: 40px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             margin: 20px auto;
         }
+
         h2 {
             text-align: center;
             margin-bottom: 30px;
             color: #333;
         }
+
         .form-section {
             margin-bottom: 30px;
         }
+
         .form-section h4 {
             border-bottom: 2px solid #667eea;
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
+
         .table-container {
             max-height: 300px;
             overflow-y: auto;
         }
+
         .submission-card {
             border: 1px solid #e0e0e0;
             border-radius: 8px;
@@ -47,11 +54,13 @@
             margin-bottom: 10px;
             transition: all 0.3s;
         }
+
         .submission-card:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h2><i class="bi bi-person-circle me-2"></i>학생 상세 정보</h2>
@@ -98,20 +107,22 @@
         <!-- 🔥 제출물 탭 -->
         <div class="form-section">
             <h4><i class="bi bi-folder-check me-2"></i>제출물 (Entry/Scratch)</h4>
-            
+
             <ul class="nav nav-tabs mb-3" id="submissionTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="entry-tab" data-bs-toggle="tab" data-bs-target="#entry-submissions" type="button">
+                    <button class="nav-link active" id="entry-tab" data-bs-toggle="tab"
+                        data-bs-target="#entry-submissions" type="button">
                         <i class="bi bi-file-earmark-code"></i> Entry
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="scratch-tab" data-bs-toggle="tab" data-bs-target="#scratch-submissions" type="button">
+                    <button class="nav-link" id="scratch-tab" data-bs-toggle="tab" data-bs-target="#scratch-submissions"
+                        type="button">
                         <i class="bi bi-box"></i> Scratch
                     </button>
                 </li>
             </ul>
-            
+
             <div class="tab-content" id="submissionTabContent">
                 <div class="tab-pane fade show active" id="entry-submissions" role="tabpanel">
                     <div id="entry-list"></div>
@@ -135,18 +146,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (logs && logs.length > 0) { %>
-                            <% logs.forEach(log => { %>
+                        <% if (logs && logs.length> 0) { %>
+                            <% logs.forEach(log=> { %>
                                 <tr>
-                                    <td><%= new Date(log.start_time).toLocaleString('ko-KR') %></td>
-                                    <td><%= log.content_name %></td>
+                                    <td>
+                                        <%= new Date(log.start_time).toLocaleString('ko-KR') %>
+                                    </td>
+                                    <td>
+                                        <%= log.content_name %>
+                                    </td>
                                 </tr>
-                            <% }) %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="2" class="text-center text-muted">학습 기록이 없습니다.</td>
-                            </tr>
-                        <% } %>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="2" class="text-center text-muted">학습 기록이 없습니다.</td>
+                                        </tr>
+                                        <% } %>
                     </tbody>
                 </table>
             </div>
@@ -162,29 +177,38 @@
                         <tr>
                             <th>일시</th>
                             <th>상태</th>
+                            <th>상세 내용</th>
                             <th>접속 IP</th>
-                            <th>브라우저</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (activityLogs && activityLogs.length > 0) { %>
-                            <% activityLogs.forEach(log => { %>
+                        <% if (activityLogs && activityLogs.length> 0) { %>
+                            <% activityLogs.forEach(log=> { %>
                                 <tr>
-                                    <td><%= new Date(log.created_at).toLocaleString('ko-KR') %></td>
                                     <td>
-                                        <span class="badge <%= log.status === 'login' ? 'bg-success' : log.status === 'logout' ? 'bg-secondary' : 'bg-light text-dark' %>">
-                                            <%= log.status === 'login' ? '로그인' : log.status === 'logout' ? '로그아웃' : '활동중' %>
+                                        <%= new Date(log.created_at).toLocaleString('ko-KR') %>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge <%= log.status === 'login' ? 'bg-success' : log.status === 'logout' ? 'bg-secondary' : 'bg-info text-dark' %>">
+                                            <%= log.status==='login' ? '로그인' : log.status==='logout' ? '로그아웃' :
+                                                (log.action_type || '활동' ) %>
                                         </span>
                                     </td>
-                                    <td><%= log.ip_address %></td>
-                                    <td><%= log.user_agent ? log.user_agent.substring(0, 50) + '...' : '-' %></td>
+                                    <td class="text-truncate" style="max-width: 200px;"
+                                        title="<%= log.action_detail || log.url %>">
+                                        <%= log.action_detail || log.url || '-' %>
+                                    </td>
+                                    <td>
+                                        <%= log.ip_address %>
+                                    </td>
                                 </tr>
-                            <% }) %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="4" class="text-center text-muted">로그인 기록이 없습니다.</td>
-                            </tr>
-                        <% } %>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">로그인 기록이 없습니다.</td>
+                                        </tr>
+                                        <% } %>
                     </tbody>
                 </table>
             </div>
@@ -194,7 +218,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const studentId = <%= student.id %>;
-        
+
         // 학생 정보 수정
         document.getElementById('studentDetailForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -209,7 +233,7 @@
             try {
                 const isMyProfile = <%= locals.isMyProfile || false %>;
                 const url = isMyProfile ? '/api/my-profile' : `/teacher/api/students/${studentId}`;
-                
+
                 const response = await fetch(url, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -228,18 +252,18 @@
                 alert('오류 발생');
             }
         });
-        
+
         // 🔥 제출물 로드
         async function loadSubmissions(platform) {
             const listId = `${platform}-list`;
             const container = document.getElementById(listId);
-            
+
             container.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div> 로딩 중...</div>';
-            
+
             try {
                 const response = await fetch(`/teacher/api/students/${studentId}/submissions?platform=${platform}`);
                 const result = await response.json();
-                
+
                 if (result.success && result.submissions.length > 0) {
                     container.innerHTML = result.submissions.map(sub => `
                         <div class="submission-card">
@@ -279,15 +303,15 @@
                 container.innerHTML = '<div class="alert alert-danger">제출물을 불러올 수 없습니다.</div>';
             }
         }
-        
+
         // 제출물 보기
         function viewSubmission(s3Url, platform) {
-            const workspaceUrl = platform === 'entry' 
+            const workspaceUrl = platform === 'entry'
                 ? `/entry/?s3Url=${encodeURIComponent(s3Url)}`
                 : `/scratch/?s3Url=${encodeURIComponent(s3Url)}`;
             window.open(workspaceUrl, '_blank');
         }
-        
+
         // 제출물 다운로드
         function downloadSubmission(s3Url, fileName) {
             const a = document.createElement('a');
@@ -297,20 +321,21 @@
             a.click();
             document.body.removeChild(a);
         }
-        
+
         // 페이지 로드 시 Entry 제출물 로드
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadSubmissions('entry');
         });
-        
+
         // 탭 전환 이벤트
-        document.getElementById('entry-tab').addEventListener('shown.bs.tab', function() {
+        document.getElementById('entry-tab').addEventListener('shown.bs.tab', function () {
             loadSubmissions('entry');
         });
-        
-        document.getElementById('scratch-tab').addEventListener('shown.bs.tab', function() {
+
+        document.getElementById('scratch-tab').addEventListener('shown.bs.tab', function () {
             loadSubmissions('scratch');
         });
     </script>
 </body>
+
 </html>

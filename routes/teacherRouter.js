@@ -658,9 +658,9 @@ router.get('/student-detail/:id', requireTeacher, checkSameCenter, async (req, r
         );
 
         const activityLogs = await db.queryDatabase(
-            `SELECT created_at, ip_address, user_agent, url, status 
+            `SELECT created_at, ip_address, user_agent, url, status, action_type, action_detail 
             FROM UserActivityLogs 
-            WHERE user_id = ? AND status IN ('login', 'logout')
+            WHERE user_id = ?
             ORDER BY created_at DESC 
             LIMIT 50`,
             [studentId]
