@@ -10,101 +10,119 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/styles.css">
     <style>
-        /* Subway Map Timeline Styles (Compact Version) */
+        /* Subway Map Timeline Styles (Refined) */
         .timeline-container {
             height: calc(100vh - 150px);
             overflow-y: auto;
             border-right: 1px solid #dee2e6;
-            padding-right: 20px;
+            padding-right: 10px;
+            /* Reduced padding */
+            padding-left: 10px;
         }
 
         .timeline-list {
             position: relative;
-            padding-left: 20px;
+            padding-left: 30px;
+            /* Space for the line */
             list-style: none;
             margin-top: 20px;
         }
 
         .timeline-line {
             position: absolute;
-            left: 7px;
-            top: 5px;
+            left: 15px;
+            /* Center of station */
+            top: 10px;
             bottom: 0;
-            width: 2px;
-            background-color: #e9ecef;
+            /* Extends to bottom */
+            width: 4px;
+            /* Thicker line like subway */
+            background-color: #6c757d;
+            /* Subway line color (Gray) */
             border-radius: 2px;
+            z-index: 0;
         }
 
         .timeline-node {
             position: relative;
-            margin-bottom: 15px;
-            padding-left: 20px;
+            margin-bottom: 25px;
+            /* More spacing */
             display: flex;
             align-items: center;
+            /* Vertical center */
             transition: all 0.2s;
+            cursor: default;
         }
 
-        /* Node Marker (Station) */
+        /* Station Marker */
         .timeline-station {
             position: absolute;
-            left: 2px;
+            left: -21px;
+            /* Adjust relative to padding-left (30px) -> 15px absolute center */
             top: 50%;
             transform: translateY(-50%);
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             background-color: white;
-            border: 2px solid #adb5bd;
+            border: 3px solid #6c757d;
+            /* Match line color */
             z-index: 1;
+            /* box-shadow: 0 0 0 2px white; Optional: clear line behind */
         }
 
-        /* Default: Not Clickable by default */
-        .timeline-node {
-            cursor: default;
-            opacity: 0.7;
-        }
-
-        /* Meaningful Items (Projects) */
-        .timeline-node.meaningful {
-            cursor: pointer;
-            opacity: 1;
-        }
-
+        /* Interactive Station (Meaningful) */
         .timeline-node.meaningful .timeline-station {
             border-color: #0d6efd;
-            background-color: #e7f1ff;
-            width: 16px;
-            height: 16px;
-            left: 0px;
+            /* Primary color */
+            width: 18px;
+            height: 18px;
+            left: -23px;
+            background-color: white;
+            cursor: pointer;
         }
 
-        .timeline-node.meaningful:hover {
-            background-color: #f8f9fa;
-            border-radius: 4px;
+        .timeline-node.meaningful:hover .timeline-station {
+            background-color: #0d6efd;
         }
 
-        /* Active State */
+        /* Active Station */
         .timeline-node.active .timeline-station {
             background-color: #0d6efd;
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
         }
 
-        .timeline-node.active {
-            background-color: #e7f1ff;
-            border-radius: 4px;
-            font-weight: bold;
+        .timeline-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
         }
 
-        /* Content Layout */
-        .timeline-date {
-            font-size: 0.75rem;
-            color: #6c757d;
-            width: 80px;
-            flex-shrink: 0;
+        .timeline-header {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 2px;
         }
 
-        .timeline-text {
-            font-size: 0.9rem;
+        .timeline-title {
+            font-weight: 600;
+            color: #343a40;
+            font-size: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .timeline-meta {
+            font-size: 0.8rem;
+            color: #868e96;
+            white-space: nowrap;
+        }
+
+        .timeline-desc {
+            font-size: 0.85rem;
             color: #495057;
             white-space: nowrap;
             overflow: hidden;
@@ -170,8 +188,11 @@
                             <div class="row">
                                 <!-- Left Column: Compact Timeline -->
                                 <div class="col-md-3 timeline-container simple-scrollbar">
-                                    <div class="d-flex justify-content-between align-items-center mb-3 ps-2">
-                                        <h5 class="m-0 fw-bold"><i class="bi bi-clock-history me-2"></i>History</h5>
+                                    <div class="d-flex justify-content-between align-items-center mb-3 ps-2 pt-2">
+                                        <h5 class="m-0 fw-bold"><i class="bi bi-diagram-2 me-2"></i>History</h5>
+                                        <a href="/observatory" class="btn btn-sm btn-outline-primary rounded-pill">
+                                            <i class="bi bi-stars me-1"></i>Observatory
+                                        </a>
                                     </div>
 
                                     <div class="timeline-list">
@@ -179,43 +200,87 @@
 
                                         <% if (locals.activityLogs && activityLogs.length> 0) { %>
                                             <% activityLogs.forEach((log, index)=> {
+                                                // 1. Data Parsing & Title Logic
                                                 let isProject = log.action_type === 'portfolio_upload';
                                                 let isMeaningful = isProject;
-                                                // Add check for other meaningful types if needed (e.g. 'entry_save')
+                                                // Additional logic for 'meaningful' items (e.g. detailed view
+                                                available)
 
                                                 let title = log.action_type;
-                                                let icon = '';
+                                                let desc = '';
+                                                let rawDetail = {};
+                                                try { rawDetail = JSON.parse(log.action_detail); } catch(e) { rawDetail
+                                                = {}; }
 
+                                                // --- Log Translation Logic ---
                                                 if (isProject) {
-                                                let detail = {};
-                                                try { detail = JSON.parse(log.action_detail); } catch(e) {}
-                                                title = detail.projectName || 'Project Upload';
-                                                icon = '<i class="bi bi-controller text-primary me-1"></i>';
+                                                title = rawDetail.projectName || 'Project Upload';
+                                                desc = 'Portfolio Submission';
                                                 } else if (log.action_type === 'login') {
-                                                title = '로그인';
+                                                title = '로그인 (Login)';
+                                                desc = 'System Access';
                                                 } else if (log.action_type === 'logout') {
-                                                title = '로그아웃';
+                                                title = '로그아웃 (Logout)';
+                                                desc = 'System Exit';
+                                                } else if (log.action_type.startsWith('GET /')) {
+                                                // Parse readable path
+                                                const path = log.action_type.replace('GET ', '');
+                                                if (path.includes('/content/')) {
+                                                const parts = path.split('/');
+                                                const contentName = parts[parts.length - 1]; // e.g., cospro_1-1
+                                                title = `학습: ${contentName}`;
+                                                desc = 'Learning Activity';
+                                                isMeaningful = false; // Usually just viewing
+                                                } else if (path.includes('page')) {
+                                                title = '페이지 방문';
+                                                desc = path;
+                                                } else {
+                                                title = '페이지 조회';
+                                                desc = path;
                                                 }
+                                                } else {
+                                                // Fallback for other custom types
+                                                desc = log.action_detail ? (typeof log.action_detail === 'string' ?
+                                                log.action_detail : 'Detail info') : '';
+                                                }
+
+                                                // Date Formatting (Single Line: MM.DD HH:mm)
+                                                const dateObj = new Date(log.created_at);
+                                                const dateStr = (dateObj.getMonth() + 1).toString().padStart(2, '0') +
+                                                '.' +
+                                                dateObj.getDate().toString().padStart(2, '0');
+                                                const timeStr = dateObj.getHours().toString().padStart(2, '0') + ':' +
+                                                dateObj.getMinutes().toString().padStart(2, '0');
+                                                const dateTimeStr = `${dateStr} ${timeStr}`;
                                                 %>
+
                                                 <div class="timeline-node <%= isMeaningful ? 'meaningful' : '' %>"
                                                     onclick="<%= isMeaningful ? `selectActivity(this, ${index})` : '' %>">
                                                     <div class="timeline-station"></div>
-                                                    <div class="timeline-date">
-                                                        <%= new Date(log.created_at).toLocaleString('ko-KR', {
-                                                            timeZone: 'Asia/Seoul' , month: '2-digit' , day: '2-digit' ,
-                                                            hour: '2-digit' , minute:'2-digit' }) %>
-                                                    </div>
-                                                    <div class="timeline-text">
-                                                        <%- icon %>
-                                                            <%= title %>
+
+                                                    <div class="timeline-content">
+                                                        <div class="timeline-header">
+                                                            <span class="timeline-title">
+                                                                <%= title %>
+                                                            </span>
+                                                            <span class="timeline-meta">
+                                                                <%= dateTimeStr %>
+                                                            </span>
+                                                        </div>
+                                                        <% if (desc) { %>
+                                                            <div class="timeline-desc">
+                                                                <%= desc %>
+                                                            </div>
+                                                            <% } %>
                                                     </div>
                                                 </div>
                                                 <% }); %>
                                                     <% } else { %>
-                                                        <div class="text-center py-4 text-muted small">
-                                                            기록 없음
-                                                        </div>
-                                                        <% } %>
+                                                        <% } else { %>
+                                                            <div class="text-center py-4 text-muted small">
+                                                                기록 없음
+                                                            </div>
+                                                            <% } %>
                                     </div>
                                 </div>
 
