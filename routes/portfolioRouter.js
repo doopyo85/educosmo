@@ -52,13 +52,37 @@ const upload = multer({
 let runningContainers = {};
 
 // 포트폴리오 메인 페이지
-router.get('/', (req, res) => {
-  res.render('portfolio', {
-    userID: req.session.userID,
-    userRole: req.session.role,
-    is_logined: req.session.is_logined,
-    centerID: req.session.centerID
-  });
+router.get('/', async (req, res) => {
+  try {
+    const userID = req.session.userID;
+
+    let activityLogs = [];
+    if (userID) {
+      const users = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [userID]);
+      if (users.length > 0) {
+        const dbId = users[0].id;
+        // Fetch activity logs
+        activityLogs = await db.queryDatabase(`
+                  SELECT created_at, action_type, url, action_detail, status 
+                  FROM UserActivityLogs 
+                  WHERE user_id = ? 
+                  ORDER BY created_at DESC 
+                  LIMIT 100
+              `, [dbId]);
+      }
+    }
+
+    res.render('portfolio', {
+      userID: req.session.userID,
+      userRole: req.session.role,
+      is_logined: req.session.is_logined,
+      centerID: req.session.centerID,
+      activityLogs // Pass logs to view
+    });
+  } catch (error) {
+    console.error('Portfolio Page Error:', error);
+    res.status(500).send('Error loading portfolio page');
+  }
 });
 
 // 테스트 라우트 추가 (여기에 새로 추가)
@@ -81,21 +105,21 @@ router.get('/mole-game', (req, res) => {
 router.get('/run/qwerfighter', async (req, res) => {
   const projectId = 'qwerfighter';
   const projectPath = path.join(projectsDir, projectId);
-  
+
   try {
     // Docker 컨테이너 실행 여부 확인
     const checkCmd = `docker ps --filter name=pygame-${projectId} --format "{{.Names}}"`;
-    
+
     exec(checkCmd, (err, stdout) => {
       if (err) {
         console.error('Docker 명령 실행 오류:', err);
         return res.status(500).json({ error: 'Docker 서비스 연결 오류' });
       }
-      
+
       // 실행 중이 아니면 새로 시작
       if (!stdout.includes(`pygame-${projectId}`)) {
         console.log(`컨테이너 pygame-${projectId} 시작 중...`);
-        
+
         const runCmd = `
           docker run -d --rm \
             --name pygame-${projectId} \
@@ -103,15 +127,15 @@ router.get('/run/qwerfighter', async (req, res) => {
             -p 6080:6080 \
             qwerfighter-vnc
         `;
-        
+
         exec(runCmd, (err) => {
           if (err) {
             console.error('Docker 컨테이너 실행 오류:', err);
             return res.status(500).json({ error: '게임 환경 시작 실패' });
           }
-          
+
           console.log(`컨테이너 pygame-${projectId} 실행 성공`);
-          
+
           // 게임 뷰어 렌더링
           renderGameViewer();
         });
@@ -121,7 +145,7 @@ router.get('/run/qwerfighter', async (req, res) => {
         renderGameViewer();
       }
     });
-    
+
     // 게임 뷰어 페이지 렌더링 함수
     function renderGameViewer() {
       res.render('game-viewer', {
@@ -141,20 +165,20 @@ router.get('/run/qwerfighter', async (req, res) => {
 router.get('/run/:projectId', async (req, res) => {
   const { projectId } = req.params;
   const userId = req.session.userID;
-  
+
   try {
     // 프로젝트 정보 조회
     const [project] = await db.queryDatabase(
       'SELECT * FROM PortfolioProjects WHERE id = ? AND user_id = ?',
       [projectId, userId]
     );
-    
+
     if (!project) {
       return res.status(404).json({ error: '프로젝트를 찾을 수 없거나 접근 권한이 없습니다.' });
     }
-    
+
     const projectPath = path.join(projectsDir, projectId);
-    
+
     // 프로젝트 실행
     await runPygameProject(projectId, projectPath, req, res);
   } catch (error) {
@@ -167,34 +191,34 @@ router.get('/run/:projectId', async (req, res) => {
 async function runPygameProject(projectId, projectPath, req, res) {
   const userId = req.session.userID;
   const containerName = `pygame-${projectId}`;
-  
+
   try {
     // 포트 할당
     const port = await portManager.allocatePort(userId, projectId);
-    
+
     // 이미 실행 중인 컨테이너 확인
     const checkCmd = `docker ps --filter name=${containerName} --format "{{.Names}}"`;
-    
+
     exec(checkCmd, async (err, stdout) => {
       if (err) {
         console.error('Docker 컨테이너 확인 중 오류:', err);
         return res.status(500).json({ error: 'Docker 서비스에 연결할 수 없습니다.' });
       }
-      
+
       // 이미 실행 중인 경우
       if (stdout.includes(containerName)) {
         console.log(`[SKIP] 이미 실행 중인 컨테이너: ${containerName}`);
-        
+
         // 활동 시간 업데이트
         portManager.updateActivity(userId, projectId);
-        
+
         // noVNC URL로 리다이렉트
         return res.redirect(`/novnc/vnc.html?host=${req.hostname}&path=/api/ws/proxy/6080&autoconnect=true`);
       } else {
         // 실행 중이 아니면 새로 시작
         startNewContainer(port);
       }
-      
+
       // 새 컨테이너 시작 함수
       function startNewContainer(port) {
         // Docker 명령어 구성 (리소스 제한 추가)
@@ -206,23 +230,23 @@ async function runPygameProject(projectId, projectPath, req, res) {
             -p ${port}:6080 \
             qwerfighter-vnc
         `;
-        
+
         // 컨테이너 실행
         exec(runCmd, (err) => {
           if (err) {
             console.error('Docker 컨테이너 실행 오류:', err);
             return res.status(500).json({ error: '게임 환경을 시작할 수 없습니다.' });
           }
-          
+
           console.log(`[OK] 컨테이너 ${containerName} 시작됨 - 포트 ${port}`);
-          
+
           // 컨테이너 ID 업데이트
           exec(`docker inspect --format='{{.Id}}' ${containerName}`, (err, stdout) => {
             if (!err && stdout) {
               portManager.updateContainerId(userId, projectId, stdout.trim());
             }
           });
-          
+
           // noVNC URL로 리다이렉트
           res.redirect(`/novnc/vnc.html?host=${req.hostname}&path=/api/ws/proxy/6080&autoconnect=true`);
         });
@@ -238,12 +262,12 @@ async function runPygameProject(projectId, projectPath, req, res) {
 router.get('/api/projects', async (req, res) => {
   try {
     const userId = req.session.userID;
-    
+
     const projects = await db.queryDatabase(
       'SELECT * FROM PortfolioProjects WHERE user_id = ? ORDER BY created_at DESC',
       [userId]
     );
-    
+
     res.json({ success: true, projects });
   } catch (error) {
     console.error('프로젝트 목록 조회 오류:', error);
@@ -257,42 +281,42 @@ router.post('/api/upload', upload.single('projectFile'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'ZIP 파일을 업로드해주세요.' });
     }
-    
+
     const { projectName, projectDesc } = req.body;
     const userId = req.session.userID;
-    
+
     if (!projectName) {
       // 업로드된 파일 삭제
       fs.unlinkSync(req.file.path);
       return res.status(400).json({ success: false, message: '프로젝트 이름을 입력해주세요.' });
     }
-    
+
     // 프로젝트 ID 생성
     const projectId = uuidv4();
     const projectPath = path.join(projectsDir, projectId);
-    
+
     // 프로젝트 디렉토리 생성
     if (!fs.existsSync(projectPath)) {
       fs.mkdirSync(projectPath, { recursive: true });
     }
-    
+
     // ZIP 파일 압축 해제
     await extract(req.file.path, { dir: projectPath });
-    
+
     // main.py 파일 존재 여부 확인
     const mainPyPath = path.join(projectPath, 'main.py');
     if (!fs.existsSync(mainPyPath)) {
       // 압축 해제된 디렉토리에서 main.py 찾기
       let mainPyFound = false;
-      
+
       // 재귀적으로 main.py 찾기
       function findMainPy(dir) {
         const files = fs.readdirSync(dir);
-        
+
         for (const file of files) {
           const filePath = path.join(dir, file);
           const stat = fs.statSync(filePath);
-          
+
           if (stat.isDirectory()) {
             findMainPy(filePath);
           } else if (file === 'main.py') {
@@ -303,19 +327,19 @@ router.post('/api/upload', upload.single('projectFile'), async (req, res) => {
           }
         }
       }
-      
+
       findMainPy(projectPath);
-      
+
       if (!mainPyFound) {
         // 프로젝트 디렉토리 삭제
         fs.rmdirSync(projectPath, { recursive: true });
         // 업로드된 파일 삭제
         fs.unlinkSync(req.file.path);
-        
+
         return res.status(400).json({ success: false, message: 'ZIP 파일에 main.py가 포함되어 있지 않습니다.' });
       }
     }
-    
+
     // index.html 파일 생성 (없을 경우)
     const indexHtmlPath = path.join(projectPath, 'index.html');
     if (!fs.existsSync(indexHtmlPath)) {
@@ -372,29 +396,29 @@ router.post('/api/upload', upload.single('projectFile'), async (req, res) => {
 </body>
 </html>
       `;
-      
+
       fs.writeFileSync(indexHtmlPath, indexHtml);
     }
-    
+
     // image 디렉토리 생성 (없을 경우)
     const imageDir = path.join(projectPath, 'image');
     if (!fs.existsSync(imageDir)) {
       fs.mkdirSync(imageDir, { recursive: true });
     }
-    
+
     // 썸네일 이미지 경로
     let thumbnailPath = null;
-    
+
     // 업로드된 파일 정리
     fs.unlinkSync(req.file.path);
-    
+
     // DB에 프로젝트 정보 저장
     const result = await db.queryDatabase(
       `INSERT INTO PortfolioProjects (id, user_id, name, description, thumbnail, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
       [projectId, userId, projectName, projectDesc, thumbnailPath]
     );
-    
+
     res.json({
       success: true,
       message: '프로젝트가 성공적으로 업로드되었습니다.',
@@ -416,17 +440,17 @@ router.delete('/api/delete/:projectId', async (req, res) => {
   try {
     const { projectId } = req.params;
     const userId = req.session.userID;
-    
+
     // 프로젝트 정보 조회
     const [project] = await db.queryDatabase(
       'SELECT * FROM PortfolioProjects WHERE id = ? AND user_id = ?',
       [projectId, userId]
     );
-    
+
     if (!project) {
       return res.status(404).json({ success: false, message: '프로젝트를 찾을 수 없거나 접근 권한이 없습니다.' });
     }
-    
+
     // 실행 중인 컨테이너가 있으면 중지
     const containerName = `pygame-${projectId}`;
     exec(`docker ps --filter name=${containerName} --format "{{.Names}}"`, (err, stdout) => {
@@ -435,19 +459,19 @@ router.delete('/api/delete/:projectId', async (req, res) => {
         delete runningContainers[containerName];
       }
     });
-    
+
     // 프로젝트 디렉토리 삭제
     const projectPath = path.join(projectsDir, projectId);
     if (fs.existsSync(projectPath)) {
       fs.rmdirSync(projectPath, { recursive: true });
     }
-    
+
     // DB에서 프로젝트 정보 삭제
     await db.queryDatabase(
       'DELETE FROM PortfolioProjects WHERE id = ?',
       [projectId]
     );
-    
+
     res.json({ success: true, message: '프로젝트가 삭제되었습니다.' });
   } catch (error) {
     console.error('프로젝트 삭제 오류:', error);
@@ -458,17 +482,17 @@ router.delete('/api/delete/:projectId', async (req, res) => {
 // 컨테이너 정리 함수 수정
 async function cleanupContainers() {
   console.log('미사용 컨테이너 정리 중...');
-  
+
   try {
     // 오래된 할당 정리 (30분)
     const cleanedCount = await portManager.cleanupOldAllocations(30);
-    
+
     if (cleanedCount > 0) {
       // 해제된 컨테이너 중지
       const timeoutAllocations = await db.queryDatabase(
         'SELECT container_id FROM PortAllocation WHERE status = "timeout" AND container_id IS NOT NULL'
       );
-      
+
       for (const allocation of timeoutAllocations) {
         if (allocation.container_id) {
           exec(`docker stop ${allocation.container_id}`, (err) => {
