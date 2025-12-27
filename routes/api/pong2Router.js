@@ -364,4 +364,85 @@ router.post('/auth/login', async (req, res) => {
     }
 });
 
+// ==========================================
+// SSO & Tracking
+// ==========================================
+
+// 1. Generate SSO Token (For Paid Users moving to Pong2)
+router.get('/auth/sso-token', requireAuth, (req, res) => {
+    try {
+        if (req.user.type !== 'PAID') {
+            return res.status(403).json({ error: 'Only paid users can generate SSO tokens' });
+        }
+
+        // Short-lived token (5 mins)
+        const token = jwt.sign(
+            {
+                id: req.user.id, // This is 'Users.id' (Paid User PK)
+                type: 'PAID',
+                centerID: req.user.centerID,
+                role: req.user.role
+            },
+            JWT.SECRET,
+            { expiresIn: '5m' }
+        );
+
+        res.json({ success: true, token });
+    } catch (error) {
+        console.error('SSO Token Error:', error);
+        res.status(500).json({ error: 'Failed to generate token' });
+    }
+});
+
+// 2. Get Current User (For Pong2 to validate token)
+router.get('/auth/me', requireAuth, async (req, res) => {
+    try {
+        // req.user is already populated by pong2Auth middleware
+        const user = {
+            id: req.user.id,
+            nickname: req.user.nickname || req.user.name, // Normalize name
+            type: req.user.type,
+            role: req.user.role || 'student'
+        };
+
+        // If PAID user, we might want to fetch latest details from DB?
+        // For now, session/token data is sufficient.
+
+        res.json({ success: true, user });
+    } catch (error) {
+        console.error('Get Me Error:', error);
+        res.status(500).json({ error: 'Failed to get user info' });
+    }
+});
+
+// 3. Tracking Beacon
+router.post('/logs/track', requireAuth, async (req, res) => {
+    try {
+        const { action, detail, url } = req.body;
+
+        // Log to UserActivityLogs or a specifc Pong2 logs table
+        // Reusing UserActivityLogs for now
+        await queryDatabase(`
+            INSERT INTO UserActivityLogs 
+            (user_id, center_id, action_type, url, ip_address, user_agent, action_detail, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            req.user.id,
+            req.user.centerID || null,
+            'PONG2_EVENT',
+            url || 'pong2.app',
+            req.ip,
+            req.headers['user-agent'],
+            `${action}: ${detail || ''}`,
+            'track'
+        ]);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Tracking Error:', error);
+        // Don't fail hard on tracking errors
+        res.json({ success: false });
+    }
+});
+
 module.exports = router;

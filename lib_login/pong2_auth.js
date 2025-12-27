@@ -27,17 +27,47 @@ async function pong2Auth(req, res, next) {
             try {
                 const decoded = jwt.verify(token, JWT.SECRET);
 
-                // Verify user still exists in DB
-                const users = await queryDatabase('SELECT id, email, nickname FROM Pong2Users WHERE id = ?', [decoded.id]);
-
-                if (users.length > 0) {
+                if (decoded.type === 'PAID') {
+                    // 2a. Paid User Token
+                    // We can trust the signature generally, but good to check if user exists/is active if needed.
+                    // For performance, we'll trust the token claims for now as they are short-lived.
                     req.user = {
-                        id: users[0].id,
-                        email: users[0].email,
-                        nickname: users[0].nickname,
-                        type: 'PONG2'
+                        id: decoded.id,
+                        type: 'PAID',
+                        centerID: decoded.centerID,
+                        role: decoded.role,
+                        // Fetch name if needed, or rely on client to know it? 
+                        // For 'auth/me', we need the name. Let's fetch it lazily or just query DB.
                     };
-                    return next();
+
+                    // Optimization: If we need nickname/name populated for everything, query DB.
+                    // Let's query DB to be safe and consistent with session-based user.
+                    const users = await queryDatabase('SELECT id, name, nickname, role, centerID FROM Users WHERE id = ?', [decoded.id]);
+                    if (users.length > 0) {
+                        req.user = {
+                            ...req.user,
+                            name: users[0].name,
+                            nickname: users[0].nickname,
+                            role: users[0].role,
+                            centerID: users[0].centerID
+                        };
+                        return next();
+                    }
+
+                } else {
+                    // 2b. Pong2 User Token (Existing logic)
+                    // Verify user still exists in DB
+                    const users = await queryDatabase('SELECT id, email, nickname FROM Pong2Users WHERE id = ?', [decoded.id]);
+
+                    if (users.length > 0) {
+                        req.user = {
+                            id: users[0].id,
+                            email: users[0].email,
+                            nickname: users[0].nickname,
+                            type: 'PONG2'
+                        };
+                        return next();
+                    }
                 }
             } catch (err) {
                 // Token invalid or expired

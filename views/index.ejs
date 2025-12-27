@@ -431,20 +431,30 @@
 
             // Pong2 Fallback Logic
             // Pong2 Fallback Logic
-            window.handlePong2Click = function (e) {
+            window.handlePong2Click = async function (e) {
                 e.preventDefault();
-                e.stopPropagation(); // Prevents bubbling if clicked from inner button
+                e.stopPropagation();
 
-                const pong2Url = 'https://pong2.app/';
+                let pong2Url = 'https://pong2.app/';
 
-                // Optimistic Navigation: Directly open pong2.app
-                // The previous fetch check validation was causing false negatives due to CORS/Network policies.
-                // Since pong2.app is a static site with high availability, we prioritize direct access.
+                try {
+                    // Try to generate SSO token
+                    const response = await fetch('/api/pong2/auth/sso-token');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.token) {
+                            pong2Url += `?token=${data.token}`;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('SSO Token fetch failed:', error);
+                }
+
+                // Optimistic Navigation
                 const newWin = window.open(pong2Url, '_blank');
 
-                // Backup: If popup is blocked, try redirecting current window (though _blank is preferred)
+                // Backup: If popup is blocked, redirect current window
                 if (!newWin || newWin.closed || typeof newWin.closed == 'undefined') {
-                    // Fallback to local computer section if popup failed
                     window.location.href = '/computer';
                 }
             };

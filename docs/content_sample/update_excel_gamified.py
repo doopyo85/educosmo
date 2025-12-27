@@ -153,6 +153,46 @@ for html_path in html_files:
         df.columns[13]: ct_tags,
     }
     
+    # Determine List 1 (Group) and List 2 (Number/Topic)
+    # Default fallback
+    list1_val = group_val
+    list2_val = num_val
+    
+    # Readable Map for Connectome
+    readable_map = {
+        "VAR": "1. Variables & I/O",
+        "TYPE": "2. Data Types",
+        "LIST": "3. List & Tuple",
+        "DICT": "4. Dict & Set",
+        "REV": "5. Logic Review",
+        "COND": "6. Conditionals",
+        "LOOP": "7. Loops",
+        "FUNC": "8. Functions",
+        "FILE": "9. File I/O",
+        "GUILD": "10. Guild Review",
+        "CLASS": "11. Classes",
+        "MOD": "12. Modules",
+        "EXCEPT": "13. Exceptions",
+        "DATA": "14. Data Analysis",
+        "FINAL": "15. Final Assessment"
+    }
+
+    if prefix in readable_map:
+        list1_val = readable_map[prefix]
+        # Format "001" -> "p01"
+        try:
+            num_int = int(num_val)
+            list2_val = f"p{num_int:02d}"
+        except:
+            list2_val = num_val # Fallback
+    
+    # Update Row Data with new List values
+    # Note: We update the legacy columns specifically
+    row_data.update({
+        col_group: list1_val,
+        col_num: list2_val
+    })
+    
     # Update or Append
     mask = df['problem_id'] == problem_id
     if mask.any():
