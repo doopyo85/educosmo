@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> - 코딩앤플레이</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+        
+        .detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+        
+        /* 뒤로가기 */
+        .back-nav {
+            margin-bottom: 1rem;
+        }
+        
+        .back-nav a {
+            color: #666;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+        }
+        
+        .back-nav a:hover {
+            color: #667eea;
+        }
+        
+        /* 메인 레이아웃 */
+        .project-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 1.5rem;
+        }
+        
+        @media (max-width: 992px) {
+            .project-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 플레이어 영역 */
+        .player-section {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .player-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 75%; /* 4:3 비율 */
+            background: #1a1a2e;
+        }
+        
+        .player-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .player-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+        }
+        
+        .player-loading .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .player-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .player-controls .btn-group .btn {
+            border-radius: 20px;
+        }
+        
+        /* 프로젝트 정보 */
+        .project-info-section {
+            padding: 1.5rem;
+        }
+        
+        .project-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .project-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+        }
+        
+        .platform-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .platform-badge.entry { background: #00c4b4; }
+        .platform-badge.scratch { background: #ff9a00; }
+        .platform-badge.python { background: #306998; }
+        
+        .project-stats-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .project-stats-row span {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        
+        .project-description {
+            color: #555;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        
+        .project-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .project-tags .tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+        }
+        
+        /* 사이드바 */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .sidebar-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .sidebar-card h5 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        /* 작성자 정보 */
+        .author-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .author-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .author-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .author-info h6 {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .author-info p {
+            color: #666;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+        
+        .author-info a {
+            color: #667eea;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+        
+        .author-info a:hover {
+            text-decoration: underline;
+        }
+        
+        /* 액션 버튼 */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .action-buttons .btn {
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+        }
+        
+        .btn-like {
+            background: white;
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
+        }
+        
+        .btn-like:hover, .btn-like.liked {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-share {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        
+        .btn-fullscreen {
+            background: #343a40;
+            border: none;
+            color: white;
+        }
+        
+        /* 관련 작품 */
+        .related-projects {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .related-item {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem;
+            border-radius: 12px;
+            transition: background 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .related-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .related-thumb {
+            width: 80px;
+            height: 60px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .related-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .related-info h6 {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .related-info p {
+            font-size: 0.8rem;
+            color: #666;
+            margin: 0;
+        }
+        
+        /* 로딩 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        /* 에러 상태 */
+        .error-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .error-state i {
+            font-size: 4rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+    
+    <!-- 로딩 오버레이 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">작품을 불러오는 중...</p>
+        </div>
+    </div>
+    
+    <div class="detail-container">
+        <!-- 뒤로가기 -->
+        <div class="back-nav">
+            <a href="/gallery">
+                <i class="bi bi-arrow-left"></i> 갤러리로 돌아가기
+            </a>
+        </div>
+        
+        <!-- 에러 상태 -->
+        <div class="error-state" id="errorState" style="display: none;">
+            <i class="bi bi-exclamation-circle"></i>
+            <h4>작품을 찾을 수 없습니다</h4>
+            <p class="text-muted">삭제되었거나 접근 권한이 없는 작품입니다.</p>
+            <a href="/gallery" class="btn btn-primary mt-3">갤러리로 돌아가기</a>
+        </div>
+        
+        <!-- 메인 레이아웃 -->
+        <div class="project-layout" id="projectLayout" style="display: none;">
+            <!-- 왼쪽: 플레이어 -->
+            <div class="player-section">
+                <div class="player-wrapper">
+                    <div class="player-loading" id="playerLoading">
+                        <div class="spinner-border" role="status"></div>
+                        <p>프로젝트를 실행하는 중...</p>
+                    </div>
+                    <iframe id="projectPlayer" allowfullscreen></iframe>
+                </div>
+                
+                <div class="player-controls">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="restartProject()">
+                            <i class="bi bi-arrow-clockwise"></i> 다시 시작
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleFullscreen()">
+                            <i class="bi bi-arrows-fullscreen"></i> 전체화면
+                        </button>
+                    </div>
+                    <span class="text-muted" id="playCount">
+                        <i class="bi bi-play-circle"></i> <span>0</span>회 실행
+                    </span>
+                </div>
+                
+                <!-- 프로젝트 정보 -->
+                <div class="project-info-section">
+                    <div class="project-title-row">
+                        <h1 class="project-title" id="projectTitle">프로젝트 제목</h1>
+                        <span class="platform-badge" id="platformBadge">플랫폼</span>
+                    </div>
+                    
+                    <div class="project-stats-row">
+                        <span><i class="bi bi-eye"></i> <span id="viewCount">0</span> 조회</span>
+                        <span><i class="bi bi-heart-fill text-danger"></i> <span id="likeCount">0</span> 좋아요</span>
+                        <span><i class="bi bi-calendar3"></i> <span id="createdAt">-</span></span>
+                    </div>
+                    
+                    <p class="project-description" id="projectDescription">설명이 없습니다.</p>
+                    
+                    <div class="project-tags" id="projectTags"></div>
+                </div>
+            </div>
+            
+            <!-- 오른쪽: 사이드바 -->
+            <div class="sidebar">
+                <!-- 작성자 정보 -->
+                <div class="sidebar-card">
+                    <h5><i class="bi bi-person-fill"></i> 만든 사람</h5>
+                    <div class="author-card">
+                        <div class="author-avatar" id="authorAvatar">?</div>
+                        <div class="author-info">
+                            <h6 id="authorName">-</h6>
+                            <p id="authorId">@-</p>
+                            <a href="#" id="authorLink">작품 더 보기 →</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 액션 버튼 -->
+                <div class="sidebar-card">
+                    <div class="action-buttons">
+                        <button class="btn btn-like" id="likeBtn" onclick="toggleLike()">
+                            <i class="bi bi-heart"></i> 좋아요
+                        </button>
+                        <button class="btn btn-share" onclick="shareProject()">
+                            <i class="bi bi-share"></i> 공유하기
+                        </button>
+                        <% if (is_logined) { %>
+                        <button class="btn btn-outline-secondary" id="editBtn" style="display: none;" onclick="editProject()">
+                            <i class="bi bi-pencil"></i> 수정하기
+                        </button>
+                        <% } %>
+                    </div>
+                </div>
+                
+                <!-- 관련 작품 -->
+                <div class="sidebar-card">
+                    <h5><i class="bi bi-collection"></i> 관련 작품</h5>
+                    <div class="related-projects" id="relatedProjects">
+                        <p class="text-muted text-center">불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 공유 모달 -->
+    <div class="modal fade" id="shareModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-share"></i> 작품 공유하기</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">링크 복사</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="shareUrl" readonly>
+                            <button class="btn btn-primary" onclick="copyShareUrl()">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary flex-fill" onclick="shareToKakao()">
+                            <i class="bi bi-chat-fill"></i> 카카오톡
+                        </button>
+                        <button class="btn btn-outline-info flex-fill" onclick="shareToTwitter()">
+                            <i class="bi bi-twitter"></i> 트위터
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const projectId = <%= projectId %>;
+        let projectData = null;
+        let isLiked = false;
+        
+        // 페이지 로드
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProject();
+        });
+        
+        // 프로젝트 로드
+        async function loadProject() {
+            try {
+                const response = await fetch(`/api/gallery/projects/${projectId}`);
+                const result = await response.json();
+                
+                if (!result.success) {
+                    showError();
+                    return;
+                }
+                
+                projectData = result.data;
+                isLiked = projectData.isLiked;
+                
+                renderProject();
+                loadRelatedProjects();
+                recordPlay();
+                
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('projectLayout').style.display = 'grid';
+                
+            } catch (error) {
+                console.error('프로젝트 로드 오류:', error);
+                showError();
+            }
+        }
+        
+        // 프로젝트 렌더링
+        function renderProject() {
+            const p = projectData;
+            
+            // 제목
+            document.getElementById('projectTitle').textContent = p.title;
+            document.title = `${p.title} - 코딩앤플레이`;
+            
+            // 플랫폼 뱃지
+            const badge = document.getElementById('platformBadge');
+            badge.textContent = getPlatformName(p.platform);
+            badge.className = `platform-badge ${p.platform}`;
+            
+            // 통계
+            document.getElementById('viewCount').textContent = formatNumber(p.view_count);
+            document.getElementById('likeCount').textContent = formatNumber(p.like_count);
+            document.getElementById('playCount').querySelector('span').textContent = formatNumber(p.play_count);
+            document.getElementById('createdAt').textContent = formatDate(p.created_at);
+            
+            // 설명
+            document.getElementById('projectDescription').textContent = p.description || '설명이 없습니다.';
+            
+            // 태그
+            const tagsContainer = document.getElementById('projectTags');
+            const tags = p.tags || [];
+            tagsContainer.innerHTML = tags.map(tag => `<span class="tag">#${tag}</span>`).join('');
+            
+            // 작성자
+            const avatarEl = document.getElementById('authorAvatar');
+            if (p.profile_image) {
+                avatarEl.innerHTML = `<img src="${p.profile_image}" alt="${p.userName}" onerror="this.parentElement.textContent='${(p.userName || p.userID).charAt(0).toUpperCase()}'">`;
+            } else {
+                avatarEl.textContent = (p.userName || p.userID).charAt(0).toUpperCase();
+            }
+            document.getElementById('authorName').textContent = p.userName || p.userID;
+            document.getElementById('authorId').textContent = `@${p.userID}`;
+            document.getElementById('authorLink').href = `/gallery/user/${p.userID}`;
+            
+            // 좋아요 버튼
+            updateLikeButton();
+            
+            // 수정 버튼 (본인 작품만)
+            if (p.isOwner) {
+                document.getElementById('editBtn').style.display = 'block';
+            }
+            
+            // 플레이어 로드
+            loadPlayer();
+        }
+        
+        // 플레이어 로드
+        function loadPlayer() {
+            const iframe = document.getElementById('projectPlayer');
+            const loading = document.getElementById('playerLoading');
+            
+            iframe.src = projectData.embed_url;
+            
+            iframe.onload = () => {
+                loading.style.display = 'none';
+            };
+        }
+        
+        // 관련 작품 로드
+        async function loadRelatedProjects() {
+            try {
+                const response = await fetch(`/api/gallery/projects?platform=${projectData.platform}&limit=5`);
+                const result = await response.json();
+                
+                const container = document.getElementById('relatedProjects');
+                
+                // 현재 프로젝트 제외
+                const related = result.data.filter(p => p.id !== projectId).slice(0, 4);
+                
+                if (related.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center">관련 작품이 없습니다.</p>';
+                    return;
+                }
+                
+                container.innerHTML = related.map(p => `
+                    <a href="/gallery/project/${p.id}" class="related-item">
+                        <div class="related-thumb">
+                            ${p.thumbnail_url ? `<img src="${p.thumbnail_url}" alt="${p.title}">` : ''}
+                        </div>
+                        <div class="related-info">
+                            <h6>${escapeHtml(p.title)}</h6>
+                            <p>${escapeHtml(p.userName || p.userID)}</p>
+                        </div>
+                    </a>
+                `).join('');
+                
+            } catch (error) {
+                console.error('관련 작품 로드 오류:', error);
+            }
+        }
+        
+        // 실행 횟수 기록
+        async function recordPlay() {
+            try {
+                await fetch(`/api/gallery/projects/${projectId}/play`, { method: 'POST' });
+            } catch (error) {
+                console.error('실행 기록 오류:', error);
+            }
+        }
+        
+        // 좋아요 토글
+        async function toggleLike() {
+            <% if (!is_logined) { %>
+            alert('로그인이 필요합니다.');
+            return;
+            <% } %>
+            
+            try {
+                const response = await fetch(`/api/gallery/projects/${projectId}/like`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    isLiked = result.isLiked;
+                    document.getElementById('likeCount').textContent = formatNumber(result.likeCount);
+                    updateLikeButton();
+                }
+            } catch (error) {
+                console.error('좋아요 오류:', error);
+            }
+        }
+        
+        // 좋아요 버튼 업데이트
+        function updateLikeButton() {
+            const btn = document.getElementById('likeBtn');
+            if (isLiked) {
+                btn.classList.add('liked');
+                btn.innerHTML = '<i class="bi bi-heart-fill"></i> 좋아요 취소';
+            } else {
+                btn.classList.remove('liked');
+                btn.innerHTML = '<i class="bi bi-heart"></i> 좋아요';
+            }
+        }
+        
+        // 다시 시작
+        function restartProject() {
+            const iframe = document.getElementById('projectPlayer');
+            iframe.src = iframe.src;
+            document.getElementById('playerLoading').style.display = 'block';
+        }
+        
+        // 전체화면
+        function toggleFullscreen() {
+            const iframe = document.getElementById('projectPlayer');
+            if (iframe.requestFullscreen) {
+                iframe.requestFullscreen();
+            } else if (iframe.webkitRequestFullscreen) {
+                iframe.webkitRequestFullscreen();
+            }
+        }
+        
+        // 공유 모달
+        function shareProject() {
+            document.getElementById('shareUrl').value = window.location.href;
+            new bootstrap.Modal(document.getElementById('shareModal')).show();
+        }
+        
+        // URL 복사
+        function copyShareUrl() {
+            const input = document.getElementById('shareUrl');
+            input.select();
+            document.execCommand('copy');
+            alert('링크가 복사되었습니다!');
+        }
+        
+        // 카카오 공유
+        function shareToKakao() {
+            // 카카오톡 공유 API 필요
+            alert('카카오톡 공유 기능은 준비 중입니다.');
+        }
+        
+        // 트위터 공유
+        function shareToTwitter() {
+            const text = encodeURIComponent(`${projectData.title} - 코딩앤플레이 갤러리`);
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+        }
+        
+        // 수정하기
+        function editProject() {
+            window.location.href = `/gallery/my?edit=${projectId}`;
+        }
+        
+        // 에러 표시
+        function showError() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+        }
+        
+        // 유틸리티 함수
+        function getPlatformName(platform) {
+            const names = { entry: '엔트리', scratch: '스크래치', python: '파이썬', appinventor: '앱인벤터' };
+            return names[platform] || platform;
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return (num || 0).toString();
+        }
+        
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+    
+    <%- include('partials/footer') %>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>친구들 갤러리 - 코딩앤플레이</title>
+    <title><%= pageTitle %> - 코딩앤플레이</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/styles.css">
@@ -33,24 +33,33 @@
             font-size: 1.1rem;
         }
         
+        /* 상단 툴바 */
+        .gallery-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
         /* 플랫폼 필터 */
         .platform-filter {
             display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            gap: 0.5rem;
             flex-wrap: wrap;
         }
         
         .filter-btn {
-            padding: 0.5rem 1.5rem;
-            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
             border: 2px solid #e9ecef;
             background: white;
             color: #495057;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 500;
+            font-size: 0.9rem;
         }
         
         .filter-btn:hover {
@@ -64,109 +73,188 @@
             border-color: transparent;
         }
         
-        .filter-btn.scratch { --platform-color: #ff9a00; }
-        .filter-btn.entry { --platform-color: #00c4b4; }
-        .filter-btn.python { --platform-color: #306998; }
-        
         .filter-btn.scratch.active { background: #ff9a00; }
         .filter-btn.entry.active { background: #00c4b4; }
         .filter-btn.python.active { background: #306998; }
         
-        /* 유저 프로필 격자 */
-        .users-grid {
+        /* 정렬 드롭다운 */
+        .sort-dropdown .btn {
+            border-radius: 20px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+        }
+        
+        /* 프로젝트 그리드 */
+        .projects-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 1.5rem;
+        }
+        
+        /* 프로젝트 카드 */
+        .project-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.2);
+        }
+        
+        .project-thumbnail {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 비율 */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+        
+        .project-thumbnail img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .project-thumbnail .placeholder-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .project-thumbnail .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .project-card:hover .play-overlay {
+            opacity: 1;
+        }
+        
+        .play-overlay i {
+            font-size: 4rem;
+            color: white;
+        }
+        
+        .platform-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .platform-badge.entry { background: #00c4b4; }
+        .platform-badge.scratch { background: #ff9a00; }
+        .platform-badge.python { background: #306998; }
+        .platform-badge.appinventor { background: #a4c639; }
+        
+        .featured-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .project-info {
             padding: 1rem;
         }
         
-        .user-card {
+        .project-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #333;
+        }
+        
+        .project-author {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            padding: 1.5rem 1rem;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: inherit;
-            position: relative;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
         }
         
-        .user-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.25);
-        }
-        
-        .user-avatar {
-            width: 100px;
-            height: 100px;
+        .author-avatar {
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #fff;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 2.5rem;
+            font-size: 0.7rem;
             font-weight: bold;
-            margin-bottom: 1rem;
         }
         
-        .user-avatar img {
+        .author-avatar img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
         }
         
-        .user-name {
-            font-weight: 600;
-            font-size: 1rem;
-            color: #333;
-            margin-bottom: 0.25rem;
-            text-align: center;
-            max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        .author-name {
+            font-size: 0.85rem;
+            color: #666;
         }
         
-        .user-id {
-            font-size: 0.8rem;
-            color: #6c757d;
-            margin-bottom: 0.5rem;
-        }
-        
-        .project-count {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 0.25rem 0.6rem;
-            border-radius: 15px;
-            min-width: 24px;
-            text-align: center;
-        }
-        
-        .user-stats {
+        .project-stats {
             display: flex;
             gap: 1rem;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: #888;
         }
         
-        .user-stats span {
+        .project-stats span {
             display: flex;
             align-items: center;
             gap: 0.25rem;
+        }
+        
+        .project-stats .liked {
+            color: #e74c3c;
+        }
+        
+        /* 액션 버튼 */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-buttons .btn {
+            border-radius: 20px;
         }
         
         /* 빈 상태 */
@@ -204,21 +292,31 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* 페이지네이션 */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
         /* 반응형 */
         @media (max-width: 768px) {
             .gallery-header h1 {
                 font-size: 1.8rem;
             }
             
-            .users-grid {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-                gap: 1rem;
+            .gallery-toolbar {
+                flex-direction: column;
+                align-items: stretch;
             }
             
-            .user-avatar {
-                width: 80px;
-                height: 80px;
-                font-size: 2rem;
+            .platform-filter {
+                justify-content: center;
+            }
+            
+            .projects-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 1rem;
             }
         }
     </style>
@@ -228,24 +326,49 @@
     
     <div class="gallery-container">
         <div class="gallery-header">
-            <h1><i class="bi bi-people-fill"></i> 친구들 갤러리</h1>
-            <p>친구들이 만든 멋진 작품을 구경해보세요!</p>
+            <h1><i class="bi bi-collection-play-fill"></i> 친구들 갤러리</h1>
+            <p>친구들이 만든 멋진 작품을 구경하고 직접 실행해보세요!</p>
         </div>
         
-        <!-- 플랫폼 필터 -->
-        <div class="platform-filter">
-            <button class="filter-btn active" data-category="">
-                <i class="bi bi-grid-3x3-gap-fill"></i> 전체
-            </button>
-            <button class="filter-btn scratch" data-category="scratch">
-                <i class="bi bi-puzzle-fill"></i> 스크래치
-            </button>
-            <button class="filter-btn entry" data-category="entry">
-                <i class="bi bi-box-fill"></i> 엔트리
-            </button>
-            <button class="filter-btn python" data-category="python">
-                <i class="bi bi-code-slash"></i> 파이썬
-            </button>
+        <!-- 툴바 -->
+        <div class="gallery-toolbar">
+            <!-- 플랫폼 필터 -->
+            <div class="platform-filter">
+                <button class="filter-btn active" data-platform="">
+                    <i class="bi bi-grid-3x3-gap-fill"></i> 전체
+                </button>
+                <button class="filter-btn entry" data-platform="entry">
+                    <i class="bi bi-box-fill"></i> 엔트리
+                </button>
+                <button class="filter-btn scratch" data-platform="scratch">
+                    <i class="bi bi-puzzle-fill"></i> 스크래치
+                </button>
+                <button class="filter-btn python" data-platform="python">
+                    <i class="bi bi-code-slash"></i> 파이썬
+                </button>
+            </div>
+            
+            <!-- 정렬 & 액션 -->
+            <div class="action-buttons">
+                <div class="dropdown sort-dropdown">
+                    <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-sort-down"></i> 정렬
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item sort-option active" href="#" data-sort="latest">최신순</a></li>
+                        <li><a class="dropdown-item sort-option" href="#" data-sort="popular">인기순</a></li>
+                        <li><a class="dropdown-item sort-option" href="#" data-sort="views">조회순</a></li>
+                    </ul>
+                </div>
+                <% if (is_logined) { %>
+                <a href="/gallery/my" class="btn btn-outline-primary">
+                    <i class="bi bi-folder-fill"></i> 내 작품
+                </a>
+                <a href="/gallery/share" class="btn btn-primary">
+                    <i class="bi bi-upload"></i> 공유하기
+                </a>
+                <% } %>
+            </div>
         </div>
         
         <!-- 로딩 -->
@@ -253,28 +376,42 @@
             <div class="loading-spinner"></div>
         </div>
         
-        <!-- 유저 격자 -->
-        <div class="users-grid" id="usersGrid" style="display: none;"></div>
+        <!-- 프로젝트 그리드 -->
+        <div class="projects-grid" id="projectsGrid" style="display: none;"></div>
         
         <!-- 빈 상태 -->
         <div class="empty-state" id="emptyState" style="display: none;">
             <i class="bi bi-emoji-frown"></i>
             <h4>아직 공유된 작품이 없어요</h4>
             <p>첫 번째로 작품을 공유해보세요!</p>
-            <a href="/portfolio" class="btn btn-primary mt-3">
+            <% if (is_logined) { %>
+            <a href="/gallery/share" class="btn btn-primary mt-3">
                 <i class="bi bi-upload"></i> 내 작품 공유하기
             </a>
+            <% } else { %>
+            <a href="/auth/login" class="btn btn-primary mt-3">
+                <i class="bi bi-box-arrow-in-right"></i> 로그인하고 공유하기
+            </a>
+            <% } %>
         </div>
+        
+        <!-- 페이지네이션 -->
+        <div class="pagination-container" id="pagination" style="display: none;"></div>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let currentCategory = '';
+        // 상태 관리
+        let currentPlatform = '';
+        let currentSort = 'latest';
+        let currentPage = 1;
+        const limit = 20;
         
-        // 페이지 로드 시 유저 목록 가져오기
+        // 페이지 로드 시
         document.addEventListener('DOMContentLoaded', () => {
-            loadUsers();
+            loadProjects();
             setupFilters();
+            setupSortOptions();
         });
         
         // 필터 버튼 설정
@@ -283,75 +420,190 @@
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    currentCategory = btn.dataset.category;
-                    loadUsers();
+                    currentPlatform = btn.dataset.platform;
+                    currentPage = 1;
+                    loadProjects();
                 });
             });
         }
         
-        // 유저 목록 로드
-        async function loadUsers() {
+        // 정렬 옵션 설정
+        function setupSortOptions() {
+            document.querySelectorAll('.sort-option').forEach(opt => {
+                opt.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('.sort-option').forEach(o => o.classList.remove('active'));
+                    opt.classList.add('active');
+                    currentSort = opt.dataset.sort;
+                    currentPage = 1;
+                    loadProjects();
+                });
+            });
+        }
+        
+        // 프로젝트 목록 로드
+        async function loadProjects() {
             const loading = document.getElementById('loading');
-            const grid = document.getElementById('usersGrid');
+            const grid = document.getElementById('projectsGrid');
             const empty = document.getElementById('emptyState');
+            const pagination = document.getElementById('pagination');
             
             loading.style.display = 'flex';
             grid.style.display = 'none';
             empty.style.display = 'none';
+            pagination.style.display = 'none';
             
             try {
-                let url = '/api/scratch/gallery/users';
-                if (currentCategory) {
-                    url += `?category=${currentCategory}`;
+                let url = `/api/gallery/projects?page=${currentPage}&limit=${limit}&sort=${currentSort}`;
+                if (currentPlatform) {
+                    url += `&platform=${currentPlatform}`;
                 }
                 
                 const response = await fetch(url);
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
-                    renderUsers(result.data);
+                    renderProjects(result.data);
+                    renderPagination(result.pagination);
                     grid.style.display = 'grid';
+                    pagination.style.display = 'flex';
                 } else {
                     empty.style.display = 'block';
                 }
             } catch (error) {
-                console.error('유저 목록 로드 오류:', error);
+                console.error('프로젝트 목록 로드 오류:', error);
                 empty.style.display = 'block';
             } finally {
                 loading.style.display = 'none';
             }
         }
         
-        // 유저 카드 렌더링
-        function renderUsers(users) {
-            const grid = document.getElementById('usersGrid');
-            grid.innerHTML = users.map(user => {
-                const avatarContent = user.profile_image 
-                    ? `<img src="${user.profile_image}" alt="${user.name || user.userID}" onerror="this.parentElement.innerHTML='${(user.name || user.userID).charAt(0).toUpperCase()}'">`
-                    : (user.name || user.userID).charAt(0).toUpperCase();
+        // 프로젝트 카드 렌더링
+        function renderProjects(projects) {
+            const grid = document.getElementById('projectsGrid');
+            
+            grid.innerHTML = projects.map(project => {
+                const avatarContent = project.profile_image 
+                    ? `<img src="${project.profile_image}" alt="${project.userName || project.userID}" onerror="this.style.display='none'; this.parentElement.textContent='${(project.userName || project.userID).charAt(0).toUpperCase()}'">`
+                    : (project.userName || project.userID).charAt(0).toUpperCase();
+                
+                const thumbnailContent = project.thumbnail_url
+                    ? `<img src="${project.thumbnail_url}" alt="${project.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"><i class="placeholder-icon bi bi-controller" style="display:none"></i>`
+                    : `<i class="placeholder-icon bi bi-${getPlatformIcon(project.platform)}"></i>`;
                 
                 return `
-                    <a href="/gallery/user/${user.userID}" class="user-card">
-                        <span class="project-count">${user.project_count}</span>
-                        <div class="user-avatar">
-                            ${avatarContent}
+                    <div class="project-card" onclick="viewProject(${project.id})">
+                        <div class="project-thumbnail">
+                            ${thumbnailContent}
+                            <span class="platform-badge ${project.platform}">${getPlatformName(project.platform)}</span>
+                            ${project.is_featured ? '<span class="featured-badge"><i class="bi bi-star-fill"></i> 추천</span>' : ''}
+                            <div class="play-overlay">
+                                <i class="bi bi-play-circle-fill"></i>
+                            </div>
                         </div>
-                        <div class="user-name">${user.name || user.userID}</div>
-                        <div class="user-id">@${user.userID}</div>
-                        <div class="user-stats">
-                            <span><i class="bi bi-eye"></i> ${formatNumber(user.total_views || 0)}</span>
-                            <span><i class="bi bi-heart"></i> ${formatNumber(user.total_likes || 0)}</span>
+                        <div class="project-info">
+                            <div class="project-title">${escapeHtml(project.title)}</div>
+                            <div class="project-author">
+                                <div class="author-avatar">${avatarContent}</div>
+                                <span class="author-name">${escapeHtml(project.userName || project.userID)}</span>
+                            </div>
+                            <div class="project-stats">
+                                <span><i class="bi bi-eye"></i> ${formatNumber(project.view_count)}</span>
+                                <span class="${project.isLiked ? 'liked' : ''}">
+                                    <i class="bi bi-heart${project.isLiked ? '-fill' : ''}"></i> ${formatNumber(project.like_count)}
+                                </span>
+                                <span><i class="bi bi-play-circle"></i> ${formatNumber(project.play_count)}</span>
+                            </div>
                         </div>
-                    </a>
+                    </div>
                 `;
             }).join('');
+        }
+        
+        // 페이지네이션 렌더링
+        function renderPagination(pagination) {
+            const container = document.getElementById('pagination');
+            const { page, totalPages } = pagination;
+            
+            if (totalPages <= 1) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            let html = '<nav><ul class="pagination">';
+            
+            // 이전
+            html += `<li class="page-item ${page <= 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="goToPage(${page - 1}); return false;">이전</a>
+            </li>`;
+            
+            // 페이지 번호
+            const startPage = Math.max(1, page - 2);
+            const endPage = Math.min(totalPages, page + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<li class="page-item ${i === page ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="goToPage(${i}); return false;">${i}</a>
+                </li>`;
+            }
+            
+            // 다음
+            html += `<li class="page-item ${page >= totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="goToPage(${page + 1}); return false;">다음</a>
+            </li>`;
+            
+            html += '</ul></nav>';
+            container.innerHTML = html;
+        }
+        
+        // 페이지 이동
+        function goToPage(page) {
+            currentPage = page;
+            loadProjects();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // 프로젝트 상세 페이지로 이동
+        function viewProject(id) {
+            window.location.href = `/gallery/project/${id}`;
+        }
+        
+        // 플랫폼 아이콘
+        function getPlatformIcon(platform) {
+            const icons = {
+                entry: 'box-fill',
+                scratch: 'puzzle-fill',
+                python: 'code-slash',
+                appinventor: 'phone-fill',
+                jupyter: 'journal-code'
+            };
+            return icons[platform] || 'file-code';
+        }
+        
+        // 플랫폼 이름
+        function getPlatformName(platform) {
+            const names = {
+                entry: '엔트리',
+                scratch: '스크래치',
+                python: '파이썬',
+                appinventor: '앱인벤터',
+                jupyter: '주피터'
+            };
+            return names[platform] || platform;
         }
         
         // 숫자 포맷
         function formatNumber(num) {
             if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
             if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-            return num.toString();
+            return (num || 0).toString();
+        }
+        
+        // HTML 이스케이프
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
         }
     </script>
     
