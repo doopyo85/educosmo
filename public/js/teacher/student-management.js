@@ -242,8 +242,8 @@ const StudentManagement = {
                         </a>
                     </td>
                     <td><span class="text-muted">${student.email || '-'}</span></td>
-                    <td><span class="text-muted">${student.created_at ? new Date(student.created_at).toLocaleDateString('ko-KR') : '-'}</span></td>
-                    <td><span class="text-muted">${student.last_access ? new Date(student.last_access).toLocaleDateString('ko-KR') : '-'}</span></td>
+                    <td><span class="text-muted">${student.created_at ? new Date(student.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-'}</span></td>
+                    <td><span class="text-muted">${student.last_access ? new Date(student.last_access).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-'}</span></td>
                     <td>
                         <button class="btn-icon edit me-1" 
                                 onclick="StudentManagement.editStudent(${student.id})" title="수정">
@@ -342,7 +342,14 @@ const StudentManagement = {
                         </a>
                         <div class="small text-muted" style="line-height:1;">${storageUsage}</div>
                     </td>
-                    <td><span class="text-muted small">${student.last_learning_at || '-'}</span></td>
+                    <td class="text-center">
+                        <div class="d-flex flex-column align-items-center justify-content-center">
+                            <i class="bi bi-clock-history fs-5 text-secondary mb-1"></i>
+                            <span class="text-muted small" style="line-height:1;">
+                                ${student.last_learning_at ? new Date(student.last_learning_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }) : '-'}
+                            </span>
+                        </div>
+                    </td>
                 </tr>
             `);
         });

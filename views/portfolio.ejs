@@ -178,11 +178,11 @@
                                 }
                                 %>
                                 <div class="timeline-node <%= isMeaningful ? 'meaningful' : '' %>"
-                                    onclick="<%= isMeaningful ? `selectActivity(this, ${JSON.stringify(log)})` : '' %>">
+                                    onclick="<%= isMeaningful ? `selectActivity(this, ${index})` : '' %>">
                                     <div class="timeline-station"></div>
                                     <div class="timeline-date">
-                                        <%= new Date(log.created_at).toLocaleString('ko-KR', { month: '2-digit' ,
-                                            day: '2-digit' , hour: '2-digit' , minute:'2-digit' }) %>
+                                        <%= new Date(log.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' ,
+                                            month: '2-digit' , day: '2-digit' , hour: '2-digit' , minute:'2-digit' }) %>
                                     </div>
                                     <div class="timeline-text">
                                         <%- icon %>
@@ -249,6 +249,9 @@
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
             <script>
+                // Server-side data injected into client
+                const clientLogs = <% - JSON.stringify(activityLogs || []) %>;
+
                 function uploadProjectModal() {
                     const fileInput = document.getElementById('mProjectFile');
                     const nameInput = document.getElementById('mProjectName');
@@ -278,7 +281,10 @@
                         });
                 }
 
-                function selectActivity(element, log) {
+                function selectActivity(element, index) {
+                    const log = clientLogs[index];
+                    if (!log) return;
+
                     // UI Selection Update
                     document.querySelectorAll('.timeline-node').forEach(el => el.classList.remove('active'));
                     element.classList.add('active');
