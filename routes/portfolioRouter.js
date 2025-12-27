@@ -419,6 +419,22 @@ router.post('/api/upload', upload.single('projectFile'), async (req, res) => {
       [projectId, userId, projectName, projectDesc, thumbnailPath]
     );
 
+    // 🔥 활동 로그 기록 (UserActivityLogs)
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const userAgent = req.get('User-Agent');
+    const actionDetail = JSON.stringify({
+      projectId: projectId,
+      projectName: projectName,
+      thumbnail: thumbnailPath || '',
+      description: projectDesc
+    });
+
+    await db.queryDatabase(`
+      INSERT INTO UserActivityLogs 
+      (user_id, action_type, url, ip_address, user_agent, status, action_detail, created_at)
+      VALUES (?, 'portfolio_upload', '/portfolio/api/upload', ?, ?, 'active', ?, NOW())
+    `, [userId, ip, userAgent, actionDetail]);
+
     res.json({
       success: true,
       message: '프로젝트가 성공적으로 업로드되었습니다.',
