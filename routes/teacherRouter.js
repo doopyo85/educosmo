@@ -666,6 +666,10 @@ router.get('/student-detail/:id', requireTeacher, checkSameCenter, async (req, r
             [studentId]
         );
 
+        const centers = await getCenterList();
+        const centerObj = centers.find(c => c.id == student.centerID);
+        student.centerName = centerObj ? centerObj.name : '소속 없음';
+
         res.render('teacher/student-detail', {
             student,
             logs,

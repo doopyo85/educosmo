@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> - 코딩앤플레이</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .share-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .page-header h1 i {
+            color: #667eea;
+        }
+        
+        .page-header p {
+            color: #666;
+            margin: 0.5rem 0 0;
+        }
+        
+        /* 스텝 인디케이터 */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            color: #adb5bd;
+        }
+        
+        .step.active {
+            color: #667eea;
+        }
+        
+        .step.completed {
+            color: #28a745;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .step.active .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background: #28a745;
+            color: white;
+        }
+        
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: #e9ecef;
+        }
+        
+        /* 카드 */
+        .share-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+        
+        .share-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* 프로젝트 선택 그리드 */
+        .project-select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .project-select-item {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .project-select-item:hover {
+            border-color: #667eea;
+        }
+        
+        .project-select-item.selected {
+            border-color: #667eea;
+            background: #f8f5ff;
+        }
+        
+        .project-select-item .thumb {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .project-select-item .title {
+            font-weight: 500;
+            font-size: 0.9rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .project-select-item .meta {
+            font-size: 0.8rem;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+        
+        .platform-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: white;
+        }
+        
+        .platform-icon.entry { background: #00c4b4; }
+        .platform-icon.scratch { background: #ff9a00; }
+        .platform-icon.python { background: #306998; }
+        
+        /* 폼 스타일 */
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-text {
+            font-size: 0.8rem;
+        }
+        
+        .visibility-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .visibility-option {
+            flex: 1;
+            min-width: 150px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .visibility-option:hover {
+            border-color: #667eea;
+        }
+        
+        .visibility-option.selected {
+            border-color: #667eea;
+            background: #f8f5ff;
+        }
+        
+        .visibility-option i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .visibility-option.selected i {
+            color: #667eea;
+        }
+        
+        .visibility-option .title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .visibility-option .desc {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        /* 버튼 */
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .btn-submit:hover {
+            opacity: 0.9;
+            color: white;
+        }
+        
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* 로딩 */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            padding: 3rem;
+        }
+        
+        /* 플랫폼 필터 */
+        .platform-filter {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .platform-filter .btn {
+            border-radius: 20px;
+        }
+        
+        .platform-filter .btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+    
+    <div class="share-container">
+        <div class="page-header">
+            <h1><i class="bi bi-upload"></i> 작품 공유하기</h1>
+            <p>내 프로젝트를 갤러리에 공유하고 다른 친구들과 나눠보세요!</p>
+        </div>
+        
+        <!-- 스텝 인디케이터 -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <span class="step-number">1</span>
+                <span>프로젝트 선택</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" id="step2">
+                <span class="step-number">2</span>
+                <span>정보 입력</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" id="step3">
+                <span class="step-number">3</span>
+                <span>공유 완료</span>
+            </div>
+        </div>
+        
+        <!-- Step 1: 프로젝트 선택 -->
+        <div id="stepContent1">
+            <div class="share-card">
+                <h3><i class="bi bi-folder2-open"></i> 공유할 프로젝트 선택</h3>
+                
+                <div class="platform-filter">
+                    <button class="btn btn-outline-secondary active" data-platform="">전체</button>
+                    <button class="btn btn-outline-secondary" data-platform="entry">엔트리</button>
+                    <button class="btn btn-outline-secondary" data-platform="scratch">스크래치</button>
+                    <button class="btn btn-outline-secondary" data-platform="python">파이썬</button>
+                </div>
+                
+                <div class="loading-container" id="projectsLoading">
+                    <div class="spinner-border text-primary"></div>
+                </div>
+                
+                <div class="project-select-grid" id="projectsGrid" style="display: none;"></div>
+                
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="bi bi-inbox"></i>
+                    <h5>공유 가능한 프로젝트가 없어요</h5>
+                    <p>먼저 프로젝트를 저장해주세요.</p>
+                </div>
+            </div>
+            
+            <div class="text-end">
+                <button class="btn btn-submit" id="nextStep1" disabled onclick="goToStep(2)">
+                    다음 <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Step 2: 정보 입력 -->
+        <div id="stepContent2" style="display: none;">
+            <div class="share-card">
+                <h3><i class="bi bi-pencil-square"></i> 작품 정보</h3>
+                
+                <div class="mb-3">
+                    <label class="form-label">제목 *</label>
+                    <input type="text" class="form-control" id="shareTitle" maxlength="100" placeholder="작품 제목을 입력하세요">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">설명</label>
+                    <textarea class="form-control" id="shareDescription" rows="3" maxlength="500" placeholder="작품에 대한 설명을 입력하세요"></textarea>
+                    <div class="form-text"><span id="descCount">0</span>/500</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">태그</label>
+                    <input type="text" class="form-control" id="shareTags" placeholder="쉼표로 구분 (예: 게임, 애니메이션, 교육)">
+                    <div class="form-text">최대 5개까지 입력할 수 있어요</div>
+                </div>
+            </div>
+            
+            <div class="share-card">
+                <h3><i class="bi bi-eye"></i> 공개 범위</h3>
+                
+                <div class="visibility-options">
+                    <div class="visibility-option selected" data-visibility="public">
+                        <i class="bi bi-globe"></i>
+                        <div class="title">전체 공개</div>
+                        <div class="desc">누구나 볼 수 있어요</div>
+                    </div>
+                    <div class="visibility-option" data-visibility="class">
+                        <i class="bi bi-people"></i>
+                        <div class="title">같은 센터만</div>
+                        <div class="desc">우리 센터 친구들만 볼 수 있어요</div>
+                    </div>
+                    <div class="visibility-option" data-visibility="private">
+                        <i class="bi bi-lock"></i>
+                        <div class="title">나만 보기</div>
+                        <div class="desc">나만 볼 수 있어요</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-outline-secondary" onclick="goToStep(1)">
+                    <i class="bi bi-arrow-left"></i> 이전
+                </button>
+                <button class="btn btn-submit" id="submitShare" onclick="submitShare()">
+                    <i class="bi bi-upload"></i> 공유하기
+                </button>
+            </div>
+        </div>
+        
+        <!-- Step 3: 완료 -->
+        <div id="stepContent3" style="display: none;">
+            <div class="share-card text-center py-5">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                <h3 class="mt-3">공유 완료!</h3>
+                <p class="text-muted">작품이 갤러리에 등록되었어요.</p>
+                
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <a href="/gallery" class="btn btn-outline-primary">
+                        <i class="bi bi-grid"></i> 갤러리 보기
+                    </a>
+                    <a href="#" id="viewSharedProject" class="btn btn-submit">
+                        <i class="bi bi-eye"></i> 내 작품 보기
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let shareableProjects = [];
+        let selectedProject = null;
+        let currentPlatformFilter = '';
+        let selectedVisibility = 'public';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadShareableProjects();
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            // 플랫폼 필터
+            document.querySelectorAll('.platform-filter .btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.platform-filter .btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentPlatformFilter = btn.dataset.platform;
+                    renderProjects();
+                });
+            });
+            
+            // 설명 글자수
+            document.getElementById('shareDescription').addEventListener('input', (e) => {
+                document.getElementById('descCount').textContent = e.target.value.length;
+            });
+            
+            // 공개범위 선택
+            document.querySelectorAll('.visibility-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    document.querySelectorAll('.visibility-option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    selectedVisibility = opt.dataset.visibility;
+                });
+            });
+        }
+        
+        async function loadShareableProjects() {
+            const loading = document.getElementById('projectsLoading');
+            const grid = document.getElementById('projectsGrid');
+            const empty = document.getElementById('emptyState');
+            
+            try {
+                const response = await fetch('/api/gallery/shareable');
+                const result = await response.json();
+                
+                if (result.success && result.data.length > 0) {
+                    shareableProjects = result.data;
+                    renderProjects();
+                    grid.style.display = 'grid';
+                } else {
+                    empty.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('프로젝트 로드 오류:', error);
+                empty.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        function renderProjects() {
+            const grid = document.getElementById('projectsGrid');
+            let filtered = shareableProjects;
+            
+            if (currentPlatformFilter) {
+                filtered = shareableProjects.filter(p => p.platform === currentPlatformFilter);
+            }
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="text-center text-muted py-4" style="grid-column: 1/-1;">해당 플랫폼의 프로젝트가 없습니다.</div>`;
+                return;
+            }
+            
+            grid.innerHTML = filtered.map(p => `
+                <div class="project-select-item ${selectedProject?.id === p.id ? 'selected' : ''}" 
+                     onclick="selectProject(${p.id})">
+                    <div class="thumb">
+                        <i class="bi bi-${getPlatformIcon(p.platform)}"></i>
+                    </div>
+                    <div class="title">${escapeHtml(p.project_name)}</div>
+                    <div class="meta">
+                        <span class="platform-icon ${p.platform}">${getPlatformShort(p.platform)}</span>
+                        ${formatDate(p.submitted_at)}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function selectProject(id) {
+            selectedProject = shareableProjects.find(p => p.id === id);
+            renderProjects();
+            document.getElementById('nextStep1').disabled = !selectedProject;
+            
+            // 제목 자동 입력
+            if (selectedProject) {
+                document.getElementById('shareTitle').value = selectedProject.project_name;
+            }
+        }
+        
+        function goToStep(step) {
+            // 스텝 인디케이터 업데이트
+            for (let i = 1; i <= 3; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                stepEl.classList.remove('active', 'completed');
+                
+                if (i < step) {
+                    stepEl.classList.add('completed');
+                } else if (i === step) {
+                    stepEl.classList.add('active');
+                }
+            }
+            
+            // 컨텐츠 전환
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`stepContent${i}`).style.display = i === step ? 'block' : 'none';
+            }
+        }
+        
+        async function submitShare() {
+            const title = document.getElementById('shareTitle').value.trim();
+            const description = document.getElementById('shareDescription').value.trim();
+            const tagsInput = document.getElementById('shareTags').value;
+            const tags = tagsInput.split(',').map(t => t.trim()).filter(t => t).slice(0, 5);
+            
+            if (!title) {
+                alert('제목을 입력해주세요.');
+                return;
+            }
+            
+            if (!selectedProject) {
+                alert('프로젝트를 선택해주세요.');
+                goToStep(1);
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitShare');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 공유 중...';
+            
+            try {
+                const response = await fetch('/api/gallery/share', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        submissionId: selectedProject.id,
+                        platform: selectedProject.platform,
+                        title,
+                        description,
+                        visibility: selectedVisibility,
+                        tags,
+                        s3Url: selectedProject.s3_file_path
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('viewSharedProject').href = `/gallery/project/${result.projectId}`;
+                    goToStep(3);
+                } else {
+                    alert('공유 실패: ' + result.error);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-upload"></i> 공유하기';
+                }
+            } catch (error) {
+                console.error('공유 오류:', error);
+                alert('공유 중 오류가 발생했습니다.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-upload"></i> 공유하기';
+            }
+        }
+        
+        function getPlatformIcon(platform) {
+            const icons = { entry: 'box-fill', scratch: 'puzzle-fill', python: 'code-slash' };
+            return icons[platform] || 'file-code';
+        }
+        
+        function getPlatformShort(platform) {
+            const shorts = { entry: 'E', scratch: 'S', python: 'P' };
+            return shorts[platform] || '?';
+        }
+        
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('ko-KR');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+    
+    <%- include('partials/footer') %>
+</body>
+</html>
