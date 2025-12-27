@@ -533,6 +533,101 @@ async function cleanupContainers() {
 }
 
 
+// ============================================
+// 미들웨어: 같은 센터 학생인지 확인 (Timeline Modal용)
+// ============================================
+const checkSameCenter = async (req, res, next) => {
+  try {
+    const studentId = req.params.id || req.body.studentId;
+    const teacherCenterId = req.session.centerID;
+    const teacherRole = req.session.role;
+
+    // admin은 모든 센터 접근 가능
+    if (teacherRole === 'admin') {
+      return next();
+    }
+
+    // 학생의 centerID 확인
+    const [student] = await db.queryDatabase(
+      'SELECT centerID FROM Users WHERE id = ?',
+      [studentId]
+    );
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: '학생을 찾을 수 없습니다.'
+      });
+    }
+
+    if (student.centerID !== teacherCenterId) {
+      return res.status(403).json({
+        success: false,
+        message: '다른 센터 학생에게는 접근할 수 없습니다.'
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error('센터 확인 중 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '권한 확인 중 오류가 발생했습니다.'
+    });
+  }
+};
+
+// ============================================
+// 교사 대시보드 타임라인 조회 (Modal)
+// ============================================
+router.get('/student/:id', checkSameCenter, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const userRole = req.session.role;
+
+    // 교사/관리자 권한 체크
+    if (!['teacher', 'manager', 'admin'].includes(userRole)) {
+      return res.status(403).send('권한이 없습니다.');
+    }
+
+    const [student] = await db.queryDatabase(
+      'SELECT * FROM Users WHERE id = ? AND role = "student"',
+      [studentId]
+    );
+
+    if (!student) {
+      return res.status(404).send('학생을 찾을 수 없습니다.');
+    }
+
+    const logs = await db.queryDatabase(
+      'SELECT * FROM LearningLogs WHERE user_id = ? ORDER BY start_time DESC LIMIT 20',
+      [studentId]
+    );
+
+    const activityLogs = await db.queryDatabase(
+      `SELECT created_at, ip_address, user_agent, url, status, action_type, action_detail 
+            FROM UserActivityLogs 
+            WHERE user_id = ?
+            ORDER BY created_at DESC 
+            LIMIT 50`,
+      [studentId]
+    );
+
+    // 모달용 뷰 렌더링 (Header/Footer 없이)
+    res.render('teacher/student-detail', {
+      student,
+      logs,
+      activityLogs,
+      layout: false // Express-ejs-layouts나 유사 미들웨어가 있다면 적용, 없으면 무시됨
+    });
+
+  } catch (error) {
+    console.error('학생 상세 조회 오류:', error);
+    res.status(500).send('오류 발생');
+  }
+});
+
+
 // 서버에 정리 스케줄러 등록 (15분마다 실행)
 setInterval(cleanupContainers, 15 * 60 * 1000);
 
