@@ -502,6 +502,223 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 });
 
 // =============================================================================
+// 🔥 프로젝트 덮어쓰기 API (PUT - RESTful 표준)
+// =============================================================================
+
+router.put('/api/save-project/:fileId', authenticateUser, async (req, res) => {
+    try {
+        const { fileId } = req.params;
+        const { projectData, projectName, thumbnailBase64 } = req.body;
+        const userID = req.session.userID;
+
+        console.log(`\n📝 ========== [Entry PUT] 덮어쓰기 요청 ==========`);
+        console.log(`👤 사용자: ${userID}`);
+        console.log(`📁 fileId: ${fileId}`);
+        console.log(`📋 projectName: ${projectName}`);
+
+        if (!projectData) {
+            return res.status(400).json({
+                success: false,
+                error: '프로젝트 데이터가 필요합니다.'
+            });
+        }
+
+        const db = require('../lib_login/db');
+        const quotaChecker = require('../lib_storage/quotaChecker');
+        const S3Manager = require('../lib_storage/s3Manager');
+        const parallelSave = require('../lib_storage/parallelSave');
+        const s3Manager = new S3Manager();
+
+        // 1. 사용자 DB ID 조회
+        const [user] = await db.queryDatabase(
+            'SELECT id, centerID FROM Users WHERE userID = ?',
+            [userID]
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
+        const userId = user.id;
+        const centerId = user.centerID;
+
+        // 2. 기존 프로젝트 조회 (본인 소유 확인)
+        const [existingProject] = await db.queryDatabase(
+            `SELECT id, s3_key, s3_url, file_size_kb, project_name 
+             FROM ProjectSubmissions 
+             WHERE id = ? AND user_id = ? AND platform = 'entry' 
+               AND (is_deleted = FALSE OR is_deleted IS NULL)`,
+            [fileId, userId]
+        );
+
+        if (!existingProject) {
+            console.log(`❌ [Entry PUT] 프로젝트를 찾을 수 없음: fileId=${fileId}, userId=${userId}`);
+            return res.status(404).json({
+                success: false,
+                error: '프로젝트를 찾을 수 없거나 수정 권한이 없습니다.'
+            });
+        }
+
+        console.log(`✅ [Entry PUT] 기존 프로젝트 확인:`, {
+            id: existingProject.id,
+            name: existingProject.project_name,
+            oldSizeKb: existingProject.file_size_kb
+        });
+
+        // 3. 프로젝트 데이터 → JSON → Buffer
+        const projectJson = JSON.stringify(projectData);
+        const projectBuffer = Buffer.from(projectJson, 'utf8');
+        const newFileSize = projectBuffer.length;
+        const oldFileSize = (existingProject.file_size_kb || 0) * 1024;
+
+        // 4. 용량 차이 계산 및 체크
+        const sizeDiff = newFileSize - oldFileSize;
+        console.log(`📊 [Entry PUT] 용량 변화: ${oldFileSize} → ${newFileSize} (차이: ${sizeDiff > 0 ? '+' : ''}${sizeDiff})`);
+
+        if (sizeDiff > 0) {
+            const canSave = await quotaChecker.canUpload(userId, centerId, sizeDiff);
+            if (!canSave.allowed) {
+                return res.status(413).json({
+                    success: false,
+                    error: 'QUOTA_EXCEEDED',
+                    message: canSave.message || '저장 공간이 부족합니다.',
+                    details: {
+                        currentUsage: canSave.currentUsage,
+                        limit: canSave.limit,
+                        required: sizeDiff
+                    }
+                });
+            }
+        }
+
+        // 5. S3 덮어쓰기 (기존 키 사용 또는 새 키 생성)
+        let s3Key = existingProject.s3_key;
+        let s3Url;
+
+        if (s3Key) {
+            // 기존 S3 키로 덮어쓰기
+            s3Url = await s3Manager.uploadProject(s3Key, projectBuffer, 'application/json');
+            console.log(`✅ [Entry PUT] S3 덮어쓰기 완료: ${s3Key}`);
+        } else {
+            // S3 키가 없으면 새로 생성
+            const timestamp = Date.now();
+            const safeName = (projectName || existingProject.project_name || 'project').replace(/[^a-zA-Z0-9가-힣_-]/g, '_');
+            s3Key = `users/${userID}/entry/projects/${safeName}_${timestamp}.ent`;
+            s3Url = await s3Manager.uploadProject(s3Key, projectBuffer, 'application/json');
+            console.log(`✅ [Entry PUT] S3 새 키로 업로드: ${s3Key}`);
+        }
+
+        // 6. 썸네일 업로드 (있는 경우)
+        let thumbnailUrl = null;
+        if (thumbnailBase64) {
+            try {
+                const base64Data = thumbnailBase64.replace(/^data:image\/\w+;base64,/, '');
+                const thumbnailBuffer = Buffer.from(base64Data, 'base64');
+                const timestamp = Date.now();
+                const safeName = (projectName || 'project').replace(/[^a-zA-Z0-9가-힣_-]/g, '_');
+                const thumbKey = `users/${userID}/entry/projects/thumbnails/${safeName}_${timestamp}.png`;
+                thumbnailUrl = await s3Manager.uploadProject(thumbKey, thumbnailBuffer, 'image/png');
+                console.log(`📸 [Entry PUT] 썸네일 업로드 완료: ${thumbnailUrl}`);
+            } catch (thumbError) {
+                console.warn(`⚠️ [Entry PUT] 썸네일 업로드 실패 (무시):`, thumbError.message);
+            }
+        }
+
+        // 7. 프로젝트 분석
+        const analysis = parallelSave.analyzeEntryProject(projectData);
+
+        // 8. DB 업데이트 (ProjectSubmissions)
+        const updateFields = [
+            'project_name = ?',
+            's3_url = ?',
+            's3_key = ?',
+            'file_size_kb = ?',
+            'blocks_count = ?',
+            'sprites_count = ?',
+            'variables_count = ?',
+            'functions_count = ?',
+            'complexity_score = ?',
+            'updated_at = NOW()'
+        ];
+        const updateValues = [
+            projectName || existingProject.project_name,
+            s3Url,
+            s3Key,
+            Math.ceil(newFileSize / 1024),
+            analysis.blocksCount || 0,
+            analysis.spritesCount || 0,
+            analysis.variablesCount || 0,
+            analysis.functionsCount || 0,
+            analysis.complexityScore || 0
+        ];
+
+        if (thumbnailUrl) {
+            updateFields.push('thumbnail_url = ?');
+            updateValues.push(thumbnailUrl);
+        }
+
+        updateValues.push(fileId); // WHERE 조건용
+
+        await db.queryDatabase(
+            `UPDATE ProjectSubmissions SET ${updateFields.join(', ')} WHERE id = ?`,
+            updateValues
+        );
+
+        // 9. UserFiles 업데이트 (있으면)
+        const [userFile] = await db.queryDatabase(
+            `SELECT id, file_size FROM UserFiles 
+             WHERE user_id = ? AND stored_name = ? AND (is_deleted = FALSE OR is_deleted IS NULL)`,
+            [userId, existingProject.s3_key || s3Key]
+        );
+
+        if (userFile) {
+            await db.queryDatabase(
+                `UPDATE UserFiles SET file_size = ?, updated_at = NOW() WHERE id = ?`,
+                [newFileSize, userFile.id]
+            );
+            console.log(`✅ [Entry PUT] UserFiles 업데이트: id=${userFile.id}`);
+        }
+
+        // 10. 용량 업데이트
+        if (sizeDiff !== 0) {
+            if (sizeDiff > 0) {
+                await quotaChecker.increaseUsage(userId, centerId, sizeDiff, 'entry');
+            } else {
+                await quotaChecker.decreaseUsage(userId, centerId, Math.abs(sizeDiff), 'entry');
+            }
+            console.log(`📊 [Entry PUT] 용량 업데이트: ${sizeDiff > 0 ? '+' : ''}${sizeDiff} bytes`);
+        }
+
+        console.log(`✅ [Entry PUT] 덮어쓰기 완료: projectId=${fileId}`);
+        console.log(`================================================\n`);
+
+        res.json({
+            success: true,
+            projectId: parseInt(fileId),
+            fileId: parseInt(fileId),
+            userFileId: userFile?.id || null,
+            fileName: s3Key.split('/').pop(),
+            s3Url: s3Url,
+            s3Key: s3Key,
+            fileSize: newFileSize,
+            fileSizeKb: Math.ceil(newFileSize / 1024),
+            thumbnailUrl: thumbnailUrl,
+            message: '프로젝트가 업데이트되었습니다.'
+        });
+
+    } catch (error) {
+        console.error('❌ [Entry PUT] 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// =============================================================================
 // 🔥 프로젝트 삭제 API (병렬 삭제 모델: UserFiles + ProjectSubmissions)
 // =============================================================================
 
