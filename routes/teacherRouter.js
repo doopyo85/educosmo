@@ -667,7 +667,9 @@ router.get('/student-detail/:id', requireTeacher, checkSameCenter, async (req, r
         );
 
         const centers = await getCenterList();
-        const centerObj = centers.find(c => c.id == student.centerID);
+        // console.log('Centers:', centers);
+        // console.log('Student CenterID:', student.centerID);
+        const centerObj = centers.find(c => String(c.id).trim() === String(student.centerID).trim());
         student.centerName = centerObj ? centerObj.name : '소속 없음';
 
         res.render('teacher/student-detail', {
