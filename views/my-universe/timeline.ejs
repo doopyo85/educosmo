@@ -218,6 +218,38 @@
         margin-bottom: 15px;
         opacity: 0.3;
     }
+
+    /* Platform Badge Styling */
+    .platform-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 2px 6px;
+        border: 1px solid #007AFF;
+        color: #007AFF;
+        border-radius: 6px;
+        margin-right: 6px;
+        vertical-align: middle;
+        background-color: rgba(0, 122, 255, 0.05);
+    }
+
+    .platform-badge.scratch {
+        border-color: #FF9500;
+        color: #FF9500;
+        background-color: rgba(255, 149, 0, 0.05);
+    }
+
+    .platform-badge.python {
+        border-color: #34C759;
+        color: #34C759;
+        background-color: rgba(52, 199, 89, 0.05);
+    }
+
+    .platform-badge.system {
+        border-color: #8E8E93;
+        color: #8E8E93;
+        background-color: #F2F2F7;
+    }
 </style>
 
 <div class="timeline-wrapper">
@@ -247,7 +279,13 @@
                                     <i class="bi <%= item.iconClass %> timeline-icon-small"></i>
                                     <div>
                                         <div class="timeline-title">
-                                            <%= item.title %>
+                                            <% if (item.platform && item.platform !=='LOG' ) { %>
+                                                <span
+                                                    class="platform-badge <%= item.platform === '스크래치' ? 'scratch' : (item.platform === '파이썬' ? 'python' : '') %>">
+                                                    <%= item.platform %>
+                                                </span>
+                                                <% } %>
+                                                    <%= item.title %>
                                         </div>
                                         <div class="timeline-time">
                                             <%= item.timeStr %> • <%= item.action_type || 'Activity' %>

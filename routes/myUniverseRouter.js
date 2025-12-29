@@ -3,62 +3,106 @@ const router = express.Router();
 const path = require('path');
 const db = require('../lib_login/db');
 
-// Helper to get friendly title
-const getFriendlyTitle = (item) => {
-    // 1. If it has a direct title (Blog, Gallery, Badge), use it
-    // 1. If it has a direct title (Blog, Gallery, Badge) AND not a log type, use it
-    // Logs store 'action_type' in title, which we want to translate regardless of content
-    if (item.type !== 'log' && item.title && item.title !== 'User Activity') return item.title;
+// 🚀 Caching for Problem Data
+let problemCache = null;
+let lastCacheTime = 0;
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-    // 2. Map log types
-    const actionType = item.title; // In the query below, we map action_type to title for logs
+async function getProblemMap(req) { // Pass req to access getSheetData if needed
+    const now = Date.now();
+    if (problemCache && (now - lastCacheTime < CACHE_TTL)) {
+        return problemCache;
+    }
 
-    if (actionType === 'login') return '로그인 (Login)';
-    if (actionType === 'logout') return '로그아웃 (Logout)';
+    try {
+        // Use global getSheetData or require it
+        const { getSheetData } = require('../lib_google/sheetService');
+        const rows = await getSheetData('problems!A2:C'); // A: ID?, B: Key, C: Title
+
+        const map = new Map();
+        if (rows && rows.length) {
+            rows.forEach(row => {
+                // Assuming B is the ID/Key (e.g., 'cospro_3-1_p08' or 'cpe1-1a')
+                // and C is the Title. 
+                // Adjust index based on inspecting 'update_excel_p08.py' which implied col 1 (B) is Key.
+                // Row structure: [A, B, C] -> indices 0, 1, 2
+                if (row[1] && row[2]) {
+                    map.set(row[1].trim(), row[2].trim());
+                }
+            });
+        }
+
+        problemCache = map;
+        lastCacheTime = now;
+        // console.log(`Problem Map Cached: ${map.size} items`);
+        return map;
+    } catch (e) {
+        console.error('Failed to load problem map:', e);
+        return new Map(); // Empty map fallback
+    }
+}
+
+// Helper to get friendly title and platform
+const getFriendlyInfo = (item, problemMap) => {
+    let platform = '';
+    let name = item.title;
+
+    // 1. Direct Types (Blog, Gallery, Badge)
+    if (item.type !== 'log' && item.title && item.title !== 'User Activity') {
+        return { platform: item.type.toUpperCase(), name: item.title };
+    }
+
+    // 2. Log Types
+    const actionType = item.title;
+
+    if (actionType === 'login') return { platform: 'SYSTEM', name: '로그인 (Login)' };
+    if (actionType === 'logout') return { platform: 'SYSTEM', name: '로그아웃 (Logout)' };
+
+    // Portfolio / Project Uploads
     if (actionType === 'portfolio_upload') {
         try {
             const detail = JSON.parse(item.metadata || '{}');
-            return detail.projectName || '프로젝트 업로드';
+            name = detail.projectName || '프로젝트 업로드';
         } catch (e) {
-            return '프로젝트 업로드';
+            name = '프로젝트 업로드';
         }
+        return { platform: 'PORTFOLIO', name };
     }
-    if (!actionType) return 'Activity';
 
-    // Improved Entry Project Mapping
-    if (actionType.includes('entry_load_project')) {
+    // Entry Projects
+    if (actionType.includes('entry') || actionType.includes('cpe')) {
+        platform = '엔트리';
         try {
-            // Attempt to parse metadata for filename
             const detail = JSON.parse(item.metadata || '{}');
             const url = detail.s3Url || detail.projectUrl;
 
             if (url) {
-                // Extract filename from URL (e.g., .../CTRpython_1-1_p01.ent)
                 let filename = url.substring(url.lastIndexOf('/') + 1);
                 filename = decodeURIComponent(filename);
-
                 // Remove extension
                 filename = filename.replace(/\.(ent|sb2|sb3)$/i, '');
 
-                // Format: Replace underscores with spaces for readability
-                // "CTRpython_1-1_p01" -> "CTRpython 1-1 p01"
-                return '(엔트리) ' + filename.replace(/_/g, ' ');
+                // 1. Try Lookup in Problem Map
+                if (problemMap && problemMap.has(filename)) {
+                    name = problemMap.get(filename);
+                } else {
+                    // 2. Fallback formatting
+                    name = filename.replace(/_/g, ' ');
+                }
+            } else {
+                name = '프로젝트 학습';
             }
         } catch (e) {
-            // Fallback if parsing fails
+            name = '프로젝트 학습';
         }
-        return '(엔트리) 프로젝트 학습';
+        return { platform, name };
     }
-    if (actionType.includes('entry_save_project')) return '(엔트리) 프로젝트 저장';
-    if (actionType.includes('entry')) return '(엔트리) 학습 진행';
 
-    if (actionType.includes('scratch')) return '(스크래치) 학습';
-    if (actionType.includes('python')) return '(파이썬) 학습';
+    if (actionType.includes('scratch')) return { platform: '스크래치', name: '학습 진행' };
+    if (actionType.includes('python')) return { platform: '파이썬', name: '학습 진행' };
+    if (actionType.includes('appinventor') || actionType.includes('app_inventor')) return { platform: '앱인벤터', name: '학습 진행' };
 
-    // Add App Inventor if it exists in logs, or generic catch-all
-    if (actionType.includes('appinventor') || actionType.includes('app_inventor')) return '(앱인벤터) 학습';
-
-    return actionType;
+    return { platform: 'LOG', name: actionType || 'Activity' };
 };
 
 // Helper to get icon class
@@ -81,59 +125,51 @@ const getIconClass = (item) => {
     }
 };
 
-const processLogs = (logs) => {
+const processLogs = async (logs) => {
+    const problemMap = await getProblemMap(); // Load data
+
     return logs.map(log => {
         const dateObj = new Date(log.created_at);
-        const finalTitle = getFriendlyTitle(log);
+        const info = getFriendlyInfo(log, problemMap); // Get platform and name
 
-        // Metadata parsing for detail view
         // Metadata parsing for detail view
         let finalUrl = '#'; // Default to no-op
-        let displayMetadata = '';
 
+        // ... (Original Metadata Parsing - kept same logic mostly)
         if (log.type === 'log') {
             try {
-                // If metadata is a JSON string (typical for complex logs)
                 if (log.metadata && (log.metadata.startsWith('{') || log.metadata.startsWith('['))) {
                     const detail = JSON.parse(log.metadata);
-
-                    // Extract URL if available
                     if (detail.projectUrl) finalUrl = detail.projectUrl;
                     else if (detail.s3Url) finalUrl = detail.s3Url;
-
-                    // Construct Entry Workspace Link if params exist
                     if (log.title.includes('entry_load_project')) {
-                        // Use s3Url to open specific project
                         if (detail.s3Url) {
                             finalUrl = '/entry?s3Url=' + encodeURIComponent(detail.s3Url);
                         } else {
-                            finalUrl = '/entry/workspace'; // Fallback
+                            finalUrl = '/entry/workspace';
                         }
                     }
                 } else {
-                    // Regular string metadata
                     if (log.metadata && log.metadata.startsWith('http')) {
                         finalUrl = log.metadata;
                     }
                 }
-            } catch (e) {
-                console.error('Metadata parse error:', e);
-            }
+            } catch (e) { console.error(e); }
         } else if (log.type === 'gallery') {
-            // Gallery items usually have metadata as thumbnail, but ID works for link
             finalUrl = `/gallery/project/${log.id}`;
         } else if (log.type === 'blog') {
             finalUrl = `/posts/${log.id}`;
         }
 
         return {
-            dateStr: dateObj.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }),
-            timeStr: dateObj.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-            title: finalTitle,
+            dateStr: dateObj.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', timeZone: 'Asia/Seoul' }),
+            timeStr: dateObj.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' }),
+            title: info.name,
+            platform: info.platform, // New field for badge
             iconClass: getIconClass(log),
             url: finalUrl,
-            status: 'Completed', // Default
-            action_type: (log.type || 'Activity').toUpperCase() // For display label
+            status: 'Completed',
+            action_type: (log.type || 'Activity').toUpperCase()
         };
     });
 };
@@ -277,7 +313,7 @@ router.get('/timeline', async (req, res) => {
         `, [studentId, studentId, studentId, studentId]);
 
         // Process logs for view
-        const timelineItems = processLogs(activityLogs);
+        const timelineItems = await processLogs(activityLogs);
 
         res.render('my-universe/index', {
             activeTab: 'timeline',
