@@ -185,12 +185,63 @@ router.get('/student/:id', async (req, res) => {
         }
 
         const activityLogs = await db.queryDatabase(`
-            SELECT created_at, action_type, url, action_detail, status 
-            FROM UserActivityLogs 
-            WHERE user_id = ? 
-            ORDER BY created_at DESC 
+            SELECT * FROM (
+                -- 1. Gallery Projects
+                SELECT 
+                    'gallery' as type, 
+                    title, 
+                    created_at, 
+                    id, 
+                    thumbnail_url as metadata 
+                FROM gallery_projects 
+                WHERE user_id = ?
+
+                UNION ALL
+
+                -- 2. Blog Posts
+                SELECT 
+                    'blog' as type, 
+                    title, 
+                    created_at, 
+                    id, 
+                    excerpt as metadata 
+                FROM user_blog_posts 
+                WHERE user_id = ?
+
+                UNION ALL
+
+                -- 3. Badges
+                SELECT 
+                    'badge' as type, 
+                    badge_code as title, 
+                    earned_at as created_at, 
+                    id, 
+                    NULL as metadata 
+                FROM user_badges 
+                WHERE user_id = ?
+
+                UNION ALL
+
+                -- 4. User Activity Logs
+                SELECT 
+                    'log' as type, 
+                    action_type as title, 
+                    created_at, 
+                    log_id as id, 
+                    action_detail as metadata 
+                FROM UserActivityLogs 
+                WHERE user_id = ? 
+                AND (
+                    action_type = 'portfolio_upload' 
+                    OR action_type = 'login'
+                    OR action_type LIKE '%entry%'
+                    OR action_type LIKE '%scratch%'
+                    OR action_type LIKE '%python%'
+                )
+            ) AS UnifiedTimeline
+            ORDER BY created_at DESC
             LIMIT 50
-        `, [studentId]);
+        `, [studentId, studentId, studentId, studentId]);
 
         // Process logs for view
         const timelineItems = processLogs(activityLogs);
