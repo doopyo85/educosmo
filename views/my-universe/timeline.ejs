@@ -245,8 +245,8 @@
                 </div>
                 <% } %>
 
-                    <div class="timeline-item"
-                        onclick="showDetail(this, '<%= title %>', '<%= timeStr %>', `<%= log.url %>`, '<%= log.status %>')">
+                    <div class="timeline-item" onclick="handleClick(this)" data-title="<%= title %>"
+                        data-time="<%= timeStr %>" data-url="<%= log.url %>" data-status="<%= log.status %>">
                         <div class="timeline-connector"></div>
                         <div class="activity-icon">
                             <i class="bi <%= iconClass %>"></i>
@@ -283,7 +283,13 @@
 </div>
 
 <script>
-    function showDetail(element, title, time, url, status) {
+    function handleClick(element) {
+        // Read data attributes
+        const title = element.dataset.title;
+        const time = element.dataset.time;
+        const url = element.dataset.url;
+        const status = element.dataset.status;
+
         // Active state handling
         document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
