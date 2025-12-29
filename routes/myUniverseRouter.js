@@ -6,7 +6,9 @@ const db = require('../lib_login/db');
 // Helper to get friendly title
 const getFriendlyTitle = (item) => {
     // 1. If it has a direct title (Blog, Gallery, Badge), use it
-    if (item.title && item.title !== 'User Activity') return item.title;
+    // 1. If it has a direct title (Blog, Gallery, Badge) AND not a log type, use it
+    // Logs store 'action_type' in title, which we want to translate regardless of content
+    if (item.type !== 'log' && item.title && item.title !== 'User Activity') return item.title;
 
     // 2. Map log types
     const actionType = item.title; // In the query below, we map action_type to title for logs

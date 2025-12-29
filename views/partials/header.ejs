@@ -94,11 +94,11 @@
                                             <!-- 🔥 포트폴리오 (학생 전용) -->
                                             <% if (role==='student' ) { %>
                                                 <div class="board-notification-wrapper">
-                                                    <button class="board-icon-btn"
-                                                        onclick="location.href='/my-universe'" title="나의 학습이력"
-                                                        aria-label="나의 학습이력 보기">
+                                                    <a href="/my-universe"
+                                                        class="board-icon-btn d-flex align-items-center justify-content-center text-dark text-decoration-none"
+                                                        title="나의 학습이력" aria-label="나의 학습이력 보기">
                                                         <i class="bi bi-clock-history" aria-hidden="true"></i>
-                                                    </button>
+                                                    </a>
                                                     <div class="board-tooltip">나의 학습</div>
                                                 </div>
                                                 <% } %>
