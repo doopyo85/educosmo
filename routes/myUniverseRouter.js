@@ -585,7 +585,7 @@ router.get('/problems', async (req, res) => {
         const problems = await db.queryDatabase(`
             SELECT * FROM QuizResults 
             WHERE user_id = ?
-            ORDER BY created_at DESC
+            ORDER BY timestamp DESC
             LIMIT 100
         `, [targetUserId]);
 
