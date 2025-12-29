@@ -1,43 +1,34 @@
-<!-- Last Updated: Refactored Logic to Controller -->
+<!-- Last Updated: Subway Style Restored + Logic in Controller -->
 <style>
     /* 
-     * Apple-Style Timeline Design 
-     * "Premium Minimalism"
+     * Subway Style Timeline 
+     * "Connected & Continuous"
      */
     :root {
-        --ios-bg: #F5F5F7;
-        --ios-card: #FFFFFF;
-        --ios-text-primary: #1D1D1F;
-        --ios-text-secondary: #86868B;
-        --ios-accent: #007AFF;
-        /* SF Blue */
-        --ios-border: #D2D2D7;
-        --ios-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-        --ios-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
-    }
-
-    body {
-        background-color: var(--ios-bg);
-        /* Global background for this page context */
+        --timeline-line-color: #E0E0E0;
+        --timeline-dot-color: #007AFF;
+        --timeline-dot-border: #FFFFFF;
+        --timeline-bg: #F5F5F7;
     }
 
     .timeline-wrapper {
         display: flex;
-        gap: 40px;
+        gap: 20px;
         max-width: 1200px;
         margin: 0 auto;
         padding-top: 20px;
         height: calc(100vh - 140px);
-        /* Adjust based on header */
     }
 
-    /* Left Panel: The Timeline */
+    /* Left Panel: Subway List */
     .timeline-container {
         flex: 1;
-        background: transparent;
+        background: #FFFFFF;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        padding: 30px 20px;
         overflow-y: auto;
-        padding-right: 20px;
-        /* Scrollbar styling */
+        /* Custom Scrollbar */
         scrollbar-width: thin;
         scrollbar-color: #d1d1d1 transparent;
     }
@@ -51,12 +42,12 @@
         border-radius: 10px;
     }
 
-    /* Right Panel: Detail View (Sticky) */
+    /* Right Panel: Detail View */
     .detail-panel {
-        flex: 1.5;
-        background: var(--ios-card);
-        border-radius: 24px;
-        box-shadow: var(--ios-shadow-md);
+        flex: 1.2;
+        background: #FFFFFF;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         padding: 40px;
         display: flex;
         flex-direction: column;
@@ -66,121 +57,120 @@
         height: 100%;
         position: sticky;
         top: 20px;
-        transition: all 0.3s ease;
     }
 
-    /* Timeline Items */
+    /* Subway Items */
+    .timeline-list {
+        position: relative;
+        padding-left: 20px;
+    }
+
+    /* Continuous Line */
+    .timeline-list::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 29px;
+        /* Adjust to center with dots */
+        width: 3px;
+        background: var(--timeline-line-color);
+        z-index: 0;
+    }
+
     .timeline-group-date {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--ios-text-secondary);
-        margin: 20px 0 10px 14px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #86868B;
+        background: #FFFFFF;
+        /* Mask line behind date */
+        position: relative;
+        z-index: 1;
+        display: inline-block;
+        margin: 20px 0 10px 0;
+        padding: 4px 10px;
+        border-radius: 12px;
+        border: 1px solid #F2F2F7;
     }
 
     .timeline-item {
         position: relative;
-        padding: 20px;
-        margin-bottom: 16px;
-        background: var(--ios-card);
-        border-radius: 18px;
-        box-shadow: var(--ios-shadow-sm);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        border: 1px solid transparent;
+        padding: 15px 15px 15px 50px;
+        /* Space for line/dot */
+        margin-bottom: 15px;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 16px;
+        transition: all 0.2s ease;
+        border-radius: 12px;
     }
 
     .timeline-item:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        background-color: #F9F9F9;
     }
 
     .timeline-item.active {
-        border-color: var(--ios-accent);
-        background-color: #F0F8FF;
-        /* Very subtle blue tint */
+        background-color: #EFF6FF;
     }
 
-    /* Connector Line */
-    .timeline-connector {
+    /* Station Dot */
+    .timeline-dot {
         position: absolute;
-        left: 34px;
-        /* Align with icon center */
-        top: 60px;
-        bottom: -30px;
-        width: 2px;
-        background: #E5E5EA;
-        z-index: -1;
+        left: 22px;
+        top: 22px;
+        width: 16px;
+        height: 16px;
+        background: #FFFFFF;
+        border: 4px solid var(--timeline-dot-color);
+        border-radius: 50%;
+        z-index: 1;
+        transition: transform 0.2s;
     }
 
-    .timeline-item:last-child .timeline-connector {
-        display: none;
+    .timeline-item:hover .timeline-dot {
+        transform: scale(1.2);
     }
 
-    /* Icon Box */
-    .activity-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
+    .timeline-item.active .timeline-dot {
+        background: var(--timeline-dot-color);
+        box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+    }
+
+    /* Icon within Dot? No, "Subway" usually just has dots. 
+       Let's put the icon in the content area for context */
+
+    .timeline-content-row {
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 1.4rem;
-        background: #F2F2F7;
-        color: var(--ios-text-primary);
-        flex-shrink: 0;
+        justify-content: space-between;
     }
 
-    .activity-icon.project {
-        background: #EAF4FF;
-        color: #007AFF;
+    .timeline-main-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 
-    .activity-icon.login {
-        background: #E8F5E9;
-        color: #34C759;
+    .timeline-time {
+        font-size: 0.8rem;
+        color: #86868B;
+        min-width: 60px;
     }
 
-    .activity-icon.learning {
-        background: #FFF9E6;
-        color: #FF9500;
-    }
-
-    .activity-icon.page {
-        background: #F2F2F7;
-        color: #8E8E93;
-    }
-
-    /* Content */
-    .activity-content {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .activity-title {
-        font-size: 1rem;
+    .timeline-title {
         font-weight: 600;
-        color: var(--ios-text-primary);
-        margin-bottom: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        color: #1D1D1F;
+        font-size: 1rem;
     }
 
-    .activity-meta {
-        font-size: 0.85rem;
-        color: var(--ios-text-secondary);
+    .timeline-icon-small {
+        color: var(--timeline-dot-color);
+        font-size: 1.1rem;
     }
 
     /* Empty State */
     .empty-state {
         text-align: center;
         padding: 60px 0;
-        color: var(--ios-text-secondary);
+        color: #86868B;
     }
 
     .empty-state i {
@@ -193,39 +183,48 @@
 <div class="timeline-wrapper">
     <!-- Left: Timeline List -->
     <div class="timeline-container">
-        <% let lastDate='' ; const items=locals.timelineItems || []; if (items.length> 0) {
-            items.forEach(function(item) {
-            %>
+        <div class="timeline-list">
+            <% let lastDate='' ; const items=locals.timelineItems || []; if (items.length> 0) {
+                items.forEach(function(item) {
+                %>
 
-            <% if (item.dateStr !==lastDate) { lastDate=item.dateStr; %>
-                <div class="timeline-group-date">
-                    <%= item.dateStr %>
-                </div>
-                <% } %>
-
-                    <div class="timeline-item" onclick="handleClick(this)" data-title="<%= item.title %>"
-                        data-time="<%= item.timeStr %>" data-url="<%= item.url %>" data-status="<%= item.status %>">
-                        <div class="timeline-connector"></div>
-                        <div class="activity-icon">
-                            <i class="bi <%= item.iconClass %>"></i>
-                        </div>
-                        <div class="activity-content">
-                            <div class="activity-title">
-                                <%= item.title %>
-                            </div>
-                            <div class="activity-meta">
-                                <%= item.timeStr %> • <%= item.action_type || 'Activity' %>
-                            </div>
-                        </div>
-                        <i class="bi bi-chevron-right text-muted" style="font-size: 0.8rem;"></i>
+                <% if (item.dateStr !==lastDate) { lastDate=item.dateStr; %>
+                    <div class="mb-2">
+                        <span class="timeline-group-date">
+                            <%= item.dateStr %>
+                        </span>
                     </div>
+                    <% } %>
 
-                    <% }); } else { %>
-                        <div class="empty-state">
-                            <i class="bi bi-clock-history"></i>
-                            <p>아직 기록된 활동이 없습니다.</p>
+                        <div class="timeline-item" onclick="handleClick(this)" data-title="<%= item.title %>"
+                            data-time="<%= item.dateStr %> <%= item.timeStr %>" data-url="<%= item.url %>"
+                            data-status="<%= item.status %>">
+
+                            <div class="timeline-dot"></div>
+
+                            <div class="timeline-content-row">
+                                <div class="timeline-main-info">
+                                    <i class="bi <%= item.iconClass %> timeline-icon-small"></i>
+                                    <div>
+                                        <div class="timeline-title">
+                                            <%= item.title %>
+                                        </div>
+                                        <div class="timeline-time">
+                                            <%= item.timeStr %> • <%= item.action_type || 'Activity' %>
+                                        </div>
+                                    </div>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted" style="font-size: 0.8rem;"></i>
+                            </div>
                         </div>
-                        <% } %>
+
+                        <% }); } else { %>
+                            <div class="empty-state">
+                                <i class="bi bi-clock-history"></i>
+                                <p>아직 기록된 활동이 없습니다.</p>
+                            </div>
+                            <% } %>
+        </div>
     </div>
 
     <!-- Right: Detail Panel -->
@@ -258,7 +257,7 @@
             panel.innerHTML = `
                 <div class="animate-fade-in text-center">
                     <div class="mb-4">
-                        <span class="badge bg-secondary rounded-pill px-3 py-2" style="font-weight:500; background-color: #E5E5EA !important; color: #1D1D1F;">
+                        <span class="badge bg-light text-dark rounded-pill px-3 py-2 border">
                             ${time}
                         </span>
                     </div>
