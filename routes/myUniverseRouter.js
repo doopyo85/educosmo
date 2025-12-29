@@ -17,7 +17,7 @@ async function getProblemMap(req) { // Pass req to access getSheetData if needed
     try {
         // Use global getSheetData or require it
         const { getSheetData } = require('../lib_google/sheetService');
-        const rows = await getSheetData('problems!A2:C'); // A: ID?, B: Key, C: Title
+        const rows = await getSheetData('Problems!A2:C'); // A: ID?, B: Key, C: Title
 
         const map = new Map();
         if (rows && rows.length) {
@@ -125,7 +125,7 @@ const getIconClass = (item) => {
     }
 };
 
-const processLogs = async (logs) => {
+const processLogs = async (logs, currentUser) => {
     const problemMap = await getProblemMap(); // Load data
 
     return logs.map(log => {
@@ -144,7 +144,12 @@ const processLogs = async (logs) => {
                     else if (detail.s3Url) finalUrl = detail.s3Url;
                     if (log.title.includes('entry_load_project')) {
                         if (detail.s3Url) {
-                            finalUrl = '/entry?s3Url=' + encodeURIComponent(detail.s3Url);
+                            // URL Format: /entry_editor/?s3Url=...&userID=...&role=...
+                            const s3UrlEncoded = encodeURIComponent(detail.s3Url);
+                            const userID = currentUser && currentUser.userID ? currentUser.userID : '';
+                            const role = currentUser && currentUser.role ? currentUser.role : 'student';
+
+                            finalUrl = `/entry_editor/?s3Url=${s3UrlEncoded}&userID=${userID}&role=${role}`;
                         } else {
                             finalUrl = '/entry/workspace';
                         }
@@ -437,7 +442,8 @@ router.get('/student/:id', async (req, res) => {
         `, [studentId, studentId, studentId, studentId]);
 
         // Process logs for view
-        const timelineItems = processLogs(activityLogs);
+        const currentUser = { userID: req.session.userID, role: req.session.role };
+        const timelineItems = await processLogs(activityLogs, currentUser);
 
         console.log('--- STUDENT TIMELINE DATA ---');
         console.log(JSON.stringify(timelineItems, null, 2));
