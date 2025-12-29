@@ -374,8 +374,8 @@ const StudentManagement = {
     },
 
     openTimelineModal(userId, userName) {
-        // 교사 대시보드에서 포트폴리오 페이지로 이동
-        window.location.href = `/portfolio/student/${userId}`;
+        // 교사 대시보드에서 My Universe 페이지로 이동
+        window.location.href = `/my-universe/student/${userId}`;
     },
 
     generateDots(completed, total) {
