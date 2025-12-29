@@ -313,7 +313,8 @@ router.get('/timeline', async (req, res) => {
         `, [studentId, studentId, studentId, studentId]);
 
         // Process logs for view
-        const timelineItems = await processLogs(activityLogs);
+        const currentUser = { userID: req.session.userID, role: req.session.role };
+        const timelineItems = await processLogs(activityLogs, currentUser);
 
         res.render('my-universe/index', {
             activeTab: 'timeline',

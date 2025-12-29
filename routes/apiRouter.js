@@ -682,6 +682,17 @@ router.get('/get-scratch-data', authenticateUser, async (req, res) => {
   }
 });
 
+// DEBUG: List Tables
+router.get('/debug/tables', async (req, res) => {
+  try {
+    const tables = await db.queryDatabase('SHOW TABLES');
+    res.json(tables);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 // Entry 데이터 API는 entryApiRouter로 이동됨 (/api/entry/projects/list)
 
 router.get('/get-ml-data', authenticateUser, async (req, res) => {
