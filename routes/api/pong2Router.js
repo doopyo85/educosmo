@@ -445,12 +445,15 @@ router.get('/auth/sso-token', requireAuth, (req, res) => {
         }
 
         // Short-lived token (5 mins)
+        // 🔥 userID 추가: boardApiRouter 등에서 req.session.userID로 사용
         const token = jwt.sign(
             {
                 id: req.user.id, // This is 'Users.id' (Paid User PK)
+                userID: req.user.userID, // 🔥 문자열 userID 추가
                 type: 'PAID',
                 centerID: req.user.centerID,
-                role: req.user.role
+                role: req.user.role,
+                userType: req.user.userType || 'student' // 🔥 userType 추가
             },
             JWT.SECRET,
             { expiresIn: JWT.EXPIRES_IN }
