@@ -275,6 +275,18 @@
         panel.style.opacity = '0';
 
         setTimeout(() => {
+            // Determine Action Button
+            let actionHtml = '';
+            if (url && url !== '#' && !url.startsWith('{')) {
+                actionHtml = `
+                    <div class="mt-4 pt-3 border-top">
+                        <a href="${url}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold" target="_blank">
+                            <i class="bi bi-box-arrow-up-right me-2"></i> 확인하기
+                        </a>
+                    </div>
+                `;
+            }
+
             panel.innerHTML = `
                 <div class="animate-fade-in text-center">
                     <div class="mb-4">
@@ -283,15 +295,15 @@
                         </span>
                     </div>
                     <h2 class="fw-bold mb-3" style="color: #1D1D1F;">${title}</h2>
-                    <div class="p-4 rounded-4 text-start d-inline-block" style="background: #F5F5F7; min-width: 300px;">
-                        <div class="mb-3">
-                            <label class="small text-muted fw-bold text-uppercase">URL</label>
-                            <div class="text-break font-monospace small" style="color: #007AFF;">${url}</div>
+                    
+                    <div class="p-4 rounded-4 text-center d-inline-block" style="background: #ffffff; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05);">
+                         <div class="mb-2">
+                             <div class="fw-medium text-success fs-5">
+                                <i class="bi bi-check-circle-fill me-1"></i> ${status || 'Completed'}
+                             </div>
+                             <div class="small text-muted mt-1">SUCCESS</div>
                         </div>
-                        <div>
-                            <label class="small text-muted fw-bold text-uppercase">Status</label>
-                            <div class="fw-medium">${status || 'Success'}</div>
-                        </div>
+                        ${actionHtml}
                     </div>
                 </div>
             `;

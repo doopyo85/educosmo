@@ -23,7 +23,11 @@ const getFriendlyTitle = (item) => {
     }
     if (!actionType) return 'Activity';
 
-    if (actionType.includes('entry')) return '엔트리 학습';
+    // Improved Entry Project Mapping
+    if (actionType.includes('entry_load_project')) return '엔트리 프로젝트 학습';
+    if (actionType.includes('entry_save_project')) return '엔트리 프로젝트 저장';
+    if (actionType.includes('entry')) return '엔트리 학습 진행';
+
     if (actionType.includes('scratch')) return '스크래치 학습';
     if (actionType.includes('python')) return '파이썬 학습';
 
@@ -56,12 +60,40 @@ const processLogs = (logs) => {
         const finalTitle = getFriendlyTitle(log);
 
         // Metadata parsing for detail view
-        let finalUrl = log.metadata || '#';
-        if (log.type === 'log' && log.title === 'portfolio_upload') {
+        // Metadata parsing for detail view
+        let finalUrl = '#'; // Default to no-op
+        let displayMetadata = '';
+
+        if (log.type === 'log') {
             try {
-                const detail = JSON.parse(log.metadata || '{}');
-                finalUrl = detail.s3Url || '#';
-            } catch (e) { }
+                // If metadata is a JSON string (typical for complex logs)
+                if (log.metadata && (log.metadata.startsWith('{') || log.metadata.startsWith('['))) {
+                    const detail = JSON.parse(log.metadata);
+
+                    // Extract URL if available
+                    if (detail.projectUrl) finalUrl = detail.projectUrl;
+                    else if (detail.s3Url) finalUrl = detail.s3Url;
+
+                    // Construct Entry Workspace Link if params exist
+                    if (log.title.includes('entry_load_project')) {
+                        // Attempt to reconstruct a usable link if possible, or link to main workspace
+                        // For now, we might not have enough to rebuild full editor state, but let's try
+                        finalUrl = '/entry/workspace'; // Fallback
+                    }
+                } else {
+                    // Regular string metadata
+                    if (log.metadata && log.metadata.startsWith('http')) {
+                        finalUrl = log.metadata;
+                    }
+                }
+            } catch (e) {
+                console.error('Metadata parse error:', e);
+            }
+        } else if (log.type === 'gallery') {
+            // Gallery items usually have metadata as thumbnail, but ID works for link
+            finalUrl = `/gallery/project/${log.id}`;
+        } else if (log.type === 'blog') {
+            finalUrl = `/posts/${log.id}`;
         }
 
         return {
