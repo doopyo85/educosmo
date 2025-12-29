@@ -103,9 +103,12 @@ const processLogs = (logs) => {
 
                     // Construct Entry Workspace Link if params exist
                     if (log.title.includes('entry_load_project')) {
-                        // Attempt to reconstruct a usable link if possible, or link to main workspace
-                        // For now, we might not have enough to rebuild full editor state, but let's try
-                        finalUrl = '/entry/workspace'; // Fallback
+                        // Use s3Url to open specific project
+                        if (detail.s3Url) {
+                            finalUrl = '/entry?s3Url=' + encodeURIComponent(detail.s3Url);
+                        } else {
+                            finalUrl = '/entry/workspace'; // Fallback
+                        }
                     }
                 } else {
                     // Regular string metadata
