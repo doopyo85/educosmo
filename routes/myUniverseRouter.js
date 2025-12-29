@@ -71,7 +71,7 @@ const processLogs = (logs) => {
             iconClass: getIconClass(log),
             url: finalUrl,
             status: 'Completed', // Default
-            action_type: log.type.toUpperCase() // For display label
+            action_type: (log.type || 'Activity').toUpperCase() // For display label
         };
     });
 };
