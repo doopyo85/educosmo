@@ -28,6 +28,10 @@ const { logUserActivity, logMenuAccess, logLearningActivity } = require('./lib_l
 const initGalleryDB = require('./tools/init_gallery_db');
 initGalleryDB().catch(console.error);
 
+// 🔥 Initialize Observatory DB Schema
+const initSchema = require('./lib_login/schemaInit');
+initSchema().catch(console.error);
+
 const app = express();
 const SERVICE_TYPE = process.env.SERVICE_TYPE || 'main';
 const isMain = SERVICE_TYPE === 'main';

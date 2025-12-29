@@ -605,4 +605,28 @@ router.get('/problems', async (req, res) => {
 });
 
 
+// ============================================
+// Observatory Tab (Student Self-View)
+// ============================================
+router.get('/observatory', async (req, res) => {
+    try {
+        if (!req.session.is_logined) {
+            return res.redirect('/auth/login');
+        }
+
+        res.render('my-universe/index', {
+            activeTab: 'observatory',
+            userID: req.session.userID,
+            userRole: req.session.role,
+            is_logined: req.session.is_logined,
+            centerID: req.session.centerID
+        });
+
+    } catch (error) {
+        console.error('My Observatory Error:', error);
+        res.status(500).send('Error loading observatory');
+    }
+});
+
+
 module.exports = router;
