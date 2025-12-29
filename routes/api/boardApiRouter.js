@@ -202,6 +202,123 @@ router.get('/posts', async (req, res) => {
     }
 });
 
+// ===================================================
+// 🔥 게시글 상세 조회 API (pong2 공유 게시판용)
+// GET /api/board/posts/:id
+// ===================================================
+router.get('/posts/:id', async (req, res) => {
+    try {
+        const postId = req.params.id;
+        
+        // 숫자인지 검증 (navigation과 구분)
+        if (isNaN(parseInt(postId))) {
+            return res.status(400).json({
+                success: false,
+                message: '올바르지 않은 게시글 ID입니다.'
+            });
+        }
+        
+        const categoryNameMap = {
+            1: 'notice',
+            2: 'education', 
+            3: 'free'
+        };
+        
+        const categoryDisplayMap = {
+            1: '업데이트 노트',
+            2: '교육정보', 
+            3: '자유게시판'
+        };
+        
+        // 게시글 조회
+        const posts = await db.queryDatabase(`
+            SELECT 
+                bp.id,
+                bp.title,
+                bp.content,
+                bp.author,
+                bp.author_id,
+                bp.views,
+                bp.is_pinned,
+                bp.is_notice,
+                bp.source,
+                bp.ccl,
+                bp.category_id,
+                bp.attachment_count,
+                bp.has_images,
+                bp.created_at,
+                bp.updated_at
+            FROM board_posts bp
+            WHERE bp.id = ?
+        `, [postId]);
+        
+        if (!posts || posts.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '게시글을 찾을 수 없습니다.'
+            });
+        }
+        
+        const post = posts[0];
+        
+        // 조회수 증가
+        await db.queryDatabase(
+            'UPDATE board_posts SET views = views + 1 WHERE id = ?',
+            [postId]
+        );
+        
+        // 첨부파일 조회
+        const attachments = await db.queryDatabase(`
+            SELECT 
+                id,
+                original_name,
+                stored_name,
+                file_size,
+                file_type,
+                s3_url,
+                is_image,
+                download_count,
+                created_at
+            FROM board_attachments
+            WHERE post_id = ?
+            ORDER BY created_at ASC
+        `, [postId]);
+        
+        // JSON 응답 반환
+        res.json({
+            success: true,
+            post: {
+                id: post.id,
+                title: post.title,
+                content: post.content,
+                author: post.author,
+                author_id: post.author_id,
+                views: post.views + 1, // 증가된 조회수 반영
+                is_pinned: post.is_pinned,
+                is_notice: post.is_notice,
+                source: post.source,
+                ccl: post.ccl,
+                category_id: post.category_id,
+                category_name: categoryDisplayMap[post.category_id] || '알 수 없음',
+                category_slug: categoryNameMap[post.category_id] || 'unknown',
+                attachment_count: post.attachment_count || 0,
+                has_images: post.has_images || false,
+                created_at: formatDate(post.created_at),
+                updated_at: formatDate(post.updated_at)
+            },
+            attachments: attachments || []
+        });
+        
+    } catch (error) {
+        console.error('게시글 상세 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '게시글을 불러오는 중 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
 // 🔥 게시글 작성 API (첨부파일 지원 + 이미지 영구화)
 router.post('/posts', authenticateUser, async (req, res) => {
     try {
