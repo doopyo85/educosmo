@@ -195,6 +195,10 @@ router.get('/student/:id', async (req, res) => {
         // Process logs for view
         const timelineItems = processLogs(activityLogs);
 
+        console.log('--- STUDENT TIMELINE DATA ---');
+        console.log(JSON.stringify(timelineItems, null, 2));
+        console.log('-----------------------------');
+
         res.render('my-universe/index', {
             activeTab: 'timeline',
             student,
