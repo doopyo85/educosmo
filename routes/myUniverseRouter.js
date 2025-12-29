@@ -3,6 +3,54 @@ const router = express.Router();
 const path = require('path');
 const db = require('../lib_login/db');
 
+// Helper Helpers (Moved from EJS)
+const getFriendlyTitle = (log) => {
+    const url = log.url || '';
+    const type = log.action_type || '';
+
+    if (type === 'portfolio_upload') return '프로젝트 업로드';
+    if (type === 'login') return '로그인';
+    if (type === 'logout') return '로그아웃';
+
+    if (url === '/' || url === '/entry') return '메인 홈 방문';
+    if (url.includes('/my-universe')) return '마이 유니버스';
+    if (url.includes('/play-entry')) return '엔트리 학습';
+    if (url.includes('/python')) return '파이썬 학습';
+    if (url.includes('/scratch')) return '스크래치 학습';
+    if (url.includes('/board')) return '게시판 활동';
+    if (url.includes('/observatory')) return 'Observatory 탐험';
+
+    return '페이지 방문';
+};
+
+const getIconClass = (log) => {
+    const type = log.action_type || '';
+    if (type === 'portfolio_upload') return 'bi-folder-plus project';
+    if (type === 'login') return 'bi-box-arrow-in-right login';
+    if (type.includes('scratch') || type.includes('entry') || type.includes('python')) return 'bi-code-square learning';
+    return 'bi-window page';
+};
+
+const processLogs = (logs) => {
+    return logs.filter(log => {
+        // Filter logic
+        const url = log.url || '';
+        if (url.startsWith('/api/') || url.includes('/resource/') || url.includes('get-')) return false;
+        return true;
+    }).map(log => {
+        const dateObj = new Date(log.created_at);
+        return {
+            dateStr: dateObj.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }),
+            timeStr: dateObj.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+            title: getFriendlyTitle(log),
+            iconClass: getIconClass(log),
+            url: log.url,
+            status: log.status,
+            action_type: log.action_type
+        };
+    });
+};
+
 // ============================================
 // Main My Universe Route (Redirect)
 // ============================================
@@ -23,6 +71,8 @@ router.get('/timeline', async (req, res) => {
         }
 
         let activityLogs = [];
+        let timelineItems = [];
+
         if (userID) {
             const users = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [userID]);
             if (users.length > 0) {
@@ -42,6 +92,9 @@ router.get('/timeline', async (req, res) => {
                     ORDER BY created_at DESC 
                     LIMIT 100
                 `, [dbId]);
+
+                // Process logs for view
+                timelineItems = processLogs(activityLogs);
             }
         }
 
@@ -51,7 +104,7 @@ router.get('/timeline', async (req, res) => {
             userRole: req.session.role,
             is_logined: req.session.is_logined,
             centerID: req.session.centerID,
-            activityLogs: activityLogs,
+            timelineItems: timelineItems, // Pass processed items
             readOnly: false
         });
 
@@ -115,10 +168,13 @@ router.get('/student/:id', async (req, res) => {
             LIMIT 50
         `, [studentId]);
 
+        // Process logs for view
+        const timelineItems = processLogs(activityLogs);
+
         res.render('my-universe/index', {
             activeTab: 'timeline',
             student,
-            activityLogs,
+            timelineItems, // Pass processed items
             readOnly: true, // Teacher view is read-only
             userID: req.session.userID,
             userRole: req.session.role,

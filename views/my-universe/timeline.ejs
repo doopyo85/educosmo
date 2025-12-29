@@ -1,4 +1,4 @@
-<!-- Last Updated: Apple Design Fix Applied (Forced Update) -->
+<!-- Last Updated: Refactored Logic to Controller -->
 <style>
     /* 
      * Apple-Style Timeline Design 
@@ -193,84 +193,39 @@
 <div class="timeline-wrapper">
     <!-- Left: Timeline List -->
     <div class="timeline-container">
-        <% let hasLogs=false; let lastDate='' ; // Helper to clean up titles const getFriendlyTitle=(log)=> {
-            const url = log.url || '';
-            const type = log.action_type || '';
-
-            if (type === 'portfolio_upload') return '프로젝트 업로드';
-            if (type === 'login') return '로그인';
-            if (type === 'logout') return '로그아웃';
-
-            if (url === '/' || url === '/entry') return '메인 홈 방문';
-            if (url.includes('/my-universe')) return '마이 유니버스';
-            if (url.includes('/play-entry')) return '엔트리 학습';
-            if (url.includes('/python')) return '파이썬 학습';
-            if (url.includes('/scratch')) return '스크래치 학습';
-            if (url.includes('/board')) return '게시판 활동';
-            if (url.includes('/observatory')) return 'Observatory 탐험';
-
-            return '페이지 방문';
-            };
-
-            const getIconClass = (log) => {
-            const type = log.action_type || '';
-            if (type === 'portfolio_upload') return 'bi-folder-plus project';
-            if (type === 'login') return 'bi-box-arrow-in-right login';
-            if (type.includes('scratch') || type.includes('entry') || type.includes('python')) return 'bi-code-square
-            learning';
-            return 'bi-window page';
-            };
-
-            // Filters
-            const filteredLogs = (locals.activityLogs || []).filter(log => {
-            // Ignore API calls, resources, and noisy polls
-            const url = log.url || '';
-            if (url.startsWith('/api/') || url.includes('/resource/') || url.includes('get-')) return false;
-            return true;
-            });
-
-            if (filteredLogs.length > 0) {
-            hasLogs = true;
-            filteredLogs.forEach(function(log, index) {
-            const dateObj = new Date(log.created_at);
-            const dateStr = dateObj.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
-            const timeStr = dateObj.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-            const title = getFriendlyTitle(log);
-            const iconClass = getIconClass(log);
-            const rawDetail = log.action_detail || {};
+        <% let lastDate='' ; const items=locals.timelineItems || []; if (items.length> 0) {
+            items.forEach(function(item) {
             %>
 
-            <% if (dateStr !==lastDate) { lastDate=dateStr; %>
+            <% if (item.dateStr !==lastDate) { lastDate=item.dateStr; %>
                 <div class="timeline-group-date">
-                    <%= dateStr %>
+                    <%= item.dateStr %>
                 </div>
                 <% } %>
 
-                    <div class="timeline-item" onclick="handleClick(this)" data-title="<%= title %>"
-                        data-time="<%= timeStr %>" data-url="<%= log.url %>" data-status="<%= log.status %>">
+                    <div class="timeline-item" onclick="handleClick(this)" data-title="<%= item.title %>"
+                        data-time="<%= item.timeStr %>" data-url="<%= item.url %>" data-status="<%= item.status %>">
                         <div class="timeline-connector"></div>
                         <div class="activity-icon">
-                            <i class="bi <%= iconClass %>"></i>
+                            <i class="bi <%= item.iconClass %>"></i>
                         </div>
                         <div class="activity-content">
                             <div class="activity-title">
-                                <%= title %>
+                                <%= item.title %>
                             </div>
                             <div class="activity-meta">
-                                <%= timeStr %> • <%= log.action_type || 'Activity' %>
+                                <%= item.timeStr %> • <%= item.action_type || 'Activity' %>
                             </div>
                         </div>
                         <i class="bi bi-chevron-right text-muted" style="font-size: 0.8rem;"></i>
                     </div>
 
-                    <% }); } %>
-
-                        <% if (!hasLogs) { %>
-                            <div class="empty-state">
-                                <i class="bi bi-clock-history"></i>
-                                <p>아직 기록된 활동이 없습니다.</p>
-                            </div>
-                            <% } %>
+                    <% }); } else { %>
+                        <div class="empty-state">
+                            <i class="bi bi-clock-history"></i>
+                            <p>아직 기록된 활동이 없습니다.</p>
+                        </div>
+                        <% } %>
     </div>
 
     <!-- Right: Detail Panel -->
