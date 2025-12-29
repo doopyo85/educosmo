@@ -1313,5 +1313,3 @@ const shutdown = (signal) => {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
-/ /   F o r c e   r e s t a r t :   % d a t e %   % t i m e %  
- 
