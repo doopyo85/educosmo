@@ -26,7 +26,29 @@ const getFriendlyTitle = (item) => {
     if (!actionType) return 'Activity';
 
     // Improved Entry Project Mapping
-    if (actionType.includes('entry_load_project')) return '엔트리 프로젝트 학습';
+    if (actionType.includes('entry_load_project')) {
+        try {
+            // Attempt to parse metadata for filename
+            const detail = JSON.parse(item.metadata || '{}');
+            const url = detail.s3Url || detail.projectUrl;
+
+            if (url) {
+                // Extract filename from URL (e.g., .../CTRpython_1-1_p01.ent)
+                let filename = url.substring(url.lastIndexOf('/') + 1);
+                filename = decodeURIComponent(filename);
+
+                // Remove extension
+                filename = filename.replace(/\.(ent|sb2|sb3)$/i, '');
+
+                // Format: Replace underscores with spaces for readability
+                // "CTRpython_1-1_p01" -> "CTRpython 1-1 p01"
+                return filename.replace(/_/g, ' ');
+            }
+        } catch (e) {
+            // Fallback if parsing fails
+        }
+        return '엔트리 프로젝트 학습';
+    }
     if (actionType.includes('entry_save_project')) return '엔트리 프로젝트 저장';
     if (actionType.includes('entry')) return '엔트리 학습 진행';
 
