@@ -1,6 +1,7 @@
 const { getSheetData } = require('../lib_google/sheetService'); // 🔥 Import sheetService
 const PythonRunner = require('../lib_execution/PythonRunner');
 const ConnectomeService = require('./ConnectomeService');
+const { updateCTFromProblem } = require('./ctScoringService');
 const EvaluationService = require('./EvaluationService');
 const { queryDatabase } = require('../lib_login/db'); // Adjusted Assumption
 
@@ -224,26 +225,29 @@ class PythonProblemManager {
                 // Check for errors
                 if (results.some(r => r.error)) status = 'ERROR';
 
+                // 🔥 LOG TO QuizResults
+                // Schema: user_id, exam_name, problem_number, is_correct, score, user_answer, execution_results
                 await queryDatabase(`
-                    INSERT INTO ProblemSubmissions 
-                    (user_id, problem_id, code, language, status, score, execution_time, memory_usage, submitted_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-                `, [userId, problemId, userCode, 'python', status, score, avgTime, avgMemory]);
+                    INSERT INTO QuizResults 
+                    (user_id, exam_name, problem_number, is_correct, score, user_answer, execution_results, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+                `, [
+                    userId,
+                    examName,
+                    problemId,
+                    isSuccess,
+                    score,
+                    userCode,
+                    JSON.stringify(results)
+                ]);
 
-                console.log(`✅ Submission saved for User ${userId}, Problem ${problemId}`);
+                console.log(`✅ Submission saved to QuizResults for User ${userId}, Problem ${problemId}`);
 
-                // Trigger Score Propagation (Connectome Update)
-                if (status === 'PASS') {
+                // Trigger Score Propagation (Connectome Update) via ctScoringService
+                if (isSuccess) {
                     // Fire and forget (don't await to keep response fast)
-                    this.connectomeService.updateUserConnectome(userId, problemId, score)
+                    updateCTFromProblem(userId, problemId)
                         .catch(err => console.error('Connectome update background error:', err));
-                }
-
-                // Trigger Evaluation Engine (The Auditor) - 10% chance or every Nth time
-                // This updates Pass Rate, Discrimination Index, etc.
-                if (Math.random() < 0.1) {
-                    this.evaluationService.evaluateProblem(problemId)
-                        .catch(err => console.error('Evaluation background error:', err));
                 }
 
             } catch (dbError) {

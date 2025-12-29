@@ -575,23 +575,19 @@ router.get('/problems', async (req, res) => {
             return res.redirect('/auth/login');
         }
 
-        // Resolve numeric DB ID
-        let studentId = req.session.dbId;
-        if (!studentId && req.session.userID) {
-            const [user] = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [req.session.userID]);
-            if (user) studentId = user.id;
-        }
+        // Use string userID matching QuizResults schema (VARCHAR)
+        const targetUserId = req.session.userID;
 
-        if (!studentId) {
+        if (!targetUserId) {
             return res.redirect('/auth/login');
         }
 
         const problems = await db.queryDatabase(`
             SELECT * FROM QuizResults 
             WHERE user_id = ?
-            ORDER BY timestamp DESC
+            ORDER BY created_at DESC
             LIMIT 100
-        `, [studentId]);
+        `, [targetUserId]);
 
         res.render('my-universe/index', {
             activeTab: 'problems',
