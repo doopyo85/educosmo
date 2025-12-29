@@ -92,6 +92,41 @@ const authenticateUser = (req, res, next) => {
   }
 
   if (req.session && req.session.is_logined) {
+    // 🔥 Activity Logging for Timeline
+    // Only log meaningful page views (GET requests, not APIs/resources)
+    if (req.method === 'GET' && !req.xhr && !req.path.startsWith('/api/') && !req.path.startsWith('/resource/') && !req.path.startsWith('/node_modules/')) {
+      // Async logging - do not await
+      const { queryDatabase } = require('./db');
+
+      // Use subquery to get numeric user_id from string userID (username)
+      queryDatabase(`
+        INSERT INTO UserActivityLogs 
+        (user_id, center_id, action_type, url, ip_address, user_agent, action_detail, status) 
+        SELECT 
+           id, 
+           ?, 
+           ?, 
+           ?, 
+           ?, 
+           ?, 
+           ?, 
+           'success'
+        FROM Users 
+        WHERE userID = ?
+      `, [
+        req.session.centerID,
+        'GET',
+        req.originalUrl,
+        req.ip,
+        req.headers['user-agent'],
+        'Page View: ' + req.path,
+        req.session.userID
+      ]).catch(err => {
+        // Silently fail or log to console if needed
+        // console.error('Activity Logging Error:', err.message);
+      });
+    }
+
     // 세션이 존재하고 로그인 상태이면 다음 미들웨어로 진행
     next();
   } else {

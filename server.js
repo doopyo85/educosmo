@@ -24,6 +24,10 @@ const { updatePermissionCache } = require('./lib_login/permissions');
 const { checkPageAccess, checkRole, checkAdminRole } = require('./lib_login/authMiddleware');
 const { logUserActivity, logMenuAccess, logLearningActivity } = require('./lib_login/logging');
 
+// 🔥 Initialize Gallery DB Tables
+const initGalleryDB = require('./tools/init_gallery_db');
+initGalleryDB().catch(console.error);
+
 const app = express();
 const SERVICE_TYPE = process.env.SERVICE_TYPE || 'main';
 const isMain = SERVICE_TYPE === 'main';

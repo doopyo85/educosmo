@@ -37,7 +37,7 @@ router.get('/timeline', async (req, res) => {
                         OR action_type LIKE '%entry%' 
                         OR action_type LIKE '%scratch%' 
                         OR action_type LIKE '%pong%'
-                        OR action_type IN ('login', 'logout')
+                        OR action_type IN ('login', 'logout', 'GET')
                     )
                     ORDER BY created_at DESC 
                     LIMIT 100
