@@ -42,18 +42,21 @@ const getFriendlyTitle = (item) => {
 
                 // Format: Replace underscores with spaces for readability
                 // "CTRpython_1-1_p01" -> "CTRpython 1-1 p01"
-                return filename.replace(/_/g, ' ');
+                return '(엔트리) ' + filename.replace(/_/g, ' ');
             }
         } catch (e) {
             // Fallback if parsing fails
         }
-        return '엔트리 프로젝트 학습';
+        return '(엔트리) 프로젝트 학습';
     }
-    if (actionType.includes('entry_save_project')) return '엔트리 프로젝트 저장';
-    if (actionType.includes('entry')) return '엔트리 학습 진행';
+    if (actionType.includes('entry_save_project')) return '(엔트리) 프로젝트 저장';
+    if (actionType.includes('entry')) return '(엔트리) 학습 진행';
 
-    if (actionType.includes('scratch')) return '스크래치 학습';
-    if (actionType.includes('python')) return '파이썬 학습';
+    if (actionType.includes('scratch')) return '(스크래치) 학습';
+    if (actionType.includes('python')) return '(파이썬) 학습';
+
+    // Add App Inventor if it exists in logs, or generic catch-all
+    if (actionType.includes('appinventor') || actionType.includes('app_inventor')) return '(앱인벤터) 학습';
 
     return actionType;
 };
