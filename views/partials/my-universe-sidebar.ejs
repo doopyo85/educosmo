@@ -1,0 +1,150 @@
+<!-- Apple Admin Style Sidebar & Layout CSS -->
+<style>
+    /* =========================================
+       Apple UI Style & Layout Overrides
+       ========================================= */
+    body {
+        background-color: #f5f5f7;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: #1d1d1f;
+    }
+
+    /* 1. Layout Structure */
+    .board-layout-container {
+        display: flex;
+        /* Sidebar + Content */
+        max-width: none !important;
+        width: 100%;
+        margin: 0 !important;
+        padding: 20px 40px;
+        gap: 30px;
+    }
+
+    .board-sidebar {
+        width: 260px;
+        min-width: 260px;
+        position: sticky;
+        top: 20px;
+        height: calc(100vh - 40px);
+        border: none;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    /* Sidebar Styling */
+    .board-sidebar-header {
+        background: transparent;
+        color: #86868b;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 10px 15px;
+        font-weight: 600;
+        margin-top: 10px;
+    }
+
+    .board-nav-group {
+        margin-bottom: 24px;
+    }
+
+    .board-category-item {
+        display: flex;
+        align-items: center;
+        border-radius: 12px !important;
+        margin-bottom: 4px;
+        padding: 10px 16px;
+        color: #424245;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        border: none !important;
+        text-decoration: none;
+    }
+
+    .board-category-item:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+    }
+
+    .board-category-item.active {
+        background-color: #0071e3 !important;
+        /* Apple Blue */
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+    }
+
+    .board-category-item i {
+        font-size: 1.1rem;
+        margin-right: 12px;
+    }
+
+    .board-main-content {
+        flex: 1;
+        max-width: none !important;
+        border: none;
+        box-shadow: none;
+        background: transparent;
+        padding: 0;
+        min-width: 0;
+        /* Prevent flex overflow */
+    }
+
+    /* Responsive: Mobile Stack */
+    @media (max-width: 768px) {
+        .board-layout-container {
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .board-sidebar {
+            width: 100%;
+            height: auto;
+            position: relative;
+        }
+    }
+</style>
+
+<!-- Sidebar Content -->
+<div class="board-sidebar">
+    <div class="mb-4 px-3 d-flex align-items-center gap-2">
+        <i class="bi bi-stars fs-4 text-primary"></i>
+        <span class="fw-bold fs-5 text-dark">My Universe</span>
+    </div>
+
+    <% let baseUrl='/my-universe' ; let isStudentView=false; // Logic from previous nav if (locals.student &&
+        locals.student.id) { baseUrl=`/my-universe/student/${locals.student.id}`; isStudentView=true; } const
+        currentTab=locals.activeTab || '' ; const galleryUrl=isStudentView ? `/gallery?userId=${locals.student.userID}`
+        : '/gallery/my' ; const observatoryUrl=`${baseUrl}/observatory`; const timelineUrl=isStudentView ? baseUrl :
+        baseUrl + '/timeline' ; %>
+
+        <div class="board-nav-group">
+            <div class="board-sidebar-header">Menu</div>
+            <div class="d-flex flex-column gap-1">
+                <a class="board-category-item <%= currentTab === 'timeline' ? 'active' : '' %>"
+                    href="<%= timelineUrl %>">
+                    <i class="bi bi-list-task"></i> 타임라인 (Timeline)
+                </a>
+
+                <a class="board-category-item <%= currentTab === 'gallery' ? 'active' : '' %>" href="<%= galleryUrl %>">
+                    <i class="bi bi-grid-fill"></i> 갤러리 (Gallery)
+                </a>
+
+                <a class="board-category-item <%= currentTab === 'observatory' ? 'active' : '' %>"
+                    href="<%= observatoryUrl %>">
+                    <i class="bi bi-stars"></i> Observatory
+                </a>
+            </div>
+        </div>
+
+        <div class="board-nav-group">
+            <div class="board-sidebar-header">Insights</div>
+            <div class="d-flex flex-column gap-1">
+                <a class="board-category-item disabled" href="#" style="opacity: 0.5; cursor: default;">
+                    <i class="bi bi-bar-chart-fill"></i> 대시보드
+                </a>
+                <a class="board-category-item disabled" href="#" style="opacity: 0.5; cursor: default;">
+                    <i class="bi bi-journal-text"></i> 블로그
+                </a>
+            </div>
+        </div>
+</div>

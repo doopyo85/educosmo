@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= pageTitle %> - 코딩앤플레이</title>
+    <title>
+        <%= pageTitle %> - 코딩앤플레이
+    </title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/styles.css">
     <style>
         .my-gallery-container {
@@ -13,14 +17,14 @@
             margin: 0 auto;
             padding: 2rem;
         }
-        
+
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
         }
-        
+
         .page-header h1 {
             font-size: 1.8rem;
             font-weight: 700;
@@ -29,17 +33,17 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .page-header h1 i {
             color: #667eea;
         }
-        
+
         /* 탭 네비게이션 */
         .nav-tabs {
             border-bottom: 2px solid #e9ecef;
             margin-bottom: 2rem;
         }
-        
+
         .nav-tabs .nav-link {
             border: none;
             color: #666;
@@ -48,18 +52,18 @@
             border-radius: 0;
             position: relative;
         }
-        
+
         .nav-tabs .nav-link:hover {
             color: #667eea;
             border: none;
         }
-        
+
         .nav-tabs .nav-link.active {
             color: #667eea;
             background: none;
             border: none;
         }
-        
+
         .nav-tabs .nav-link.active::after {
             content: '';
             position: absolute;
@@ -70,7 +74,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 3px 3px 0 0;
         }
-        
+
         /* 통계 카드 */
         .stats-row {
             display: grid;
@@ -78,38 +82,38 @@
             gap: 1rem;
             margin-bottom: 2rem;
         }
-        
+
         .stat-card {
             background: white;
             border-radius: 12px;
             padding: 1.5rem;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
-        
+
         .stat-card .value {
             font-size: 2rem;
             font-weight: 700;
             color: #667eea;
         }
-        
+
         .stat-card .label {
             color: #666;
             font-size: 0.9rem;
         }
-        
+
         /* 프로젝트 테이블 */
         .projects-table {
             background: white;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
-        
+
         .projects-table table {
             margin: 0;
         }
-        
+
         .projects-table th {
             background: #f8f9fa;
             font-weight: 600;
@@ -117,20 +121,20 @@
             border-bottom: 2px solid #e9ecef;
             padding: 1rem;
         }
-        
+
         .projects-table td {
             padding: 1rem;
             vertical-align: middle;
         }
-        
+
         .project-row {
             transition: background 0.2s;
         }
-        
+
         .project-row:hover {
             background: #f8f9fa;
         }
-        
+
         .project-thumb {
             width: 80px;
             height: 60px;
@@ -142,26 +146,26 @@
             justify-content: center;
             color: white;
         }
-        
+
         .project-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        
+
         .project-title-cell {
             font-weight: 500;
         }
-        
+
         .project-title-cell a {
             color: #333;
             text-decoration: none;
         }
-        
+
         .project-title-cell a:hover {
             color: #667eea;
         }
-        
+
         .platform-badge {
             padding: 4px 10px;
             border-radius: 12px;
@@ -169,284 +173,311 @@
             font-weight: 600;
             color: white;
         }
-        
-        .platform-badge.entry { background: #00c4b4; }
-        .platform-badge.scratch { background: #ff9a00; }
-        .platform-badge.python { background: #306998; }
-        
+
+        .platform-badge.entry {
+            background: #00c4b4;
+        }
+
+        .platform-badge.scratch {
+            background: #ff9a00;
+        }
+
+        .platform-badge.python {
+            background: #306998;
+        }
+
         .visibility-badge {
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 0.75rem;
             font-weight: 500;
         }
-        
-        .visibility-badge.public { background: #d4edda; color: #155724; }
-        .visibility-badge.class { background: #cce5ff; color: #004085; }
-        .visibility-badge.private { background: #f8d7da; color: #721c24; }
-        
+
+        .visibility-badge.public {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .visibility-badge.class {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .visibility-badge.private {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
         .action-btns .btn {
             padding: 0.25rem 0.5rem;
             font-size: 0.8rem;
         }
-        
+
         /* 빈 상태 */
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
             color: #6c757d;
         }
-        
+
         .empty-state i {
             font-size: 4rem;
             margin-bottom: 1rem;
             opacity: 0.5;
         }
-        
+
         /* 로딩 */
         .loading-container {
             display: flex;
             justify-content: center;
             padding: 3rem;
         }
-        
+
         /* 반응형 테이블 */
         @media (max-width: 768px) {
             .projects-table {
                 overflow-x: auto;
             }
-            
+
             .projects-table table {
                 min-width: 600px;
             }
         }
     </style>
 </head>
+
 <body>
     <%- include('partials/header') %>
-    
-    <div class="my-gallery-container">
-        <div class="page-header">
-            <h1><i class="bi bi-folder-fill"></i> 내 포트폴리오</h1>
-            <a href="/gallery/share" class="btn btn-primary">
-                <i class="bi bi-plus-lg"></i> 새 작품 공유
-            </a>
-        </div>
-        
-        <!-- 통계 -->
-        <div class="stats-row">
-            <div class="stat-card">
-                <div class="value" id="totalProjects">0</div>
-                <div class="label">공유한 작품</div>
-            </div>
-            <div class="stat-card">
-                <div class="value" id="totalViews">0</div>
-                <div class="label">총 조회수</div>
-            </div>
-            <div class="stat-card">
-                <div class="value" id="totalLikes">0</div>
-                <div class="label">총 좋아요</div>
-            </div>
-            <div class="stat-card">
-                <div class="value" id="totalPlays">0</div>
-                <div class="label">총 실행수</div>
-            </div>
-        </div>
-        
-        <!-- 탭 -->
-        <ul class="nav nav-tabs">
-            <li class="nav-item">
-                <a class="nav-link active" href="#" data-filter="">전체</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-filter="entry">엔트리</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-filter="scratch">스크래치</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-filter="python">파이썬</a>
-            </li>
-        </ul>
-        
-        <!-- 로딩 -->
-        <div class="loading-container" id="loading">
-            <div class="spinner-border text-primary"></div>
-        </div>
-        
-        <!-- 프로젝트 테이블 -->
-        <div class="projects-table" id="projectsTable" style="display: none;">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th style="width: 100px;">썸네일</th>
-                        <th>제목</th>
-                        <th style="width: 90px;">플랫폼</th>
-                        <th style="width: 80px;">공개범위</th>
-                        <th style="width: 80px;">조회</th>
-                        <th style="width: 80px;">좋아요</th>
-                        <th style="width: 100px;">등록일</th>
-                        <th style="width: 120px;">관리</th>
-                    </tr>
-                </thead>
-                <tbody id="projectsBody"></tbody>
-            </table>
-        </div>
-        
-        <!-- 빈 상태 -->
-        <div class="empty-state" id="emptyState" style="display: none;">
-            <i class="bi bi-folder2-open"></i>
-            <h4>아직 공유한 작품이 없어요</h4>
-            <p>첫 번째 작품을 갤러리에 공유해보세요!</p>
-            <a href="/gallery/share" class="btn btn-primary mt-3">
-                <i class="bi bi-upload"></i> 작품 공유하기
-            </a>
-        </div>
-    </div>
-    
-    <!-- 수정 모달 -->
-    <div class="modal fade" id="editModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-pencil"></i> 작품 정보 수정</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="editProjectId">
-                    <div class="mb-3">
-                        <label class="form-label">제목</label>
-                        <input type="text" class="form-control" id="editTitle">
+
+        <div class="board-layout-container">
+            <!-- Sidebar -->
+            <%- include('partials/my-universe-sidebar', { activeTab: 'gallery' , student: null }) %>
+
+                <!-- Main Content -->
+                <div class="board-main-content">
+                    <div class="my-gallery-container" style="padding: 0; max-width: none;">
+                        <div class="page-header">
+                            <h1><i class="bi bi-folder-fill"></i> 내 포트폴리오</h1>
+                            <a href="/gallery/share" class="btn btn-primary">
+                                <i class="bi bi-plus-lg"></i> 새 작품 공유
+                            </a>
+                        </div>
+
+                        <!-- 통계 -->
+                        <div class="stats-row">
+                            <div class="stat-card">
+                                <div class="value" id="totalProjects">0</div>
+                                <div class="label">공유한 작품</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value" id="totalViews">0</div>
+                                <div class="label">총 조회수</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value" id="totalLikes">0</div>
+                                <div class="label">총 좋아요</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value" id="totalPlays">0</div>
+                                <div class="label">총 실행수</div>
+                            </div>
+                        </div>
+
+                        <!-- 탭 -->
+                        <ul class="nav nav-tabs">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#" data-filter="">전체</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" data-filter="entry">엔트리</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" data-filter="scratch">스크래치</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" data-filter="python">파이썬</a>
+                            </li>
+                        </ul>
+
+                        <!-- 로딩 -->
+                        <div class="loading-container" id="loading">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+
+                        <!-- 프로젝트 테이블 -->
+                        <div class="projects-table" id="projectsTable" style="display: none;">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 100px;">썸네일</th>
+                                        <th>제목</th>
+                                        <th style="width: 90px;">플랫폼</th>
+                                        <th style="width: 80px;">공개범위</th>
+                                        <th style="width: 80px;">조회</th>
+                                        <th style="width: 80px;">좋아요</th>
+                                        <th style="width: 100px;">등록일</th>
+                                        <th style="width: 120px;">관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="projectsBody"></tbody>
+                            </table>
+                        </div>
+
+                        <!-- 빈 상태 -->
+                        <div class="empty-state" id="emptyState" style="display: none;">
+                            <i class="bi bi-folder2-open"></i>
+                            <h4>아직 공유한 작품이 없어요</h4>
+                            <p>첫 번째 작품을 갤러리에 공유해보세요!</p>
+                            <a href="/gallery/share" class="btn btn-primary mt-3">
+                                <i class="bi bi-upload"></i> 작품 공유하기
+                            </a>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">설명</label>
-                        <textarea class="form-control" id="editDescription" rows="3"></textarea>
+
+                    <!-- 수정 모달 -->
+                    <div class="modal fade" id="editModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title"><i class="bi bi-pencil"></i> 작품 정보 수정</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="hidden" id="editProjectId">
+                                    <div class="mb-3">
+                                        <label class="form-label">제목</label>
+                                        <input type="text" class="form-control" id="editTitle">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">설명</label>
+                                        <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">공개 범위</label>
+                                        <select class="form-select" id="editVisibility">
+                                            <option value="public">전체 공개</option>
+                                            <option value="class">같은 센터만</option>
+                                            <option value="private">나만 보기</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">태그 (쉼표로 구분)</label>
+                                        <input type="text" class="form-control" id="editTags"
+                                            placeholder="예: 게임, 애니메이션">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                                    <button type="button" class="btn btn-primary" onclick="saveEdit()">저장</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">공개 범위</label>
-                        <select class="form-select" id="editVisibility">
-                            <option value="public">전체 공개</option>
-                            <option value="class">같은 센터만</option>
-                            <option value="private">나만 보기</option>
-                        </select>
+
+                    <!-- 삭제 확인 모달 -->
+                    <div class="modal fade" id="deleteModal" tabindex="-1">
+                        <div class="modal-dialog modal-sm">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title text-danger"><i class="bi bi-trash"></i> 삭제 확인</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>정말 이 작품을 갤러리에서 삭제하시겠습니까?</p>
+                                    <p class="text-muted small">원본 프로젝트 파일은 삭제되지 않습니다.</p>
+                                    <input type="hidden" id="deleteProjectId">
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">삭제</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">태그 (쉼표로 구분)</label>
-                        <input type="text" class="form-control" id="editTags" placeholder="예: 게임, 애니메이션">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-                    <button type="button" class="btn btn-primary" onclick="saveEdit()">저장</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 삭제 확인 모달 -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger"><i class="bi bi-trash"></i> 삭제 확인</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>정말 이 작품을 갤러리에서 삭제하시겠습니까?</p>
-                    <p class="text-muted small">원본 프로젝트 파일은 삭제되지 않습니다.</p>
-                    <input type="hidden" id="deleteProjectId">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">삭제</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        let allProjects = [];
-        let currentFilter = '';
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            loadMyProjects();
-            setupTabs();
-        });
-        
-        function setupTabs() {
-            document.querySelectorAll('.nav-tabs .nav-link').forEach(tab => {
-                tab.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.querySelectorAll('.nav-tabs .nav-link').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    currentFilter = tab.dataset.filter;
-                    renderProjects();
-                });
-            });
-        }
-        
-        async function loadMyProjects() {
-            const loading = document.getElementById('loading');
-            const table = document.getElementById('projectsTable');
-            const empty = document.getElementById('emptyState');
-            
-            loading.style.display = 'flex';
-            table.style.display = 'none';
-            empty.style.display = 'none';
-            
-            try {
-                const response = await fetch('/api/gallery/my?limit=100');
-                const result = await response.json();
-                
-                if (result.success && result.data.length > 0) {
-                    allProjects = result.data;
-                    updateStats();
-                    renderProjects();
-                    table.style.display = 'block';
-                } else {
-                    empty.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('내 작품 로드 오류:', error);
-                empty.style.display = 'block';
-            } finally {
-                loading.style.display = 'none';
-            }
-        }
-        
-        function updateStats() {
-            document.getElementById('totalProjects').textContent = allProjects.length;
-            document.getElementById('totalViews').textContent = formatNumber(
-                allProjects.reduce((sum, p) => sum + (p.view_count || 0), 0)
-            );
-            document.getElementById('totalLikes').textContent = formatNumber(
-                allProjects.reduce((sum, p) => sum + (p.like_count || 0), 0)
-            );
-            document.getElementById('totalPlays').textContent = formatNumber(
-                allProjects.reduce((sum, p) => sum + (p.play_count || 0), 0)
-            );
-        }
-        
-        function renderProjects() {
-            const tbody = document.getElementById('projectsBody');
-            let filtered = allProjects;
-            
-            if (currentFilter) {
-                filtered = allProjects.filter(p => p.platform === currentFilter);
-            }
-            
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">해당 플랫폼의 작품이 없습니다.</td></tr>`;
-                return;
-            }
-            
-            tbody.innerHTML = filtered.map(p => {
-                const thumbContent = p.thumbnail_url
-                    ? `<img src="${p.thumbnail_url}" alt="${p.title}">`
-                    : `<i class="bi bi-${getPlatformIcon(p.platform)}"></i>`;
-                
-                return `
+
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                    <script>
+                        let allProjects = [];
+                        let currentFilter = '';
+
+                        document.addEventListener('DOMContentLoaded', () => {
+                            loadMyProjects();
+                            setupTabs();
+                        });
+
+                        function setupTabs() {
+                            document.querySelectorAll('.nav-tabs .nav-link').forEach(tab => {
+                                tab.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    document.querySelectorAll('.nav-tabs .nav-link').forEach(t => t.classList.remove('active'));
+                                    tab.classList.add('active');
+                                    currentFilter = tab.dataset.filter;
+                                    renderProjects();
+                                });
+                            });
+                        }
+
+                        async function loadMyProjects() {
+                            const loading = document.getElementById('loading');
+                            const table = document.getElementById('projectsTable');
+                            const empty = document.getElementById('emptyState');
+
+                            loading.style.display = 'flex';
+                            table.style.display = 'none';
+                            empty.style.display = 'none';
+
+                            try {
+                                const response = await fetch('/api/gallery/my?limit=100');
+                                const result = await response.json();
+
+                                if (result.success && result.data.length > 0) {
+                                    allProjects = result.data;
+                                    updateStats();
+                                    renderProjects();
+                                    table.style.display = 'block';
+                                } else {
+                                    empty.style.display = 'block';
+                                }
+                            } catch (error) {
+                                console.error('내 작품 로드 오류:', error);
+                                empty.style.display = 'block';
+                            } finally {
+                                loading.style.display = 'none';
+                            }
+                        }
+
+                        function updateStats() {
+                            document.getElementById('totalProjects').textContent = allProjects.length;
+                            document.getElementById('totalViews').textContent = formatNumber(
+                                allProjects.reduce((sum, p) => sum + (p.view_count || 0), 0)
+                            );
+                            document.getElementById('totalLikes').textContent = formatNumber(
+                                allProjects.reduce((sum, p) => sum + (p.like_count || 0), 0)
+                            );
+                            document.getElementById('totalPlays').textContent = formatNumber(
+                                allProjects.reduce((sum, p) => sum + (p.play_count || 0), 0)
+                            );
+                        }
+
+                        function renderProjects() {
+                            const tbody = document.getElementById('projectsBody');
+                            let filtered = allProjects;
+
+                            if (currentFilter) {
+                                filtered = allProjects.filter(p => p.platform === currentFilter);
+                            }
+
+                            if (filtered.length === 0) {
+                                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">해당 플랫폼의 작품이 없습니다.</td></tr>`;
+                                return;
+                            }
+
+                            tbody.innerHTML = filtered.map(p => {
+                                const thumbContent = p.thumbnail_url
+                                    ? `<img src="${p.thumbnail_url}" alt="${p.title}">`
+                                    : `<i class="bi bi-${getPlatformIcon(p.platform)}"></i>`;
+
+                                return `
                     <tr class="project-row">
                         <td>
                             <div class="project-thumb">${thumbContent}</div>
@@ -473,111 +504,119 @@
                         </td>
                     </tr>
                 `;
-            }).join('');
-        }
-        
-        function openEdit(id) {
-            const project = allProjects.find(p => p.id === id);
-            if (!project) return;
-            
-            document.getElementById('editProjectId').value = id;
-            document.getElementById('editTitle').value = project.title;
-            document.getElementById('editDescription').value = project.description || '';
-            document.getElementById('editVisibility').value = project.visibility;
-            document.getElementById('editTags').value = (project.tags || []).join(', ');
-            
-            new bootstrap.Modal(document.getElementById('editModal')).show();
-        }
-        
-        async function saveEdit() {
-            const id = document.getElementById('editProjectId').value;
-            const data = {
-                title: document.getElementById('editTitle').value,
-                description: document.getElementById('editDescription').value,
-                visibility: document.getElementById('editVisibility').value,
-                tags: document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(t => t)
-            };
-            
-            try {
-                const response = await fetch(`/api/gallery/projects/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-                    loadMyProjects();
-                    alert('저장되었습니다.');
-                } else {
-                    alert('저장 실패: ' + result.error);
-                }
-            } catch (error) {
-                console.error('저장 오류:', error);
-                alert('저장 중 오류가 발생했습니다.');
-            }
-        }
-        
-        function openDelete(id) {
-            document.getElementById('deleteProjectId').value = id;
-            new bootstrap.Modal(document.getElementById('deleteModal')).show();
-        }
-        
-        async function confirmDelete() {
-            const id = document.getElementById('deleteProjectId').value;
-            
-            try {
-                const response = await fetch(`/api/gallery/projects/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-                    loadMyProjects();
-                    alert('삭제되었습니다.');
-                } else {
-                    alert('삭제 실패: ' + result.error);
-                }
-            } catch (error) {
-                console.error('삭제 오류:', error);
-                alert('삭제 중 오류가 발생했습니다.');
-            }
-        }
-        
-        function getPlatformIcon(platform) {
-            const icons = { entry: 'box-fill', scratch: 'puzzle-fill', python: 'code-slash' };
-            return icons[platform] || 'file-code';
-        }
-        
-        function getPlatformName(platform) {
-            const names = { entry: '엔트리', scratch: '스크래치', python: '파이썬' };
-            return names[platform] || platform;
-        }
-        
-        function getVisibilityName(visibility) {
-            const names = { public: '전체', class: '센터', private: '비공개' };
-            return names[visibility] || visibility;
-        }
-        
-        function formatNumber(num) {
-            return (num || 0).toLocaleString();
-        }
-        
-        function formatDate(dateStr) {
-            return new Date(dateStr).toLocaleDateString('ko-KR');
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text || '';
-            return div.innerHTML;
-        }
-    </script>
-    
-    <%- include('partials/footer') %>
+                            }).join('');
+                        }
+
+                        function openEdit(id) {
+                            const project = allProjects.find(p => p.id === id);
+                            if (!project) return;
+
+                            document.getElementById('editProjectId').value = id;
+                            document.getElementById('editTitle').value = project.title;
+                            document.getElementById('editDescription').value = project.description || '';
+                            document.getElementById('editVisibility').value = project.visibility;
+                            document.getElementById('editTags').value = (project.tags || []).join(', ');
+
+                            new bootstrap.Modal(document.getElementById('editModal')).show();
+                        }
+
+                        async function saveEdit() {
+                            const id = document.getElementById('editProjectId').value;
+                            const data = {
+                                title: document.getElementById('editTitle').value,
+                                description: document.getElementById('editDescription').value,
+                                visibility: document.getElementById('editVisibility').value,
+                                tags: document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(t => t)
+                            };
+
+                            try {
+                                const response = await fetch(`/api/gallery/projects/${id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(data)
+                                });
+
+                                const result = await response.json();
+
+                                if (result.success) {
+                                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                                    loadMyProjects();
+                                    alert('저장되었습니다.');
+                                } else {
+                                    alert('저장 실패: ' + result.error);
+                                }
+                            } catch (error) {
+                                console.error('저장 오류:', error);
+                                alert('저장 중 오류가 발생했습니다.');
+                            }
+                        }
+
+                        function openDelete(id) {
+                            document.getElementById('deleteProjectId').value = id;
+                            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+                        }
+
+                        async function confirmDelete() {
+                            const id = document.getElementById('deleteProjectId').value;
+
+                            try {
+                                const response = await fetch(`/api/gallery/projects/${id}`, {
+                                    method: 'DELETE'
+                                });
+
+                                const result = await response.json();
+
+                                if (result.success) {
+                                    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                                    loadMyProjects();
+                                    alert('삭제되었습니다.');
+                                } else {
+                                    alert('삭제 실패: ' + result.error);
+                                }
+                            } catch (error) {
+                                console.error('삭제 오류:', error);
+                                alert('삭제 중 오류가 발생했습니다.');
+                            }
+                        }
+
+                        function getPlatformIcon(platform) {
+                            const icons = { entry: 'box-fill', scratch: 'puzzle-fill', python: 'code-slash' };
+                            return icons[platform] || 'file-code';
+                        }
+
+                        function getPlatformName(platform) {
+                            const names = { entry: '엔트리', scratch: '스크래치', python: '파이썬' };
+                            return names[platform] || platform;
+                        }
+
+                        function getVisibilityName(visibility) {
+                            const names = { public: '전체', class: '센터', private: '비공개' };
+                            return names[visibility] || visibility;
+                        }
+
+                        function formatNumber(num) {
+                            return (num || 0).toLocaleString();
+                        }
+
+                        function formatDate(dateStr) {
+                            return new Date(dateStr).toLocaleDateString('ko-KR');
+                        }
+
+                        function escapeHtml(text) {
+                            const div = document.createElement('div');
+                            div.textContent = text || '';
+                            return div.innerHTML;
+                        }
+                    </script>
+
+                    <script>
+                        // ... script content ...
+                    </script>
+
+                </div> <!-- End board-main-content -->
+        </div> <!-- End board-layout-container -->
+
+        <%- include('partials/footer') %>
 </body>
+
 </html>
