@@ -21,6 +21,8 @@ const getFriendlyTitle = (item) => {
             return '프로젝트 업로드';
         }
     }
+    if (!actionType) return 'Activity';
+
     if (actionType.includes('entry')) return '엔트리 학습';
     if (actionType.includes('scratch')) return '스크래치 학습';
     if (actionType.includes('python')) return '파이썬 학습';
