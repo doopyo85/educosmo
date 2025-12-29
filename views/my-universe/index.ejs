@@ -44,8 +44,8 @@
 
         <!-- My Universe Navigation -->
         <div class="my-universe-nav">
-            <% // Determine base URL based on context (Student View vs Self View) let baseUrl='/my-universe' ; if
-                (locals.student && locals.student.id) { baseUrl=`/my-universe/student/${student.id}`; } %>
+            <% let baseUrl='/my-universe' ; if (locals.student && locals.student.id) {
+                baseUrl=`/my-universe/student/${locals.student.id}`; } %>
                 <ul class="nav nav-tabs border-0">
                     <li class="nav-item">
                         <a class="nav-link <%= activeTab === 'timeline' ? 'active' : '' %>"
