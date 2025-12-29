@@ -178,7 +178,16 @@ router.get('/timeline', async (req, res) => {
             return res.redirect('/auth/login');
         }
 
-        const studentId = req.session.dbId; // Use logged-in user's DB ID
+        // Resolve numeric DB ID if not in session
+        let studentId = req.session.dbId;
+        if (!studentId && req.session.userID) {
+            const [user] = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [req.session.userID]);
+            if (user) studentId = user.id;
+        }
+
+        if (!studentId) {
+            return res.redirect('/auth/login');
+        }
 
         const activityLogs = await db.queryDatabase(`
             SELECT * FROM (
