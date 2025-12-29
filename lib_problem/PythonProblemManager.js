@@ -226,10 +226,10 @@ class PythonProblemManager {
                 if (results.some(r => r.error)) status = 'ERROR';
 
                 // 🔥 LOG TO QuizResults
-                // Schema: user_id, exam_name, problem_number, is_correct, score, user_answer, execution_results
+                // Schema: user_id, exam_name, problem_number, is_correct, score, user_answer, execution_results, timestamp
                 await queryDatabase(`
                     INSERT INTO QuizResults 
-                    (user_id, exam_name, problem_number, is_correct, score, user_answer, execution_results, created_at)
+                    (user_id, exam_name, problem_number, is_correct, score, user_answer, execution_results, timestamp)
                     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
                 `, [
                     userId,

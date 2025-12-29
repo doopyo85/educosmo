@@ -374,42 +374,42 @@
                 }
 
                 // 정보 저장 처리
-                document.getElementById('myInfoForm').addEventListener('submit', async function (e) {
-                    e.preventDefault();
+                const myInfoForm = document.getElementById('myInfoForm');
+                if (myInfoForm) {
+                    myInfoForm.addEventListener('submit', async function (e) {
+                        e.preventDefault();
 
-                    const formData = {
-                        name: document.getElementById('infoName').value,
-                        email: document.getElementById('infoEmail').value,
-                        phone: document.getElementById('infoPhone').value,
-                        password: document.getElementById('infoPassword').value
-                    };
+                        const formData = {
+                            name: document.getElementById('infoName').value,
+                            email: document.getElementById('infoEmail').value,
+                            phone: document.getElementById('infoPhone').value,
+                            password: document.getElementById('infoPassword').value
+                        };
 
-                    try {
-                        const response = await fetch('/api/my-profile-detail', {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(formData)
-                        });
+                        try {
+                            const response = await fetch('/api/my-profile-detail', {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(formData)
+                            });
 
-                        const result = await response.json();
-                        if (result.success) {
-                            alert('수정이 완료되었습니다.');
+                            const result = await response.json();
+                            if (result.success) {
+                                alert('수정이 완료되었습니다.');
 
-                            // 모달 닫기
-                            const modalEl = document.getElementById('myInfoModal');
-                            const modal = bootstrap.Modal.getInstance(modalEl);
-                            modal.hide();
-
-                            // 페이지 새로고침 없이 이름 업데이트 등은 선택사항이지만 여기선 간단히 리로드 혹은 유지
-                            // location.reload(); 
-                        } else {
-                            alert('수정 실패: ' + result.message);
+                                // 모달 닫기
+                                const modalEl = document.getElementById('myInfoModal');
+                                const modal = bootstrap.Modal.getInstance(modalEl);
+                                modal.hide();
+                            } else {
+                                alert('수정 실패: ' + result.message);
+                            }
+                        } catch (error) {
+                            console.error('프로필 저장 오류:', error);
+                            alert('저장 중 오류가 발생했습니다.');
                         }
-                    } catch (error) {
-                        console.error('프로필 저장 오류:', error);
-                        alert('저장 중 오류가 발생했습니다.');
-                    }
-                });
+                    });
+                }
             </script>
