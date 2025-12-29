@@ -593,16 +593,81 @@ router.get('/get-user-session', (req, res) => {
     res.status(200).json({ is_logined: false, role: 'guest' });
   }
 });
-
-// 직접 카드형 페이지 API 추가 (복구)
-router.get('/get-computer-data', authenticateUser, async (req, res) => {
+// 내 프로필 상세 정보 조회 API
+router.get('/my-profile-detail', authenticateUser, async (req, res) => {
   try {
-    const data = await getSheetData('computer!A2:F');
-    res.json(data);
+    const [student] = await db.queryDatabase(
+      'SELECT id, userID, name, email, phone, centerID FROM Users WHERE userID = ?',
+      [req.session.userID]
+    );
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 소속 센터 정보 가져오기 (globally cached if available, otherwise fetch)
+    let centerName = '소속 없음';
+    if (student.centerID && global.centerMap && global.centerMap.has(String(student.centerID))) {
+      centerName = global.centerMap.get(String(student.centerID));
+    }
+
+    res.json({
+      success: true,
+      student: {
+        ...student,
+        centerName
+      }
+    });
+
   } catch (error) {
-    console.error('computer 시트 데이터 로드 오류:', error);
-    res.status(500).json({ error: 'computer 시트 오류' });
+    console.error('프로필 상세 조회 오류:', error);
+    res.status(500).json({ success: false, message: '오류 발생' });
   }
+});
+
+// 내 프로필 수정 API
+router.put('/my-profile-detail', authenticateUser, async (req, res) => {
+  try {
+    const { name, email, password, phone } = req.body;
+    const userId = req.session.userID;
+
+    const [user] = await db.queryDatabase(
+      'SELECT id FROM Users WHERE userID = ?',
+      [userId]
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    let query, params;
+
+    if (password && password.trim() !== '') {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      query = `UPDATE Users SET name = ?, email = ?, password = ?, phone = ? WHERE id = ?`;
+      params = [name, email || '', hashedPassword, phone || '', user.id];
+    } else {
+      query = `UPDATE Users SET name = ?, email = ?, phone = ? WHERE id = ?`;
+      params = [name, email || '', phone || '', user.id];
+    }
+
+    await db.queryDatabase(query, params);
+
+    res.json({ success: true, message: '프로필이 수정되었습니다.' });
+
+  } catch (error) {
+    console.error('프로필 수정 오류:', error);
+    res.status(500).json({ success: false, message: '프로필 수정에 실패했습니다.', error: error.message });
+  }
+});
+
+try {
+  const data = await getSheetData('computer!A2:F');
+  res.json(data);
+} catch (error) {
+  console.error('computer 시트 데이터 로드 오류:', error);
+  res.status(500).json({ error: 'computer 시트 오류' });
+}
 });
 
 router.get('/get-scratch-data', authenticateUser, async (req, res) => {

@@ -341,4 +341,75 @@
                 document.getElementById('myFilesModal').addEventListener('hidden.bs.modal', function () {
                     document.getElementById('myFilesFrame').src = '';
                 });
+
+                /**
+                 * 내 정보 수정 모달 열기
+                 */
+                async function openMyProfile() {
+                    try {
+                        const response = await fetch('/api/my-profile-detail');
+                        const result = await response.json();
+
+                        if (result.success) {
+                            const student = result.student;
+
+                            // 폼 데이터 채우기
+                            document.getElementById('infoCenterName').value = student.centerName || '소속 없음';
+                            document.getElementById('infoName').value = student.name || '';
+                            document.getElementById('infoUserID').value = student.userID || '';
+                            document.getElementById('infoEmail').value = student.email || '';
+                            document.getElementById('infoPhone').value = student.phone || '';
+                            document.getElementById('infoPassword').value = ''; // 비밀번호 초기화
+
+                            // 모달 표시
+                            const infoModal = new bootstrap.Modal(document.getElementById('myInfoModal'));
+                            infoModal.show();
+                        } else {
+                            alert('정보를 불러오는데 실패했습니다: ' + result.message);
+                        }
+                    } catch (error) {
+                        console.error('프로필 로드 오류:', error);
+                        alert('서버 통신 오류가 발생했습니다.');
+                    }
+                }
+
+                // 정보 저장 처리
+                document.getElementById('myInfoForm').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const formData = {
+                        name: document.getElementById('infoName').value,
+                        email: document.getElementById('infoEmail').value,
+                        phone: document.getElementById('infoPhone').value,
+                        password: document.getElementById('infoPassword').value
+                    };
+
+                    try {
+                        const response = await fetch('/api/my-profile-detail', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(formData)
+                        });
+
+                        const result = await response.json();
+                        if (result.success) {
+                            alert('수정이 완료되었습니다.');
+
+                            // 모달 닫기
+                            const modalEl = document.getElementById('myInfoModal');
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            modal.hide();
+
+                            // 페이지 새로고침 없이 이름 업데이트 등은 선택사항이지만 여기선 간단히 리로드 혹은 유지
+                            // location.reload(); 
+                        } else {
+                            alert('수정 실패: ' + result.message);
+                        }
+                    } catch (error) {
+                        console.error('프로필 저장 오류:', error);
+                        alert('저장 중 오류가 발생했습니다.');
+                    }
+                });
             </script>
