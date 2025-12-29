@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { queryDatabase, getStudentById } = require('../../lib_login/db');
-const { pong2Auth, requireAuth } = require('../../lib_login/pong2_auth');
+const { pong2Auth, requireAuth, requireDbUser } = require('../../lib_login/pong2_auth');
 const { JWT } = require('../../config');
 
 // 🔥 Pong2 전용 CORS 미들웨어 (pong2.app에서의 크로스 오리진 요청 허용)
@@ -245,7 +245,7 @@ router.get('/boards/:id', async (req, res) => {
 // ==========================================
 // Auth: Create Post (Community/Teacher)
 // ==========================================
-router.post('/boards', requireAuth, async (req, res) => {
+router.post('/boards', requireDbUser, async (req, res) => {
     try {
         const { title, content, board_type, nest_id } = req.body; // board_type: 'COMMUNITY' or 'TEACHER'
 
@@ -290,7 +290,7 @@ router.post('/boards', requireAuth, async (req, res) => {
 // ==========================================
 
 // Add Comment
-router.post('/boards/:id/comments', requireAuth, async (req, res) => {
+router.post('/boards/:id/comments', requireDbUser, async (req, res) => {
     try {
         const { id } = req.params;
         const { content, parent_id } = req.body;
@@ -317,7 +317,7 @@ router.post('/boards/:id/comments', requireAuth, async (req, res) => {
 });
 
 // Toggle Reaction
-router.post('/boards/:id/react', requireAuth, async (req, res) => {
+router.post('/boards/:id/react', requireDbUser, async (req, res) => {
     try {
         const { id } = req.params;
         const { type } = req.body; // 'like', 'laugh', 'heart'
@@ -474,25 +474,22 @@ router.get('/auth/me', requireAuth, async (req, res) => {
     }
 });
 
-// 3. Tracking Beacon
-router.post('/logs/track', requireAuth, async (req, res) => {
+// 3. Tracking Beacon (로그인 사용자만, 실패해도 무시)
+router.post('/logs/track', async (req, res) => {
     try {
-        const { action, detail, url } = req.body;
-
-        // 🔥 user_id가 숫자인지 확인 (FK 제약 대응)
-        const userId = typeof req.user.id === 'number' ? req.user.id : null;
-        
-        if (!userId) {
-            console.warn('Tracking skipped: Invalid user_id', req.user);
-            return res.json({ success: false, reason: 'invalid_user_id' });
+        // 🔥 비로그인 사용자는 트래킹 스킵
+        if (!req.user || typeof req.user.id !== 'number') {
+            return res.json({ success: true, skipped: true });
         }
+
+        const { action, detail, url } = req.body;
 
         await queryDatabase(`
             INSERT INTO UserActivityLogs 
             (user_id, center_id, action_type, url, ip_address, user_agent, action_detail, status) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `, [
-            userId,
+            req.user.id,
             req.user.centerID || null,
             'PONG2_EVENT',
             url || 'pong2.app',
@@ -504,8 +501,7 @@ router.post('/logs/track', requireAuth, async (req, res) => {
 
         res.json({ success: true });
     } catch (error) {
-        console.error('Tracking Error:', error);
-        // Don't fail hard on tracking errors
+        console.error('Tracking Error:', error.message);
         res.json({ success: false });
     }
 });
