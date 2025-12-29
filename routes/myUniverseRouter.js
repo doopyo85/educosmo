@@ -169,8 +169,93 @@ router.get('/', (req, res) => {
 });
 
 // ============================================
+// ============================================
 // Timeline Tab (Previously Portfolio)
 // ============================================
+router.get('/timeline', async (req, res) => {
+    try {
+        if (!req.session.is_logined) {
+            return res.redirect('/auth/login');
+        }
+
+        const studentId = req.session.dbId; // Use logged-in user's DB ID
+
+        const activityLogs = await db.queryDatabase(`
+            SELECT * FROM (
+                -- 1. Gallery Projects
+                SELECT 
+                    'gallery' as type, 
+                    title COLLATE utf8mb4_unicode_ci as title, 
+                    created_at, 
+                    id, 
+                    thumbnail_url COLLATE utf8mb4_unicode_ci as metadata 
+                FROM gallery_projects 
+                WHERE user_id = ?
+
+                UNION ALL
+
+                -- 2. Blog Posts
+                SELECT 
+                    'blog' as type, 
+                    title COLLATE utf8mb4_unicode_ci as title, 
+                    created_at, 
+                    id, 
+                    excerpt COLLATE utf8mb4_unicode_ci as metadata 
+                FROM user_blog_posts 
+                WHERE user_id = ?
+
+                UNION ALL
+
+                -- 3. Badges
+                SELECT 
+                    'badge' as type, 
+                    badge_code COLLATE utf8mb4_unicode_ci as title, 
+                    earned_at as created_at, 
+                    id, 
+                    NULL as metadata 
+                FROM user_badges 
+                WHERE user_id = ?
+
+                UNION ALL
+
+                -- 4. User Activity Logs
+                SELECT 
+                    'log' as type, 
+                    action_type COLLATE utf8mb4_unicode_ci as title, 
+                    created_at, 
+                    log_id as id, 
+                    action_detail COLLATE utf8mb4_unicode_ci as metadata 
+                FROM UserActivityLogs 
+                WHERE user_id = ? 
+                AND (
+                    action_type = 'portfolio_upload' 
+                    OR action_type = 'login'
+                    OR action_type LIKE '%entry%'
+                    OR action_type LIKE '%scratch%'
+                    OR action_type LIKE '%python%'
+                )
+            ) AS UnifiedTimeline
+            ORDER BY created_at DESC
+            LIMIT 50
+        `, [studentId, studentId, studentId, studentId]);
+
+        // Process logs for view
+        const timelineItems = processLogs(activityLogs);
+
+        res.render('my-universe/index', {
+            activeTab: 'timeline',
+            timelineItems,
+            userID: req.session.userID,
+            userRole: req.session.role,
+            is_logined: req.session.is_logined,
+            centerID: req.session.centerID
+        });
+
+    } catch (error) {
+        console.error('My Timeline Error:', error);
+        res.status(500).send('Error loading timeline');
+    }
+});
 
 // ============================================
 // Observatory Tab
