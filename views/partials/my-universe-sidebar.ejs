@@ -111,11 +111,10 @@
         <span class="fw-bold fs-5 text-dark">My Universe</span>
     </div>
 
-    <% let baseUrl='/my-universe' ; let isStudentView=false; // Logic from previous nav if (locals.student &&
-        locals.student.id) { baseUrl=`/my-universe/student/${locals.student.id}`; isStudentView=true; } const
-        currentTab=locals.activeTab || '' ; const galleryUrl=isStudentView ? `/gallery?userId=${locals.student.userID}`
-        : '/gallery/my' ; const observatoryUrl=`${baseUrl}/observatory`; const timelineUrl=isStudentView ? baseUrl :
-        baseUrl + '/timeline' ; %>
+    <% let baseUrl='/my-universe' ; let isStudentView=false; if (locals.student && locals.student.id) {
+        baseUrl=`/my-universe/student/${locals.student.id}`; isStudentView=true; } const currentTab=locals.activeTab
+        || '' ; const galleryUrl=isStudentView ? `/gallery?userId=${locals.student.userID}` : '/gallery/my' ; const
+        observatoryUrl=`${baseUrl}/observatory`; const timelineUrl=isStudentView ? baseUrl : baseUrl + '/timeline' ; %>
 
         <div class="board-nav-group">
             <div class="board-sidebar-header">Menu</div>
