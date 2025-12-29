@@ -135,10 +135,6 @@ router.get('/', (req, res) => {
 // ============================================
 // Timeline Tab (Previously Portfolio)
 // ============================================
-console.error('My Universe Timeline Error:', error);
-res.status(500).send('Error loading timeline');
-    }
-});
 
 // ============================================
 // Observatory Tab
