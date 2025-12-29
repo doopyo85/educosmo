@@ -6,6 +6,49 @@ const { queryDatabase, getStudentById } = require('../../lib_login/db');
 const { pong2Auth, requireAuth } = require('../../lib_login/pong2_auth');
 const { JWT } = require('../../config');
 
+// 🔥 Pong2 전용 CORS 미들웨어 (pong2.app에서의 크로스 오리진 요청 허용)
+router.use((req, res, next) => {
+    const allowedOrigins = [
+        'https://pong2.app',
+        'https://www.pong2.app',
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'https://app.codingnplay.co.kr'
+    ];
+    
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    
+    // Preflight 요청 처리
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    
+    next();
+});
+
+// 🔥 JSON 응답 보장 미들웨어 (HTML 응답 방지)
+router.use((req, res, next) => {
+    // 원본 res.send를 저장
+    const originalSend = res.send.bind(res);
+    
+    res.send = function(body) {
+        // Content-Type이 설정되지 않았으면 JSON으로 설정
+        if (!res.get('Content-Type')) {
+            res.set('Content-Type', 'application/json');
+        }
+        return originalSend(body);
+    };
+    
+    next();
+});
+
 // Use Hybrid Auth for all routes
 router.use(pong2Auth);
 

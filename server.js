@@ -527,6 +527,7 @@ const routes = {
 app.use('/api/python-problems', authenticateUser, require('./routes/pythonProblemRouter'));
 
 const entryRouter = require('./routes/entryRouter');
+const myUniverseRouter = require('./routes/myUniverseRouter');
 const ttsRouter = require('./routes/api/ttsRouter');
 app.use('/api', authenticateUser, ttsRouter);
 
@@ -536,6 +537,9 @@ if (isMain || SERVICE_TYPE === 'entry') {
 
 const entDebugRouter = require('./routes/api/debug/entDebugRouter');
 app.use('/api/debug/ent', entDebugRouter);
+
+// 🔥 My Universe 라우터
+app.use('/my-universe', authenticateUser, myUniverseRouter);
 
 
 if (isMain || SERVICE_TYPE === 'appinventor') {
