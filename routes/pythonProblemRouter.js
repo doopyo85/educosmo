@@ -53,29 +53,69 @@ router.post('/run', async (req, res) => {
 });
 
 // 4. Submit Solution (Run against Test Cases)
+// 4. Submit Solution (Run against Test Cases)
 router.post('/:id/submit', async (req, res) => {
     try {
         const problemId = req.params.id;
-        const { code } = req.body; // User's main code
+        const { code } = req.body;
+        const userId = req.session.user ? req.session.user.id : (req.session.dbId || null);
+
+        if (!userId && req.session.userID) {
+            // Try to resolve ID if missing
+            try {
+                const [u] = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [req.session.userID]);
+                if (u) req.session.dbId = u.id;
+            } catch (e) { }
+        }
 
         const problem = await problemManager.getProblem(problemId);
         if (!problem) {
             return res.status(404).json({ success: false, error: 'Problem not found' });
         }
 
-        // Reference: Phase 1 Judge0 Batch Execution
-        // Judge0Adapter.runTestCases handles the batching logic internally.
         const results = await runner.runTestCases(code, problem.test_cases);
-
         const allPassed = results.every(r => r.passed);
 
-        // Map results back to handle hidden test cases if necessary
-        // Judge0Adapter returns results in same order as input
+        // Map results
         const finalResults = results.map((r, index) => {
             const originalTc = problem.test_cases[index];
             const isHidden = originalTc ? originalTc.is_hidden : false;
             return isHidden ? { passed: r.passed, hidden: true } : r;
         });
+
+        // 🔥 Log to QuizResults instead of StudentLogs
+        if (req.session.userID) {
+            try {
+                // Resolve numeric ID
+                let dbId = req.session.dbId;
+                if (!dbId) {
+                    const [u] = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [req.session.userID]);
+                    if (u) dbId = u.id;
+                }
+
+                if (dbId) {
+                    const executionJson = JSON.stringify({ results: finalResults });
+                    const isCorrect = allPassed ? 1 : 0;
+
+                    // 1. Insert into QuizResults
+                    await db.queryDatabase(`
+                        INSERT INTO QuizResults 
+                        (user_id, exam_name, problem_number, user_answer, is_correct, execution_results, timestamp)
+                        VALUES (?, 'CTRpython', ?, ?, ?, ?, NOW())
+                    `, [dbId, problemId, code, isCorrect, executionJson]);
+
+                    console.log(`✅ [QuizResults] Logged solution for User ${dbId}, Problem ${problemId}`);
+
+                    // 2. Update CT Scores
+                    if (allPassed) {
+                        const { updateCTFromProblem } = require('../lib_problem/ctScoringService');
+                        updateCTFromProblem(dbId, problemId).catch(e => console.error('CT Update Error:', e));
+                    }
+                }
+            } catch (dbError) {
+                console.error('Failed to log solution to DB:', dbError);
+            }
+        }
 
         res.json({
             success: true,
@@ -83,27 +123,6 @@ router.post('/:id/submit', async (req, res) => {
             results: finalResults
         });
 
-        // 🔥 Log success to Database (for Observatory)
-        if (allPassed && req.session.userID) {
-            try {
-                // 1. Get User numeric ID
-                const [user] = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [req.session.userID]);
-                if (user) {
-                    // 2. Check if already logged (avoid duplicate logs for same problem?)
-                    // Optional: For now, just log everything. Observatory can deduplicate.
-                    await db.queryDatabase(`
-                        INSERT INTO StudentLogs (student_id, log_type, description, created_at)
-                        VALUES (?, 'PROBLEM_SOLVED', ?, CURRENT_TIMESTAMP)
-                    `, [user.id, `Solved Problem ${problemId}`]);
-                    console.log(`✅ Logged solution for User ${user.id}, Problem ${problemId}`);
-                }
-            } catch (dbError) {
-                console.error('Failed to log solution to DB:', dbError);
-                // Don't fail the request just because logging failed
-            }
-        }
-
-        return;
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }

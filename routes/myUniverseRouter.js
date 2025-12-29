@@ -164,6 +164,26 @@ const processLogs = async (logs, currentUser) => {
             finalUrl = `/gallery/project/${log.id}`;
         } else if (log.type === 'blog') {
             finalUrl = `/posts/${log.id}`;
+        } else if (['entry', 'scratch'].includes(log.type)) {
+            try {
+                const detail = JSON.parse(log.metadata || '{}');
+                if (log.type === 'entry' && detail.s3Url) {
+                    const s3UrlEncoded = encodeURIComponent(detail.s3Url);
+                    const userID = currentUser && currentUser.userID ? currentUser.userID : '';
+                    const role = currentUser && currentUser.role ? currentUser.role : 'student';
+                    finalUrl = `/entry_editor/?s3Url=${s3UrlEncoded}&userID=${userID}&role=${role}`;
+                } else if (log.type === 'scratch' && detail.s3Url) {
+                    // Based on server.js cos-editor logic
+                    const s3UrlEncoded = encodeURIComponent(detail.s3Url);
+                    finalUrl = `/scratch/?project_file=${s3UrlEncoded}`;
+                }
+            } catch (e) { }
+        } else if (log.type === 'solve') {
+            // For solved problems, maybe link to the problem content if possible
+            // log.title is problem_number e.g. 'cospro_3-1_p06'
+            // If we have a route /content/python/:id
+            // finalUrl = `/content/python/${log.title}`;
+            finalUrl = '#'; // Valid placeholder
         }
 
         return {
@@ -308,14 +328,49 @@ router.get('/timeline', async (req, res) => {
                 AND (
                     action_type = 'portfolio_upload' 
                     OR action_type = 'login'
-                    OR action_type LIKE '%entry%'
-                    OR action_type LIKE '%scratch%'
-                    OR action_type LIKE '%python%'
+                    -- Removed generic entry/scratch logs as we now use ProjectSubmissions
                 )
+
+                UNION ALL
+
+                -- 5. [NEW] Learning Logs (Content Study)
+                SELECT 
+                    'learn' as type,
+                    content_name COLLATE utf8mb4_unicode_ci as title,
+                    start_time as created_at,
+                    learning_id as id,
+                    CONCAT('{"progress":', IFNULL(progress, 0), ', "platform":"', IFNULL(platform,''), '"}') COLLATE utf8mb4_unicode_ci as metadata
+                FROM LearningLogs
+                WHERE user_id = ?
+
+                UNION ALL
+
+                -- 6. [NEW] Project Submissions (Entry/Scratch)
+                SELECT 
+                    LOWER(platform) as type, -- 'entry' or 'scratch'
+                    project_name COLLATE utf8mb4_unicode_ci as title,
+                    created_at,
+                    id,
+                    CONCAT('{"s3Url":"', IFNULL(s3_url,''), '", "thumbnail":"', IFNULL(thumbnail_url,''), '"}') COLLATE utf8mb4_unicode_ci as metadata
+                FROM ProjectSubmissions
+                WHERE user_id = ? AND is_deleted = 0
+
+                UNION ALL
+
+                -- 7. [NEW] Quiz/Problem Logs (Python)
+                SELECT 
+                    'solve' as type,
+                    problem_number COLLATE utf8mb4_unicode_ci as title, -- 'cospro_3-1_p06'
+                    timestamp as created_at,
+                    id,
+                    CONCAT('{"is_correct":', is_correct, '}') COLLATE utf8mb4_unicode_ci as metadata
+                FROM QuizResults
+                WHERE user_id = ?
+
             ) AS UnifiedTimeline
             ORDER BY created_at DESC
             LIMIT 50
-        `, [studentId, studentId, studentId, studentId]);
+        `, [studentId, studentId, studentId, studentId, studentId, studentId, studentId]);
 
         // Process logs for view
         const currentUser = { userID: req.session.userID, role: req.session.role };
@@ -507,6 +562,49 @@ router.get('/student/:id/observatory', async (req, res) => {
     } catch (error) {
         console.error('Student Observatory Error:', error);
         res.status(500).send('Error loading student observatory');
+    }
+});
+
+
+// ============================================
+// Problems Tab (New)
+// ============================================
+router.get('/problems', async (req, res) => {
+    try {
+        if (!req.session.is_logined) {
+            return res.redirect('/auth/login');
+        }
+
+        // Resolve numeric DB ID
+        let studentId = req.session.dbId;
+        if (!studentId && req.session.userID) {
+            const [user] = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [req.session.userID]);
+            if (user) studentId = user.id;
+        }
+
+        if (!studentId) {
+            return res.redirect('/auth/login');
+        }
+
+        const problems = await db.queryDatabase(`
+            SELECT * FROM QuizResults 
+            WHERE user_id = ?
+            ORDER BY timestamp DESC
+            LIMIT 100
+        `, [studentId]);
+
+        res.render('my-universe/index', {
+            activeTab: 'problems',
+            problems, // Pass data to view
+            userID: req.session.userID,
+            userRole: req.session.role,
+            is_logined: req.session.is_logined,
+            centerID: req.session.centerID
+        });
+
+    } catch (error) {
+        console.error('My Problems Error:', error);
+        res.status(500).send('Error loading problems');
     }
 });
 

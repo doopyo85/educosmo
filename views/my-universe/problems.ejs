@@ -1,0 +1,69 @@
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0" style="color: #1d1d1f;">문제 풀이 (Problem Solving)</h2>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="width: 100%;">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="py-3 ps-4" style="width: 50px;">#</th>
+                            <th class="py-3">문제 (Problem)</th>
+                            <th class="py-3">상태 (Status)</th>
+                            <th class="py-3">제출 시간 (Date)</th>
+                            <th class="py-3 pe-4 text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (locals.problems && locals.problems.length> 0) { %>
+                            <% locals.problems.forEach((item, index)=> { %>
+                                <tr>
+                                    <td class="ps-4 text-muted">
+                                        <%= index + 1 %>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">
+                                            <%= item.problem_number %>
+                                        </div>
+                                        <div class="small text-muted">
+                                            <%= item.exam_name %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <% if (item.is_correct) { %>
+                                            <span class="badge bg-success-subtle text-success rounded-pill px-3">
+                                                <i class="bi bi-check-circle-fill me-1"></i> Success
+                                            </span>
+                                            <% } else { %>
+                                                <span class="badge bg-danger-subtle text-danger rounded-pill px-3">
+                                                    <i class="bi bi-x-circle-fill me-1"></i> Failed
+                                                </span>
+                                                <% } %>
+                                    </td>
+                                    <td class="text-secondary">
+                                        <%= new Date(item.timestamp).toLocaleString('ko-KR') %>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <!-- Future: Link to detail modal or page -->
+                                        <button class="btn btn-sm btn-light rounded-pill border" disabled>
+                                            상세보기
+                                        </button>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="5" class="text-center py-5 text-muted">
+                                                <i class="bi bi-clipboard-x fs-1 d-block mb-3 opacity-25"></i>
+                                                아직 푼 문제가 없습니다.
+                                            </td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
