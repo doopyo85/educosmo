@@ -308,3 +308,21 @@ body {
         font-size: 36px;
     }
 }
+
+/* Global Code Styling for Problem Descriptions */
+code {
+    background-color: #f5f5f7;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    color: #1d1d1f;
+    /* Black text as requested */
+    font-weight: 600;
+    font-size: 0.9em;
+    margin: 0 2px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+    display: inline-block;
+    line-height: normal;
+    vertical-align: middle;
+}
