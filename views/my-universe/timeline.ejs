@@ -1,342 +1,319 @@
 <style>
-    /* Subway Map Timeline Styles (Refined) */
+    /* 
+     * Apple-Style Timeline Design 
+     * "Premium Minimalism"
+     */
+    :root {
+        --ios-bg: #F5F5F7;
+        --ios-card: #FFFFFF;
+        --ios-text-primary: #1D1D1F;
+        --ios-text-secondary: #86868B;
+        --ios-accent: #007AFF;
+        /* SF Blue */
+        --ios-border: #D2D2D7;
+        --ios-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+        --ios-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    body {
+        background-color: var(--ios-bg);
+        /* Global background for this page context */
+    }
+
+    .timeline-wrapper {
+        display: flex;
+        gap: 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-top: 20px;
+        height: calc(100vh - 140px);
+        /* Adjust based on header */
+    }
+
+    /* Left Panel: The Timeline */
     .timeline-container {
-        height: calc(100vh - 150px);
+        flex: 1;
+        background: transparent;
         overflow-y: auto;
-        border-right: 1px solid #dee2e6;
-        padding-right: 10px;
-        padding-left: 10px;
+        padding-right: 20px;
+        /* Scrollbar styling */
+        scrollbar-width: thin;
+        scrollbar-color: #d1d1d1 transparent;
     }
 
-    .timeline-list {
-        position: relative;
-        padding-left: 30px;
-        list-style: none;
-        margin-top: 20px;
+    .timeline-container::-webkit-scrollbar {
+        width: 6px;
     }
 
-    .timeline-line {
-        position: absolute;
-        left: 15px;
-        top: 10px;
-        bottom: 0;
-        width: 4px;
-        background-color: #6c757d;
-        border-radius: 2px;
-        z-index: 0;
+    .timeline-container::-webkit-scrollbar-thumb {
+        background-color: #d1d1d1;
+        border-radius: 10px;
     }
 
-    .timeline-node {
-        position: relative;
-        margin-bottom: 25px;
-        display: flex;
-        align-items: center;
-        transition: all 0.2s;
-        cursor: default;
-    }
-
-    .timeline-station {
-        position: absolute;
-        left: -21px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background-color: white;
-        border: 3px solid #6c757d;
-        z-index: 1;
-    }
-
-    .timeline-node.meaningful .timeline-station {
-        border-color: #0d6efd;
-        width: 18px;
-        height: 18px;
-        left: -23px;
-        background-color: white;
-        cursor: pointer;
-    }
-
-    .timeline-node.meaningful:hover .timeline-station {
-        background-color: #0d6efd;
-    }
-
-    .timeline-node.active .timeline-station {
-        background-color: #0d6efd;
-        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
-    }
-
-    .timeline-content {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        width: 100%;
-    }
-
-    .timeline-header {
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-        margin-bottom: 2px;
-    }
-
-    .timeline-title {
-        font-weight: 600;
-        color: #343a40;
-        font-size: 1rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .timeline-meta {
-        font-size: 0.8rem;
-        color: #868e96;
-        white-space: nowrap;
-    }
-
-    .timeline-desc {
-        font-size: 0.85rem;
-        color: #495057;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .viewer-container {
-        height: calc(100vh - 150px);
-        overflow-y: auto;
-        padding-left: 20px;
-    }
-
-    .project-card-large {
-        border: none;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        border-radius: 16px;
-        overflow: hidden;
-    }
-
-    .project-img-large {
-        height: 300px;
-        background-size: cover;
-        background-position: center;
-        background-color: #eee;
-    }
-
-    .empty-state {
+    /* Right Panel: Detail View (Sticky) */
+    .detail-panel {
+        flex: 1.5;
+        background: var(--ios-card);
+        border-radius: 24px;
+        box-shadow: var(--ios-shadow-md);
+        padding: 40px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        text-align: center;
         height: 100%;
-        color: #6c757d;
+        position: sticky;
+        top: 20px;
+        transition: all 0.3s ease;
+    }
+
+    /* Timeline Items */
+    .timeline-group-date {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--ios-text-secondary);
+        margin: 20px 0 10px 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding: 20px;
+        margin-bottom: 16px;
+        background: var(--ios-card);
+        border-radius: 18px;
+        box-shadow: var(--ios-shadow-sm);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .timeline-item:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .timeline-item.active {
+        border-color: var(--ios-accent);
+        background-color: #F0F8FF;
+        /* Very subtle blue tint */
+    }
+
+    /* Connector Line */
+    .timeline-connector {
+        position: absolute;
+        left: 34px;
+        /* Align with icon center */
+        top: 60px;
+        bottom: -30px;
+        width: 2px;
+        background: #E5E5EA;
+        z-index: -1;
+    }
+
+    .timeline-item:last-child .timeline-connector {
+        display: none;
+    }
+
+    /* Icon Box */
+    .activity-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        background: #F2F2F7;
+        color: var(--ios-text-primary);
+        flex-shrink: 0;
+    }
+
+    .activity-icon.project {
+        background: #EAF4FF;
+        color: #007AFF;
+    }
+
+    .activity-icon.login {
+        background: #E8F5E9;
+        color: #34C759;
+    }
+
+    .activity-icon.learning {
+        background: #FFF9E6;
+        color: #FF9500;
+    }
+
+    .activity-icon.page {
+        background: #F2F2F7;
+        color: #8E8E93;
+    }
+
+    /* Content */
+    .activity-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .activity-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--ios-text-primary);
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .activity-meta {
+        font-size: 0.85rem;
+        color: var(--ios-text-secondary);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 0;
+        color: var(--ios-text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.3;
     }
 </style>
 
-<div class="row h-100">
-    <!-- Left Column: Compact Timeline -->
-    <div class="col-md-3 timeline-container simple-scrollbar">
-        <div class="d-flex justify-content-between align-items-center mb-3 ps-2 pt-2">
-            <h5 class="m-0 fw-bold"><i class="bi bi-diagram-2 me-2"></i>History</h5>
-            <!-- Observatory button removed as it's now a tab -->
-        </div>
+<div class="timeline-wrapper">
+    <!-- Left: Timeline List -->
+    <div class="timeline-container">
+        <% let hasLogs=false; let lastDate='' ; // Helper to clean up titles const getFriendlyTitle=(log)=> {
+            const url = log.url || '';
+            const type = log.action_type || '';
 
-        <div class="timeline-list">
-            <div class="timeline-line"></div>
+            if (type === 'portfolio_upload') return '프로젝트 업로드';
+            if (type === 'login') return '로그인';
+            if (type === 'logout') return '로그아웃';
 
-            <% if (locals.activityLogs && activityLogs.length> 0) { %>
-                <% activityLogs.forEach(function(log, index) { var isProject=(log.action_type==='portfolio_upload' );
-                    var isMeaningful=isProject; var title=log.action_type; var desc='' ; var rawDetail={}; try {
-                    rawDetail=JSON.parse(log.action_detail); } catch(e) { rawDetail={}; } if (isProject) {
-                    title=rawDetail.projectName || 'Project Upload' ; desc='Portfolio Submission' ; } else if
-                    (log.action_type==='login' ) { title='로그인 (Login)' ; desc='System Access' ; } else if
-                    (log.action_type==='logout' ) { title='로그아웃 (Logout)' ; desc='System Exit' ; } else if
-                    (log.action_type.startsWith('GET /')) { var path=log.action_type.replace('GET ', '');
-                        if (path.includes(' /content/')) { var parts=path.split('/'); var
-                    contentName=parts[parts.length - 1]; title='학습: ' + contentName; desc='Learning Activity' ;
-                    isMeaningful=false; } else if (path.includes('page')) { title='페이지 방문' ; desc=path; } else {
-                    title='페이지 조회' ; desc=path; } } else { desc=log.action_detail ? (typeof log.action_detail==='string'
-                    ? log.action_detail : 'Detail info' ) : '' ; } var dateObj=new Date(log.created_at); var
-                    dateStr=(dateObj.getMonth() + 1).toString().padStart(2, '0' ) + '.' +
-                    dateObj.getDate().toString().padStart(2, '0' ); var
-                    timeStr=dateObj.getHours().toString().padStart(2, '0' ) + ':' +
-                    dateObj.getMinutes().toString().padStart(2, '0' ); var dateTimeStr=dateStr + ' ' + timeStr; %>
-                    <div class="timeline-node <%= isMeaningful ? 'meaningful' : '' %>"
-                        onclick="<%= isMeaningful ? 'selectActivity(this, ' + index + ')' : '' %>">
-                        <div class="timeline-station"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-header">
-                                <span class="timeline-title">
-                                    <%= title %>
-                                </span>
-                                <span class="timeline-meta">
-                                    <%= dateTimeStr %>
-                                </span>
-                            </div>
-                            <% if (desc) { %>
-                                <div class="timeline-desc">
-                                    <%= desc %>
-                                </div>
-                                <% } %>
+            if (url === '/' || url === '/entry') return '메인 홈 방문';
+            if (url.includes('/my-universe')) return '마이 유니버스';
+            if (url.includes('/play-entry')) return '엔트리 학습';
+            if (url.includes('/python')) return '파이썬 학습';
+            if (url.includes('/scratch')) return '스크래치 학습';
+            if (url.includes('/board')) return '게시판 활동';
+            if (url.includes('/observatory')) return 'Observatory 탐험';
+
+            return '페이지 방문';
+            };
+
+            const getIconClass = (log) => {
+            const type = log.action_type || '';
+            if (type === 'portfolio_upload') return 'bi-folder-plus project';
+            if (type === 'login') return 'bi-box-arrow-in-right login';
+            if (type.includes('scratch') || type.includes('entry') || type.includes('python')) return 'bi-code-square
+            learning';
+            return 'bi-window page';
+            };
+
+            // Filters
+            const filteredLogs = (locals.activityLogs || []).filter(log => {
+            // Ignore API calls, resources, and noisy polls
+            const url = log.url || '';
+            if (url.startsWith('/api/') || url.includes('/resource/') || url.includes('get-')) return false;
+            return true;
+            });
+
+            if (filteredLogs.length > 0) {
+            hasLogs = true;
+            filteredLogs.forEach(function(log, index) {
+            const dateObj = new Date(log.created_at);
+            const dateStr = dateObj.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+            const timeStr = dateObj.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+            const title = getFriendlyTitle(log);
+            const iconClass = getIconClass(log);
+            const rawDetail = log.action_detail || {};
+            %>
+
+            <% if (dateStr !==lastDate) { lastDate=dateStr; %>
+                <div class="timeline-group-date">
+                    <%= dateStr %>
+                </div>
+                <% } %>
+
+                    <div class="timeline-item"
+                        onclick="showDetail(this, '<%= title %>', '<%= timeStr %>', `<%= log.url %>`, '<%= log.status %>')">
+                        <div class="timeline-connector"></div>
+                        <div class="activity-icon">
+                            <i class="bi <%= iconClass %>"></i>
                         </div>
+                        <div class="activity-content">
+                            <div class="activity-title">
+                                <%= title %>
+                            </div>
+                            <div class="activity-meta">
+                                <%= timeStr %> • <%= log.action_type || 'Activity' %>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted" style="font-size: 0.8rem;"></i>
                     </div>
-                    <% }); %>
-                        <% } else { %>
-                            <div class="text-center py-4 text-muted small">
-                                기록 없음
+
+                    <% }); } %>
+
+                        <% if (!hasLogs) { %>
+                            <div class="empty-state">
+                                <i class="bi bi-clock-history"></i>
+                                <p>아직 기록된 활동이 없습니다.</p>
                             </div>
                             <% } %>
-        </div>
     </div>
 
-    <!-- Right Column: Content Viewer -->
-    <div class="col-md-9 viewer-container simple-scrollbar" id="viewerPanel">
-        <div class="empty-state">
-            <i class="bi bi-folder2-open fs-1 mb-3"></i>
-            <h4>프로젝트를 선택하세요</h4>
-            <p>좌측 타임라인에서 프로젝트를 클릭하여 상세 내용을 확인하세요.</p>
-            <% if (!locals.readOnly) { %>
-                <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                    <i class="bi bi-plus-lg me-2"></i>새 프로젝트 추가
-                </button>
-                <% } %>
+    <!-- Right: Detail Panel -->
+    <div class="detail-panel" id="detailPanel">
+        <div class="text-muted mb-3">
+            <i class="bi bi-app-indicator" style="font-size: 4rem; opacity: 0.1;"></i>
         </div>
-    </div>
-</div>
-
-<!-- Upload Modal -->
-<div class="modal fade" id="uploadModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">새 프로젝트 업로드</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted small">Pygame 프로젝트 ZIP 파일을 업로드하세요 (main.py 포함).</p>
-                <div class="mb-3">
-                    <label class="form-label">프로젝트 이름</label>
-                    <input type="text" class="form-control" id="mProjectName">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">설명</label>
-                    <textarea class="form-control" id="mProjectDesc"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">파일 (ZIP)</label>
-                    <input type="file" class="form-control" id="mProjectFile" accept=".zip">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-                <button type="button" class="btn btn-primary" onclick="uploadProjectModal()">업로드</button>
-            </div>
-        </div>
+        <h4 class="fw-bold mb-2">활동을 선택하세요</h4>
+        <p class="text-muted">좌측 타임라인에서 항목을 클릭하면<br>상세 정보를 확인할 수 있습니다.</p>
     </div>
 </div>
 
 <script>
-    // Server-side data injected into client
-    const clientLogs = <% - JSON.stringify(activityLogs || []) %>;
-    const isReadOnly = <%= locals.readOnly || false %>;
-
-    function uploadProjectModal() {
-        const fileInput = document.getElementById('mProjectFile');
-        const nameInput = document.getElementById('mProjectName');
-        const descInput = document.getElementById('mProjectDesc');
-
-        if (!fileInput.files.length) return alert('파일을 선택해주세요.');
-
-        const formData = new FormData();
-        formData.append('projectFile', fileInput.files[0]);
-        formData.append('projectName', nameInput.value);
-        formData.append('projectDesc', descInput.value);
-
-        fetch('/api/portfolio/upload', {
-            method: 'POST',
-            body: formData
-        })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    alert('업로드 완료');
-                    location.reload();
-                } else {
-                    alert('업로드 실패: ' + result.message);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('오류 발생');
-            });
-    }
-
-    function selectActivity(element, index) {
-        const log = clientLogs[index];
-        if (!log) return;
-
-        document.querySelectorAll('.timeline-node').forEach(el => el.classList.remove('active'));
+    function showDetail(element, title, time, url, status) {
+        // Active state handling
+        document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
 
-        const viewer = document.getElementById('viewerPanel');
-        let content = '';
+        // Update detail panel with nice animation
+        const panel = document.getElementById('detailPanel');
+        panel.style.opacity = '0';
 
-        let detail = {};
-        try { detail = JSON.parse(log.action_detail); } catch (e) { detail = { raw: log.action_detail }; }
-
-        if (log.action_type === 'portfolio_upload') {
-            const projectId = detail.projectId;
-            const img = detail.thumbnail || '/resource/pygame-default.png';
-
-            const deleteButton = !isReadOnly ? `
-                <button class="btn btn-outline-danger px-4 py-2" onclick="deleteProject('${projectId}')">
-                    <i class="bi bi-trash me-2"></i>Delete
-                </button>` : '';
-
-            content = `
-                <div class="fade-in p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2 class="fw-bold text-dark">${detail.projectName}</h2>
-                        <span class="badge bg-primary rounded-pill px-3 py-2">Game Project</span>
+        setTimeout(() => {
+            panel.innerHTML = `
+                <div class="animate-fade-in text-center">
+                    <div class="mb-4">
+                        <span class="badge bg-secondary rounded-pill px-3 py-2" style="font-weight:500; background-color: #E5E5EA !important; color: #1D1D1F;">
+                            ${time}
+                        </span>
                     </div>
-                    
-                    <div class="card project-card-large mb-4 border-0 shadow-sm">
-                        <div class="project-img-large rounded-top" style="background-image: url('${img}');"></div>
-                        <div class="card-body p-4 bg-white rounded-bottom">
-                            <h5 class="fw-bold mb-3">Description</h5>
-                            <p class="text-secondary mb-4" style="line-height: 1.6;">${detail.description || 'No description provided.'}</p>
-                            <div class="d-flex gap-3">
-                                <button class="btn btn-primary px-4 py-2" onclick="location.href='/portfolio/run/${projectId}'">
-                                    <i class="bi bi-play-fill me-2"></i>Play Game
-                                </button>
-                                ${deleteButton}
-                            </div>
+                    <h2 class="fw-bold mb-3" style="color: #1D1D1F;">${title}</h2>
+                    <div class="p-4 rounded-4 text-start d-inline-block" style="background: #F5F5F7; min-width: 300px;">
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold text-uppercase">URL</label>
+                            <div class="text-break font-monospace small" style="color: #007AFF;">${url}</div>
+                        </div>
+                        <div>
+                            <label class="small text-muted fw-bold text-uppercase">Status</label>
+                            <div class="fw-medium">${status || 'Success'}</div>
                         </div>
                     </div>
                 </div>
             `;
-        }
-
-        viewer.innerHTML = content;
+            panel.style.opacity = '1';
+        }, 200);
     }
-
-    function deleteProject(projectId) {
-        if (!confirm('정말 삭제하시겠습니까?')) return;
-        fetch(`/api/portfolio/delete/${projectId}`, { method: 'DELETE' })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert('삭제되었습니다.');
-                    location.reload();
-                } else {
-                    alert('삭제 실패: ' + data.message);
-                }
-            });
-    }
-
-    // Auto-select first project if exists
-    document.addEventListener('DOMContentLoaded', () => {
-        const firstProject = document.querySelector('.timeline-node.meaningful');
-        if (firstProject) firstProject.click();
-    });
 </script>
