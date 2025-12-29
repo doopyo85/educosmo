@@ -36,7 +36,7 @@ const optionalAuth = (req, res, next) => {
  */
 function generateEmbedUrl(platform, s3Url) {
     const encodedUrl = encodeURIComponent(s3Url);
-    
+
     switch (platform) {
         case 'entry':
             return `/entry_editor/?s3Url=${encodedUrl}&mode=play&embed=1`;
@@ -66,15 +66,15 @@ async function getUserDbId(userID) {
 function canAccessProject(project, sessionUser, sessionCenterId) {
     if (project.visibility === 'public') return true;
     if (!sessionUser) return false;
-    
+
     if (project.visibility === 'private') {
         return project.userID === sessionUser;
     }
-    
+
     if (project.visibility === 'class') {
         return project.center_id === sessionCenterId || project.userID === sessionUser;
     }
-    
+
     return false;
 }
 
@@ -188,7 +188,7 @@ router.get('/projects', optionalAuth, async (req, res) => {
         } = req.query;
 
         const sessionUser = req.session?.userID;
-        const sessionCenterId = req.session?.centerID;
+        const sessionCenterId = req.session?.centerID || null;
 
         let whereConditions = ['gp.is_active = 1'];
         let params = [];
