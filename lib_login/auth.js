@@ -29,6 +29,24 @@ router.get('/login', (req, res) => {
     const logoSrc = isCosmoedu ? '/resource/rocket.webp' : '/resource/logo.png';
     const logoAlt = isCosmoedu ? '코스모에듀 로고' : '코딩앤플레이 로고';
 
+    // 🔥 SSO: redirect 파라미터 처리 (pong2 등 외부 앱에서 오는 경우)
+    const redirectParam = req.query.redirect;
+    if (redirectParam) {
+        // 허용된 도메인만 리다이렉트 허용 (보안)
+        const allowedDomains = ['pong2.app', 'www.pong2.app', 'localhost'];
+        try {
+            const redirectHost = new URL(redirectParam).hostname;
+            if (allowedDomains.some(domain => redirectHost === domain || redirectHost.endsWith('.' + domain))) {
+                req.session.ssoRedirect = redirectParam;
+                console.log('[SSO] Redirect URL saved:', redirectParam);
+            } else {
+                console.warn('[SSO] Blocked redirect to:', redirectHost);
+            }
+        } catch (e) {
+            console.warn('[SSO] Invalid redirect URL:', redirectParam);
+        }
+    }
+
     // 세션에서 로그인 메시지 가져오기
     const loginMessage = req.session.loginMessage || '';
 
@@ -194,7 +212,39 @@ router.post('/login_process', async (req, res) => {
 
             console.log('[LOGIN SUCCESS] 세션 저장 성공');
 
-            // 역할별 리다이렉트 URL 설정
+            // 🔥 JWT 토큰 생성 (SSO용 - 사용자 정보 포함)
+            const token = jwt.sign(
+                {
+                    id: user.id,           // 🔥 숫자 ID 추가 (pong2에서 필요)
+                    userID: user.userID,
+                    name: user.name,       // 🔥 이름 추가
+                    role: user.role,
+                    centerID: user.centerID,
+                    type: 'PAID'           // 🔥 유료 사용자 표시
+                },
+                JWT.SECRET,
+                { expiresIn: JWT.EXPIRES_IN }
+            );
+
+            // 🔥 SSO 리다이렉트 처리 (pong2 등 외부 앱으로 돌아가기)
+            const ssoRedirect = req.session.ssoRedirect;
+            if (ssoRedirect) {
+                // SSO 리다이렉트 세션 정리
+                delete req.session.ssoRedirect;
+                
+                // 토큰을 URL 파라미터로 전달
+                const redirectWithToken = `${ssoRedirect}${ssoRedirect.includes('?') ? '&' : '?'}token=${token}`;
+                console.log('[SSO] Redirecting to:', redirectWithToken);
+                
+                return res.json({ 
+                    success: true, 
+                    redirect: redirectWithToken, 
+                    token: token,
+                    sso: true 
+                });
+            }
+
+            // 일반 로그인: 역할별 리다이렉트 URL 설정
             let redirectUrl = '/';
             if (user.role === 'kinder') {
                 redirectUrl = '/kinder';
@@ -202,23 +252,7 @@ router.post('/login_process', async (req, res) => {
 
             console.log(`[LOGIN SUCCESS] 리다이렉트 URL: ${redirectUrl}`);
 
-            // 성공 응답 전송
-            // 🔥 JWT 토큰 생성
-            const token = jwt.sign(
-                {
-                    userID: user.userID,
-                    role: user.role,
-                    centerID: user.centerID,
-                    userType: req.session.userType // Add userType if needed
-                },
-                JWT.SECRET,
-                { expiresIn: JWT.EXPIRES_IN }
-            );
-
-            // 🔥 쿠키에 토큰 설정 (옵션: Pong2 같은 외부 앱은 JSON 응답 사용, 브라우저는 쿠키 사용)
-            // res.cookie('token', token, { httpOnly: true, secure: false }); // 필요시 사용
-
-            res.json({ success: true, redirect: redirectUrl, token: token }); // 🔥 토큰 반환
+            res.json({ success: true, redirect: redirectUrl, token: token });
         });
 
     } catch (error) {
