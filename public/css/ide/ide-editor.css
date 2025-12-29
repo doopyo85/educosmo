@@ -243,7 +243,7 @@
   height: 32px !important;
   flex-grow: 0 !important;
   flex-shrink: 0 !important;
-  
+
   /* 스타일 - 파란색 */
   background-color: var(--vscode-accent) !important;
   color: #ffffff !important;
@@ -255,7 +255,7 @@
   font-size: 13px !important;
   font-weight: 500 !important;
   transition: all 0.2s ease;
-  
+
   /* 정렬 */
   display: inline-flex !important;
   align-items: center !important;
@@ -288,9 +288,9 @@
   height: 32px !important;
   flex-grow: 0 !important;
   flex-shrink: 0 !important;
-  
+
   /* 스타일 - 주황색 */
-  background-color: #f39c12 !important;
+  background-color: #9C27B0 !important;
   color: #ffffff !important;
   border: none !important;
   padding: 6px 10px !important;
@@ -300,7 +300,7 @@
   font-size: 13px !important;
   font-weight: 500 !important;
   transition: all 0.2s ease;
-  
+
   /* 정렬 */
   display: inline-flex !important;
   align-items: center !important;
@@ -314,7 +314,7 @@
 }
 
 .ide-container #submitCodeBtn:hover:not(:disabled) {
-  background-color: #e67e22 !important;
+  background-color: #7B1FA2 !important;
   transform: translateY(-1px) !important;
 }
 
