@@ -99,7 +99,8 @@
                         </a>
                     </div>
                     <div class="segment-item">
-                        <a href="/gallery" class="segment-link <%= activeTab === 'gallery' ? 'active' : '' %>">
+                        <a href="<%= locals.student ? `/gallery?userId=${locals.student.userID}` : '/gallery/my' %>"
+                            class="segment-link <%= activeTab === 'gallery' ? 'active' : '' %>">
                             <i class="bi bi-grid-fill"></i> 갤러리
                         </a>
                     </div>
