@@ -61,8 +61,9 @@ async function pong2Auth(req, res, next) {
 
                 if (decoded.type === 'PAID') {
                     // 2a. Paid User Token (SSO)
+                    // 🔥 수정: decoded.id는 숫자 PK이므로 WHERE id = ? 사용
                     const users = await queryDatabase(
-                        'SELECT id, name, userID, role, centerID FROM Users WHERE userID = ?', 
+                        'SELECT id, name, userID, role, centerID FROM Users WHERE id = ?', 
                         [decoded.id]
                     );
                     
