@@ -189,10 +189,10 @@ router.get('/student/:id', async (req, res) => {
                 -- 1. Gallery Projects
                 SELECT 
                     'gallery' as type, 
-                    title, 
+                    title COLLATE utf8mb4_unicode_ci as title, 
                     created_at, 
                     id, 
-                    thumbnail_url as metadata 
+                    thumbnail_url COLLATE utf8mb4_unicode_ci as metadata 
                 FROM gallery_projects 
                 WHERE user_id = ?
 
@@ -201,10 +201,10 @@ router.get('/student/:id', async (req, res) => {
                 -- 2. Blog Posts
                 SELECT 
                     'blog' as type, 
-                    title, 
+                    title COLLATE utf8mb4_unicode_ci as title, 
                     created_at, 
                     id, 
-                    excerpt as metadata 
+                    excerpt COLLATE utf8mb4_unicode_ci as metadata 
                 FROM user_blog_posts 
                 WHERE user_id = ?
 
@@ -213,7 +213,7 @@ router.get('/student/:id', async (req, res) => {
                 -- 3. Badges
                 SELECT 
                     'badge' as type, 
-                    badge_code as title, 
+                    badge_code COLLATE utf8mb4_unicode_ci as title, 
                     earned_at as created_at, 
                     id, 
                     NULL as metadata 
@@ -225,10 +225,10 @@ router.get('/student/:id', async (req, res) => {
                 -- 4. User Activity Logs
                 SELECT 
                     'log' as type, 
-                    action_type as title, 
+                    action_type COLLATE utf8mb4_unicode_ci as title, 
                     created_at, 
                     log_id as id, 
-                    action_detail as metadata 
+                    action_detail COLLATE utf8mb4_unicode_ci as metadata 
                 FROM UserActivityLogs 
                 WHERE user_id = ? 
                 AND (
