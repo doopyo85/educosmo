@@ -11,14 +11,42 @@ const { JWT } = require('../config');
 async function pong2Auth(req, res, next) {
     try {
         // 1. Check for existing session (Paid User)
-        // Matches apiRouter.js session structure
         if (req.session && (req.session.userID || req.session.user)) {
+            const sessionUserID = req.session.userID || req.session.user?.userID;
+            
+            // 🔥 중요: DB에서 실제 숫자 id 조회 (FK 제약 대응)
+            if (sessionUserID) {
+                try {
+                    const users = await queryDatabase(
+                        'SELECT id, name, userID, role, centerID FROM Users WHERE userID = ?', 
+                        [sessionUserID]
+                    );
+                    
+                    if (users.length > 0) {
+                        req.user = {
+                            id: users[0].id,          // 🔥 숫자 id (Users.id PK)
+                            userID: users[0].userID,  // 문자열 userID (참고용)
+                            name: users[0].name,
+                            nickname: users[0].name,
+                            role: users[0].role || req.session.role || 'student',
+                            centerID: users[0].centerID || req.session.centerID,
+                            type: 'PAID'
+                        };
+                        return next();
+                    }
+                } catch (dbError) {
+                    console.error('Session user lookup error:', dbError);
+                }
+            }
+            
+            // DB 조회 실패 시 세션 값 사용 (비권장, 하위 호환성)
             req.user = {
-                id: req.session.userID || req.session.user.id,
-                name: req.session.username || (req.session.user ? req.session.user.name : 'Unknown'),
-                nickname: req.session.userNickname || (req.session.user ? req.session.user.nickname : req.session.userID),
-                role: req.session.role || (req.session.user ? req.session.user.role : 'student'),
-                centerID: req.session.centerID || (req.session.user ? req.session.user.centerID : null),
+                id: null,  // 🔥 null로 설정하여 FK 오류 방지
+                userID: sessionUserID,
+                name: req.session.username || 'Unknown',
+                nickname: req.session.userNickname || sessionUserID,
+                role: req.session.role || 'student',
+                centerID: req.session.centerID || null,
                 type: 'PAID'
             };
             return next();
@@ -34,37 +62,31 @@ async function pong2Auth(req, res, next) {
 
                 if (decoded.type === 'PAID') {
                     // 2a. Paid User Token
-                    // We can trust the signature generally, but good to check if user exists/is active if needed.
-                    // For performance, we'll trust the token claims for now as they are short-lived.
-                    req.user = {
-                        id: decoded.id,
-                        type: 'PAID',
-                        centerID: decoded.centerID,
-                        role: decoded.role,
-                        // Fetch name if needed, or rely on client to know it? 
-                        // For 'auth/me', we need the name. Let's fetch it lazily or just query DB.
-                    };
-
-                    // Optimization: If we need nickname/name populated for everything, query DB.
-                    // Let's query DB to be safe and consistent with session-based user.
-                    // FIX: Process 'nickname' column error - Users table might not have nickname
-                    // FIX: Use 'userID' column for lookup as token.id might be the username string (e.g. 'minho')
-                    const users = await queryDatabase('SELECT id, name, role, centerID FROM Users WHERE userID = ?', [decoded.id]);
+                    // 🔥 decoded.id가 userID(문자열)일 수 있으므로 DB 조회 필수
+                    const users = await queryDatabase(
+                        'SELECT id, name, userID, role, centerID FROM Users WHERE userID = ?', 
+                        [decoded.id]
+                    );
+                    
                     if (users.length > 0) {
                         req.user = {
-                            ...req.user,
+                            id: users[0].id,          // 🔥 숫자 id
+                            userID: users[0].userID,  // 문자열 userID
                             name: users[0].name,
-                            nickname: users[0].name, // Use name as nickname for Paid Users
+                            nickname: users[0].name,
                             role: users[0].role,
-                            centerID: users[0].centerID
+                            centerID: users[0].centerID,
+                            type: 'PAID'
                         };
                         return next();
                     }
 
                 } else {
-                    // 2b. Pong2 User Token (Existing logic)
-                    // Verify user still exists in DB
-                    const users = await queryDatabase('SELECT id, email, nickname FROM Pong2Users WHERE id = ?', [decoded.id]);
+                    // 2b. Pong2 User Token
+                    const users = await queryDatabase(
+                        'SELECT id, email, nickname FROM Pong2Users WHERE id = ?', 
+                        [decoded.id]
+                    );
 
                     if (users.length > 0) {
                         req.user = {
@@ -77,14 +99,11 @@ async function pong2Auth(req, res, next) {
                     }
                 }
             } catch (err) {
-                // Token invalid or expired
                 console.warn('Invalid JWT Token:', err.message);
             }
         }
 
         // 3. No valid auth found
-        // If this is a protected route, the route handler should check for req.user
-        // We don't force 401 here to allow "Optional Auth" routes (e.g. read public boards)
         req.user = null;
         next();
 

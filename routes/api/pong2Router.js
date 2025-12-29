@@ -479,14 +479,20 @@ router.post('/logs/track', requireAuth, async (req, res) => {
     try {
         const { action, detail, url } = req.body;
 
-        // Log to UserActivityLogs or a specifc Pong2 logs table
-        // Reusing UserActivityLogs for now
+        // 🔥 user_id가 숫자인지 확인 (FK 제약 대응)
+        const userId = typeof req.user.id === 'number' ? req.user.id : null;
+        
+        if (!userId) {
+            console.warn('Tracking skipped: Invalid user_id', req.user);
+            return res.json({ success: false, reason: 'invalid_user_id' });
+        }
+
         await queryDatabase(`
             INSERT INTO UserActivityLogs 
             (user_id, center_id, action_type, url, ip_address, user_agent, action_detail, status) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `, [
-            req.user.id,
+            userId,
             req.user.centerID || null,
             'PONG2_EVENT',
             url || 'pong2.app',
