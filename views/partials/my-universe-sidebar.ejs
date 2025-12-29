@@ -111,12 +111,12 @@
         <span class="fw-bold fs-5 text-dark">My Universe</span>
     </div>
 
-    <% let baseUrl='/my-universe' ; let isStudentView=false; // If student object exists AND it's NOT the logged-in user
-        themselves // (This prevents "My Gallery" going to ?userId=me) if (locals.student && locals.student.id &&
-        locals.student.userID !==locals.userID) { baseUrl=`/my-universe/student/${locals.student.id}`;
-        isStudentView=true; } const currentTab=locals.activeTab || '' ; const galleryUrl=isStudentView ?
-        `/gallery?userId=${locals.student.userID}` : '/gallery/my' ; const observatoryUrl=`${baseUrl}/observatory`;
-        const timelineUrl=isStudentView ? baseUrl : baseUrl + '/timeline' ; %>
+    <% let baseUrl='/my-universe' ; let isStudentView=false; /* Check if we are viewing another student's universe */ if
+        (locals.student && locals.student.id && locals.student.userID !==locals.userID) {
+        baseUrl='/my-universe/student/' + locals.student.id; isStudentView=true; } const currentTab=locals.activeTab
+        || '' ; const galleryUrl=isStudentView ? ('/gallery?userId=' + locals.student.userID) : ' /gallery/my'; const
+        observatoryUrl=baseUrl + '/observatory' ; const timelineUrl=isStudentView ? baseUrl : (baseUrl + '/timeline' );
+        %>
 
         <div class="board-nav-group">
             <div class="board-sidebar-header">Menu</div>
