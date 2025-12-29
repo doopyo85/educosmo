@@ -49,6 +49,16 @@ router.use((req, res, next) => {
     next();
 });
 
+// 🔥 요청 로깅 (디버깅용)
+router.use((req, res, next) => {
+    console.log(`🔍 [Pong2] ${req.method} ${req.path}`, {
+        hasSession: !!req.session?.is_logined,
+        hasAuthHeader: !!req.headers.authorization,
+        origin: req.headers.origin
+    });
+    next();
+});
+
 // Use Hybrid Auth for all routes
 router.use(pong2Auth);
 
