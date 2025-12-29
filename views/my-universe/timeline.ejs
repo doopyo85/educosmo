@@ -11,6 +11,27 @@
         --timeline-bg: #F5F5F7;
     }
 
+    /* Event Type Colors */
+    .timeline-item[data-type="GALLERY"] .timeline-dot {
+        border-color: #007AFF;
+    }
+
+    .timeline-item[data-type="BLOG"] .timeline-dot {
+        border-color: #FF9500;
+    }
+
+    .timeline-item[data-type="BADGE"] .timeline-dot {
+        border-color: #FFD60A;
+    }
+
+    .timeline-item[data-type="SOLVE"] .timeline-dot {
+        border-color: #34C759;
+    }
+
+    .timeline-item[data-type="LOG"] .timeline-dot {
+        border-color: #8E8E93;
+    }
+
     .timeline-wrapper {
         display: flex;
         gap: 20px;
@@ -196,9 +217,9 @@
                     </div>
                     <% } %>
 
-                        <div class="timeline-item" onclick="handleClick(this)" data-title="<%= item.title %>"
-                            data-time="<%= item.dateStr %> <%= item.timeStr %>" data-url="<%= item.url %>"
-                            data-status="<%= item.status %>">
+                        <div class="timeline-item" onclick="handleClick(this)" data-type="<%= item.action_type %>"
+                            data-title="<%= item.title %>" data-time="<%= item.dateStr %> <%= item.timeStr %>"
+                            data-url="<%= item.url %>" data-status="<%= item.status %>">
 
                             <div class="timeline-dot"></div>
 

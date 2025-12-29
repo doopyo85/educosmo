@@ -3,53 +3,127 @@ const router = express.Router();
 const path = require('path');
 const db = require('../lib_login/db');
 
-// Helper Helpers (Moved from EJS)
-const getFriendlyTitle = (log) => {
-    const url = log.url || '';
-    const type = log.action_type || '';
+// Helper to get friendly title
+const getFriendlyTitle = (item) => {
+    // 1. If it has a direct title (Blog, Gallery, Badge), use it
+    if (item.title && item.title !== 'User Activity') return item.title;
 
-    if (type === 'portfolio_upload') return '프로젝트 업로드';
-    if (type === 'login') return '로그인';
-    if (type === 'logout') return '로그아웃';
+    // 2. Map log types
+    const actionType = item.title; // In the query below, we map action_type to title for logs
 
-    if (url === '/' || url === '/entry') return '메인 홈 방문';
-    if (url.includes('/my-universe')) return '마이 유니버스';
-    if (url.includes('/play-entry')) return '엔트리 학습';
-    if (url.includes('/python')) return '파이썬 학습';
-    if (url.includes('/scratch')) return '스크래치 학습';
-    if (url.includes('/board')) return '게시판 활동';
-    if (url.includes('/observatory')) return 'Observatory 탐험';
+    if (actionType === 'login') return '로그인 (Login)';
+    if (actionType === 'logout') return '로그아웃 (Logout)';
+    if (actionType === 'portfolio_upload') {
+        try {
+            const detail = JSON.parse(item.metadata || '{}');
+            return detail.projectName || '프로젝트 업로드';
+        } catch (e) {
+            return '프로젝트 업로드';
+        }
+    }
+    if (actionType.includes('entry')) return '엔트리 학습';
+    if (actionType.includes('scratch')) return '스크래치 학습';
+    if (actionType.includes('python')) return '파이썬 학습';
 
-    return '페이지 방문';
+    return actionType;
 };
 
-const getIconClass = (log) => {
-    const type = log.action_type || '';
-    if (type === 'portfolio_upload') return 'bi-folder-plus project';
-    if (type === 'login') return 'bi-box-arrow-in-right login';
-    if (type.includes('scratch') || type.includes('entry') || type.includes('python')) return 'bi-code-square learning';
-    return 'bi-window page';
+// Helper to get icon class
+const getIconClass = (item) => {
+    switch (item.type) {
+        case 'submit':
+        case 'gallery':
+            return 'bi-file-earmark-code-fill text-primary'; // Blue
+        case 'solve':
+            return 'bi-check-circle-fill text-success'; // Green
+        case 'blog':
+            return 'bi-pencil-square text-warning'; // Orange
+        case 'badge':
+            return 'bi-trophy-fill text-warning'; // Gold
+        case 'log':
+            if (item.title === 'login') return 'bi-door-open-fill text-success';
+            if (item.title === 'portfolio_upload') return 'bi-cloud-upload-fill text-info';
+            return 'bi-activity text-secondary';
+        default: return 'bi-circle-fill text-secondary';
+    }
 };
 
 const processLogs = (logs) => {
-    return logs.filter(log => {
-        // Filter logic
-        const url = log.url || '';
-        if (url.startsWith('/api/') || url.includes('/resource/') || url.includes('get-')) return false;
-        return true;
-    }).map(log => {
+    return logs.map(log => {
         const dateObj = new Date(log.created_at);
+        const finalTitle = getFriendlyTitle(log);
+
+        // Metadata parsing for detail view
+        let finalUrl = log.metadata || '#';
+        if (log.type === 'log' && log.title === 'portfolio_upload') {
+            try {
+                const detail = JSON.parse(log.metadata || '{}');
+                finalUrl = detail.s3Url || '#';
+            } catch (e) { }
+        }
+
         return {
             dateStr: dateObj.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }),
             timeStr: dateObj.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-            title: getFriendlyTitle(log),
+            title: finalTitle,
             iconClass: getIconClass(log),
-            url: log.url,
-            status: log.status,
-            action_type: log.action_type
+            url: finalUrl,
+            status: 'Completed', // Default
+            action_type: log.type.toUpperCase() // For display label
         };
     });
 };
+
+// Middleware (assuming these are defined elsewhere or will be added)
+const authenticateUser = (req, res, next) => {
+    if (!req.session.is_logined) {
+        return res.redirect('/auth/login');
+    }
+    // Assuming dbId and user object are set in session after login
+    if (!req.session.dbId) {
+        // This might happen if session is old or user data is incomplete
+        // Re-fetch or redirect to login to refresh session
+        return res.redirect('/auth/login');
+    }
+    next();
+};
+
+const requireTeacher = (req, res, next) => {
+    if (!['teacher', 'manager', 'admin'].includes(req.session.role)) {
+        return res.status(403).send('권한이 없습니다.');
+    }
+    next();
+};
+
+const checkSameCenter = async (req, res, next) => {
+    const studentId = req.params.id;
+    const teacherRole = req.session.role;
+    const teacherCenterId = req.session.centerID;
+
+    if (teacherRole === 'admin') {
+        return next(); // Admins can view any student
+    }
+
+    try {
+        const [student] = await db.queryDatabase(
+            'SELECT centerID FROM Users WHERE id = ? AND role = "student"',
+            [studentId]
+        );
+
+        if (!student) {
+            return res.status(404).send('학생을 찾을 수 없습니다.');
+        }
+
+        if (student.centerID !== teacherCenterId) {
+            return res.status(403).send('다른 센터 학생입니다.');
+        }
+        next();
+    } catch (error) {
+        console.error('Center check error:', error);
+        res.status(500).send('Error checking student center.');
+    }
+};
+
 
 // ============================================
 // Main My Universe Route (Redirect)
@@ -61,56 +135,8 @@ router.get('/', (req, res) => {
 // ============================================
 // Timeline Tab (Previously Portfolio)
 // ============================================
-router.get('/timeline', async (req, res) => {
-    try {
-        const userID = req.session.userID;
-
-        // Basic auth check
-        if (!req.session.is_logined) {
-            return res.redirect('/auth/login');
-        }
-
-        let activityLogs = [];
-        let timelineItems = [];
-
-        if (userID) {
-            const users = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [userID]);
-            if (users.length > 0) {
-                const dbId = users[0].id;
-                // Fetch activity logs (Refined query from portfolioRouter)
-                activityLogs = await db.queryDatabase(`
-                    SELECT created_at, action_type, url, action_detail, status 
-                    FROM UserActivityLogs 
-                    WHERE user_id = ? 
-                    AND (
-                        action_type = 'portfolio_upload' 
-                        OR action_type LIKE '%entry%' 
-                        OR action_type LIKE '%scratch%' 
-                        OR action_type LIKE '%pong%'
-                        OR action_type IN ('login', 'logout', 'GET')
-                    )
-                    ORDER BY created_at DESC 
-                    LIMIT 100
-                `, [dbId]);
-
-                // Process logs for view
-                timelineItems = processLogs(activityLogs);
-            }
-        }
-
-        res.render('my-universe/index', {
-            activeTab: 'timeline',
-            userID: req.session.userID,
-            userRole: req.session.role,
-            is_logined: req.session.is_logined,
-            centerID: req.session.centerID,
-            timelineItems: timelineItems, // Pass processed items
-            readOnly: false
-        });
-
-    } catch (error) {
-        console.error('My Universe Timeline Error:', error);
-        res.status(500).send('Error loading timeline');
+console.error('My Universe Timeline Error:', error);
+res.status(500).send('Error loading timeline');
     }
 });
 
