@@ -661,13 +661,15 @@ router.put('/my-profile-detail', authenticateUser, async (req, res) => {
   }
 });
 
-try {
-  const data = await getSheetData('computer!A2:F');
-  res.json(data);
-} catch (error) {
-  console.error('computer 시트 데이터 로드 오류:', error);
-  res.status(500).json({ error: 'computer 시트 오류' });
-}
+// 직접 카드형 페이지 API 추가 (복구)
+router.get('/get-computer-data', authenticateUser, async (req, res) => {
+  try {
+    const data = await getSheetData('computer!A2:F');
+    res.json(data);
+  } catch (error) {
+    console.error('computer 시트 데이터 로드 오류:', error);
+    res.status(500).json({ error: 'computer 시트 오류' });
+  }
 });
 
 router.get('/get-scratch-data', authenticateUser, async (req, res) => {
