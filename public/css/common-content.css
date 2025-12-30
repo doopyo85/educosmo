@@ -175,12 +175,50 @@
     z-index: 110;
 }
 
-/* Show popup on hover */
+/* Show popup on hover OR when .visible class is added */
 .fab-wrapper:hover .fab-popup,
-.fab-popup:hover {
+.fab-popup:hover,
+.fab-popup.visible {
     opacity: 1;
     visibility: visible;
     transform: translateY(-50%) translateX(0);
+}
+
+/* Slider Popup Specifics */
+.fab-popup.slide-popup {
+    padding: 0 12px;
+    border-radius: 20px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+/* Slider Styling */
+.size-slider {
+    -webkit-appearance: none;
+    width: 120px;
+    height: 4px;
+    background: #dee2e6;
+    border-radius: 2px;
+    outline: none;
+    padding: 0;
+    margin: 0;
+}
+
+.size-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #495057;
+    cursor: pointer;
+    transition: background .15s ease-in-out;
+}
+
+.size-slider::-webkit-slider-thumb:hover {
+    background: #212529;
+    transform: scale(1.1);
 }
 
 /* Color Options */
@@ -201,27 +239,9 @@
     z-index: 1;
 }
 
-/* Size Options */
+/* Size Options (Deprecated but keeping for safety diff) */
 .size-option {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: transparent;
-    border: 1px solid transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.size-option:hover {
-    background-color: #f8f9fa;
-}
-
-.size-option .dot {
-    background-color: #495057;
-    border-radius: 50%;
-    display: block;
+    display: none;
 }
 
 /* Text Button (e.g. Eraser Clear) */

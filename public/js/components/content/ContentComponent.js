@@ -1613,32 +1613,39 @@ class ContentComponent extends Component {
         });
       });
 
-      // (2) 굵기 선택
-      const sizeOptions = fabGroup.querySelectorAll('.size-option');
+      // (2) 굵기 선택 (슬라이더)
+      const sizeSlider = document.getElementById('drawing-size-slider');
       const sizeIndicator = fabGroup.querySelector('.size-indicator');
 
-      sizeOptions.forEach(opt => {
-        opt.addEventListener('click', (e) => {
-          // data-size는 button에 있음
-          const btn = e.target.closest('.size-option');
-          const size = btn.dataset.size || '5';
+      if (sizeSlider) {
+        sizeSlider.addEventListener('input', (e) => {
+          const size = e.target.value;
           this.setDrawingSize(size);
 
           // 메인 버튼 인디케이터 업데이트 (크기 반영)
           if (sizeIndicator) {
-            // 단순 dot 크기 변화보다, scale로 표현
-            const scaleMap = { '2': 0.6, '5': 1, '10': 1.4 };
-            sizeIndicator.style.transform = `scale(${scaleMap[size] || 1})`;
+            const scaleValue = 0.5 + (size / 20) * 1.0; // 0.5 ~ 1.5
+            sizeIndicator.style.transform = `scale(${scaleValue})`;
           }
         });
-      });
+      }
 
-      // (3) 지우개 버튼
+      // (3) 지우개 버튼 & 옵션 토글
       const eraserBtn = document.getElementById('drawing-eraser-btn');
+      const eraserOptions = document.getElementById('fab-eraser-options'); // 지우개 옵션 팝업
+
       if (eraserBtn) {
         eraserBtn.addEventListener('click', () => {
+          // 지우개 모드 활성화/비활성화 (기본 활성화)
           this.setEraserMode();
-          // 지우개 활성화 시각적 피드백 (간단히 active 클래스 토글은 setEraserMode에서 처리)
+
+          // 옵션 팝업 토글 (지우개 눌렀을 때만 보이게 하려면 active 클래스 활용)
+          if (eraserOptions) {
+            // 단순히 CSS hover로 되어있던 것을 클릭 토글로 보조
+            eraserOptions.classList.add('visible');
+            // 3초 후 자동 숨김 or 다른곳 클릭시 숨김? 일단 사용자 요청은 "열리게 해줘"
+            setTimeout(() => eraserOptions.classList.remove('visible'), 3000);
+          }
         });
       }
 
@@ -1646,7 +1653,6 @@ class ContentComponent extends Component {
       const clearBtn = document.getElementById('drawing-clear-all');
       if (clearBtn) {
         clearBtn.addEventListener('click', () => {
-          // 팝업 내부 버튼이므로 전파 방지? (필요시)
           if (confirm('모든 그림을 지우시겠습니까?')) {
             this.clearDrawingCanvas();
           }

@@ -157,14 +157,11 @@
                                     <span class="size-indicator"
                                         style="width: 6px; height: 6px; background-color: #555;"></span>
                                 </button>
-                                <!-- 굵기 선택 팝업 (좌측) -->
-                                <div id="fab-size-options" class="fab-popup left">
-                                    <button class="size-option" data-size="2" title="얇게"><span class="dot"
-                                            style="width: 3px; height: 3px;"></span></button>
-                                    <button class="size-option" data-size="5" title="보통"><span class="dot"
-                                            style="width: 6px; height: 6px;"></span></button>
-                                    <button class="size-option" data-size="10" title="굵게"><span class="dot"
-                                            style="width: 10px; height: 10px;"></span></button>
+                                <!-- 굵기 선택 팝업 (좌측) - 슬라이더로 변경 -->
+                                <div id="fab-size-options" class="fab-popup left slide-popup"
+                                    style="padding: 0 10px; width: 140px; height: 40px;">
+                                    <input type="range" id="drawing-size-slider" class="size-slider" min="2" max="20"
+                                        value="5" step="1">
                                 </div>
                             </div>
 
@@ -173,9 +170,7 @@
                                 <button id="drawing-eraser-btn" class="floating-btn fab-child" title="지우개/지우기">
                                     <i class="bi bi-eraser"></i>
                                 </button>
-                                <!-- 지우개 옵션 (모두 지우기 포함 - 롱프레스 or 서브메뉴? 단순 토글+모두지우기 버튼 별도?) -->
-                                <!-- 사용자 요청은 '지우개 (동일한 원형 아이콘)' 이므로 단순 토글 + 더블클릭/롱프레스로 Clear? -->
-                                <!-- 편의상 좌측 팝업에 '모두 지우기' 추가 -->
+                                <!-- 지우개 옵션 (토글 시 표시) -->
                                 <div id="fab-eraser-options" class="fab-popup left"
                                     style="width: auto; padding: 0 8px;">
                                     <button id="drawing-clear-all" class="text-btn"
@@ -184,9 +179,9 @@
                             </div>
                         </div>
 
-                        <!-- 2. 메인 펜 토글 버튼 -->
+                        <!-- 2. 메인 펜 토글 버튼 (아이콘 변경: 붓 모양) -->
                         <button id="pen-toggle-btn" class="floating-btn pen-btn" title="펜 그리기">
-                            <i class="bi bi-pencil-fill"></i>
+                            <i class="bi bi-brush"></i>
                         </button>
 
                         <!-- 3. 기존 폰트 버튼 -->
