@@ -30,7 +30,7 @@
 .problem-top-nav {
     display: flex;
     align-items: center;
-    padding: 8px 16px;
+    padding: 0 16px;
     background-color: #f8f9fa;
     border-bottom: 1px solid #ddd;
     height: 60px;
@@ -38,13 +38,13 @@
     flex-shrink: 0;
     box-sizing: border-box;
     position: relative;
+    /* Allows absolute positioning of children */
     z-index: var(--z-content);
     gap: 0;
-    /* 🔥 모든 gap 제거 */
     flex-wrap: nowrap;
 }
 
-/* 문제 제목 스타일 */
+/* 문제 제목 스타일 (30% 고정) */
 .problem-title,
 #problem-title {
     font-size: 1.2rem;
@@ -53,146 +53,100 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    /* 🔥 FIX: 사용자 요청대로 30% 고정 너비 */
+
+    /* 🔥 FIX: 30% 고정 너비 */
+    width: 30%;
     flex: 0 0 30%;
     max-width: 30%;
+
     box-sizing: border-box;
     padding: 0;
     margin: 0;
-    margin-right: 15px;
-    /* 네비게이션과 간격 */
 }
 
-/* 문제 네비게이션 컨테이너 */
+/* 문제 네비게이션 컨테이너 (중앙 정렬) */
 .problem-navigation-container,
 #problem-navigation-container {
     display: flex;
     align-items: center;
-    /* 🔥 FIX: 남은 공간 모두 차지하며 내부 중앙 정렬 */
     justify-content: center;
     gap: 6px;
-    flex: 1;
-    box-sizing: border-box;
+
+    /* 🔥 FIX: 절대 위치로 중앙 정렬 */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+
+    /* Ensure it doesn't overlap too much if screen is small */
+    width: auto;
+    z-index: 1;
+}
+
+/* 🔥 헤더 컨트롤 그룹 (우측 정렬, 버튼 모음) */
+.header-controls-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    /* Right align */
+    margin-left: auto;
+    flex: 0 0 auto;
+
+    gap: 8px;
+    /* 버튼 간격 */
+    height: 100%;
+}
+
+/* Modern Individual Button Style (Option A) */
+.header-control-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #dee2e6;
+    background-color: #ffffff;
+    border-radius: 8px;
+    /* Rounded corners */
+    color: #555;
+
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    /* Soft shadow */
+
     padding: 0;
     margin: 0;
+    outline: none;
 }
 
-/* 🔥 새로 추가: 헤더 컨트롤 그룹 (폰트 + 레이아웃 버튼) */
-.header-controls-group {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    /* 🔥 FIX: 고정 20% -> 필요한 만큼만 차지 */
-    flex: 0 0 auto !important;
-    box-sizing: border-box !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    margin-left: auto !important;
-    /* 오른쪽 정렬 보장 */
-    min-width: 0 !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    gap: 4px !important;
-    /* 🔥 버튼 간 간격 추가 */
+.header-control-btn:hover {
+    border-color: #0d6efd;
+    /* Primary Color */
+    color: #0d6efd;
+    background-color: #eff6ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
-/* Bootstrap 버튼 그룹 스타일 커스터마이징 */
-.header-controls-group .btn-group {
-    display: flex !important;
-    align-items: center !important;
-    background: none !important;
-    border: none !important;
-    border-radius: 0 !important;
-    /* 🔥 그룹 테두리 제거 */
-    overflow: visible !important;
-    /* 🔥 개별 테두리를 위해 */
-    box-shadow: none !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    gap: 4px !important;
-    /* 🔥 버튼 간 간격 */
+.header-control-btn:active {
+    transform: translateY(0);
+    background-color: #e9ecef;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* 버튼 그룹 내부 버튼 통일 스타일 - 개별 테두리 */
-.header-controls-group .btn,
-.header-controls-group .header-control-btn {
-    border: 1px solid #dee2e6 !important;
-    background-color: #ffffff !important;
-    color: #495057 !important;
-    padding: 6px 10px !important;
-    font-size: 14px !important;
-    min-width: 32px !important;
-    height: 32px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 6px !important;
-    /* 🔥 각 버튼마다 둥근 테두리 */
-    margin: 0 !important;
-    flex-shrink: 0;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-    /* 🔥 개별 그림자 */
-    visibility: visible !important;
-    opacity: 1 !important;
+.header-control-btn i {
+    font-size: 16px;
+    line-height: 1;
 }
 
-/* 🔥 버튼 그룹 테두리 스타일 제거 (개별 테두리 사용) */
-/* 맨 첫 번째, 마지막, 가운데 버튼 모두 동일한 스타일 */
-.header-controls-group .btn:first-child,
-.header-controls-group .header-control-btn:first-child,
-.header-controls-group .btn:last-child,
-.header-controls-group .header-control-btn:last-child,
-.header-controls-group .btn:not(:first-child):not(:last-child),
-.header-controls-group .header-control-btn:not(:first-child):not(:last-child) {
-    border-radius: 6px !important;
-    /* 🔥 모든 버튼에 동일한 둥근 테두리 */
-    border: 1px solid #dee2e6 !important;
-}
-
-/* 버튼 호버 효과 */
-.header-controls-group .btn:hover,
-.header-controls-group .header-control-btn:hover {
-    background-color: #f8f9fa !important;
-    border-color: #adb5bd !important;
-    color: #212529 !important;
-    z-index: 1;
-    transform: none !important;
-}
-
-/* 버튼 클릭 효과 */
-.header-controls-group .btn:active,
-.header-controls-group .btn.active,
-.header-controls-group .header-control-btn:active,
-.header-controls-group .header-control-btn.active {
-    background-color: #e9ecef !important;
-    border-color: #6c757d !important;
-    color: #212529 !important;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* 아이콘 크기 통일 */
-.header-controls-group .btn i,
-.header-controls-group .header-control-btn i {
-    font-size: 14px !important;
-    line-height: 1 !important;
-}
-
-/* 포커스 스타일 */
-.header-controls-group .btn:focus,
-.header-controls-group .header-control-btn:focus {
-    outline: 2px solid #0d6efd !important;
-    outline-offset: 2px !important;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
-}
-
-/* 문제 네비게이션 */
+/* 문제 네비게이션 아이콘 (숫자) */
 .problem-navigation,
 #problem-navigation {
     display: flex;
     align-items: center;
-    gap: 6px;
-    /* 🔥 문제 번호 간격 */
+    gap: 5px;
     flex-wrap: wrap;
     justify-content: center;
 }

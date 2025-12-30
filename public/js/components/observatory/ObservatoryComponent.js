@@ -7,7 +7,10 @@ class ObservatoryComponent {
         this.renderer = null;
         this.labelRenderer = null; // for text labels
         this.nodes = [];
-        this.edges = [];
+        this.edgeLines = []; // Store edge objects
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
+        this.hoveredNode = null;
 
         // Configuration
         this.options = {
@@ -19,7 +22,7 @@ class ObservatoryComponent {
     }
 
     async init() {
-        console.log('🔭 Initializing Observatory...');
+        console.log('🔭 Initializing Observatory (Interactive Mode)...');
         if (!this.container) {
             console.error('Observatory container not found');
             return;
@@ -31,6 +34,7 @@ class ObservatoryComponent {
         this.animate();
 
         window.addEventListener('resize', () => this.onResize());
+        this.container.addEventListener('mousemove', (e) => this.onMouseMove(e));
         console.log('🚀 Observatory Launched.');
     }
 
@@ -43,7 +47,7 @@ class ObservatoryComponent {
         // Camera
         const aspect = this.container.clientWidth / this.container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(60, aspect, 1, 1000);
-        this.camera.position.set(0, 50, 200);
+        this.camera.position.set(0, 50, 150); // Closer camera
 
         // WebGL Renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -59,8 +63,6 @@ class ObservatoryComponent {
             this.labelRenderer.domElement.style.top = '0px';
             this.labelRenderer.domElement.style.pointerEvents = 'none'; // allow clicks pass through
             this.container.appendChild(this.labelRenderer.domElement);
-        } else {
-            console.warn('CSS2DRenderer not found. Labels will be disabled.');
         }
 
         // Lights
@@ -101,12 +103,10 @@ class ObservatoryComponent {
     useMockData() {
         this.data = {
             nodes: [
-                { id: 'mock1', name: "Variable", pos_x: -20, pos_y: 10, pos_z: 0, activation: 0.8 },
-                { id: 'mock2', name: "Loop", pos_x: 20, pos_y: 0, pos_z: 0, activation: 0.5 }
+                { id: 'mk1', name: "Variable", pos_x: -20, pos_y: 10, pos_z: 0, activation: 0.8 },
+                { id: 'mk2', name: "Loop", pos_x: 20, pos_y: 0, pos_z: 0, activation: 0.5 }
             ],
-            edges: [
-                { source_node_id: 'mock1', target_node_id: 'mock2', strength: 0.5 }
-            ]
+            edges: []
         };
     }
 
@@ -116,26 +116,26 @@ class ObservatoryComponent {
         // Clear existing
         this.nodes.forEach(n => {
             this.scene.remove(n);
-            if (n.labelObject) this.scene.remove(n.labelObject);
+            if (n.labelObject) n.remove(n.labelObject);
         });
+        this.edgeLines.forEach(l => this.scene.remove(l));
         this.nodes = [];
+        this.edgeLines = [];
 
-        // Remove old edges if any (basic clean up for re-render support)
-        // ... implementation simplified for init usage
-
-        const geometry = new THREE.SphereGeometry(3, 32, 32);
+        // 1. Smaller Stars
+        const geometry = new THREE.SphereGeometry(1.2, 32, 32);
 
         this.data.nodes.forEach(node => {
-            // White glowing star style
             const baseColor = new THREE.Color(this.options.nodeColor);
 
-            // Emissive intensity based on activation
-            const intensity = 0.5 + (node.activation || 0) * 1.5;
+            // Random phase for twinkling
+            node.twinklePhase = Math.random() * Math.PI * 2;
+            node.twinkleSpeed = 0.002 + Math.random() * 0.003;
 
             const material = new THREE.MeshStandardMaterial({
                 color: baseColor,
                 emissive: 0xffffff,
-                emissiveIntensity: intensity,
+                emissiveIntensity: 0.5,
                 roughness: 0.4,
                 metalness: 0.1
             });
@@ -148,22 +148,23 @@ class ObservatoryComponent {
             star.position.set(x, y, z);
             star.userData = node;
 
-            // Add Text Label using CSS2D
+            // 2. Closer Labels
             if (typeof THREE.CSS2DObject !== 'undefined') {
                 const div = document.createElement('div');
                 div.className = 'label';
                 div.textContent = node.name || node.id;
-                div.style.marginTop = '-2em'; // Move label above star
-                div.style.color = 'rgba(255, 255, 255, 0.9)';
+                div.style.marginTop = '-1.5em';
+                div.style.color = 'rgba(255, 255, 255, 0.8)';
                 div.style.fontFamily = 'sans-serif';
-                div.style.fontSize = '12px';
+                div.style.fontSize = '11px'; // Slightly smaller font
                 div.style.fontWeight = 'bold';
-                div.style.textShadow = '0 0 4px #000';
-                div.style.pointerEvents = 'none';
+                div.style.textShadow = '0 0 3px #000';
+                div.style.pointerEvents = 'none'; // Essential for raycaster
 
                 const label = new THREE.CSS2DObject(div);
-                label.position.set(0, 4, 0);
+                label.position.set(0, 2.5, 0); // Closer Y offset
                 star.add(label);
+                star.labelObject = label;
             }
 
             this.scene.add(star);
@@ -174,12 +175,12 @@ class ObservatoryComponent {
         const nodeMap = new Map();
         this.nodes.forEach(n => nodeMap.set(n.userData.id, n));
 
-        // Render Edges
+        // 3. Edges (Hidden by default)
         if (this.data.edges) {
             const lineMaterial = new THREE.LineBasicMaterial({
-                color: this.options.edgeColor,
+                color: 0xffffff,
                 transparent: true,
-                opacity: 0.4
+                opacity: 0 // Hidden initially
             });
 
             this.data.edges.forEach(edge => {
@@ -192,11 +193,25 @@ class ObservatoryComponent {
                     points.push(target.position);
 
                     const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-                    const line = new THREE.Line(lineGeometry, lineMaterial);
+                    const line = new THREE.Line(lineGeometry, lineMaterial.clone()); // Clone to control opacity individually
+
+                    line.userData = {
+                        from: edge.source_node_id,
+                        to: edge.target_node_id
+                    };
+
                     this.scene.add(line);
+                    this.edgeLines.push(line);
                 }
             });
         }
+    }
+
+    onMouseMove(event) {
+        // Calculate mouse position in normalized device coordinates (-1 to +1)
+        const rect = this.container.getBoundingClientRect();
+        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     }
 
     onResize() {
@@ -211,7 +226,63 @@ class ObservatoryComponent {
 
     animate() {
         requestAnimationFrame(() => this.animate());
-        this.scene.rotation.y += 0.0002; // Very slow rotation
+
+        const time = Date.now();
+
+        // 4. Twinkle Effect
+        this.nodes.forEach(star => {
+            if (star.userData) {
+                const phase = star.userData.twinklePhase;
+                const speed = star.userData.twinkleSpeed;
+                // Sine wave oscillating between 0.3 and 1.5
+                const intensity = 0.9 + Math.sin(time * speed + phase) * 0.6;
+                star.material.emissiveIntensity = intensity;
+
+                // Slight scale pulse
+                const scale = 1.0 + Math.sin(time * speed + phase) * 0.1;
+                star.scale.set(scale, scale, scale);
+            }
+        });
+
+        // 5. Raycasting for Hover Interaction
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const intersects = this.raycaster.intersectObjects(this.nodes);
+
+        if (intersects.length > 0) {
+            const targetStar = intersects[0].object;
+
+            if (this.hoveredNode !== targetStar) {
+                this.hoveredNode = targetStar;
+                const nodeId = targetStar.userData.id;
+                this.container.style.cursor = 'pointer';
+
+                // Highlight connected edges
+                this.edgeLines.forEach(line => {
+                    if (line.userData.from === nodeId || line.userData.to === nodeId) {
+                        line.material.opacity = 0.6; // Visible
+                        line.material.color.setHex(0x4fc3f7); // Cyan hint
+                    } else {
+                        line.material.opacity = 0; // Hidden
+                    }
+                    line.material.needsUpdate = true;
+                });
+            }
+        } else {
+            if (this.hoveredNode) {
+                this.hoveredNode = null;
+                this.container.style.cursor = 'default';
+
+                // Reset edges
+                this.edgeLines.forEach(line => {
+                    line.material.opacity = 0; // Hide all
+                    line.material.needsUpdate = true;
+                });
+            }
+        }
+
+        // Rotate scene slowly
+        this.scene.rotation.y += 0.0003;
+
         if (this.controls) this.controls.update();
         this.renderer.render(this.scene, this.camera);
         if (this.labelRenderer) {
