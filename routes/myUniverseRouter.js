@@ -3,42 +3,50 @@ const router = express.Router();
 const path = require('path');
 const db = require('../lib_login/db');
 
-// 🚀 Caching for Problem Data
+// 🚀 Caching for Problem Data (Enhanced with Tags)
 let problemCache = null;
 let lastCacheTime = 0;
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-async function getProblemMap(req) { // Pass req to access getSheetData if needed
+async function getProblemMetadataMap() {
     const now = Date.now();
     if (problemCache && (now - lastCacheTime < CACHE_TTL)) {
         return problemCache;
     }
 
     try {
-        // Use global getSheetData or require it
         const { getSheetData } = require('../lib_google/sheetService');
-        const rows = await getSheetData('Problems!A2:C'); // A: ID?, B: Key, C: Title
+        // Fetch all columns A-N for comprehensive metadata
+        const rows = await getSheetData('problems!A2:N500');
 
         const map = new Map();
         if (rows && rows.length) {
             rows.forEach(row => {
-                // Assuming B is the ID/Key (e.g., 'cospro_3-1_p08' or 'cpe1-1a')
-                // and C is the Title. 
-                // Adjust index based on inspecting 'update_excel_p08.py' which implied col 1 (B) is Key.
-                // Row structure: [A, B, C] -> indices 0, 1, 2
-                if (row[1] && row[2]) {
-                    map.set(row[1].trim(), row[2].trim());
-                }
+                // Ensure row has enough columns
+                while (row.length < 14) row.push('');
+
+                // Key: exam_name + problem_number (lowercase for matching)
+                const examName = (row[1] || '').trim();
+                const problemNumber = (row[2] || '').trim();
+                const key = `${examName.toLowerCase()}_${problemNumber.toLowerCase()}`;
+
+                map.set(key, {
+                    examName: examName,
+                    problemNumber: problemNumber,
+                    concept: row[3] || '',
+                    difficulty: row[10] || '1',
+                    questionType: row[11] || '',
+                    tags: row[12] || ''
+                });
             });
         }
 
         problemCache = map;
         lastCacheTime = now;
-        // console.log(`Problem Map Cached: ${map.size} items`);
         return map;
     } catch (e) {
-        console.error('Failed to load problem map:', e);
-        return new Map(); // Empty map fallback
+        console.error('Failed to load problem metadata:', e);
+        return new Map();
     }
 }
 
@@ -126,14 +134,17 @@ const getIconClass = (item) => {
 };
 
 const processLogs = async (logs, currentUser) => {
-    const problemMap = await getProblemMap(); // Load data
+    const metadataMap = await getProblemMetadataMap(); // Load enhanced data
 
     return logs.map(log => {
         const dateObj = new Date(log.created_at);
-        const info = getFriendlyInfo(log, problemMap); // Get platform and name
+        const info = getFriendlyInfo(log, metadataMap); // Get platform and name
 
         // Metadata parsing for detail view
         let finalUrl = '#'; // Default to no-op
+        let tags = '';
+        let concept = '';
+        let isCorrect = null;
 
         // ... (Original Metadata Parsing - kept same logic mostly)
         if (log.type === 'log') {
@@ -173,28 +184,40 @@ const processLogs = async (logs, currentUser) => {
                     const role = currentUser && currentUser.role ? currentUser.role : 'student';
                     finalUrl = `/entry_editor/?s3Url=${s3UrlEncoded}&userID=${userID}&role=${role}`;
                 } else if (log.type === 'scratch' && detail.s3Url) {
-                    // Based on server.js cos-editor logic
                     const s3UrlEncoded = encodeURIComponent(detail.s3Url);
                     finalUrl = `/scratch/?project_file=${s3UrlEncoded}`;
                 }
             } catch (e) { }
         } else if (log.type === 'solve') {
-            // For solved problems, maybe link to the problem content if possible
-            // log.title is problem_number e.g. 'cospro_3-1_p06'
-            // If we have a route /content/python/:id
-            // finalUrl = `/content/python/${log.title}`;
-            finalUrl = '#'; // Valid placeholder
+            // Parse metadata to get exam_name and problem_number for metadata lookup
+            try {
+                const detail = JSON.parse(log.metadata || '{}');
+                isCorrect = detail.is_correct;
+                const examName = detail.exam_name || '';
+                const problemNumber = detail.problem_number || '';
+                const key = `${examName.toLowerCase()}_${problemNumber.toLowerCase()}`;
+                const meta = metadataMap.get(key);
+                if (meta) {
+                    tags = meta.tags || '';
+                    concept = meta.concept || '';
+                }
+            } catch (e) { }
+            finalUrl = '#';
         }
 
         return {
             dateStr: dateObj.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', timeZone: 'Asia/Seoul' }),
             timeStr: dateObj.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' }),
             title: info.name,
-            platform: info.platform, // New field for badge
+            platform: info.platform,
             iconClass: getIconClass(log),
             url: finalUrl,
             status: 'Completed',
-            action_type: (log.type || 'Activity').toUpperCase()
+            action_type: (log.type || 'Activity').toUpperCase(),
+            // Enhanced fields for SOLVE items
+            tags: tags,
+            concept: concept,
+            isCorrect: isCorrect
         };
     });
 };
@@ -357,13 +380,13 @@ router.get('/timeline', async (req, res) => {
 
                 UNION ALL
 
-                -- 7. [NEW] Quiz/Problem Logs (Python)
+                -- 7. [NEW] Quiz/Problem Logs (Python) - Enhanced with exam_name
                 SELECT 
                     'solve' as type,
-                    problem_number COLLATE utf8mb4_unicode_ci as title, -- 'cospro_3-1_p06'
+                    CONCAT(exam_name, ' ', problem_number) COLLATE utf8mb4_unicode_ci as title,
                     timestamp as created_at,
                     id,
-                    CONCAT('{"is_correct":', is_correct, '}') COLLATE utf8mb4_unicode_ci as metadata
+                    CONCAT('{"is_correct":', is_correct, ', "exam_name":"', IFNULL(exam_name,''), '", "problem_number":"', IFNULL(problem_number,''), '"}') COLLATE utf8mb4_unicode_ci as metadata
                 FROM QuizResults
                 WHERE user_id = ?
 
@@ -567,7 +590,7 @@ router.get('/student/:id/observatory', async (req, res) => {
 
 
 // ============================================
-// Problems Tab (New)
+// Problems Tab (Enhanced with Sheet Metadata)
 // ============================================
 router.get('/problems', async (req, res) => {
     try {
@@ -575,7 +598,6 @@ router.get('/problems', async (req, res) => {
             return res.redirect('/auth/login');
         }
 
-        // Use string userID matching QuizResults schema (VARCHAR)
         // Resolve numeric DB ID
         let targetDbId = req.session.dbId;
         if (!targetDbId && req.session.userID) {
@@ -587,6 +609,7 @@ router.get('/problems', async (req, res) => {
             return res.redirect('/auth/login');
         }
 
+        // 1. Fetch QuizResults
         const problems = await db.queryDatabase(`
             SELECT * FROM QuizResults 
             WHERE user_id = ?
@@ -594,9 +617,76 @@ router.get('/problems', async (req, res) => {
             LIMIT 100
         `, [targetDbId]);
 
+        // 2. Fetch Problems Sheet Metadata
+        const { getSheetData } = require('../lib_google/sheetService');
+        let metadataMap = new Map();
+        try {
+            const problemsSheet = await getSheetData('problems!A2:N500');
+            if (problemsSheet && problemsSheet.length > 0) {
+                problemsSheet.forEach(row => {
+                    // Ensure row has enough columns
+                    while (row.length < 14) row.push('');
+                    const key = `${(row[1] || '').toLowerCase()}_${(row[2] || '').toLowerCase()}`; // examName_problemNumber
+                    metadataMap.set(key, {
+                        concept: row[3] || '',
+                        difficulty: row[10] || '1',
+                        questionType: row[11] || '',
+                        tags: row[12] || '',
+                        testCases: row[9] || '[]'
+                    });
+                });
+            }
+        } catch (sheetErr) {
+            console.error('Failed to load problem metadata:', sheetErr);
+        }
+
+        // 3. Calculate Accuracy Rates (group by exam_name + problem_number)
+        const statsMap = new Map();
+        problems.forEach(p => {
+            const key = `${(p.exam_name || '').toLowerCase()}_${(p.problem_number || '').toLowerCase()}`;
+            if (!statsMap.has(key)) {
+                statsMap.set(key, { total: 0, correct: 0 });
+            }
+            statsMap.get(key).total++;
+            if (p.is_correct) statsMap.get(key).correct++;
+        });
+
+        // 4. Enrich problems with metadata and accuracy
+        const enrichedProblems = problems.map(p => {
+            const key = `${(p.exam_name || '').toLowerCase()}_${(p.problem_number || '').toLowerCase()}`;
+            const meta = metadataMap.get(key) || {};
+            const stats = statsMap.get(key) || { total: 1, correct: 0 };
+
+            // Parse execution_results to get test case counts
+            let passedTests = 0;
+            let totalTests = 0;
+            if (p.execution_results) {
+                try {
+                    const results = JSON.parse(p.execution_results);
+                    if (Array.isArray(results)) {
+                        totalTests = results.length;
+                        passedTests = results.filter(r => r.passed).length;
+                    }
+                } catch (e) { /* ignore parse errors */ }
+            }
+
+            return {
+                ...p,
+                concept: meta.concept || '',
+                difficulty: meta.difficulty || '1',
+                questionType: meta.questionType || '',
+                tags: meta.tags || '',
+                passedTests,
+                totalTests,
+                accuracyRate: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0,
+                totalAttempts: stats.total,
+                successAttempts: stats.correct
+            };
+        });
+
         res.render('my-universe/index', {
             activeTab: 'problems',
-            problems, // Pass data to view
+            problems: enrichedProblems,
             userID: req.session.userID,
             userRole: req.session.role,
             is_logined: req.session.is_logined,
