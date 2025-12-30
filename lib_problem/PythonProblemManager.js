@@ -223,39 +223,58 @@ class PythonProblemManager {
         const avgTime = results.reduce((sum, r) => sum + (r.time || 0), 0) / totalTests || 0;
         const avgMemory = results.reduce((sum, r) => sum + (r.memory || 0), 0) / totalTests || 0;
 
-        // DB Logging (Grading Engine)
-        if (!this.useMock && userId) {
+        // DB Logging (Grading Engine) - Always save if user is authenticated
+        if (userId) {
             try {
-                // Determine Status
-                let status = isSuccess ? 'PASS' : 'FAIL';
-                // Check for errors
-                if (results.some(r => r.error)) status = 'ERROR';
-
-                // 🔥 LOG TO QuizResults
-                // Schema: user_id, exam_name, problem_number, is_correct, score, user_answer, execution_results, timestamp
-                await queryDatabase(`
-                    INSERT INTO QuizResults 
-                    (user_id, exam_name, problem_number, is_correct, score, user_answer, execution_results, timestamp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
-                `, [
-                    userId,
-                    examName,
-                    problemId,
-                    isSuccess,
-                    score,
-                    userCode,
-                    JSON.stringify(results)
-                ]);
-
-                console.log(`✅ Submission saved to QuizResults for User ${userId}, Problem ${problemId}`);
-
-                // Trigger Score Propagation (Connectome Update) via ctScoringService
-                if (isSuccess) {
-                    // Fire and forget (don't await to keep response fast)
-                    updateCTFromProblem(userId, problemId)
-                        .catch(err => console.error('Connectome update background error:', err));
+                // 🔥 Convert string userID to numeric DB ID
+                let dbUserId = userId;
+                if (typeof userId === 'string') {
+                    const [user] = await queryDatabase('SELECT id FROM Users WHERE userID = ?', [userId]);
+                    if (user) {
+                        dbUserId = user.id;
+                    } else {
+                        console.error(`❌ User not found for userID: ${userId}`);
+                        // Continue without DB save but don't crash
+                        dbUserId = null;
+                    }
                 }
 
+                if (dbUserId) {
+                    // Determine Status
+                    let status = isSuccess ? 'PASS' : 'FAIL';
+                    // Check for errors
+                    if (results.some(r => r.error)) status = 'ERROR';
+
+                    // Format problem_number consistently (e.g., 'p01')
+                    let formattedProblemNumber = String(problemId);
+                    if (/^\d+$/.test(formattedProblemNumber)) {
+                        formattedProblemNumber = 'p' + formattedProblemNumber.padStart(2, '0');
+                    }
+
+                    // 🔥 LOG TO QuizResults
+                    // Schema: user_id, exam_name, problem_number, user_answer, is_correct, timestamp, execution_results
+                    await queryDatabase(`
+                        INSERT INTO QuizResults 
+                        (user_id, exam_name, problem_number, user_answer, is_correct, timestamp, execution_results)
+                        VALUES (?, ?, ?, ?, ?, NOW(), ?)
+                    `, [
+                        dbUserId,
+                        examName,
+                        formattedProblemNumber,
+                        userCode,
+                        isSuccess ? 1 : 0,
+                        JSON.stringify(results)
+                    ]);
+
+                    console.log(`✅ Submission saved to QuizResults for User ${dbUserId} (${userId}), Problem ${formattedProblemNumber}`);
+
+                    // Trigger Score Propagation (Connectome Update) via ctScoringService
+                    if (isSuccess) {
+                        // Fire and forget (don't await to keep response fast)
+                        updateCTFromProblem(dbUserId, problemId)
+                            .catch(err => console.error('Connectome update background error:', err));
+                    }
+                }
             } catch (dbError) {
                 console.error('❌ Failed to save submission to DB:', dbError);
                 // Don't fail the request if logging fails
