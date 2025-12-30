@@ -1,4 +1,4 @@
-<!-- Last Updated: Subway Style Restored + Logic in Controller -->
+<!-- Last Updated: Hierarchical Timeline (Year/Month/Week/Day) -->
 <style>
     /* 
      * Subway Style Timeline 
@@ -35,7 +35,6 @@
     .timeline-wrapper {
         display: flex;
         gap: 15px;
-        /* Reduced gap */
         max-width: 1200px;
         margin: 0 auto;
         padding-top: 20px;
@@ -45,14 +44,11 @@
     /* Left Panel: Subway List */
     .timeline-container {
         flex: 0.7;
-        /* Reduced width ratio */
         background: #FFFFFF;
         border-radius: 20px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         padding: 20px 15px;
-        /* Reduced padding */
         overflow-y: auto;
-        /* Custom Scrollbar */
         scrollbar-width: thin;
         scrollbar-color: #d1d1d1 transparent;
     }
@@ -69,7 +65,6 @@
     /* Right Panel: Detail View */
     .detail-panel {
         flex: 1.3;
-        /* Increased width ratio */
         background: #FFFFFF;
         border-radius: 20px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
@@ -88,7 +83,6 @@
     .timeline-list {
         position: relative;
         padding-left: 15px;
-        /* Reduced left padding */
     }
 
     /* Continuous Line */
@@ -105,16 +99,13 @@
 
     .timeline-group-date {
         font-size: 0.85rem;
-        /* Smaller font */
         font-weight: 700;
         color: #86868B;
         background: #FFFFFF;
-        /* Mask line behind date */
         position: relative;
         z-index: 1;
         display: inline-block;
         margin: 15px 0 8px 0;
-        /* Reduced margin */
         padding: 4px 10px;
         border-radius: 12px;
         border: 1px solid #F2F2F7;
@@ -123,9 +114,7 @@
     .timeline-item {
         position: relative;
         padding: 10px 10px 10px 50px;
-        /* Increased padding for connector */
         margin-bottom: 8px;
-        /* Reduced spacing */
         cursor: pointer;
         transition: all 0.2s ease;
         border-radius: 12px;
@@ -139,8 +128,7 @@
         background-color: #EFF6FF;
     }
 
-    /* Station Marker (Dash + Diagonal Connector) */
-    /* Station Marker (Dash + Connector) */
+    /* Station Marker (Dash) */
     .timeline-marker {
         position: absolute;
         left: 28px;
@@ -149,20 +137,6 @@
         height: 2px;
         background: #C7C7CC;
         z-index: 2;
-    }
-
-    .timeline-marker::after {
-        content: '';
-        position: absolute;
-        right: -8px;
-        top: -4px;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        /* Dot at the end of the connector */
-        background: inherit;
-        display: none;
-        /* Keep simple line for now */
     }
 
     /* Success/Fail marker colors */
@@ -184,9 +158,6 @@
         box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
     }
 
-    /* Icon within Dot? No, "Subway" usually just has dots. 
-       Let's put the icon in the content area for context */
-
     .timeline-content-row {
         display: flex;
         align-items: center;
@@ -197,12 +168,10 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        /* Reduced gap */
     }
 
     .timeline-time {
         font-size: 0.75rem;
-        /* Smaller font */
         color: #86868B;
         min-width: 50px;
     }
@@ -211,14 +180,12 @@
         font-weight: 600;
         color: #1D1D1F;
         font-size: 0.9rem;
-        /* Smaller font */
         line-height: 1.3;
     }
 
     .timeline-icon-small {
         color: var(--timeline-dot-color);
         font-size: 1rem;
-        /* Smaller icon */
     }
 
     /* Empty State */
@@ -306,15 +273,6 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
-    .zoom-slider::-moz-range-thumb {
-        width: 16px;
-        height: 16px;
-        background: #007AFF;
-        border-radius: 50%;
-        cursor: pointer;
-        border: none;
-    }
-
     .zoom-labels {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -325,10 +283,6 @@
         padding: 0 8px;
     }
 
-    .zoom-labels span {
-        position: relative;
-    }
-
     .zoom-level-label {
         font-size: 0.75rem;
         font-weight: 600;
@@ -337,27 +291,24 @@
         text-align: right;
     }
 
-    /* VISIBILITY RULES */
-    /* Level 1: Year (Projects) -> Hide everything except projects/milestones */
-    .timeline-wrapper[data-zoom="year"] .timeline-item:not([data-type="GALLERY"]) {
-        display: none;
+    /* Summary Card for Year/Month/Week views */
+    .summary-card {
+        cursor: pointer;
+        transition: transform 0.2s;
     }
 
-    /* Level 2: Month (+Blog, Badge) -> Hide Solve, Log */
-    .timeline-wrapper[data-zoom="month"] .timeline-item[data-type="SOLVE"],
-    .timeline-wrapper[data-zoom="month"] .timeline-item[data-type="LOG"] {
-        display: none;
+    .summary-card:hover {
+        transform: translateY(-2px);
     }
 
-    /* Level 3: Week (+Solve) -> Hide Log */
-    .timeline-wrapper[data-zoom="week"] .timeline-item[data-type="LOG"] {
-        display: none;
+    .summary-card .card {
+        border-radius: 16px;
+        background: #FFFFFF;
+        border: 1px solid #F2F2F7;
     }
-
-    /* Level 4: Day (All) -> Show everything */
 </style>
 
-<div class="timeline-wrapper" data-zoom="medium">
+<div class="timeline-wrapper" data-zoom="week">
     <!-- Left: Timeline List -->
     <div class="timeline-container">
         <!-- Horizontal Zoom Slider -->
@@ -375,85 +326,254 @@
             <span class="zoom-level-label" id="zoomLevelLabel">Week</span>
         </div>
 
-        <div class="timeline-list">
-            <% let lastDate='' ; const items=locals.timelineItems || []; if (items.length> 0) {
-                items.forEach(function(item) {
-                %>
-
-                <% if (item.dateStr !==lastDate) { lastDate=item.dateStr; %>
-                    <div class="mb-2">
-                        <span class="timeline-group-date">
-                            <%= item.dateStr %>
-                        </span>
-                    </div>
-                    <% } %>
-
-                        <div class="timeline-item" onclick="handleClick(this)" data-type="<%= item.action_type %>"
-                            data-title="<%= item.title %>" data-time="<%= item.dateStr %> <%= item.timeStr %>"
-                            data-url="<%= item.url %>" data-status="<%= item.status %>"
-                            data-tags="<%= item.tags || '' %>" data-concept="<%= item.concept || '' %>"
-                            data-correct="<%= item.isCorrect %>" data-exam="<%= item.exam_name || '' %>"
-                            data-problem="<%= item.problem_number || '' %>">
-
-                            <div class="timeline-marker"></div>
-
-                            <div class="timeline-content-row">
-                                <div class="timeline-main-info">
-                                    <% if (item.action_type==='SOLVE' && item.isCorrect !==null) { %>
-                                        <i
-                                            class="bi <%= item.isCorrect ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger' %> timeline-icon-small"></i>
-                                        <% } else { %>
-                                            <i class="bi <%= item.iconClass %> timeline-icon-small"></i>
-                                            <% } %>
-                                                <div>
-                                                    <div class="timeline-title">
-                                                        <% if (item.platform && item.platform !=='LOG' ) { %>
-                                                            <span
-                                                                class="platform-badge <%= item.platform === '스크래치' ? 'scratch' : (item.platform === '파이썬' ? 'python' : '') %>">
-                                                                <%= item.platform %>
-                                                            </span>
-                                                            <% } %>
-                                                                <%= item.title %>
-                                                                    <% if (item.tags) { %>
-                                                                        <% item.tags.split(',').slice(0,
-                                                                            2).forEach(tag=> { %>
-                                                                            <span
-                                                                                class="badge bg-secondary-subtle text-secondary"
-                                                                                style="font-size: 0.65rem; font-weight: 500; margin-left: 4px;">
-                                                                                <%= tag.trim() %>
-                                                                            </span>
-                                                                            <% }); %>
-                                                                                <% } %>
-                                                    </div>
-                                                    <div class="timeline-time">
-                                                        <%= item.timeStr %> • <%= item.action_type || 'Activity' %>
-                                                    </div>
-                                                </div>
-                                </div>
-                                <i class="bi bi-chevron-right text-muted" style="font-size: 0.8rem;"></i>
-                            </div>
-                        </div>
-
-                        <% }); } else { %>
-                            <div class="empty-state">
-                                <i class="bi bi-clock-history"></i>
-                                <p>아직 기록된 활동이 없습니다.</p>
-                            </div>
-                            <% } %>
+        <div class="timeline-list" id="timelineList">
+            <!-- Timeline items will be rendered here by JavaScript -->
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Right: Detail Panel -->
     <div class="detail-panel" id="detailPanel">
-        <div class="mb-3">
-            <!-- Icon Removed -->
-        </div>
+        <div class="mb-3"></div>
         <h4 class="fw-bold mb-2">활동을 선택하세요</h4>
         <p class="text-muted">좌측 타임라인에서 항목을 클릭하면<br>상세 정보를 확인할 수 있습니다.</p>
     </div>
 </div>
 
 <script>
+    // Inject server-side data
+    const rawTimelineData = <% - JSON.stringify(locals.timelineItems || []) %>;
+
+    // Process data dates
+    const timelineData = rawTimelineData.map(item => {
+        const date = new Date(item.dateStr);
+        return {
+            ...item,
+            _date: date,
+            _year: date.getFullYear(),
+            _month: date.getMonth() + 1,
+            _day: date.getDate(),
+            // Calculate Week of Month (approx implementation)
+            // Using ISO week logic might be complex vs locale, simple math is robust enough for "Week 1,2,3,4"
+            _weekOfMonth: Math.ceil(date.getDate() / 7)
+        };
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize with Week view (Level 3)
+        const initialZoom = 3;
+        const slider = document.querySelector('.zoom-slider');
+        if (slider) {
+            slider.value = initialZoom;
+            setZoomBySlider(initialZoom);
+        }
+    });
+
+    function setZoomBySlider(value) {
+        const levels = { 1: 'year', 2: 'month', 3: 'week', 4: 'day' };
+        const labels = { 1: 'Year', 2: 'Month', 3: 'Week', 4: 'Day' };
+        const level = levels[value] || 'week';
+
+        // Update wrapper data attribute (for global styles just in case)
+        const wrapper = document.querySelector('.timeline-wrapper');
+        if (wrapper) wrapper.dataset.zoom = level;
+
+        // Update label
+        const labelEl = document.getElementById('zoomLevelLabel');
+        if (labelEl) labelEl.textContent = labels[value] || 'Week';
+
+        // Render Timeline Content
+        renderTimeline(level);
+    }
+
+    function renderTimeline(levelKey) {
+        const container = document.getElementById('timelineList');
+        if (!container) return;
+
+        container.innerHTML = '';
+        const grouped = groupData(timelineData, levelKey);
+        let html = '';
+
+        // Sort keys descending (latest first)
+        Object.keys(grouped).sort((a, b) => b.localeCompare(a)).forEach(key => {
+            const group = grouped[key];
+            if (levelKey === 'day') {
+                html += renderDayGroup(key, group);
+            } else {
+                html += renderSummaryCard(levelKey, key, group);
+            }
+        });
+
+        if (html === '') {
+            html = `<div class="text-center text-muted mt-5 py-5"><i class="bi bi-inbox display-4 opacity-25"></i><p class="mt-3">기록된 활동이 없습니다.</p></div>`;
+        }
+        container.innerHTML = html;
+
+        // Re-attach fade-in animation
+        const items = container.querySelectorAll('.timeline-item');
+        items.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.animation = `fadeIn 0.3s ease-out ${index * 0.05}s forwards`;
+        });
+    }
+
+    function groupData(data, level) {
+        const groups = {};
+        data.forEach(item => {
+            let key;
+            if (level === 'year') {
+                // Key: YYYY-MM
+                key = `${item._year}-${String(item._month).padStart(2, '0')}`;
+            } else if (level === 'month') {
+                // Key: YYYY-MM-Week
+                key = `${item._year}-${String(item._month).padStart(2, '0')}-W${item._weekOfMonth}`;
+            } else if (level === 'week') {
+                // Key: YYYY-MM-DD
+                key = item.dateStr; // Use full date as key
+            } else {
+                // Day: YYYY-MM-DD
+                key = item.dateStr;
+            }
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(item);
+        });
+        return groups;
+    }
+
+    function renderSummaryCard(level, key, items) {
+        const total = items.length;
+        const solves = items.filter(i => i.action_type === 'SOLVE').length;
+        const projects = items.filter(i => ['GALLERY', 'ENTRY', 'SCRATCH'].includes(i.action_type)).length;
+
+        let title = key;
+        let subTitle = '';
+
+        if (level === 'year') {
+            const [y, m] = key.split('-');
+            title = `${parseInt(m)}월`;
+            subTitle = `${y}년`;
+        } else if (level === 'month') {
+            const [y, m, w] = key.split('-');
+            title = `${parseInt(w.replace('W', ''))}주차`;
+            subTitle = `${parseInt(m)}월`;
+        } else if (level === 'week') {
+            // For 'week' level, we show each DAY
+            const date = items[0]._date;
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            title = `${date.getDate()}일 (${days[date.getDay()]})`;
+            subTitle = `${date.getMonth() + 1}월`;
+        }
+
+        return `
+            <div class="timeline-item summary-card mb-3" onclick="zoomInFrom('${level}')">
+                <div class="timeline-marker" style="background:#007AFF; width:12px; height:12px; border-radius:50%; top:22px; left:26px;"></div> 
+                <div class="card shadow-sm col-10">
+                    <div class="card-body d-flex align-items-center justify-content-between p-4">
+                        <div>
+                            <div class="text-muted small mb-1">${subTitle}</div>
+                            <h4 class="fw-bold mb-0 text-dark">${title}</h4>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-primary-subtle text-primary rounded-pill mb-1 px-3 py-2">
+                                Total ${total}
+                            </span>
+                            <div class="small text-muted mt-1">
+                                ${solves > 0 ? `<span class="me-2"><i class="bi bi-check-circle-fill text-success me-1"></i>${solves}</span>` : ''}
+                                ${projects > 0 ? `<span><i class="bi bi-rocket-takeoff-fill text-secondary me-1"></i>${projects}</span>` : ''}
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted ms-3"></i>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderDayGroup(dateStr, items) {
+        // Sort items by time descending
+        items.sort((a, b) => b.timeStr.localeCompare(a.timeStr));
+
+        let html = `
+            <div class="mb-2 mt-4">
+                <span class="timeline-group-date shadow-sm text-primary bg-primary-subtle border-0">
+                    ${dateStr}
+                </span>
+            </div>
+        `;
+
+        items.forEach(item => {
+            const isSuccess = item.isCorrect === 'true' || item.isCorrect === '1' || item.isCorrect === true;
+            let iconClass = item.iconClass;
+            if (item.action_type === 'SOLVE' && item.isCorrect !== null) {
+                iconClass = isSuccess ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
+            }
+
+            // Tags (up to 2)
+            let tagsHtml = '';
+            if (item.tags) {
+                item.tags.split(',').slice(0, 2).forEach(tag => {
+                    tagsHtml += `<span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.65rem;">${tag.trim()}</span>`;
+                });
+            }
+
+            // Platform badge
+            let platformHtml = '';
+            if (item.platform && item.platform !== 'LOG') {
+                const badgeClass = item.platform === '스크래치' ? 'scratch' : (item.platform === '파이썬' ? 'python' : '');
+                platformHtml = `<span class="platform-badge me-2 ${badgeClass}">${item.platform}</span>`;
+            }
+
+            html += `
+                <div class="timeline-item" onclick="handleClick(this)"
+                    data-type="${item.action_type}"
+                    data-title="${item.title}"
+                    data-time="${item.dateStr} ${item.timeStr}"
+                    data-url="${item.url}"
+                    data-status="${item.status}"
+                    data-tags="${item.tags || ''}"
+                    data-concept="${item.concept || ''}"
+                    data-correct="${item.isCorrect}"
+                    data-exam="${item.exam_name || ''}"
+                    data-problem="${item.problem_number || ''}">
+                    
+                    <div class="timeline-marker"></div>
+                    
+                    <div class="timeline-content-row">
+                        <div class="timeline-icon-small me-3">
+                             <i class="bi ${iconClass}" style="font-size: 1.2rem;"></i>
+                        </div>
+                        <div class="timeline-main-info">
+                            <div class="timeline-title d-flex align-items-center flex-wrap">
+                                ${platformHtml}
+                                <span class="me-2">${item.title}</span>
+                                ${tagsHtml}
+                            </div>
+                            <div class="timeline-meta">
+                                ${item.timeStr} • ${item.action_type || 'Activity'}
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted small"></i>
+                    </div>
+                </div>
+            `;
+        });
+        return html;
+    }
+
+    function zoomInFrom(level) {
+        // Logic to zoom in one level deeper
+        const slider = document.querySelector('.zoom-slider');
+        let nextVal = parseInt(slider.value) + 1;
+        if (nextVal <= 4) {
+            slider.value = nextVal;
+            setZoomBySlider(nextVal);
+        }
+    }
+
     function handleClick(element) {
         // Read data attributes
         const title = element.dataset.title;
@@ -479,16 +599,13 @@
             let contentHtml = '';
 
             if (type === 'SOLVE' && examName && problemNumber) {
-                // Build problem content URL
                 const problemUrl = `/quiz/${examName}?p=${problemNumber.replace('p', '')}`;
 
-                // Enhanced detail: Iframe Top, Info Bottom
                 const isSuccess = isCorrect === 'true' || isCorrect === '1';
                 const statusClass = isSuccess ? 'text-success' : 'text-danger';
                 const statusIcon = isSuccess ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
                 const statusText = isSuccess ? 'Completed' : 'Failed';
 
-                // Parse tags
                 let tagsHtml = '';
                 if (tags) {
                     tagsHtml = tags.split(',').map(tag =>
@@ -537,7 +654,6 @@
                     </div>
                 `;
             } else {
-                // Default detail for other items
                 let actionHtml = '';
                 if (url && url !== '#' && !url.startsWith('{')) {
                     actionHtml = `
@@ -574,19 +690,5 @@
             panel.innerHTML = contentHtml;
             panel.style.opacity = '1';
         }, 200);
-    }
-
-    // Zoom Slider Control (Google Maps style)
-    // Zoom Slider Control (Year-Month-Week-Day)
-    function setZoomBySlider(value) {
-        const levels = { 1: 'year', 2: 'month', 3: 'week', 4: 'day' };
-        const labels = { 1: 'Year', 2: 'Month', 3: 'Week', 4: 'Day' };
-        const level = levels[value] || 'week';
-
-        // Update wrapper data attribute
-        document.querySelector('.timeline-wrapper').dataset.zoom = level;
-
-        // Update label
-        document.getElementById('zoomLevelLabel').textContent = labels[value] || 'Week';
     }
 </script>
