@@ -3,103 +3,267 @@
         <h2 class="fw-bold mb-0" style="color: #1d1d1f;">문제 풀이 (Problem Solving)</h2>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4" style="transform: none !important; transition: none !important;">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="width: 100%;">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="py-3 ps-4" style="width: 50px;">#</th>
-                            <th class="py-3">문제 (Problem)</th>
-                            <th class="py-3">태그 (Tags)</th>
-                            <th class="py-3 text-center">테스트케이스</th>
-                            <th class="py-3 text-center">정답률</th>
-                            <th class="py-3">상태 (Status)</th>
-                            <th class="py-3">제출 시간 (Date)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (locals.problems && locals.problems.length> 0) { %>
-                            <% locals.problems.forEach((item, index)=> { %>
-                                <tr>
-                                    <td class="ps-4 text-muted">
-                                        <%= index + 1 %>
-                                    </td>
-                                    <td>
-                                        <div class="fw-bold text-dark">
-                                            <%= item.problem_number %>
-                                        </div>
-                                        <div class="small text-muted">
-                                            <%= item.exam_name %>
-                                                <% if (item.concept) { %>
-                                                    <span class="text-secondary">• <%= item.concept %></span>
-                                                    <% } %>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <% if (item.tags) { %>
-                                            <% item.tags.split(',').slice(0, 3).forEach(tag=> { %>
-                                                <span class="badge bg-primary-subtle text-primary me-1"
-                                                    style="font-weight: 500;">
-                                                    <%= tag.trim() %>
-                                                </span>
-                                                <% }); %>
-                                                    <% } else { %>
-                                                        <span class="text-muted">-</span>
-                                                        <% } %>
-                                    </td>
-                                    <td class="text-center">
-                                        <% if (item.totalTests> 0) { %>
-                                            <span
-                                                class="<%= item.passedTests === item.totalTests ? 'text-success' : 'text-warning' %>">
-                                                <strong>
-                                                    <%= item.passedTests %>
-                                                </strong>/<%= item.totalTests %>
-                                            </span>
-                                            <% } else { %>
-                                                <span class="text-muted">-</span>
-                                                <% } %>
-                                    </td>
-                                    <td class="text-center">
-                                        <% const rate=item.accuracyRate || 0; let rateClass='text-danger' ; if (rate>=
-                                            80) rateClass = 'text-success';
-                                            else if (rate >= 50) rateClass = 'text-warning';
-                                            %>
-                                            <span class="<%= rateClass %> fw-bold">
-                                                <%= rate %>%
-                                            </span>
-                                            <div class="small text-muted">
-                                                (<%= item.successAttempts || 0 %>/<%= item.totalAttempts || 1 %>회)
-                                            </div>
-                                    </td>
-                                    <td>
-                                        <% if (item.is_correct) { %>
-                                            <span class="badge bg-success-subtle text-success rounded-pill px-3">
-                                                <i class="bi bi-check-circle-fill me-1"></i> Success
-                                            </span>
-                                            <% } else { %>
-                                                <span class="badge bg-danger-subtle text-danger rounded-pill px-3">
-                                                    <i class="bi bi-x-circle-fill me-1"></i> Failed
-                                                </span>
-                                                <% } %>
-                                    </td>
-                                    <td class="text-secondary">
-                                        <%= new Date(item.timestamp).toLocaleString('ko-KR', { month: '2-digit' ,
-                                            day: '2-digit' , hour: '2-digit' , minute: '2-digit' }) %>
-                                    </td>
-                                </tr>
-                                <% }); %>
-                                    <% } else { %>
-                                        <tr>
-                                            <td colspan="7" class="text-center py-5 text-muted">
-                                                <i class="bi bi-clipboard-x fs-1 d-block mb-3 opacity-25"></i>
-                                                아직 푼 문제가 없습니다.
-                                            </td>
-                                        </tr>
+    <style>
+        .problem-group {
+            background: #FFFFFF;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .problem-group:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .problem-header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            cursor: pointer;
+            gap: 16px;
+            background: #FFFFFF;
+            transition: background 0.2s;
+        }
+
+        .problem-header:hover {
+            background: #F9F9FB;
+        }
+
+        .problem-header.expanded {
+            border-bottom: 1px solid #F2F2F7;
+        }
+
+        .problem-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .problem-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1D1D1F;
+            margin-bottom: 4px;
+        }
+
+        .problem-subtitle {
+            font-size: 0.8rem;
+            color: #86868B;
+        }
+
+        .problem-tags {
+            flex: 1;
+        }
+
+        .problem-stats {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-shrink: 0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: #86868B;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .status-failed {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .chevron-icon {
+            color: #86868B;
+            transition: transform 0.2s;
+        }
+
+        .problem-header.expanded .chevron-icon {
+            transform: rotate(180deg);
+        }
+
+        .attempts-container {
+            display: none;
+            background: #FAFAFA;
+            padding: 0;
+        }
+
+        .attempts-container.show {
+            display: block;
+        }
+
+        .attempt-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px 12px 48px;
+            gap: 16px;
+            border-bottom: 1px solid #F2F2F7;
+            font-size: 0.85rem;
+        }
+
+        .attempt-row:last-child {
+            border-bottom: none;
+        }
+
+        .attempt-number {
+            color: #86868B;
+            min-width: 40px;
+        }
+
+        .attempt-time {
+            color: #666;
+            min-width: 140px;
+        }
+
+        .attempt-tests {
+            min-width: 80px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #86868B;
+        }
+    </style>
+
+    <% if (locals.groupedProblems && locals.groupedProblems.length> 0) { %>
+        <% locals.groupedProblems.forEach((group, gIndex)=> { %>
+            <div class="problem-group">
+                <div class="problem-header" onclick="toggleAttempts(this, <%= gIndex %>)">
+                    <div class="problem-info">
+                        <div class="problem-title">
+                            <%= group.problem_number %>
+                        </div>
+                        <div class="problem-subtitle">
+                            <%= group.exam_name %>
+                                <% if (group.concept) { %> • <%= group.concept %>
                                         <% } %>
-                    </tbody>
-                </table>
+                        </div>
+                    </div>
+
+                    <div class="problem-tags">
+                        <% if (group.tags) { %>
+                            <% group.tags.split(',').slice(0, 3).forEach(tag=> { %>
+                                <span class="badge bg-primary-subtle text-primary me-1" style="font-weight: 500;">
+                                    <%= tag.trim() %>
+                                </span>
+                                <% }); %>
+                                    <% } %>
+                    </div>
+
+                    <div class="problem-stats">
+                        <div class="stat-item">
+                            <% if (group.latestTotalTests> 0) { %>
+                                <div
+                                    class="stat-value <%= group.latestPassedTests === group.latestTotalTests ? 'text-success' : 'text-warning' %>">
+                                    <%= group.latestPassedTests %>/<%= group.latestTotalTests %>
+                                </div>
+                                <% } else { %>
+                                    <div class="stat-value text-muted">-</div>
+                                    <% } %>
+                                        <div class="stat-label">테스트</div>
+                        </div>
+                        <div class="stat-item">
+                            <% const rate=group.accuracyRate || 0; let rateClass='text-danger' ; if (rate>= 80)
+                                rateClass = 'text-success';
+                                else if (rate >= 50) rateClass = 'text-warning';
+                                %>
+                                <div class="stat-value <%= rateClass %>">
+                                    <%= rate %>%
+                                </div>
+                                <div class="stat-label">정답률 (<%= group.successAttempts %>/<%= group.totalAttempts %>)
+                                </div>
+                        </div>
+                        <div>
+                            <% if (group.latestStatus) { %>
+                                <span class="status-badge status-success">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Success
+                                </span>
+                                <% } else { %>
+                                    <span class="status-badge status-failed">
+                                        <i class="bi bi-x-circle-fill me-1"></i>Failed
+                                    </span>
+                                    <% } %>
+                        </div>
+                    </div>
+
+                    <i class="bi bi-chevron-down chevron-icon"></i>
+                </div>
+
+                <div class="attempts-container" id="attempts-<%= gIndex %>">
+                    <% group.attempts.sort((a, b)=> new Date(b.timestamp) - new Date(a.timestamp)).forEach((attempt,
+                        aIndex) => { %>
+                        <div class="attempt-row">
+                            <span class="attempt-number">#<%= aIndex + 1 %></span>
+                            <span class="attempt-time">
+                                <%= new Date(attempt.timestamp).toLocaleString('ko-KR', { month: '2-digit' ,
+                                    day: '2-digit' , hour: '2-digit' , minute: '2-digit' }) %>
+                            </span>
+                            <span class="attempt-tests">
+                                <% if (attempt.totalTests> 0) { %>
+                                    <span
+                                        class="<%= attempt.passedTests === attempt.totalTests ? 'text-success' : 'text-warning' %>">
+                                        <%= attempt.passedTests %>/<%= attempt.totalTests %>
+                                    </span>
+                                    <% } else { %>
+                                        <span class="text-muted">-</span>
+                                        <% } %>
+                            </span>
+                            <span>
+                                <% if (attempt.is_correct) { %>
+                                    <span class="badge bg-success-subtle text-success">✓ Success</span>
+                                    <% } else { %>
+                                        <span class="badge bg-danger-subtle text-danger">✗ Failed</span>
+                                        <% } %>
+                            </span>
+                        </div>
+                        <% }); %>
+                </div>
             </div>
-        </div>
-    </div>
+            <% }); %>
+                <% } else { %>
+                    <div class="problem-group">
+                        <div class="empty-state">
+                            <i class="bi bi-clipboard-x fs-1 d-block mb-3 opacity-25"></i>
+                            아직 푼 문제가 없습니다.
+                        </div>
+                    </div>
+                    <% } %>
 </div>
+
+<script>
+    function toggleAttempts(header, index) {
+        const container = document.getElementById('attempts-' + index);
+        const isExpanded = container.classList.contains('show');
+
+        // Toggle
+        if (isExpanded) {
+            container.classList.remove('show');
+            header.classList.remove('expanded');
+        } else {
+            container.classList.add('show');
+            header.classList.add('expanded');
+        }
+    }
+</script>

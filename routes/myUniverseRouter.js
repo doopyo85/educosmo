@@ -684,9 +684,45 @@ router.get('/problems', async (req, res) => {
             };
         });
 
+        // 5. Group by problem (for accordion view)
+        const groupedProblemsMap = new Map();
+        enrichedProblems.forEach(p => {
+            const key = `${p.exam_name}_${p.problem_number}`;
+            if (!groupedProblemsMap.has(key)) {
+                groupedProblemsMap.set(key, {
+                    exam_name: p.exam_name,
+                    problem_number: p.problem_number,
+                    concept: p.concept,
+                    tags: p.tags,
+                    difficulty: p.difficulty,
+                    accuracyRate: p.accuracyRate,
+                    totalAttempts: p.totalAttempts,
+                    successAttempts: p.successAttempts,
+                    latestStatus: null,
+                    latestTimestamp: null,
+                    attempts: []
+                });
+            }
+            const group = groupedProblemsMap.get(key);
+            group.attempts.push(p);
+
+            // Update latest status (first item in sorted list is most recent)
+            if (!group.latestTimestamp || new Date(p.timestamp) > new Date(group.latestTimestamp)) {
+                group.latestStatus = p.is_correct;
+                group.latestTimestamp = p.timestamp;
+                group.latestPassedTests = p.passedTests;
+                group.latestTotalTests = p.totalTests;
+            }
+        });
+
+        // Convert to array and sort by latest timestamp
+        const groupedProblems = Array.from(groupedProblemsMap.values())
+            .sort((a, b) => new Date(b.latestTimestamp) - new Date(a.latestTimestamp));
+
         res.render('my-universe/index', {
             activeTab: 'problems',
-            problems: enrichedProblems,
+            problems: enrichedProblems,       // Original flat list (for compatibility)
+            groupedProblems: groupedProblems, // New grouped data
             userID: req.session.userID,
             userRole: req.session.role,
             is_logined: req.session.is_logined,
