@@ -684,14 +684,26 @@ router.get('/problems', async (req, res) => {
             };
         });
 
-        // 5. Group by problem (for accordion view)
-        const groupedProblemsMap = new Map();
+        // 5. Two-level grouping: exam_name (차시) → problems (문제)
+        const examGroupsMap = new Map();
         enrichedProblems.forEach(p => {
-            const key = `${p.exam_name}_${p.problem_number}`;
-            if (!groupedProblemsMap.has(key)) {
-                groupedProblemsMap.set(key, {
-                    exam_name: p.exam_name,
-                    problem_number: p.problem_number,
+            const examKey = p.exam_name || 'Unknown';
+            const problemKey = p.problem_number || 'Unknown';
+
+            // Create exam group if not exists
+            if (!examGroupsMap.has(examKey)) {
+                examGroupsMap.set(examKey, {
+                    exam_name: examKey,
+                    problems: new Map(),
+                    latestTimestamp: null
+                });
+            }
+            const examGroup = examGroupsMap.get(examKey);
+
+            // Create problem group within exam if not exists
+            if (!examGroup.problems.has(problemKey)) {
+                examGroup.problems.set(problemKey, {
+                    problem_number: problemKey,
                     concept: p.concept,
                     tags: p.tags,
                     difficulty: p.difficulty,
@@ -700,29 +712,41 @@ router.get('/problems', async (req, res) => {
                     successAttempts: p.successAttempts,
                     latestStatus: null,
                     latestTimestamp: null,
+                    latestPassedTests: 0,
+                    latestTotalTests: 0,
                     attempts: []
                 });
             }
-            const group = groupedProblemsMap.get(key);
-            group.attempts.push(p);
 
-            // Update latest status (first item in sorted list is most recent)
-            if (!group.latestTimestamp || new Date(p.timestamp) > new Date(group.latestTimestamp)) {
-                group.latestStatus = p.is_correct;
-                group.latestTimestamp = p.timestamp;
-                group.latestPassedTests = p.passedTests;
-                group.latestTotalTests = p.totalTests;
+            const problemGroup = examGroup.problems.get(problemKey);
+            problemGroup.attempts.push(p);
+
+            // Update latest status for this problem
+            if (!problemGroup.latestTimestamp || new Date(p.timestamp) > new Date(problemGroup.latestTimestamp)) {
+                problemGroup.latestStatus = p.is_correct;
+                problemGroup.latestTimestamp = p.timestamp;
+                problemGroup.latestPassedTests = p.passedTests;
+                problemGroup.latestTotalTests = p.totalTests;
+            }
+
+            // Update latest timestamp for exam group
+            if (!examGroup.latestTimestamp || new Date(p.timestamp) > new Date(examGroup.latestTimestamp)) {
+                examGroup.latestTimestamp = p.timestamp;
             }
         });
 
-        // Convert to array and sort by latest timestamp
-        const groupedProblems = Array.from(groupedProblemsMap.values())
-            .sort((a, b) => new Date(b.latestTimestamp) - new Date(a.latestTimestamp));
+        // Convert to array structure for template
+        const groupedByExam = Array.from(examGroupsMap.values()).map(exam => ({
+            exam_name: exam.exam_name,
+            latestTimestamp: exam.latestTimestamp,
+            problems: Array.from(exam.problems.values())
+                .sort((a, b) => new Date(b.latestTimestamp) - new Date(a.latestTimestamp))
+        })).sort((a, b) => new Date(b.latestTimestamp) - new Date(a.latestTimestamp));
 
         res.render('my-universe/index', {
             activeTab: 'problems',
-            problems: enrichedProblems,       // Original flat list (for compatibility)
-            groupedProblems: groupedProblems, // New grouped data
+            problems: enrichedProblems,       // Original flat list
+            groupedByExam: groupedByExam,     // New two-level grouped data
             userID: req.session.userID,
             userRole: req.session.role,
             is_logined: req.session.is_logined,

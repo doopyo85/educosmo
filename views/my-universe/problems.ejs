@@ -4,35 +4,77 @@
     </div>
 
     <style>
-        .problem-group {
-            background: #FFFFFF;
-            border-radius: 16px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-            margin-bottom: 12px;
-            overflow: hidden;
-            transition: box-shadow 0.2s ease;
+        /* Exam Group (차시) */
+        .exam-group {
+            margin-bottom: 20px;
         }
 
-        .problem-group:hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        }
-
-        .problem-header {
+        .exam-header {
             display: flex;
             align-items: center;
-            padding: 16px 20px;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px 16px 0 0;
             cursor: pointer;
-            gap: 16px;
+            gap: 12px;
+        }
+
+        .exam-header:hover {
+            filter: brightness(1.05);
+        }
+
+        .exam-header.collapsed {
+            border-radius: 16px;
+        }
+
+        .exam-header.collapsed+.exam-content {
+            display: none;
+        }
+
+        .exam-title {
+            font-weight: 700;
+            font-size: 1rem;
+            flex: 1;
+        }
+
+        .exam-stats {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .exam-chevron {
+            transition: transform 0.2s;
+        }
+
+        .exam-header.collapsed .exam-chevron {
+            transform: rotate(-90deg);
+        }
+
+        .exam-content {
             background: #FFFFFF;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        /* Problem Row (문제) */
+        .problem-row {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            gap: 16px;
+            border-bottom: 1px solid #F2F2F7;
+            cursor: pointer;
             transition: background 0.2s;
         }
 
-        .problem-header:hover {
-            background: #F9F9FB;
+        .problem-row:hover {
+            background: #FAFAFA;
         }
 
-        .problem-header.expanded {
-            border-bottom: 1px solid #F2F2F7;
+        .problem-row:last-child {
+            border-bottom: none;
         }
 
         .problem-info {
@@ -40,15 +82,14 @@
             min-width: 0;
         }
 
-        .problem-title {
+        .problem-number {
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: #1D1D1F;
-            margin-bottom: 4px;
         }
 
-        .problem-subtitle {
-            font-size: 0.8rem;
+        .problem-concept {
+            font-size: 0.75rem;
             color: #86868B;
         }
 
@@ -59,28 +100,29 @@
         .problem-stats {
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 20px;
             flex-shrink: 0;
         }
 
         .stat-item {
             text-align: center;
+            min-width: 60px;
         }
 
         .stat-value {
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         .stat-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #86868B;
         }
 
         .status-badge {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.75rem;
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 0.7rem;
             font-weight: 600;
         }
 
@@ -94,18 +136,10 @@
             color: #C62828;
         }
 
-        .chevron-icon {
-            color: #86868B;
-            transition: transform 0.2s;
-        }
-
-        .problem-header.expanded .chevron-icon {
-            transform: rotate(180deg);
-        }
-
+        /* Attempts Container */
         .attempts-container {
             display: none;
-            background: #FAFAFA;
+            background: #F5F5F7;
             padding: 0;
         }
 
@@ -116,28 +150,14 @@
         .attempt-row {
             display: flex;
             align-items: center;
-            padding: 12px 20px 12px 48px;
+            padding: 10px 20px 10px 56px;
             gap: 16px;
-            border-bottom: 1px solid #F2F2F7;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #EBEBEB;
         }
 
         .attempt-row:last-child {
             border-bottom: none;
-        }
-
-        .attempt-number {
-            color: #86868B;
-            min-width: 40px;
-        }
-
-        .attempt-time {
-            color: #666;
-            min-width: 140px;
-        }
-
-        .attempt-tests {
-            min-width: 80px;
         }
 
         .empty-state {
@@ -147,103 +167,114 @@
         }
     </style>
 
-    <% if (locals.groupedProblems && locals.groupedProblems.length> 0) { %>
-        <% locals.groupedProblems.forEach((group, gIndex)=> { %>
-            <div class="problem-group">
-                <div class="problem-header" onclick="toggleAttempts(this, <%= gIndex %>)">
-                    <div class="problem-info">
-                        <div class="problem-title">
-                            <%= group.problem_number %>
-                        </div>
-                        <div class="problem-subtitle">
-                            <%= group.exam_name %>
-                                <% if (group.concept) { %> • <%= group.concept %>
-                                        <% } %>
-                        </div>
-                    </div>
-
-                    <div class="problem-tags">
-                        <% if (group.tags) { %>
-                            <% group.tags.split(',').slice(0, 3).forEach(tag=> { %>
-                                <span class="badge bg-primary-subtle text-primary me-1" style="font-weight: 500;">
-                                    <%= tag.trim() %>
-                                </span>
-                                <% }); %>
-                                    <% } %>
-                    </div>
-
-                    <div class="problem-stats">
-                        <div class="stat-item">
-                            <% if (group.latestTotalTests> 0) { %>
-                                <div
-                                    class="stat-value <%= group.latestPassedTests === group.latestTotalTests ? 'text-success' : 'text-warning' %>">
-                                    <%= group.latestPassedTests %>/<%= group.latestTotalTests %>
-                                </div>
-                                <% } else { %>
-                                    <div class="stat-value text-muted">-</div>
-                                    <% } %>
-                                        <div class="stat-label">테스트</div>
-                        </div>
-                        <div class="stat-item">
-                            <% const rate=group.accuracyRate || 0; let rateClass='text-danger' ; if (rate>= 80)
-                                rateClass = 'text-success';
-                                else if (rate >= 50) rateClass = 'text-warning';
-                                %>
-                                <div class="stat-value <%= rateClass %>">
-                                    <%= rate %>%
-                                </div>
-                                <div class="stat-label">정답률 (<%= group.successAttempts %>/<%= group.totalAttempts %>)
-                                </div>
-                        </div>
-                        <div>
-                            <% if (group.latestStatus) { %>
-                                <span class="status-badge status-success">
-                                    <i class="bi bi-check-circle-fill me-1"></i>Success
-                                </span>
-                                <% } else { %>
-                                    <span class="status-badge status-failed">
-                                        <i class="bi bi-x-circle-fill me-1"></i>Failed
-                                    </span>
-                                    <% } %>
-                        </div>
-                    </div>
-
-                    <i class="bi bi-chevron-down chevron-icon"></i>
+    <% if (locals.groupedByExam && locals.groupedByExam.length> 0) { %>
+        <% locals.groupedByExam.forEach((exam, eIndex)=> { %>
+            <div class="exam-group">
+                <div class="exam-header" onclick="toggleExam(this)">
+                    <i class="bi bi-book-fill"></i>
+                    <span class="exam-title">
+                        <%= exam.exam_name %>
+                    </span>
+                    <span class="exam-stats">
+                        <%= exam.problems.length %>개 문제
+                    </span>
+                    <i class="bi bi-chevron-down exam-chevron"></i>
                 </div>
+                <div class="exam-content">
+                    <% exam.problems.forEach((problem, pIndex)=> { %>
+                        <div class="problem-row" onclick="toggleAttempts(this, '<%= eIndex %>-<%= pIndex %>')">
+                            <div class="problem-info">
+                                <div class="problem-number">
+                                    <%= problem.problem_number %>
+                                </div>
+                                <% if (problem.concept) { %>
+                                    <div class="problem-concept">
+                                        <%= problem.concept %>
+                                    </div>
+                                    <% } %>
+                            </div>
 
-                <div class="attempts-container" id="attempts-<%= gIndex %>">
-                    <% group.attempts.sort((a, b)=> new Date(b.timestamp) - new Date(a.timestamp)).forEach((attempt,
-                        aIndex) => { %>
-                        <div class="attempt-row">
-                            <span class="attempt-number">#<%= aIndex + 1 %></span>
-                            <span class="attempt-time">
-                                <%= new Date(attempt.timestamp).toLocaleString('ko-KR', { month: '2-digit' ,
-                                    day: '2-digit' , hour: '2-digit' , minute: '2-digit' }) %>
-                            </span>
-                            <span class="attempt-tests">
-                                <% if (attempt.totalTests> 0) { %>
-                                    <span
-                                        class="<%= attempt.passedTests === attempt.totalTests ? 'text-success' : 'text-warning' %>">
-                                        <%= attempt.passedTests %>/<%= attempt.totalTests %>
+                            <div class="problem-tags">
+                                <% if (problem.tags) { %>
+                                    <% problem.tags.split(',').slice(0, 3).forEach(tag=> { %>
+                                        <span class="badge bg-primary-subtle text-primary me-1"
+                                            style="font-size: 0.7rem; font-weight: 500;">
+                                            <%= tag.trim() %>
+                                        </span>
+                                        <% }); %>
+                                            <% } %>
+                            </div>
+
+                            <div class="problem-stats">
+                                <div class="stat-item">
+                                    <% if (problem.latestTotalTests> 0) { %>
+                                        <div
+                                            class="stat-value <%= problem.latestPassedTests === problem.latestTotalTests ? 'text-success' : 'text-warning' %>">
+                                            <%= problem.latestPassedTests %>/<%= problem.latestTotalTests %>
+                                        </div>
+                                        <% } else { %>
+                                            <div class="stat-value text-muted">-</div>
+                                            <% } %>
+                                                <div class="stat-label">테스트</div>
+                                </div>
+                                <div class="stat-item">
+                                    <% const rate=problem.accuracyRate || 0; let rateClass='text-danger' ; if (rate>=
+                                        80) rateClass = 'text-success';
+                                        else if (rate >= 50) rateClass = 'text-warning';
+                                        %>
+                                        <div class="stat-value <%= rateClass %>">
+                                            <%= rate %>%
+                                        </div>
+                                        <div class="stat-label">
+                                            <%= problem.successAttempts %>/<%= problem.totalAttempts %>회
+                                        </div>
+                                </div>
+                                <div>
+                                    <% if (problem.latestStatus) { %>
+                                        <span class="status-badge status-success">
+                                            <i class="bi bi-check-circle-fill me-1"></i>Success
+                                        </span>
+                                        <% } else { %>
+                                            <span class="status-badge status-failed">
+                                                <i class="bi bi-x-circle-fill me-1"></i>Failed
+                                            </span>
+                                            <% } %>
+                                </div>
+                            </div>
+
+                            <i class="bi bi-chevron-down text-muted" style="font-size: 0.8rem;"></i>
+                        </div>
+
+                        <div class="attempts-container" id="attempts-<%= eIndex %>-<%= pIndex %>">
+                            <% problem.attempts.sort((a, b)=> new Date(b.timestamp) - new
+                                Date(a.timestamp)).forEach((attempt, aIndex) => { %>
+                                <div class="attempt-row">
+                                    <span style="color: #86868B; min-width: 40px;">#<%= aIndex + 1 %></span>
+                                    <span style="min-width: 130px;">
+                                        <%= new Date(attempt.timestamp).toLocaleString('ko-KR', { month: '2-digit' ,
+                                            day: '2-digit' , hour: '2-digit' , minute: '2-digit' }) %>
                                     </span>
-                                    <% } else { %>
-                                        <span class="text-muted">-</span>
-                                        <% } %>
-                            </span>
-                            <span>
-                                <% if (attempt.is_correct) { %>
-                                    <span class="badge bg-success-subtle text-success">✓ Success</span>
-                                    <% } else { %>
-                                        <span class="badge bg-danger-subtle text-danger">✗ Failed</span>
-                                        <% } %>
-                            </span>
+                                    <span style="min-width: 70px;">
+                                        <% if (attempt.totalTests> 0) { %>
+                                            <%= attempt.passedTests %>/<%= attempt.totalTests %>
+                                                    <% } else { %>
+                                                        -
+                                                        <% } %>
+                                    </span>
+                                    <% if (attempt.is_correct) { %>
+                                        <span class="badge bg-success-subtle text-success">✓ Success</span>
+                                        <% } else { %>
+                                            <span class="badge bg-danger-subtle text-danger">✗ Failed</span>
+                                            <% } %>
+                                </div>
+                                <% }); %>
                         </div>
                         <% }); %>
                 </div>
             </div>
             <% }); %>
                 <% } else { %>
-                    <div class="problem-group">
+                    <div class="exam-group">
                         <div class="empty-state">
                             <i class="bi bi-clipboard-x fs-1 d-block mb-3 opacity-25"></i>
                             아직 푼 문제가 없습니다.
@@ -253,17 +284,13 @@
 </div>
 
 <script>
-    function toggleAttempts(header, index) {
-        const container = document.getElementById('attempts-' + index);
-        const isExpanded = container.classList.contains('show');
+    function toggleExam(header) {
+        header.classList.toggle('collapsed');
+    }
 
-        // Toggle
-        if (isExpanded) {
-            container.classList.remove('show');
-            header.classList.remove('expanded');
-        } else {
-            container.classList.add('show');
-            header.classList.add('expanded');
-        }
+    function toggleAttempts(row, id) {
+        event.stopPropagation();
+        const container = document.getElementById('attempts-' + id);
+        container.classList.toggle('show');
     }
 </script>

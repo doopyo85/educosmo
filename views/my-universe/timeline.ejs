@@ -339,6 +339,10 @@
         const time = element.dataset.time;
         const url = element.dataset.url;
         const status = element.dataset.status;
+        const type = element.dataset.type;
+        const tags = element.dataset.tags || '';
+        const concept = element.dataset.concept || '';
+        const isCorrect = element.dataset.correct;
 
         // Active state handling
         document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
@@ -349,38 +353,98 @@
         panel.style.opacity = '0';
 
         setTimeout(() => {
-            // Determine Action Button
-            let actionHtml = '';
-            if (url && url !== '#' && !url.startsWith('{')) {
-                actionHtml = `
-                    <div class="mt-4 pt-3 border-top">
-                        <a href="${url}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold" target="_blank">
-                            <i class="bi bi-box-arrow-up-right me-2"></i> 확인하기
-                        </a>
+            let contentHtml = '';
+
+            if (type === 'SOLVE') {
+                // Enhanced detail for SOLVE items
+                const isSuccess = isCorrect === 'true' || isCorrect === '1';
+                const statusClass = isSuccess ? 'text-success' : 'text-danger';
+                const statusIcon = isSuccess ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+                const statusText = isSuccess ? '정답' : '오답';
+
+                // Parse tags into badges
+                let tagsHtml = '';
+                if (tags) {
+                    tags.split(',').forEach(tag => {
+                        tagsHtml += `<span class="badge bg-primary-subtle text-primary me-1" style="font-size: 0.8rem;">${tag.trim()}</span>`;
+                    });
+                }
+
+                contentHtml = `
+                    <div class="animate-fade-in text-center">
+                        <div class="mb-3">
+                            <span class="badge bg-light text-dark rounded-pill px-3 py-2 border">
+                                ${time}
+                            </span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <span class="badge bg-success-subtle text-success px-3 py-2" style="font-size: 0.8rem;">
+                                <i class="bi bi-code-square me-1"></i> 문제풀이
+                            </span>
+                        </div>
+                        
+                        <h2 class="fw-bold mb-2" style="color: #1D1D1F; font-size: 1.5rem;">${title}</h2>
+                        
+                        ${concept ? `<p class="text-muted mb-3" style="font-size: 0.9rem;">${concept}</p>` : ''}
+                        
+                        ${tagsHtml ? `<div class="mb-4">${tagsHtml}</div>` : ''}
+                        
+                        <div class="p-4 rounded-4 d-inline-block" style="background: #ffffff; min-width: 280px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.06);">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
+                                <i class="bi ${statusIcon} ${statusClass}" style="font-size: 2rem;"></i>
+                                <span class="fw-bold ${statusClass}" style="font-size: 1.3rem;">${statusText}</span>
+                            </div>
+                            
+                            <div class="text-muted" style="font-size: 0.85rem;">
+                                ${isSuccess ? '이 문제를 성공적으로 해결했습니다!' : '다음에 다시 도전해보세요!'}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-3">
+                            <p class="text-muted small mb-0">
+                                <i class="bi bi-info-circle me-1"></i>
+                                문제 풀이 탭에서 상세 시도 기록을 확인할 수 있습니다
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Default detail for other items
+                let actionHtml = '';
+                if (url && url !== '#' && !url.startsWith('{')) {
+                    actionHtml = `
+                        <div class="mt-4 pt-3 border-top">
+                            <a href="${url}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold" target="_blank">
+                                <i class="bi bi-box-arrow-up-right me-2"></i> 확인하기
+                            </a>
+                        </div>
+                    `;
+                }
+
+                contentHtml = `
+                    <div class="animate-fade-in text-center">
+                        <div class="mb-4">
+                            <span class="badge bg-light text-dark rounded-pill px-3 py-2 border">
+                                ${time}
+                            </span>
+                        </div>
+                        <h2 class="fw-bold mb-3" style="color: #1D1D1F;">${title}</h2>
+                        
+                        <div class="p-4 rounded-4 text-center d-inline-block" style="background: #ffffff; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05);">
+                             <div class="mb-2">
+                                 <div class="fw-medium text-success fs-5">
+                                    <i class="bi bi-check-circle-fill me-1"></i> ${status || 'Completed'}
+                                 </div>
+                                 <div class="small text-muted mt-1">SUCCESS</div>
+                            </div>
+                            ${actionHtml}
+                        </div>
                     </div>
                 `;
             }
 
-            panel.innerHTML = `
-                <div class="animate-fade-in text-center">
-                    <div class="mb-4">
-                        <span class="badge bg-light text-dark rounded-pill px-3 py-2 border">
-                            ${time}
-                        </span>
-                    </div>
-                    <h2 class="fw-bold mb-3" style="color: #1D1D1F;">${title}</h2>
-                    
-                    <div class="p-4 rounded-4 text-center d-inline-block" style="background: #ffffff; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05);">
-                         <div class="mb-2">
-                             <div class="fw-medium text-success fs-5">
-                                <i class="bi bi-check-circle-fill me-1"></i> ${status || 'Completed'}
-                             </div>
-                             <div class="small text-muted mt-1">SUCCESS</div>
-                        </div>
-                        ${actionHtml}
-                    </div>
-                </div>
-            `;
+            panel.innerHTML = contentHtml;
             panel.style.opacity = '1';
         }, 200);
     }

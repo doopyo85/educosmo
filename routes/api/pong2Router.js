@@ -257,7 +257,7 @@ router.get('/boards/:id', async (req, res) => {
 // ==========================================
 router.post('/boards', requireDbUser, async (req, res) => {
     try {
-        const { title, content, board_type, nest_id } = req.body; // board_type: 'COMMUNITY' or 'TEACHER'
+        const { title, content, board_type, nest_id, image_url } = req.body; // board_type: 'COMMUNITY' or 'TEACHER'
 
         // Validate basic input
         if (!title || !content) {
@@ -267,6 +267,7 @@ router.post('/boards', requireDbUser, async (req, res) => {
         const authorName = req.user.nickname || req.user.name;
         const authorId = req.user.id;
         const authorType = req.user.type; // 'PAID' or 'PONG2'
+        const imageUrl = image_url || null; // 🔥 이미지 URL 추가
 
         // Determine Scope AND Category
         let boardScope = 'COMMUNITY';
@@ -283,9 +284,9 @@ router.post('/boards', requireDbUser, async (req, res) => {
 
         const result = await queryDatabase(`
             INSERT INTO board_posts 
-            (category_id, title, content, author, author_id, author_type, board_scope, is_public, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
-        `, [categoryId, title, content, authorName, authorId, authorType, boardScope]);
+            (category_id, title, content, image_url, author, author_id, author_type, board_scope, is_public, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
+        `, [categoryId, title, content, imageUrl, authorName, authorId, authorType, boardScope]);
 
         res.json({ success: true, postId: result.insertId });
 
