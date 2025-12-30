@@ -1468,7 +1468,7 @@ class ContentComponent extends Component {
     }
   }
 
-  // 🔥 NEW: 그리기 기능 설정 및 이벤트 바인딩
+  /* 🔥 OLD Drawing Logic (Deprecated)
   setupDrawingFeature() {
     if (!this.elements.penToggleBtn) return;
 
@@ -1583,6 +1583,143 @@ class ContentComponent extends Component {
     // UI 업데이트 (색상 선택 해제 느낌)
     this.elements.colorBtns.forEach(b => b.classList.remove('active'));
     if (this.elements.eraserBtn) this.elements.eraserBtn.classList.add('active');
+  }
+
+  */
+
+  // 🔥 NEW: FAB-style Drawing Logic
+  setupDrawingFeature() {
+    if (!this.elements.penToggleBtn) return;
+
+    // 1. 펜 토글 버튼 이벤트
+    this.elements.penToggleBtn.addEventListener('click', () => {
+      this.toggleDrawingMode();
+    });
+
+    // 2. FAB 메뉴 이벤트 바인딩
+    const fabGroup = document.getElementById('drawing-fab-group');
+    if (fabGroup) {
+      // (1) 색상 선택
+      const colorOptions = fabGroup.querySelectorAll('.color-option');
+      const colorIndicator = fabGroup.querySelector('.color-indicator');
+
+      colorOptions.forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          const color = e.target.dataset.color || '#ff0000';
+          this.setDrawingColor(color);
+
+          // 메인 버튼 인디케이터 업데이트
+          if (colorIndicator) colorIndicator.style.backgroundColor = color;
+        });
+      });
+
+      // (2) 굵기 선택
+      const sizeOptions = fabGroup.querySelectorAll('.size-option');
+      const sizeIndicator = fabGroup.querySelector('.size-indicator');
+
+      sizeOptions.forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          // data-size는 button에 있음
+          const btn = e.target.closest('.size-option');
+          const size = btn.dataset.size || '5';
+          this.setDrawingSize(size);
+
+          // 메인 버튼 인디케이터 업데이트 (크기 반영)
+          if (sizeIndicator) {
+            // 단순 dot 크기 변화보다, scale로 표현
+            const scaleMap = { '2': 0.6, '5': 1, '10': 1.4 };
+            sizeIndicator.style.transform = `scale(${scaleMap[size] || 1})`;
+          }
+        });
+      });
+
+      // (3) 지우개 버튼
+      const eraserBtn = document.getElementById('drawing-eraser-btn');
+      if (eraserBtn) {
+        eraserBtn.addEventListener('click', () => {
+          this.setEraserMode();
+          // 지우개 활성화 시각적 피드백 (간단히 active 클래스 토글은 setEraserMode에서 처리)
+        });
+      }
+
+      // (4) 모두 지우기
+      const clearBtn = document.getElementById('drawing-clear-all');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          // 팝업 내부 버튼이므로 전파 방지? (필요시)
+          if (confirm('모든 그림을 지우시겠습니까?')) {
+            this.clearDrawingCanvas();
+          }
+        });
+      }
+    }
+  }
+
+  toggleDrawingMode() {
+    const container = this.elements.container; // #problem-container
+    const btn = this.elements.penToggleBtn;
+
+    // FAB 그룹은 CSS에서 .problem-container.pen-active 형제 선택자로 자동 제어됨
+
+    if (!container || !btn) return;
+
+    const isActive = container.classList.contains('pen-active');
+
+    if (isActive) {
+      // 비활성화
+      container.classList.remove('pen-active');
+      btn.classList.remove('active');
+
+      // 아이콘 변경 (펜)
+      btn.innerHTML = '<i class="bi bi-pencil-fill"></i>';
+      btn.title = "펜 그리기";
+
+    } else {
+      // 활성화
+      container.classList.add('pen-active');
+      btn.classList.add('active');
+
+      // 아이콘 변경 (닫기)
+      btn.innerHTML = '<i class="bi bi-x-lg"></i>';
+      btn.title = "그리기 종료";
+
+      // 캔버스 초기화 (최초 1회)
+      if (!this.drawingCanvasInstance && window.DrawingCanvas) {
+        console.log('ContentComponent: DrawingCanvas 초기화');
+        this.drawingCanvasInstance = new window.DrawingCanvas('drawing-canvas');
+      }
+    }
+  }
+
+  setDrawingColor(color) {
+    if (!this.drawingCanvasInstance) return;
+    this.drawingCanvasInstance.setColor(color);
+
+    // 지우개 모드 해제됨 -> 지우개 버튼 스타일 초기화
+    const eraserBtn = document.getElementById('drawing-eraser-btn');
+    if (eraserBtn) {
+      eraserBtn.classList.remove('active');
+      eraserBtn.style.backgroundColor = 'white';
+      eraserBtn.style.color = '#555';
+    }
+  }
+
+  setDrawingSize(size) {
+    if (!this.drawingCanvasInstance) return;
+    this.drawingCanvasInstance.setSize(size);
+  }
+
+  setEraserMode() {
+    if (!this.drawingCanvasInstance) return;
+
+    this.drawingCanvasInstance.setEraserMode(true);
+
+    const eraserBtn = document.getElementById('drawing-eraser-btn');
+    if (eraserBtn) {
+      eraserBtn.classList.add('active');
+      eraserBtn.style.backgroundColor = '#e9ecef'; // Active color styling
+      eraserBtn.style.color = '#0d6efd';
+    }
   }
 
   clearDrawingCanvas() {

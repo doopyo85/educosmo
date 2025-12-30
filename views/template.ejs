@@ -128,54 +128,68 @@
                         <canvas id="drawing-canvas" class="drawing-canvas"></canvas>
                     </div>
 
-                    <!-- 🔥 추가: 그리기 도구 툴바 (숨김 상태) -->
-                    <div id="drawing-toolbar" class="drawing-toolbar">
-                        <div class="toolbar-section">
-                            <span class="toolbar-label">색상</span>
-                            <div class="color-picker">
-                                <button class="color-btn active" data-color="#ff0000" style="background-color: #ff0000;"
-                                    title="빨강"></button>
-                                <button class="color-btn" data-color="#ffcc00" style="background-color: #ffcc00;"
-                                    title="노랑"></button>
-                                <button class="color-btn" data-color="#0066ff" style="background-color: #0066ff;"
-                                    title="파랑"></button>
-                                <button class="color-btn" data-color="#000000" style="background-color: #000000;"
-                                    title="검정"></button>
-                            </div>
-                        </div>
-                        <div class="toolbar-divider"></div>
-                        <div class="toolbar-section">
-                            <span class="toolbar-label">굵기</span>
-                            <div class="size-picker">
-                                <button class="size-btn small" data-size="2" title="얇게">
-                                    <span class="dot" style="width: 4px; height: 4px;"></span>
-                                </button>
-                                <button class="size-btn medium active" data-size="5" title="보통">
-                                    <span class="dot" style="width: 8px; height: 8px;"></span>
-                                </button>
-                                <button class="size-btn large" data-size="10" title="굵게">
-                                    <span class="dot" style="width: 12px; height: 12px;"></span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="toolbar-divider"></div>
-                        <div class="toolbar-section">
-                            <button id="drawing-eraser" class="tool-btn" title="지우개">
-                                <i class="bi bi-eraser"></i>
-                            </button>
-                            <button id="drawing-clear" class="tool-btn" title="모두 지우기">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 🔥 추가: 우측 하단 플로팅 폰트 컨트롤 -->
-                    <!-- 🔥 추가: 우측 하단 플로팅 폰트 컨트롤 (복구됨) -->
+                    <!-- 🔥 추가: 우측 하단 플로팅 폰트 컨트롤 & 그리기 FAB -->
                     <div class="content-floating-controls">
-                        <!-- 펜 토글 버튼 (최상단) -->
+
+                        <!-- 1. 확장되는 그리기 메뉴 (기본 숨김) -->
+                        <div id="drawing-fab-group" class="drawing-fab-group">
+                            <!-- 색상 버튼 -->
+                            <div class="fab-wrapper">
+                                <button id="drawing-color-btn" class="floating-btn fab-child" title="색상 변경">
+                                    <span class="color-indicator" style="background-color: #ff0000;"></span>
+                                </button>
+                                <!-- 색상 선택 팝업 (좌측) -->
+                                <div id="fab-color-palette" class="fab-popup left">
+                                    <button class="color-option" data-color="#ff0000"
+                                        style="background-color: #ff0000;"></button>
+                                    <button class="color-option" data-color="#ffcc00"
+                                        style="background-color: #ffcc00;"></button>
+                                    <button class="color-option" data-color="#0066ff"
+                                        style="background-color: #0066ff;"></button>
+                                    <button class="color-option" data-color="#000000"
+                                        style="background-color: #000000;"></button>
+                                </div>
+                            </div>
+
+                            <!-- 굵기 버튼 -->
+                            <div class="fab-wrapper">
+                                <button id="drawing-size-btn" class="floating-btn fab-child" title="굵기 변경">
+                                    <span class="size-indicator"
+                                        style="width: 6px; height: 6px; background-color: #555;"></span>
+                                </button>
+                                <!-- 굵기 선택 팝업 (좌측) -->
+                                <div id="fab-size-options" class="fab-popup left">
+                                    <button class="size-option" data-size="2" title="얇게"><span class="dot"
+                                            style="width: 3px; height: 3px;"></span></button>
+                                    <button class="size-option" data-size="5" title="보통"><span class="dot"
+                                            style="width: 6px; height: 6px;"></span></button>
+                                    <button class="size-option" data-size="10" title="굵게"><span class="dot"
+                                            style="width: 10px; height: 10px;"></span></button>
+                                </div>
+                            </div>
+
+                            <!-- 지우개 버튼 -->
+                            <div class="fab-wrapper">
+                                <button id="drawing-eraser-btn" class="floating-btn fab-child" title="지우개/지우기">
+                                    <i class="bi bi-eraser"></i>
+                                </button>
+                                <!-- 지우개 옵션 (모두 지우기 포함 - 롱프레스 or 서브메뉴? 단순 토글+모두지우기 버튼 별도?) -->
+                                <!-- 사용자 요청은 '지우개 (동일한 원형 아이콘)' 이므로 단순 토글 + 더블클릭/롱프레스로 Clear? -->
+                                <!-- 편의상 좌측 팝업에 '모두 지우기' 추가 -->
+                                <div id="fab-eraser-options" class="fab-popup left"
+                                    style="width: auto; padding: 0 8px;">
+                                    <button id="drawing-clear-all" class="text-btn"
+                                        style="font-size: 11px; white-space: nowrap;">모두 지우기</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. 메인 펜 토글 버튼 -->
                         <button id="pen-toggle-btn" class="floating-btn pen-btn" title="펜 그리기">
                             <i class="bi bi-pencil-fill"></i>
                         </button>
+
+                        <!-- 3. 기존 폰트 버튼 -->
                         <button id="content-font-increase" class="floating-btn" title="폰트 확대">
                             <i class="bi bi-plus"></i>
                         </button>
