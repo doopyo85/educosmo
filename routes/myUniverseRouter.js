@@ -576,9 +576,14 @@ router.get('/problems', async (req, res) => {
         }
 
         // Use string userID matching QuizResults schema (VARCHAR)
-        const targetUserId = req.session.userID;
+        // Resolve numeric DB ID
+        let targetDbId = req.session.dbId;
+        if (!targetDbId && req.session.userID) {
+            const [user] = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [req.session.userID]);
+            if (user) targetDbId = user.id;
+        }
 
-        if (!targetUserId) {
+        if (!targetDbId) {
             return res.redirect('/auth/login');
         }
 
@@ -587,7 +592,7 @@ router.get('/problems', async (req, res) => {
             WHERE user_id = ?
             ORDER BY timestamp DESC
             LIMIT 100
-        `, [targetUserId]);
+        `, [targetDbId]);
 
         res.render('my-universe/index', {
             activeTab: 'problems',

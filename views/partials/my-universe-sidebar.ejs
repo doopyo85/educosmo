@@ -130,14 +130,14 @@
                     <i class="bi bi-grid-fill"></i> 갤러리 (Gallery)
                 </a>
 
-                <a class="board-category-item <%= currentTab === 'observatory' ? 'active' : '' %>"
-                    href="<%= observatoryUrl %>">
-                    <i class="bi bi-stars"></i> 별자리 관측소 (Observatory)
-                </a>
-
                 <a class="board-category-item <%= currentTab === 'problems' ? 'active' : '' %>"
                     href="<%= baseUrl + '/problems' %>">
                     <i class="bi bi-journal-code"></i> 문제 풀이 (Problems)
+                </a>
+
+                <a class="board-category-item <%= currentTab === 'observatory' ? 'active' : '' %>"
+                    href="<%= observatoryUrl %>">
+                    <i class="bi bi-stars"></i> 별자리 관측소 (Observatory)
                 </a>
             </div>
         </div>
