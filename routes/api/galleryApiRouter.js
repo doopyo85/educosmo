@@ -238,8 +238,12 @@ router.get('/projects', optionalAuth, async (req, res) => {
                 orderBy = 'gp.created_at DESC';
         }
 
-        // 페이지네이션
-        const offset = (parseInt(page) - 1) * parseInt(limit);
+        // 페이지네이션 (Safe Parsing)
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 20;
+        const finalPage = Math.max(1, pageNum);
+        const finalLimit = Math.max(1, limitNum);
+        const offset = (finalPage - 1) * finalLimit;
 
         // 쿼리 실행
         const query = `
@@ -269,7 +273,7 @@ router.get('/projects', optionalAuth, async (req, res) => {
             LIMIT ? OFFSET ?
         `;
 
-        params.push(parseInt(limit), offset);
+        params.push(finalLimit, offset);
 
         const projects = await db.queryDatabase(query, params);
 
@@ -599,7 +603,11 @@ router.get('/my', requireAuth, async (req, res) => {
             params.push(platform);
         }
 
-        const offset = (parseInt(page) - 1) * parseInt(limit);
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 20;
+        const finalPage = Math.max(1, pageNum);
+        const finalLimit = Math.max(1, limitNum);
+        const offset = (finalPage - 1) * finalLimit;
 
         const projects = await db.queryDatabase(
             `SELECT 
@@ -611,7 +619,7 @@ router.get('/my', requireAuth, async (req, res) => {
              WHERE ${whereConditions.join(' AND ')}
              ORDER BY gp.created_at DESC
              LIMIT ? OFFSET ?`,
-            [...params, parseInt(limit), offset]
+            [...params, finalLimit, offset]
         );
 
         const [countResult] = await db.queryDatabase(
