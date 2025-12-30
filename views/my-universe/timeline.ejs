@@ -143,30 +143,46 @@
         background-color: #EFF6FF;
     }
 
-    /* Station Dot */
-    .timeline-dot {
+    /* Station Marker (Dash + Diagonal Connector) */
+    .timeline-marker {
         position: absolute;
-        left: 17px;
-        /* Adjusted left */
-        top: 17px;
-        /* Adjusted top */
-        width: 14px;
-        /* Smaller dot */
-        height: 14px;
-        background: #FFFFFF;
-        border: 3px solid var(--timeline-dot-color);
-        border-radius: 50%;
-        z-index: 1;
-        transition: transform 0.2s;
+        left: 20px;
+        top: 18px;
+        width: 12px;
+        height: 2px;
+        background: #86868B;
+        z-index: 2;
     }
 
-    .timeline-item:hover .timeline-dot {
-        transform: scale(1.2);
+    .timeline-marker::after {
+        content: '';
+        position: absolute;
+        left: 12px;
+        top: 0;
+        width: 20px;
+        height: 8px;
+        border-left: 2px solid #E0E0E0;
+        border-bottom: 2px solid #E0E0E0;
+        border-radius: 0 0 0 8px;
     }
 
-    .timeline-item.active .timeline-dot {
-        background: var(--timeline-dot-color);
-        box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+    /* Success/Fail marker colors */
+    .timeline-item[data-correct="true"] .timeline-marker,
+    .timeline-item[data-correct="1"] .timeline-marker {
+        background: #34C759;
+    }
+
+    .timeline-item[data-correct="false"] .timeline-marker,
+    .timeline-item[data-correct="0"] .timeline-marker {
+        background: #FF3B30;
+    }
+
+    .timeline-item:hover .timeline-marker {
+        transform: scaleX(1.3);
+    }
+
+    .timeline-item.active .timeline-marker {
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
     }
 
     /* Icon within Dot? No, "Subway" usually just has dots. 
@@ -251,44 +267,40 @@
         background-color: #F2F2F7;
     }
 
-    /* Zoom Slider (Google Maps Style) */
+    /* Horizontal Zoom Slider (Top) */
     .zoom-slider-container {
-        position: absolute;
-        top: 20px;
-        right: 20px;
         display: flex;
-        flex-direction: column;
         align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding: 10px 16px;
         background: #FFFFFF;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-        padding: 8px 6px;
-        z-index: 10;
+        border: 1px solid #F0F0F0;
     }
 
-    .zoom-slider-label {
-        font-size: 0.6rem;
+    .zoom-slider-title {
+        font-size: 0.7rem;
+        font-weight: 600;
         color: #86868B;
-        writing-mode: vertical-lr;
-        text-orientation: mixed;
-        margin-bottom: 6px;
+        white-space: nowrap;
     }
 
     .zoom-slider {
+        flex: 1;
         -webkit-appearance: none;
-        width: 80px;
-        height: 6px;
+        appearance: none;
+        height: 4px;
         background: #E0E0E0;
-        border-radius: 3px;
-        writing-mode: bt-lr;
-        -webkit-appearance: slider-vertical;
-        transform: rotate(180deg);
+        border-radius: 2px;
+        cursor: pointer;
     }
 
     .zoom-slider::-webkit-slider-thumb {
         -webkit-appearance: none;
-        width: 14px;
-        height: 14px;
+        appearance: none;
+        width: 16px;
+        height: 16px;
         background: #007AFF;
         border-radius: 50%;
         cursor: pointer;
@@ -296,40 +308,71 @@
     }
 
     .zoom-slider::-moz-range-thumb {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         background: #007AFF;
         border-radius: 50%;
         cursor: pointer;
+        border: none;
+    }
+
+    .zoom-labels {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        text-align: center;
+        font-size: 0.65rem;
+        color: #86868B;
+        margin-top: 4px;
+    }
+
+    .zoom-labels span {
+        position: relative;
     }
 
     .zoom-level-label {
-        font-size: 0.65rem;
+        font-size: 0.75rem;
         font-weight: 600;
         color: #007AFF;
-        margin-top: 6px;
+        min-width: 50px;
+        text-align: right;
     }
 
-    /* Hidden items based on zoom level */
-    .timeline-wrapper[data-zoom="far"] .timeline-item[data-type="SOLVE"],
-    .timeline-wrapper[data-zoom="far"] .timeline-item[data-type="LOG"] {
+    /* VISIBILITY RULES */
+    /* Level 1: Year (Projects) -> Hide everything except projects/milestones */
+    .timeline-wrapper[data-zoom="year"] .timeline-item:not([data-type="GALLERY"]) {
         display: none;
     }
 
-    .timeline-wrapper[data-zoom="medium"] .timeline-item[data-type="LOG"] {
+    /* Level 2: Month (+Blog, Badge) -> Hide Solve, Log */
+    .timeline-wrapper[data-zoom="month"] .timeline-item[data-type="SOLVE"],
+    .timeline-wrapper[data-zoom="month"] .timeline-item[data-type="LOG"] {
         display: none;
     }
+
+    /* Level 3: Week (+Solve) -> Hide Log */
+    .timeline-wrapper[data-zoom="week"] .timeline-item[data-type="LOG"] {
+        display: none;
+    }
+
+    /* Level 4: Day (All) -> Show everything */
 </style>
 
 <div class="timeline-wrapper" data-zoom="medium">
     <!-- Left: Timeline List -->
-    <div class="timeline-container" style="position: relative;">
-        <!-- Zoom Slider (Google Maps Style) -->
+    <div class="timeline-container">
+        <!-- Horizontal Zoom Slider -->
         <div class="zoom-slider-container">
-            <span class="zoom-slider-label">ZOOM</span>
-            <input type="range" class="zoom-slider" min="1" max="3" value="2" orient="vertical"
-                onchange="setZoomBySlider(this.value)">
-            <span class="zoom-level-label" id="zoomLevelLabel">중간</span>
+            <span class="zoom-slider-title">ZOOM</span>
+            <div style="flex: 1;">
+                <input type="range" class="zoom-slider" min="1" max="4" value="3" oninput="setZoomBySlider(this.value)">
+                <div class="zoom-labels">
+                    <span>Year</span>
+                    <span>Month</span>
+                    <span>Week</span>
+                    <span>Day</span>
+                </div>
+            </div>
+            <span class="zoom-level-label" id="zoomLevelLabel">Week</span>
         </div>
 
         <div class="timeline-list">
@@ -352,7 +395,7 @@
                             data-correct="<%= item.isCorrect %>" data-exam="<%= item.exam_name || '' %>"
                             data-problem="<%= item.problem_number || '' %>">
 
-                            <div class="timeline-dot"></div>
+                            <div class="timeline-marker"></div>
 
                             <div class="timeline-content-row">
                                 <div class="timeline-main-info">
@@ -524,15 +567,16 @@
     }
 
     // Zoom Slider Control (Google Maps style)
+    // Zoom Slider Control (Year-Month-Week-Day)
     function setZoomBySlider(value) {
-        const levels = { 1: 'far', 2: 'medium', 3: 'close' };
-        const labels = { 1: '멀리', 2: '중간', 3: '가까이' };
-        const level = levels[value] || 'medium';
+        const levels = { 1: 'year', 2: 'month', 3: 'week', 4: 'day' };
+        const labels = { 1: 'Year', 2: 'Month', 3: 'Week', 4: 'Day' };
+        const level = levels[value] || 'week';
 
         // Update wrapper data attribute
         document.querySelector('.timeline-wrapper').dataset.zoom = level;
 
         // Update label
-        document.getElementById('zoomLevelLabel').textContent = labels[value] || '중간';
+        document.getElementById('zoomLevelLabel').textContent = labels[value] || 'Week';
     }
 </script>
