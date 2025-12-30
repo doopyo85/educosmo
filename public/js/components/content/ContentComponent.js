@@ -78,6 +78,19 @@ class ContentComponent extends Component {
     this.elements.nextButton = document.getElementById(this.nextButtonId);
     this.elements.explanationBtn = document.getElementById('explanation-btn'); // 🔥 추가: 해설 버튼
 
+    // 🔥 NEW: 그리기 캔버스 및 도구
+    this.elements.drawingCanvas = document.getElementById('drawing-canvas');
+    this.elements.drawingToolbar = document.getElementById('drawing-toolbar');
+    this.elements.penToggleBtn = document.getElementById('pen-toggle-btn');
+
+    // 툴바 버튼
+    this.elements.colorBtns = document.querySelectorAll('.color-btn');
+    this.elements.sizeBtns = document.querySelectorAll('.size-btn');
+    this.elements.eraserBtn = document.getElementById('drawing-eraser');
+    this.elements.clearBtn = document.getElementById('drawing-clear');
+
+    this.drawingCanvasInstance = null; // DrawingCanvas 인스턴스
+
     if (!this.elements.container) {
       console.error(`콘텐츠 컨테이너(${this.containerId})를 찾을 수 없습니다`);
     }
@@ -87,6 +100,7 @@ class ContentComponent extends Component {
     }
 
     this.setupExplanationButton();
+    this.setupDrawingFeature(); // 🔥 그리기 기능 설정
   }
 
   setupEventBindings() {
@@ -579,6 +593,12 @@ class ContentComponent extends Component {
     container.appendChild(titleSpan);
 
     this.elements.problemTitle.appendChild(container);
+
+    // 🔥 NEW: 타이틀 업데이트 시점에 네비게이션/컨트롤 표시 (nav-loading 제거)
+    const topNav = document.querySelector('.problem-top-nav');
+    if (topNav) {
+      topNav.classList.remove('nav-loading');
+    }
   }
 
   // 🔥 NEW: 파일 타입에 따른 콘텐츠 로드 처리
@@ -1157,6 +1177,12 @@ class ContentComponent extends Component {
 
 
   showErrorInIframe(message) {
+    // 🔥 NEW: 에러 발생 시에도 네비게이션 표시 (갇힘 방지)
+    const topNav = document.querySelector('.problem-top-nav');
+    if (topNav) {
+      topNav.classList.remove('nav-loading');
+    }
+
     if (!this.elements.iframe) return;
 
     this.elements.iframe.srcdoc = `
@@ -1441,6 +1467,130 @@ class ContentComponent extends Component {
       this.visible = true;
     }
   }
+
+  // 🔥 NEW: 그리기 기능 설정 및 이벤트 바인딩
+  setupDrawingFeature() {
+    if (!this.elements.penToggleBtn) return;
+
+    // 1. 펜 토글 버튼 이벤트
+    this.elements.penToggleBtn.addEventListener('click', () => {
+      this.toggleDrawingMode();
+    });
+
+    // 2. 툴바 버튼 이벤트
+    if (this.elements.drawingToolbar) {
+      // 색상 선택
+      this.elements.colorBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const color = e.target.dataset.color || e.target.style.backgroundColor; // fallback
+          this.setDrawingColor(color, btn);
+        });
+      });
+
+      // 굵기 선택
+      this.elements.sizeBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          // 버튼 내부의 span(dot)을 클릭했을 경우 대비
+          const target = e.target.closest('.size-btn');
+          const size = target.dataset.size;
+          this.setDrawingSize(size, target);
+        });
+      });
+
+      // 지우개
+      if (this.elements.eraserBtn) {
+        this.elements.eraserBtn.addEventListener('click', () => {
+          this.setEraserMode();
+        });
+      }
+
+      // 전체 지우기
+      if (this.elements.clearBtn) {
+        this.elements.clearBtn.addEventListener('click', () => {
+          if (confirm('모든 그림을 지우시겠습니까?')) {
+            this.clearDrawingCanvas();
+          }
+        });
+      }
+    }
+  }
+
+  toggleDrawingMode() {
+    const container = this.elements.container; // #problem-container
+    const toolbar = this.elements.drawingToolbar;
+    const btn = this.elements.penToggleBtn;
+
+    if (!container || !toolbar || !btn) return;
+
+    const isActive = container.classList.contains('pen-active');
+
+    if (isActive) {
+      // 비활성화
+      container.classList.remove('pen-active');
+      toolbar.classList.remove('active');
+      btn.classList.remove('active');
+
+      // 아이콘 변경 (펜)
+      btn.innerHTML = '<i class="bi bi-pencil-fill"></i>';
+      btn.title = "펜 그리기";
+
+    } else {
+      // 활성화
+      container.classList.add('pen-active');
+      toolbar.classList.add('active');
+      btn.classList.add('active');
+
+      // 아이콘 변경 (닫기)
+      btn.innerHTML = '<i class="bi bi-x-lg"></i>';
+      btn.title = "그리기 종료";
+
+      // 캔버스 초기화 (최초 1회)
+      if (!this.drawingCanvasInstance && window.DrawingCanvas) {
+        console.log('ContentComponent: DrawingCanvas 초기화');
+        this.drawingCanvasInstance = new window.DrawingCanvas('drawing-canvas');
+      }
+    }
+  }
+
+  setDrawingColor(color, activeBtn) {
+    if (!this.drawingCanvasInstance) return;
+
+    this.drawingCanvasInstance.setColor(color);
+
+    // UI 업데이트
+    this.elements.colorBtns.forEach(b => b.classList.remove('active'));
+    if (activeBtn) activeBtn.classList.add('active');
+
+    // 지우개 버튼 비활성화 표시
+    if (this.elements.eraserBtn) this.elements.eraserBtn.classList.remove('active');
+  }
+
+  setDrawingSize(size, activeBtn) {
+    if (!this.drawingCanvasInstance) return;
+
+    this.drawingCanvasInstance.setSize(size);
+
+    // UI 업데이트
+    this.elements.sizeBtns.forEach(b => b.classList.remove('active'));
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+
+  setEraserMode() {
+    if (!this.drawingCanvasInstance) return;
+
+    this.drawingCanvasInstance.setEraserMode(true);
+
+    // UI 업데이트 (색상 선택 해제 느낌)
+    this.elements.colorBtns.forEach(b => b.classList.remove('active'));
+    if (this.elements.eraserBtn) this.elements.eraserBtn.classList.add('active');
+  }
+
+  clearDrawingCanvas() {
+    if (this.drawingCanvasInstance) {
+      this.drawingCanvasInstance.clear();
+    }
+  }
+
 
   hide() {
     if (this.elements.container) {

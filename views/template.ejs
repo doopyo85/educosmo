@@ -88,7 +88,7 @@
                         <div class="resize-handle-grip"></div>
                     </div>
 
-                    <div class="problem-top-nav">
+                    <div class="problem-top-nav nav-loading">
                         <!-- 1. Title (Absolute Overlay) -->
                         <div id="problem-title" class="problem-title"></div>
 
@@ -124,11 +124,58 @@
 
                     <div id="problem-container" class="problem-container">
                         <iframe id="iframeContent" src="about:blank" class="content-iframe"></iframe>
+                        <!-- 🔥 추가: 그리기 캔버스 (Overlay) -->
+                        <canvas id="drawing-canvas" class="drawing-canvas"></canvas>
+                    </div>
+
+                    <!-- 🔥 추가: 그리기 도구 툴바 (숨김 상태) -->
+                    <div id="drawing-toolbar" class="drawing-toolbar">
+                        <div class="toolbar-section">
+                            <span class="toolbar-label">색상</span>
+                            <div class="color-picker">
+                                <button class="color-btn active" data-color="#ff0000" style="background-color: #ff0000;"
+                                    title="빨강"></button>
+                                <button class="color-btn" data-color="#ffcc00" style="background-color: #ffcc00;"
+                                    title="노랑"></button>
+                                <button class="color-btn" data-color="#0066ff" style="background-color: #0066ff;"
+                                    title="파랑"></button>
+                                <button class="color-btn" data-color="#000000" style="background-color: #000000;"
+                                    title="검정"></button>
+                            </div>
+                        </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="toolbar-section">
+                            <span class="toolbar-label">굵기</span>
+                            <div class="size-picker">
+                                <button class="size-btn small" data-size="2" title="얇게">
+                                    <span class="dot" style="width: 4px; height: 4px;"></span>
+                                </button>
+                                <button class="size-btn medium active" data-size="5" title="보통">
+                                    <span class="dot" style="width: 8px; height: 8px;"></span>
+                                </button>
+                                <button class="size-btn large" data-size="10" title="굵게">
+                                    <span class="dot" style="width: 12px; height: 12px;"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="toolbar-section">
+                            <button id="drawing-eraser" class="tool-btn" title="지우개">
+                                <i class="bi bi-eraser"></i>
+                            </button>
+                            <button id="drawing-clear" class="tool-btn" title="모두 지우기">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 🔥 추가: 우측 하단 플로팅 폰트 컨트롤 -->
                     <!-- 🔥 추가: 우측 하단 플로팅 폰트 컨트롤 (복구됨) -->
                     <div class="content-floating-controls">
+                        <!-- 펜 토글 버튼 (최상단) -->
+                        <button id="pen-toggle-btn" class="floating-btn pen-btn" title="펜 그리기">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
                         <button id="content-font-increase" class="floating-btn" title="폰트 확대">
                             <i class="bi bi-plus"></i>
                         </button>
@@ -656,6 +703,7 @@
                     // 개별 컴포넌트 스크립트들
                     const componentScripts = [
                         '/js/components/nav/NavigationComponent.js?v=1.2',
+                        '/js/components/content/DrawingCanvas.js', // 🔥 추가: 그리기 기능
                         '/js/components/content/ContentComponent.js?v=1.2',
                         '/js/components/ide/IDEComponent.js',
                         '/js/components/jupyter/JupyterComponent.js',
