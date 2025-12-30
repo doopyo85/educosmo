@@ -1,0 +1,457 @@
+아래 문서는 **“educodingnplay 플랫폼에 MIT App Inventor(이하 AI2)를 공식 구조 그대로 도입·재빌드·재배포”**하기 위한 **도입 명세서(운영 인수 문서)**입니다.
+누가 읽어도 바로 이어서 작업할 수 있도록 폴더 구조/명령어/순서/주의사항 중심으로 작성했습니다.
+(현재 서버는 EC2 Ubuntu + Apache + 통합 플랫폼이며, 포트/구성 정보는 기존 운영 메모 기준을 반영했습니다【폴더구조 & 네트워크 세팅.txt†L1-L14】)
+
+0. 문서 목적과 범위
+목적
+
+MIT App Inventor 공식 소스 구조를 그대로 이해할 수 있도록 설명
+
+공식 저장소 최신(또는 지정 태그)로 클론 → 서버에서 ant 빌드 → 런타임 구동까지 절차를 표준화
+
+**educodingnplay 통합 방식(스토리지 S3, OAuth 3000, 앱서버 분리)**의 계획/주의사항을 명문화
+
+범위
+
+서버: Ubuntu(EC2)
+
+웹 프론트: Apache(Reverse Proxy)
+
+빌드: ant 기반(MIT App Inventor 전통 방식)
+
+인증: 통합 OAuth 서버(포트 3000)
+
+저장: S3 사용 계획
+
+App Server 별도 기동(포트 분리)
+
+1. MIT App Inventor 공식 기술 스택/구성요소(공식 구조 그대로)
+
+App Inventor는 “단일 웹앱”이 아니라 여러 서버/프로세스가 협력하는 시스템입니다.
+
+1.1 구성요소(역할)
+
+웹 클라이언트(UI)
+
+디자이너(Designer), 블록 에디터(Blockly), 에셋 관리, 프로젝트 관리 UI
+
+빌드 결과(컴패니언/QR/APK) 요청을 백엔드로 전달
+
+App Server (AI2 서버 / appengine)
+
+사용자/프로젝트/에셋 메타데이터 처리
+
+인증(기본은 Google 로그인), 세션 관리
+
+Build Server로 빌드 요청 전달, 빌드 결과 저장/전달
+
+Build Server (buildserver)
+
+Android SDK/Build-tools를 사용해 APK/AAB를 생성
+
+App Server로부터 job을 받아 빌드하고 결과를 반환
+
+스토리지
+
+프로젝트 소스(.aia), 에셋 파일, 빌드 산출물(apk/aab) 저장
+
+기본 구현은 로컬/클라우드 혼용이 가능하나, 본 도입에서는 S3를 목표
+
+1.2 핵심 기술
+
+Java(서버 로직, 빌드 서버)
+
+Ant(빌드 오케스트레이션)
+
+GWT(구글 웹 툴킷) 기반의 웹 클라이언트 빌드(프로젝트 세대에 따라 내부 구조 상이)
+
+Node.js는 AI2 “필수 코어”라기보다, 일부 프론트 자산/블록 관련 도구 또는 운영 환경에 따라 보조적으로 사용될 수 있음(현재 서버에도 appinventor 폴더 내 server.js가 존재)
+
+2. 공식 소스 폴더 구조(“appinventor-sources/appinventor” 기준)
+
+아래는 네 서버에도 이미 존재하는 공식 트리와 동일한 형태입니다(현재 /var/www/html/appinventor-sources/appinventor/...).
+
+2.1 최상위(저장소 루트)
+
+appinventor-sources/
+
+appinventor/ ← 실제 핵심 소스 루트
+
+bootstrap.sh ← 환경 준비 스크립트(의존성/셋업에 사용)
+
+buildtools/ ← 빌드 도구/유틸
+
+Vagrantfile ← 개발 VM 환경
+
+2.2 핵심 루트(appinventor-sources/appinventor/)
+
+build.xml, build-common.xml : ant 빌드 엔트리/공통
+
+appengine/ : App Server(서버 앱)
+
+buildserver/ : Build Server
+
+blocklyeditor/ : 블록 에디터(UI/자산)
+
+components/, components-common/ : 컴포넌트 소스
+
+common/ : 공통 유틸/라이브러리
+
+prebuilts/ : 사전 빌드 바이너리/의존물(프로젝트 정책에 따라)
+
+misc/, docs/, lib/ 등
+
+3. 목표 도입 방식(educodingnplay 통합 설계)
+3.1 목표
+
+AI2를 “educodingnplay의 한 서비스”로 분리 운영
+
+Apache에서 경로 기반 프록시:
+
+/ai2 → App Inventor App Server
+
+/ai2build → Build Server(또는 내부 전용)
+
+/auth → 통합 OAuth 서버(3000)
+
+3.2 인증(OAuth) 목표: 3000번 통합 서버
+
+현재 포트 운영 메모에 따르면 3000은 개발/테스트로 열려 있으며 외부 오픈 상태일 수 있음【폴더구조 & 네트워크 세팅.txt†L9-L14】
+
+계획: Google OAuth는 3000 서버가 담당하고,
+
+App Inventor App Server는 JWT/세션 신뢰(SSO) 형태로 연동
+
+즉 “AI2가 직접 Google OAuth를 수행”하지 않거나, 최소화/우회하도록 구성
+
+3.3 스토리지 목표: S3
+
+산출물/프로젝트 파일/에셋을 S3로 저장
+
+App Server/Build Server가 접근하는 공용 버킷 정책/IAM Role(EC2 Instance Profile)로 통합
+
+4. 서버 표준 디렉토리 설계(권장)
+
+기존 /var/www/html 아래에 모두 두는 방식은 가능하지만, 운영/업데이트/권한/데이터 분리를 위해 아래처럼 정리 권장.
+
+4.1 권장 경로
+
+소스(불변): /opt/appinventor/appinventor-sources
+
+런타임(배포물/war/산출): /opt/appinventor/runtime
+
+데이터(가변): /var/lib/appinventor-data (기존 appinventor-data 대체)
+
+로그: /var/log/appinventor/
+
+스크립트: /opt/appinventor/scripts/
+
+이미 /var/www/html/appinventor, /var/www/html/appinventor-data, /var/www/html/appinventor-sources가 있으므로
+1) 신규 표준 경로로 마이그레이션 또는 2) 현 위치 유지 + 심볼릭 링크 정리 중 택1.
+
+5. “공식 최신” 클론 → 빌드 → 구동 (순서/명령어)
+
+⚠️ 참고: 현재 환경은 인터넷/웹 조회가 제한될 수 있으므로, “최신”은 GitHub 기본 브랜치(보통 master/main) 기준으로 진행합니다.
+운영 안정성은 릴리즈 태그/커밋 해시 고정을 권장합니다.
+
+5.1 선행 패키지 설치(Ubuntu)
+sudo apt update
+sudo apt install -y git unzip zip curl wget build-essential
+sudo apt install -y ant
+sudo apt install -y openjdk-8-jdk
+
+환경변수(권장)
+echo 'export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64' | sudo tee /etc/profile.d/java8.sh
+echo 'export PATH=$JAVA_HOME/bin:$PATH' | sudo tee -a /etc/profile.d/java8.sh
+source /etc/profile.d/java8.sh
+java -version
+ant -version
+
+
+⚠️ 주의: AI2/ant 빌드는 Java 버전에 민감합니다.
+운영은 Java 8 고정을 기본으로 잡고, 업스트림이 바뀌면 그때 검토합니다.
+
+5.2 공식 저장소 클론(새 디렉토리로 “깨끗하게”)
+sudo mkdir -p /opt/appinventor
+sudo chown -R ubuntu:ubuntu /opt/appinventor
+cd /opt/appinventor
+
+git clone https://github.com/mit-cml/appinventor-sources.git
+cd appinventor-sources
+git submodule update --init --recursive || true
+
+(권장) 버전 고정
+git fetch --tags
+git tag --list | tail
+# 운영에선 특정 tag 또는 커밋으로 checkout 권장
+# git checkout <tag-or-commit>
+
+5.3 빌드 환경 부트스트랩(프로젝트 제공 스크립트가 있을 때)
+cd /opt/appinventor/appinventor-sources
+bash bootstrap.sh
+
+
+bootstrap.sh는 배포 시점에 따라 설치 항목이 다릅니다.
+실패하면 로그를 보고 필요 패키지 보완 후 재실행합니다.
+
+5.4 ant 빌드(핵심)
+cd /opt/appinventor/appinventor-sources/appinventor
+ant clean
+ant all
+
+
+빌드 시간이 길 수 있고, 메모리 부족 시 실패합니다.
+최소 4~8GB RAM 권장(빌드 서버까지 같이 돌릴 경우 더 필요).
+
+5.5 Build Server 의존성(Android SDK) 준비
+
+Build Server는 Android SDK/Build-tools가 필요합니다.
+
+권장 디렉토리
+
+SDK: /opt/android-sdk
+
+설치(예시)
+sudo mkdir -p /opt/android-sdk
+sudo chown -R ubuntu:ubuntu /opt/android-sdk
+# 커맨드라인 툴 설치 후 sdkmanager로 platform/build-tools 설치
+
+
+⚠️ 주의: “최신 SDK”가 항상 호환되는 것이 아닙니다.
+AI2 buildserver가 요구하는 정확한 build-tools/platform 버전을 빌드 에러 로그 기준으로 맞춥니다.
+
+환경변수:
+
+echo 'export ANDROID_HOME=/opt/android-sdk' | sudo tee /etc/profile.d/android.sh
+echo 'export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH' | sudo tee -a /etc/profile.d/android.sh
+source /etc/profile.d/android.sh
+
+5.6 App Server / Build Server 실행(스크립트 표준화)
+스크립트 위치(권장)
+
+/opt/appinventor/scripts/start-appinventor.sh
+
+vim /opt/appinventor/scripts/start-appinventor.sh
+chmod +x /opt/appinventor/scripts/start-appinventor.sh
+
+
+예시(골격):
+
+#!/usr/bin/env bash
+set -e
+
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+export ANDROID_HOME=/opt/android-sdk
+export PATH=$JAVA_HOME/bin:$PATH
+
+AI2_HOME=/opt/appinventor/appinventor-sources/appinventor
+
+cd "$AI2_HOME"
+
+# 1) Build Server
+# ant RunLocalBuildServer
+
+# 2) App Server
+# ant RunLocalAppEngine
+
+
+⚠️ 실제 타깃 이름은 저장소 버전에 따라 다를 수 있습니다.
+아래로 확인:
+
+cd /opt/appinventor/appinventor-sources/appinventor
+ant -p | less
+# RunLocal... 계열 타깃 확인
+
+6. Apache Reverse Proxy 구성(educodingnplay 통합)
+
+현재 서비스는 ALB/HTTPS 적용중이며 내부는 http로 소통하는 형태로 기록되어 있습니다【폴더구조 & 네트워크 세팅.txt†L1-L4】.
+따라서 Apache는 경로 기반 프록시가 정석입니다.
+
+6.1 프록시 라우팅 정책(권장)
+
+/auth/ → http://127.0.0.1:3000/ (통합 OAuth 서버)
+
+/ai2/ → http://127.0.0.1:8081/ (AI2 App Server)
+
+/ai2build/ → http://127.0.0.1:9990/ (Build Server, 가능하면 내부 전용)
+
+6.2 Apache 모듈
+sudo a2enmod proxy proxy_http headers rewrite
+sudo systemctl reload apache2
+
+6.3 vhost 예시(골격)
+
+/etc/apache2/sites-available/educodingnplay.conf
+
+ProxyPreserveHost On
+
+# OAuth (통합)
+ProxyPass        /auth/  http://127.0.0.1:3000/
+ProxyPassReverse /auth/  http://127.0.0.1:3000/
+
+# App Inventor
+ProxyPass        /ai2/   http://127.0.0.1:8081/
+ProxyPassReverse /ai2/   http://127.0.0.1:8081/
+
+# (옵션) Build Server - 외부 노출 최소화 권장
+ProxyPass        /ai2build/ http://127.0.0.1:9990/
+ProxyPassReverse /ai2build/ http://127.0.0.1:9990/
+
+# 헤더
+RequestHeader set X-Forwarded-Proto "https"
+RequestHeader set X-Forwarded-Port  "443"
+
+
+적용:
+
+sudo a2ensite educodingnplay.conf
+sudo systemctl reload apache2
+
+7. OAuth(3000) 연동 계획(SSO) – 설계/주의사항
+7.1 목표
+
+Google OAuth는 3000 통합 서버에서만 수행
+
+AI2는 “로그인 페이지” 대신,
+
+이미 로그인된 사용자면 통과
+
+미로그인이면 /auth/login으로 리다이렉트
+
+7.2 권장 연동 방식
+
+/auth에서 Google OAuth 완료
+
+서버(3000)가 세션 쿠키(도메인 공유) 또는 JWT 쿠키 발급
+
+AI2 App Server는 요청마다:
+
+쿠키의 JWT를 검증(공개키/비밀키 공유)
+
+사용자 식별자를 AI2 내부 userId로 매핑
+
+7.3 주의사항
+
+쿠키 Domain을 .educodingnplay.com으로 설정(서브경로 서비스 공유)
+
+SameSite/Lax, Secure, HttpOnly 옵션 설계
+
+AI2의 기존 Google 로그인 루틴이 남아있으면 중복/충돌 가능
+→ “AI2 내부 로그인 강제”가 아닌 “SSO 신뢰”로 정리해야 운영이 편함
+
+8. S3 스토리지 연동 계획(설계/주의사항)
+8.1 목표
+
+프로젝트(.aia), 에셋, 빌드 산출물(apk/aab)을 S3로 저장
+
+EC2 인스턴스 프로파일(IAM Role)로 접근(키 하드코딩 금지)
+
+8.2 아키텍처(권장)
+
+App Server:
+
+업로드/다운로드 → S3 직접 Put/Get
+
+메타데이터(DB)는 기존 방식 유지(별도 DB)
+
+Build Server:
+
+빌드 완료 결과를 S3에 업로드
+
+App Server에는 결과 URL/키만 전달
+
+8.3 주의사항
+
+대용량 업로드는 프리사인 URL 방식이 더 안정적(브라우저→S3 직업로드)
+
+버킷 정책: 최소 권한(프로젝트 prefix 단위)
+
+사용자 격리: s3://bucket/ai2/{userId}/{projectId}/...
+
+9. 운영(프로세스 관리) 표준: systemd 권장
+9.1 서비스 분리
+
+ai2-appserver.service
+
+ai2-buildserver.service
+
+예시:
+
+sudo vim /etc/systemd/system/ai2-appserver.service
+
+
+골격:
+
+[Unit]
+Description=MIT App Inventor App Server
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/appinventor/appinventor-sources/appinventor
+Environment=JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+ExecStart=/usr/bin/ant RunLocalAppEngine
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+
+
+적용:
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now ai2-appserver
+sudo systemctl status ai2-appserver
+
+10. 체크리스트(누구든 이어서 할 수 있게)
+10.1 소스/빌드
+
+ /opt/appinventor/appinventor-sources 최신 클론 완료
+
+ ant -p로 타깃 목록 확인
+
+ ant clean && ant all 성공
+
+ Java 버전 고정(8) 확인
+
+10.2 런타임
+
+ App Server 포트(예: 8081) 기동 확인
+
+ Build Server 포트(예: 9990) 기동 확인
+
+ Apache /ai2로 프록시 정상 동작
+
+10.3 인증
+
+ /auth(3000)에서 Google OAuth 성공
+
+ 쿠키 도메인/경로 설계(.educodingnplay.com, /)
+
+ AI2가 JWT/세션을 신뢰하도록 연동(중복 로그인 제거)
+
+10.4 스토리지(S3)
+
+ EC2 IAM Role에 S3 접근 권한 부여
+
+ 버킷 prefix/권한 분리
+
+ 업로드/다운로드 경로 표준화
+
+11. 특히 중요한 주의사항(실패 포인트 Top 7)
+
+Java 버전: 빌드/런타임 호환성 핵심(우선 8 고정)
+
+Android SDK 버전: buildserver가 요구하는 버전 맞추기(에러 로그 기반)
+
+메모리/디스크: 빌드가 무겁고 캐시가 큼
+
+Build Server 외부 노출 금지: 가능한 내부망/localhost로 제한
+
+OAuth 중복 흐름 제거: “AI2가 Google 로그인 직접” vs “3000 통합” 충돌 주의
+
+S3 권한 최소화: 키 하드코딩 금지, Role 사용
+
+버전 고정: 운영은 “항상 최신”이 아니라 “검증된 커밋/태그 고정”이 안정적
