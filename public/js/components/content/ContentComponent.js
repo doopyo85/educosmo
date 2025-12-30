@@ -1605,7 +1605,7 @@ class ContentComponent extends Component {
 
       colorOptions.forEach(opt => {
         opt.addEventListener('click', (e) => {
-          const color = e.target.dataset.color || '#ff0000';
+          const color = e.target.dataset.color || '#333333';
           this.setDrawingColor(color);
 
           // 메인 버튼 인디케이터 업데이트
