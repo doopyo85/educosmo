@@ -617,10 +617,40 @@
     animation: springUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* Closing State - Smooth Fade Out (No complex animation to avoid JS delay complexity) */
+/* Closing State - Smooth Fade Out (No complex animation) */
 .drawing-fab-group {
     /* ... existing props ... */
     transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* 🍎 Apple-Style Hover Effect for Floating Buttons (+, -, Pen) */
+/* Replaces default blue hover with soft gray/white look */
+.floating-btn:not(.active):not(.active-tool):not(:disabled):hover {
+    background-color: #ffffff;
+    /* Clean White */
+    color: #1d1d1f;
+    /* Dark Gray text/icon */
+    border-color: #d1d1d1;
+    transform: translateY(-2px) scale(1.05);
+    /* Slight lift */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    /* Soft diffused shadow */
+}
+
+/* Specific fix for Pen Toggle Button Hover (Start State) */
+#pen-toggle-btn:not(.active):hover {
+    color: #1d1d1f;
+    /* Ensure icon is dark, not blue */
+}
+
+/* Ensure the X close button (active state) keeps its Gray styling on hover */
+.floating-btn.pen-btn.active:hover {
+    background-color: #343a40;
+    /* Darker Gray */
+    border-color: #343a40;
+    color: white;
+    transform: translateY(0);
+    /* No lift for active toggle */
 }
 
 /* 콘텐츠 로딩 메시지 */

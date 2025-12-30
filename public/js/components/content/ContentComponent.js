@@ -1605,24 +1605,28 @@ class ContentComponent extends Component {
 
       colorOptions.forEach(opt => {
         opt.addEventListener('click', (e) => {
-          const color = e.target.dataset.color || '#333333';
-          this.setDrawingColor(color);
+          const btn = e.target.closest('.color-option');
+          if (!btn) return;
+          const color = btn.dataset.color || '#333333';
 
-          // 메인 버튼 인디케이터 업데이트
-          if (colorIndicator) colorIndicator.style.backgroundColor = color;
-
-          // 색상을 누르면 자동으로 '펜' 모드로 전환 (사용자 경험 개선)
-          this.setToolMode('pen');
+          if (color === 'transparent') {
+            this.setToolMode('eraser');
+            if (colorIndicator) {
+              colorIndicator.style.backgroundColor = '#ffffff';
+              colorIndicator.style.boxShadow = 'inset 0 0 0 1px #ced4da';
+            }
+          } else {
+            this.setDrawingColor(color);
+            this.setToolMode('pen');
+            if (colorIndicator) {
+              colorIndicator.style.backgroundColor = color;
+              colorIndicator.style.boxShadow = '0 0 2px rgba(0,0,0,0.5)';
+            }
+          }
         });
       });
 
-      // (0) 펜 도구 버튼 (New)
-      const penToolBtn = document.getElementById('drawing-pen-tool-btn');
-      if (penToolBtn) {
-        penToolBtn.addEventListener('click', () => {
-          this.setToolMode('pen');
-        });
-      }
+      /* (0) 펜 도구 버튼 제거됨 */
 
       // (2) 굵기 선택 (슬라이더)
       const sizeSlider = document.getElementById('drawing-size-slider');
@@ -1663,9 +1667,8 @@ class ContentComponent extends Component {
       const clearBtn = document.getElementById('drawing-clear-all');
       if (clearBtn) {
         clearBtn.addEventListener('click', () => {
-          if (confirm('모든 그림을 지우시겠습니까?')) {
-            this.clearDrawingCanvas();
-          }
+          // Confirm 제거
+          this.clearDrawingCanvas();
         });
       }
     }
@@ -1687,7 +1690,7 @@ class ContentComponent extends Component {
       btn.classList.remove('active');
 
       // 아이콘 변경 (펜)
-      btn.innerHTML = '<i class="bi bi-pencil-fill"></i>';
+      btn.innerHTML = '<i class="bi bi-pen-fill"></i>';
       btn.title = "펜 그리기";
 
     } else {
@@ -1704,6 +1707,20 @@ class ContentComponent extends Component {
         console.log('ContentComponent: DrawingCanvas 초기화');
         this.drawingCanvasInstance = new window.DrawingCanvas('drawing-canvas');
       }
+    }
+  }
+
+  setToolMode(mode) {
+    if (!this.drawingCanvasInstance) return;
+
+    const eraserBtn = document.getElementById('drawing-eraser-btn');
+
+    if (mode === 'eraser') {
+      this.drawingCanvasInstance.setEraserMode(true);
+      if (eraserBtn) eraserBtn.classList.add('active-tool');
+    } else {
+      this.drawingCanvasInstance.setEraserMode(false);
+      if (eraserBtn) eraserBtn.classList.remove('active-tool');
     }
   }
 

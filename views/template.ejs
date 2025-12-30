@@ -133,13 +133,6 @@
 
                         <!-- 1. 확장되는 그리기 메뉴 (기본 숨김) -->
                         <div id="drawing-fab-group" class="drawing-fab-group">
-                            <!-- 펜 도구 버튼 (새로 추가됨) -->
-                            <div class="fab-wrapper">
-                                <button id="drawing-pen-tool-btn" class="floating-btn fab-child active" title="펜 모드">
-                                    <i class="bi bi-pen-fill"></i>
-                                </button>
-                            </div>
-
                             <!-- 색상 선택 버튼 -->
                             <div class="fab-wrapper">
                                 <button id="drawing-color-btn" class="floating-btn fab-child" title="색상 선택">
@@ -148,6 +141,11 @@
                                 </button>
                                 <!-- 색상 선택 팝업 (좌측) -->
                                 <div id="fab-color-palette" class="fab-popup left">
+                                    <!-- 투명 (지우개) -->
+                                    <button class="color-option" data-color="transparent" title="지우개 (투명)"
+                                        style="background-color: #ffffff; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-slash-lg" style="color: #ff0000; font-size: 14px;"></i>
+                                    </button>
                                     <!-- 선홍색 (Crimson) -->
                                     <button class="color-option" data-color="#D32F2F" title="선홍색"
                                         style="background-color: #D32F2F;"></button>
@@ -177,16 +175,18 @@
                                 </div>
                             </div>
 
-                            <!-- 지우개 버튼 -->
+                            <!-- 지우개 버튼 (부분 지우개) -->
                             <div class="fab-wrapper">
-                                <button id="drawing-eraser-btn" class="floating-btn fab-child" title="지우개/지우기">
+                                <button id="drawing-eraser-btn" class="floating-btn fab-child" title="지우개">
                                     <i class="bi bi-eraser"></i>
                                 </button>
                                 <!-- 지우개 옵션 (토글 시 표시) -->
-                                <div id="fab-eraser-options" class="fab-popup left"
-                                    style="width: auto; padding: 0 8px;">
-                                    <button id="drawing-clear-all" class="text-btn"
-                                        style="font-size: 11px; white-space: nowrap;">모두 지우기</button>
+                                <div id="fab-eraser-options" class="fab-popup left" style="width: auto; padding: 0;">
+                                    <!-- 모두 지우기 (아이콘: 스와이프/삭제) -->
+                                    <button id="drawing-clear-all" class="text-btn" title="모두 지우기"
+                                        style="font-size: 16px; padding: 6px 10px; color: #fa5252;">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
