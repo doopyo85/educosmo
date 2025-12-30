@@ -177,23 +177,23 @@
 
                             <!-- 지우개 버튼 (부분 지우개) -->
                             <div class="fab-wrapper">
-                                <button id="drawing-eraser-btn" class="floating-btn fab-child" title="지우개">
+                                <button id="drawing-eraser-btn" class="floating-btn fab-child" title="지우개 (클릭: 끄기/켜기)">
                                     <i class="bi bi-eraser"></i>
                                 </button>
                                 <!-- 지우개 옵션 (토글 시 표시) -->
                                 <div id="fab-eraser-options" class="fab-popup left" style="width: auto; padding: 0;">
-                                    <!-- 모두 지우기 (아이콘: 스와이프/삭제) -->
+                                    <!-- 모두 지우기 (아이콘) - 회색조, 원형 유지 -->
                                     <button id="drawing-clear-all" class="text-btn" title="모두 지우기"
-                                        style="font-size: 16px; padding: 6px 10px; color: #fa5252;">
+                                        style="font-size: 16px; width: 32px; height: 32px; padding: 0; color: #555; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                                         <i class="bi bi-trash3"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 2. 메인 펜 토글 버튼 (아이콘 변경: 닫기 아이콘과 토글되므로 초기값만) -->
+                        <!-- 2. 메인 펜 토글 버튼 (아이콘 변경: 펜슬) -->
                         <button id="pen-toggle-btn" class="floating-btn pen-btn" title="펜 그리기">
-                            <i class="bi bi-pen-fill"></i>
+                            <i class="bi bi-pencil-fill"></i>
                         </button>
 
                         <!-- 3. 기존 폰트 버튼 -->

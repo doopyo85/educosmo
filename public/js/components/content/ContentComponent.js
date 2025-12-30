@@ -1651,14 +1651,18 @@ class ContentComponent extends Component {
 
       if (eraserBtn) {
         eraserBtn.addEventListener('click', () => {
-          this.setToolMode('eraser');
+          // Toggle Logic: If now active, switch to Pen.
+          const isActive = eraserBtn.classList.contains('active-tool');
 
-          // 옵션 팝업 토글 (지우개 눌렀을 때만 보이게 하려면 active 클래스 활용)
-          if (eraserOptions) {
-            // 단순히 CSS hover로 되어있던 것을 클릭 토글로 보조
-            eraserOptions.classList.add('visible');
-            // 3초 후 자동 숨김 or 다른곳 클릭시 숨김? 일단 사용자 요청은 "열리게 해줘"
-            setTimeout(() => eraserOptions.classList.remove('visible'), 3000);
+          if (isActive) {
+            this.setToolMode('pen');
+          } else {
+            this.setToolMode('eraser');
+            // Show options only when Activating
+            if (eraserOptions) {
+              eraserOptions.classList.add('visible');
+              setTimeout(() => eraserOptions.classList.remove('visible'), 3000);
+            }
           }
         });
       }
@@ -1689,8 +1693,8 @@ class ContentComponent extends Component {
       container.classList.remove('pen-active');
       btn.classList.remove('active');
 
-      // 아이콘 변경 (펜)
-      btn.innerHTML = '<i class="bi bi-pen-fill"></i>';
+      // 아이콘 변경 (펜 - 세련된 연필)
+      btn.innerHTML = '<i class="bi bi-pencil-fill"></i>';
       btn.title = "펜 그리기";
 
     } else {

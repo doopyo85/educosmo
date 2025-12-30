@@ -597,13 +597,23 @@
     }
 }
 
-/* Pen Toggle Button Active State (Gray instead of Blue) */
+/* Pen Toggle Button Active State (Brighter Gray for Close state) */
 .floating-btn.pen-btn.active {
-    background-color: #495057;
-    /* Gray */
+    background-color: #868e96;
+    /* Lighter Gray */
     color: white;
-    border-color: #495057;
+    border-color: #868e96;
     transform: translateY(0);
+}
+
+/* Fix Trash Icon Hover to be Circular */
+#drawing-clear-all {
+    border-radius: 50% !important;
+}
+
+#drawing-clear-all:hover {
+    background-color: #f1f3f5;
+    color: #fa5252;
 }
 
 /* FAB Group Active State - Apply Animation */
