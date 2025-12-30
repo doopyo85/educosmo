@@ -251,42 +251,63 @@
         background-color: #F2F2F7;
     }
 
-    /* Zoom Level Controls */
-    .zoom-controls {
+    /* Zoom Slider (Google Maps Style) */
+    .zoom-slider-container {
+        position: absolute;
+        top: 20px;
+        right: 20px;
         display: flex;
-        gap: 8px;
-        margin-bottom: 16px;
-        padding: 0 5px;
-    }
-
-    .zoom-btn {
-        flex: 1;
-        padding: 8px 12px;
-        border: 1px solid #E0E0E0;
+        flex-direction: column;
+        align-items: center;
         background: #FFFFFF;
         border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #666;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        padding: 8px 6px;
+        z-index: 10;
     }
 
-    .zoom-btn:hover {
-        background: #F5F5F7;
+    .zoom-slider-label {
+        font-size: 0.6rem;
+        color: #86868B;
+        writing-mode: vertical-lr;
+        text-orientation: mixed;
+        margin-bottom: 6px;
     }
 
-    .zoom-btn.active {
+    .zoom-slider {
+        -webkit-appearance: none;
+        width: 80px;
+        height: 6px;
+        background: #E0E0E0;
+        border-radius: 3px;
+        writing-mode: bt-lr;
+        -webkit-appearance: slider-vertical;
+        transform: rotate(180deg);
+    }
+
+    .zoom-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
         background: #007AFF;
-        color: white;
-        border-color: #007AFF;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
-    .zoom-btn i {
-        display: block;
-        font-size: 1rem;
-        margin-bottom: 2px;
+    .zoom-slider::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        background: #007AFF;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .zoom-level-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: #007AFF;
+        margin-top: 6px;
     }
 
     /* Hidden items based on zoom level */
@@ -302,21 +323,13 @@
 
 <div class="timeline-wrapper" data-zoom="medium">
     <!-- Left: Timeline List -->
-    <div class="timeline-container">
-        <!-- Zoom Level Controls -->
-        <div class="zoom-controls">
-            <button class="zoom-btn" data-level="far" onclick="setZoomLevel('far')">
-                <i class="bi bi-binoculars"></i>
-                멀리
-            </button>
-            <button class="zoom-btn active" data-level="medium" onclick="setZoomLevel('medium')">
-                <i class="bi bi-eye"></i>
-                중간
-            </button>
-            <button class="zoom-btn" data-level="close" onclick="setZoomLevel('close')">
-                <i class="bi bi-search"></i>
-                가까이
-            </button>
+    <div class="timeline-container" style="position: relative;">
+        <!-- Zoom Slider (Google Maps Style) -->
+        <div class="zoom-slider-container">
+            <span class="zoom-slider-label">ZOOM</span>
+            <input type="range" class="zoom-slider" min="1" max="3" value="2" orient="vertical"
+                onchange="setZoomBySlider(this.value)">
+            <span class="zoom-level-label" id="zoomLevelLabel">중간</span>
         </div>
 
         <div class="timeline-list">
@@ -336,7 +349,8 @@
                             data-title="<%= item.title %>" data-time="<%= item.dateStr %> <%= item.timeStr %>"
                             data-url="<%= item.url %>" data-status="<%= item.status %>"
                             data-tags="<%= item.tags || '' %>" data-concept="<%= item.concept || '' %>"
-                            data-correct="<%= item.isCorrect %>">
+                            data-correct="<%= item.isCorrect %>" data-exam="<%= item.exam_name || '' %>"
+                            data-problem="<%= item.problem_number || '' %>">
 
                             <div class="timeline-dot"></div>
 
@@ -407,6 +421,8 @@
         const tags = element.dataset.tags || '';
         const concept = element.dataset.concept || '';
         const isCorrect = element.dataset.correct;
+        const examName = element.dataset.exam || '';
+        const problemNumber = element.dataset.problem || '';
 
         // Active state handling
         document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
@@ -419,8 +435,12 @@
         setTimeout(() => {
             let contentHtml = '';
 
-            if (type === 'SOLVE') {
-                // Enhanced detail for SOLVE items - Two Column Layout
+            if (type === 'SOLVE' && examName && problemNumber) {
+                // Build problem content URL
+                // Format: /quiz/exam_name/problem_number or similar
+                const problemUrl = `/quiz/${examName}?p=${problemNumber.replace('p', '')}`;
+
+                // Enhanced detail for SOLVE items - Problem Preview + Metadata
                 const isSuccess = isCorrect === 'true' || isCorrect === '1';
                 const statusClass = isSuccess ? 'text-success' : 'text-danger';
                 const statusIcon = isSuccess ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
@@ -435,55 +455,30 @@
                 }
 
                 contentHtml = `
-                    <div class="animate-fade-in" style="width: 100%; text-align: left;">
-                        <!-- Header -->
-                        <div class="text-center mb-4">
-                            <span class="badge bg-light text-dark rounded-pill px-3 py-2 border" style="font-size: 0.8rem;">
-                                ${time}
-                            </span>
+                    <div class="animate-fade-in" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+                        <!-- Problem Content Preview (iframe) -->
+                        <div style="flex: 1; min-height: 0; margin-bottom: 16px;">
+                            <iframe src="${problemUrl}" 
+                                style="width: 100%; height: 100%; border: 1px solid #E0E0E0; border-radius: 12px;"
+                                loading="lazy"></iframe>
                         </div>
                         
-                        <!-- Two Column Layout -->
-                        <div class="d-flex gap-4" style="min-height: 200px;">
-                            <!-- Left: Problem Info -->
-                            <div class="flex-grow-1 p-4 rounded-3" style="background: #F9F9FB;">
-                                <div class="mb-3">
-                                    <span class="badge bg-success-subtle text-success" style="font-size: 0.7rem;">
-                                        <i class="bi bi-code-square me-1"></i>문제풀이
-                                    </span>
+                        <!-- Bottom: Info Bar -->
+                        <div class="d-flex align-items-center justify-content-between p-3 rounded-3" 
+                            style="background: #F9F9FB; flex-shrink: 0;">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-light text-dark px-3 py-2 border" style="font-size: 0.75rem;">
+                                    ${time}
+                                </span>
+                                <div>
+                                    <div class="fw-bold" style="font-size: 0.9rem;">${title}</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">${concept || ''}</div>
                                 </div>
-                                <h4 class="fw-bold mb-2" style="color: #1D1D1F;">${title}</h4>
-                                ${concept ? `<p class="text-muted mb-3" style="font-size: 0.85rem;">${concept}</p>` : ''}
-                                ${tagsHtml ? `<div class="mb-3">${tagsHtml}</div>` : ''}
-                                
-                                <div class="d-flex align-items-center gap-2 mt-4">
-                                    <i class="bi ${statusIcon} ${statusClass}" style="font-size: 1.5rem;"></i>
-                                    <span class="fw-bold ${statusClass}" style="font-size: 1.1rem;">${statusText}</span>
-                                </div>
+                                ${tagsHtml ? `<div>${tagsHtml}</div>` : ''}
                             </div>
-                            
-                            <!-- Right: Metadata -->
-                            <div class="p-4 rounded-3" style="background: #FFFFFF; border: 1px solid #F0F0F0; min-width: 180px;">
-                                <h6 class="fw-bold mb-3" style="color: #86868B; font-size: 0.75rem;">
-                                    <i class="bi bi-bar-chart me-1"></i>메타데이터
-                                </h6>
-                                
-                                <div class="mb-3 pb-3 border-bottom">
-                                    <div class="text-muted" style="font-size: 0.7rem;">결과</div>
-                                    <div class="fw-bold ${statusClass}">${statusText}</div>
-                                </div>
-                                
-                                <div class="mb-3 pb-3 border-bottom">
-                                    <div class="text-muted" style="font-size: 0.7rem;">제출 시간</div>
-                                    <div class="fw-medium" style="font-size: 0.85rem;">${time}</div>
-                                </div>
-                                
-                                <div class="mb-0">
-                                    <div class="text-muted" style="font-size: 0.7rem;">상세 보기</div>
-                                    <a href="/my-universe/problems" class="btn btn-sm btn-outline-primary mt-1" style="font-size: 0.75rem;">
-                                        문제풀이 탭 <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi ${statusIcon} ${statusClass}" style="font-size: 1.2rem;"></i>
+                                <span class="fw-bold ${statusClass}" style="font-size: 0.95rem;">${statusText}</span>
                             </div>
                         </div>
                     </div>
@@ -528,17 +523,16 @@
         }, 200);
     }
 
-    // Zoom Level Control
-    function setZoomLevel(level) {
+    // Zoom Slider Control (Google Maps style)
+    function setZoomBySlider(value) {
+        const levels = { 1: 'far', 2: 'medium', 3: 'close' };
+        const labels = { 1: '멀리', 2: '중간', 3: '가까이' };
+        const level = levels[value] || 'medium';
+
         // Update wrapper data attribute
         document.querySelector('.timeline-wrapper').dataset.zoom = level;
 
-        // Update button states
-        document.querySelectorAll('.zoom-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.level === level) {
-                btn.classList.add('active');
-            }
-        });
+        // Update label
+        document.getElementById('zoomLevelLabel').textContent = labels[value] || '중간';
     }
 </script>
