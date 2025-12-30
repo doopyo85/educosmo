@@ -4,46 +4,50 @@
     </div>
 
     <style>
-        /* Exam Group (차시) */
+        /* Flat White Theme */
         .exam-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            background: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
         }
 
         .exam-header {
             display: flex;
             align-items: center;
             padding: 14px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 16px 16px 0 0;
+            background: #FFFFFF;
+            border-bottom: 1px solid #F0F0F0;
             cursor: pointer;
             gap: 12px;
         }
 
         .exam-header:hover {
-            filter: brightness(1.05);
+            background: #FAFAFA;
         }
 
         .exam-header.collapsed {
-            border-radius: 16px;
-        }
-
-        .exam-header.collapsed+.exam-content {
-            display: none;
+            border-bottom: none;
         }
 
         .exam-title {
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.95rem;
+            color: #1D1D1F;
             flex: 1;
         }
 
         .exam-stats {
-            font-size: 0.8rem;
-            opacity: 0.9;
+            font-size: 0.75rem;
+            color: #86868B;
+            background: #F5F5F7;
+            padding: 4px 10px;
+            border-radius: 12px;
         }
 
         .exam-chevron {
+            color: #86868B;
             transition: transform 0.2s;
         }
 
@@ -53,20 +57,21 @@
 
         .exam-content {
             background: #FFFFFF;
-            border-radius: 0 0 16px 16px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
         }
 
-        /* Problem Row (문제) */
+        .exam-header.collapsed+.exam-content {
+            display: none;
+        }
+
+        /* Problem Row */
         .problem-row {
             display: flex;
             align-items: center;
-            padding: 14px 20px;
-            gap: 16px;
-            border-bottom: 1px solid #F2F2F7;
+            padding: 12px 20px;
+            gap: 12px;
+            border-bottom: 1px solid #F5F5F7;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.15s;
         }
 
         .problem-row:hover {
@@ -78,18 +83,17 @@
         }
 
         .problem-info {
-            flex: 1;
-            min-width: 0;
+            min-width: 120px;
         }
 
         .problem-number {
-            font-weight: 700;
-            font-size: 0.95rem;
+            font-weight: 600;
+            font-size: 0.9rem;
             color: #1D1D1F;
         }
 
         .problem-concept {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #86868B;
         }
 
@@ -97,31 +101,36 @@
             flex: 1;
         }
 
+        .problem-tags .badge {
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 4px 8px;
+        }
+
         .problem-stats {
             display: flex;
             align-items: center;
             gap: 20px;
-            flex-shrink: 0;
         }
 
         .stat-item {
             text-align: center;
-            min-width: 60px;
+            min-width: 55px;
         }
 
         .stat-value {
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .stat-label {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             color: #86868B;
         }
 
         .status-badge {
-            padding: 5px 12px;
-            border-radius: 16px;
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 0.7rem;
             font-weight: 600;
         }
@@ -136,11 +145,10 @@
             color: #C62828;
         }
 
-        /* Attempts Container */
+        /* Attempts */
         .attempts-container {
             display: none;
-            background: #F5F5F7;
-            padding: 0;
+            background: #FAFAFA;
         }
 
         .attempts-container.show {
@@ -150,10 +158,11 @@
         .attempt-row {
             display: flex;
             align-items: center;
-            padding: 10px 20px 10px 56px;
-            gap: 16px;
-            font-size: 0.8rem;
-            border-bottom: 1px solid #EBEBEB;
+            padding: 8px 20px 8px 52px;
+            gap: 12px;
+            font-size: 0.75rem;
+            border-bottom: 1px solid #EFEFEF;
+            color: #666;
         }
 
         .attempt-row:last-child {
@@ -164,6 +173,8 @@
             text-align: center;
             padding: 60px 20px;
             color: #86868B;
+            background: #FFFFFF;
+            border-radius: 12px;
         }
     </style>
 
@@ -171,7 +182,7 @@
         <% locals.groupedByExam.forEach((exam, eIndex)=> { %>
             <div class="exam-group">
                 <div class="exam-header" onclick="toggleExam(this)">
-                    <i class="bi bi-book-fill"></i>
+                    <i class="bi bi-folder2 text-muted"></i>
                     <span class="exam-title">
                         <%= exam.exam_name %>
                     </span>
@@ -197,8 +208,7 @@
                             <div class="problem-tags">
                                 <% if (problem.tags) { %>
                                     <% problem.tags.split(',').slice(0, 3).forEach(tag=> { %>
-                                        <span class="badge bg-primary-subtle text-primary me-1"
-                                            style="font-size: 0.7rem; font-weight: 500;">
+                                        <span class="badge bg-secondary-subtle text-secondary me-1">
                                             <%= tag.trim() %>
                                         </span>
                                         <% }); %>
@@ -231,30 +241,26 @@
                                 </div>
                                 <div>
                                     <% if (problem.latestStatus) { %>
-                                        <span class="status-badge status-success">
-                                            <i class="bi bi-check-circle-fill me-1"></i>Success
-                                        </span>
+                                        <span class="status-badge status-success">✓ Success</span>
                                         <% } else { %>
-                                            <span class="status-badge status-failed">
-                                                <i class="bi bi-x-circle-fill me-1"></i>Failed
-                                            </span>
+                                            <span class="status-badge status-failed">✗ Failed</span>
                                             <% } %>
                                 </div>
                             </div>
 
-                            <i class="bi bi-chevron-down text-muted" style="font-size: 0.8rem;"></i>
+                            <i class="bi bi-chevron-down text-muted" style="font-size: 0.7rem;"></i>
                         </div>
 
                         <div class="attempts-container" id="attempts-<%= eIndex %>-<%= pIndex %>">
                             <% problem.attempts.sort((a, b)=> new Date(b.timestamp) - new
                                 Date(a.timestamp)).forEach((attempt, aIndex) => { %>
                                 <div class="attempt-row">
-                                    <span style="color: #86868B; min-width: 40px;">#<%= aIndex + 1 %></span>
-                                    <span style="min-width: 130px;">
+                                    <span style="min-width: 35px;">#<%= aIndex + 1 %></span>
+                                    <span style="min-width: 120px;">
                                         <%= new Date(attempt.timestamp).toLocaleString('ko-KR', { month: '2-digit' ,
                                             day: '2-digit' , hour: '2-digit' , minute: '2-digit' }) %>
                                     </span>
-                                    <span style="min-width: 70px;">
+                                    <span style="min-width: 50px;">
                                         <% if (attempt.totalTests> 0) { %>
                                             <%= attempt.passedTests %>/<%= attempt.totalTests %>
                                                     <% } else { %>
@@ -262,9 +268,9 @@
                                                         <% } %>
                                     </span>
                                     <% if (attempt.is_correct) { %>
-                                        <span class="badge bg-success-subtle text-success">✓ Success</span>
+                                        <span class="text-success">✓ Success</span>
                                         <% } else { %>
-                                            <span class="badge bg-danger-subtle text-danger">✗ Failed</span>
+                                            <span class="text-danger">✗ Failed</span>
                                             <% } %>
                                 </div>
                                 <% }); %>
@@ -274,11 +280,9 @@
             </div>
             <% }); %>
                 <% } else { %>
-                    <div class="exam-group">
-                        <div class="empty-state">
-                            <i class="bi bi-clipboard-x fs-1 d-block mb-3 opacity-25"></i>
-                            아직 푼 문제가 없습니다.
-                        </div>
+                    <div class="empty-state">
+                        <i class="bi bi-clipboard-x fs-1 d-block mb-3 opacity-25"></i>
+                        아직 푼 문제가 없습니다.
                     </div>
                     <% } %>
 </div>

@@ -250,11 +250,75 @@
         color: #8E8E93;
         background-color: #F2F2F7;
     }
+
+    /* Zoom Level Controls */
+    .zoom-controls {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        padding: 0 5px;
+    }
+
+    .zoom-btn {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #E0E0E0;
+        background: #FFFFFF;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #666;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+    }
+
+    .zoom-btn:hover {
+        background: #F5F5F7;
+    }
+
+    .zoom-btn.active {
+        background: #007AFF;
+        color: white;
+        border-color: #007AFF;
+    }
+
+    .zoom-btn i {
+        display: block;
+        font-size: 1rem;
+        margin-bottom: 2px;
+    }
+
+    /* Hidden items based on zoom level */
+    .timeline-wrapper[data-zoom="far"] .timeline-item[data-type="SOLVE"],
+    .timeline-wrapper[data-zoom="far"] .timeline-item[data-type="LOG"] {
+        display: none;
+    }
+
+    .timeline-wrapper[data-zoom="medium"] .timeline-item[data-type="LOG"] {
+        display: none;
+    }
 </style>
 
-<div class="timeline-wrapper">
+<div class="timeline-wrapper" data-zoom="medium">
     <!-- Left: Timeline List -->
     <div class="timeline-container">
+        <!-- Zoom Level Controls -->
+        <div class="zoom-controls">
+            <button class="zoom-btn" data-level="far" onclick="setZoomLevel('far')">
+                <i class="bi bi-binoculars"></i>
+                멀리
+            </button>
+            <button class="zoom-btn active" data-level="medium" onclick="setZoomLevel('medium')">
+                <i class="bi bi-eye"></i>
+                중간
+            </button>
+            <button class="zoom-btn" data-level="close" onclick="setZoomLevel('close')">
+                <i class="bi bi-search"></i>
+                가까이
+            </button>
+        </div>
+
         <div class="timeline-list">
             <% let lastDate='' ; const items=locals.timelineItems || []; if (items.length> 0) {
                 items.forEach(function(item) {
@@ -356,7 +420,7 @@
             let contentHtml = '';
 
             if (type === 'SOLVE') {
-                // Enhanced detail for SOLVE items
+                // Enhanced detail for SOLVE items - Two Column Layout
                 const isSuccess = isCorrect === 'true' || isCorrect === '1';
                 const statusClass = isSuccess ? 'text-success' : 'text-danger';
                 const statusIcon = isSuccess ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
@@ -366,46 +430,61 @@
                 let tagsHtml = '';
                 if (tags) {
                     tags.split(',').forEach(tag => {
-                        tagsHtml += `<span class="badge bg-primary-subtle text-primary me-1" style="font-size: 0.8rem;">${tag.trim()}</span>`;
+                        tagsHtml += `<span class="badge bg-secondary-subtle text-secondary me-1" style="font-size: 0.75rem;">${tag.trim()}</span>`;
                     });
                 }
 
                 contentHtml = `
-                    <div class="animate-fade-in text-center">
-                        <div class="mb-3">
-                            <span class="badge bg-light text-dark rounded-pill px-3 py-2 border">
+                    <div class="animate-fade-in" style="width: 100%; text-align: left;">
+                        <!-- Header -->
+                        <div class="text-center mb-4">
+                            <span class="badge bg-light text-dark rounded-pill px-3 py-2 border" style="font-size: 0.8rem;">
                                 ${time}
                             </span>
                         </div>
                         
-                        <div class="mb-4">
-                            <span class="badge bg-success-subtle text-success px-3 py-2" style="font-size: 0.8rem;">
-                                <i class="bi bi-code-square me-1"></i> 문제풀이
-                            </span>
-                        </div>
-                        
-                        <h2 class="fw-bold mb-2" style="color: #1D1D1F; font-size: 1.5rem;">${title}</h2>
-                        
-                        ${concept ? `<p class="text-muted mb-3" style="font-size: 0.9rem;">${concept}</p>` : ''}
-                        
-                        ${tagsHtml ? `<div class="mb-4">${tagsHtml}</div>` : ''}
-                        
-                        <div class="p-4 rounded-4 d-inline-block" style="background: #ffffff; min-width: 280px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.06);">
-                            <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
-                                <i class="bi ${statusIcon} ${statusClass}" style="font-size: 2rem;"></i>
-                                <span class="fw-bold ${statusClass}" style="font-size: 1.3rem;">${statusText}</span>
+                        <!-- Two Column Layout -->
+                        <div class="d-flex gap-4" style="min-height: 200px;">
+                            <!-- Left: Problem Info -->
+                            <div class="flex-grow-1 p-4 rounded-3" style="background: #F9F9FB;">
+                                <div class="mb-3">
+                                    <span class="badge bg-success-subtle text-success" style="font-size: 0.7rem;">
+                                        <i class="bi bi-code-square me-1"></i>문제풀이
+                                    </span>
+                                </div>
+                                <h4 class="fw-bold mb-2" style="color: #1D1D1F;">${title}</h4>
+                                ${concept ? `<p class="text-muted mb-3" style="font-size: 0.85rem;">${concept}</p>` : ''}
+                                ${tagsHtml ? `<div class="mb-3">${tagsHtml}</div>` : ''}
+                                
+                                <div class="d-flex align-items-center gap-2 mt-4">
+                                    <i class="bi ${statusIcon} ${statusClass}" style="font-size: 1.5rem;"></i>
+                                    <span class="fw-bold ${statusClass}" style="font-size: 1.1rem;">${statusText}</span>
+                                </div>
                             </div>
                             
-                            <div class="text-muted" style="font-size: 0.85rem;">
-                                ${isSuccess ? '이 문제를 성공적으로 해결했습니다!' : '다음에 다시 도전해보세요!'}
+                            <!-- Right: Metadata -->
+                            <div class="p-4 rounded-3" style="background: #FFFFFF; border: 1px solid #F0F0F0; min-width: 180px;">
+                                <h6 class="fw-bold mb-3" style="color: #86868B; font-size: 0.75rem;">
+                                    <i class="bi bi-bar-chart me-1"></i>메타데이터
+                                </h6>
+                                
+                                <div class="mb-3 pb-3 border-bottom">
+                                    <div class="text-muted" style="font-size: 0.7rem;">결과</div>
+                                    <div class="fw-bold ${statusClass}">${statusText}</div>
+                                </div>
+                                
+                                <div class="mb-3 pb-3 border-bottom">
+                                    <div class="text-muted" style="font-size: 0.7rem;">제출 시간</div>
+                                    <div class="fw-medium" style="font-size: 0.85rem;">${time}</div>
+                                </div>
+                                
+                                <div class="mb-0">
+                                    <div class="text-muted" style="font-size: 0.7rem;">상세 보기</div>
+                                    <a href="/my-universe/problems" class="btn btn-sm btn-outline-primary mt-1" style="font-size: 0.75rem;">
+                                        문제풀이 탭 <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="mt-4 pt-3">
-                            <p class="text-muted small mb-0">
-                                <i class="bi bi-info-circle me-1"></i>
-                                문제 풀이 탭에서 상세 시도 기록을 확인할 수 있습니다
-                            </p>
                         </div>
                     </div>
                 `;
@@ -447,5 +526,19 @@
             panel.innerHTML = contentHtml;
             panel.style.opacity = '1';
         }, 200);
+    }
+
+    // Zoom Level Control
+    function setZoomLevel(level) {
+        // Update wrapper data attribute
+        document.querySelector('.timeline-wrapper').dataset.zoom = level;
+
+        // Update button states
+        document.querySelectorAll('.zoom-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.level === level) {
+                btn.classList.add('active');
+            }
+        });
     }
 </script>
