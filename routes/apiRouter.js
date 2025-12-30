@@ -460,8 +460,8 @@ router.get('/connectome-data', authenticateUser, async (req, res) => {
     // 1. Fetch Nodes with User Progress
     const nodes = await db.queryDatabase(`
       SELECT 
-        n.id, n.name, n.type, 
-        n.position_x, n.position_y, n.position_z,
+        n.id, n.name, n.category as type, 
+        n.pos_x as position_x, n.pos_y as position_y, n.pos_z as position_z,
         COALESCE(uc.activation_level, 0) as activation,
         COALESCE(uc.total_exp, 0) as exp
       FROM CT_Nodes n
