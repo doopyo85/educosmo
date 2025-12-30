@@ -54,7 +54,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 
-    /* 🔥 FIX: 30% 고정 너비 */
+    /* 🔥 FIX: 사용자 요청대로 30% 고정 너비 유지 */
     width: 30%;
     flex: 0 0 30%;
     max-width: 30%;
@@ -79,6 +79,8 @@
 
     /* Ensure it doesn't overlap too much if screen is small */
     width: auto;
+    max-width: 60%;
+    /* 공간 확장 */
     z-index: 1;
 }
 
@@ -146,8 +148,10 @@
 #problem-navigation {
     display: flex;
     align-items: center;
-    gap: 5px;
-    flex-wrap: wrap;
+    gap: 4px;
+    /* 간격 축소 */
+    flex-wrap: nowrap;
+    /* 줄바꿈 방지 */
     justify-content: center;
 }
 
