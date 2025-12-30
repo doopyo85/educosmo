@@ -89,15 +89,21 @@
                     </div>
 
                     <div class="problem-top-nav">
-                        <!-- 1. Title: Fixed 30% Width -->
+                        <!-- 1. Title (Absolute Overlay) -->
                         <div id="problem-title" class="problem-title"></div>
 
-                        <!-- 2. Navigation: Centered Absolute -->
+                        <!-- Spacer Left: Enforces 30% minimum width -->
+                        <div class="nav-spacer spacer-left"></div>
+
+                        <!-- 2. Navigation: Centered by spacers -->
                         <div id="problem-navigation-container" class="problem-navigation-container">
                             <i class="bi bi-chevron-left" id="prev-problem"></i>
                             <div id="problem-navigation" class="problem-navigation"></div>
                             <i class="bi bi-chevron-right" id="next-problem"></i>
                         </div>
+
+                        <!-- Spacer Right: Balances left spacer -->
+                        <div class="nav-spacer spacer-right"></div>
 
                         <!-- 3. Controls Group: Right Aligned -->
                         <div class="header-controls-group">

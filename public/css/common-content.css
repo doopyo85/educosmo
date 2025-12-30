@@ -27,6 +27,7 @@
 }
 
 /* 상단 네비게이션 바 - 60px 높이 통일 */
+/* 상단 네비게이션 바 - 60px 높이 통일 */
 .problem-top-nav {
     display: flex;
     align-items: center;
@@ -38,13 +39,35 @@
     flex-shrink: 0;
     box-sizing: border-box;
     position: relative;
-    /* Allows absolute positioning of children */
+    /* 중요: 절대 위치 요소들의 기준점 */
     z-index: var(--z-content);
     gap: 0;
     flex-wrap: nowrap;
+
+    /* Flexbox Spacer 전략 적용 */
+    justify-content: space-between;
 }
 
-/* 문제 제목 스타일 (30% 고정) */
+/* 🔥 Spacer: Flexbox 레이아웃 제어용 */
+.nav-spacer {
+    flex: 1;
+    /* 양쪽이 동일한 힘으로 밀어서 중앙 정렬 유도 */
+    pointer-events: none;
+    /* 클릭 통과 */
+    height: 100%;
+}
+
+/* 왼쪽 Spacer: 최소 30% 영역 확보 (타이틀 보호) */
+.nav-spacer.spacer-left {
+    min-width: 30%;
+}
+
+/* 오른쪽 Spacer: 컨트롤 영역 보호 */
+.nav-spacer.spacer-right {
+    min-width: 150px;
+}
+
+/* 문제 제목 스타일 (30% 고정 - 절대 위치 오버레이) */
 .problem-title,
 #problem-title {
     font-size: 1.2rem;
@@ -54,17 +77,23 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 
-    /* 🔥 FIX: 사용자 요청대로 30% 고정 너비 유지 */
-    width: 30%;
-    flex: 0 0 30%;
-    max-width: 30%;
+    /* 절대 위치로 왼쪽 Spacer 위에 겹침 */
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
 
+    width: 30%;
+
+    display: flex;
+    align-items: center;
+    padding-left: 16px;
     box-sizing: border-box;
-    padding: 0;
-    margin: 0;
+
+    z-index: 20;
 }
 
-/* 문제 네비게이션 컨테이너 (중앙 정렬) */
+/* 문제 네비게이션 컨테이너 (유동적 너비) */
 .problem-navigation-container,
 #problem-navigation-container {
     display: flex;
@@ -72,31 +101,31 @@
     justify-content: center;
     gap: 6px;
 
-    /* 🔥 FIX: 절대 위치로 중앙 정렬 */
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-
-    /* Ensure it doesn't overlap too much if screen is small */
+    /* Flex 아이템으로서 자연스럽게 배치 (절대 위치 제거) */
     width: auto;
-    max-width: 60%;
-    /* 공간 확장 */
-    z-index: 1;
+    max-width: none;
+    /* 제한 해제 */
+    z-index: 10;
+
+    /* 내용물 크기만큼만 차지 */
+    flex-shrink: 0;
 }
 
-/* 🔥 헤더 컨트롤 그룹 (우측 정렬, 버튼 모음) */
+/* 🔥 헤더 컨트롤 그룹 (절대 위치 오버레이) */
 .header-controls-group {
     display: flex;
     align-items: center;
     justify-content: flex-end;
 
-    /* Right align */
-    margin-left: auto;
-    flex: 0 0 auto;
-
-    gap: 8px;
-    /* 버튼 간격 */
+    /* 절대 위치로 오른쪽 Spacer 위에 겹침 */
+    position: absolute;
+    right: 0;
+    top: 0;
     height: 100%;
+    padding-right: 16px;
+
+    z-index: 20;
+    gap: 8px;
 }
 
 /* Modern Individual Button Style (Option A) */
@@ -149,9 +178,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    /* 간격 축소 */
     flex-wrap: nowrap;
-    /* 줄바꿈 방지 */
     justify-content: center;
 }
 
