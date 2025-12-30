@@ -1610,8 +1610,19 @@ class ContentComponent extends Component {
 
           // 메인 버튼 인디케이터 업데이트
           if (colorIndicator) colorIndicator.style.backgroundColor = color;
+
+          // 색상을 누르면 자동으로 '펜' 모드로 전환 (사용자 경험 개선)
+          this.setToolMode('pen');
         });
       });
+
+      // (0) 펜 도구 버튼 (New)
+      const penToolBtn = document.getElementById('drawing-pen-tool-btn');
+      if (penToolBtn) {
+        penToolBtn.addEventListener('click', () => {
+          this.setToolMode('pen');
+        });
+      }
 
       // (2) 굵기 선택 (슬라이더)
       const sizeSlider = document.getElementById('drawing-size-slider');
@@ -1636,8 +1647,7 @@ class ContentComponent extends Component {
 
       if (eraserBtn) {
         eraserBtn.addEventListener('click', () => {
-          // 지우개 모드 활성화/비활성화 (기본 활성화)
-          this.setEraserMode();
+          this.setToolMode('eraser');
 
           // 옵션 팝업 토글 (지우개 눌렀을 때만 보이게 하려면 active 클래스 활용)
           if (eraserOptions) {

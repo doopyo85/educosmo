@@ -133,10 +133,18 @@
 
                         <!-- 1. 확장되는 그리기 메뉴 (기본 숨김) -->
                         <div id="drawing-fab-group" class="drawing-fab-group">
-                            <!-- 색상 버튼 -->
+                            <!-- 펜 도구 버튼 (새로 추가됨) -->
                             <div class="fab-wrapper">
-                                <button id="drawing-color-btn" class="floating-btn fab-child" title="색상 변경">
-                                    <span class="color-indicator" style="background-color: #ff0000;"></span>
+                                <button id="drawing-pen-tool-btn" class="floating-btn fab-child active" title="펜 모드">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                            </div>
+
+                            <!-- 색상 선택 버튼 -->
+                            <div class="fab-wrapper">
+                                <button id="drawing-color-btn" class="floating-btn fab-child" title="색상 선택">
+                                    <span class="color-indicator"
+                                        style="background-color: #000000; box-shadow: 0 0 2px rgba(0,0,0,0.5);"></span>
                                 </button>
                                 <!-- 색상 선택 팝업 (좌측) -->
                                 <div id="fab-color-palette" class="fab-popup left">
@@ -179,9 +187,9 @@
                             </div>
                         </div>
 
-                        <!-- 2. 메인 펜 토글 버튼 (아이콘 변경: 붓 모양) -->
+                        <!-- 2. 메인 펜 토글 버튼 (아이콘 변경: 다시 연필로, 그러나 닫기 아이콘과 토글되므로 초기값만) -->
                         <button id="pen-toggle-btn" class="floating-btn pen-btn" title="펜 그리기">
-                            <i class="bi bi-brush"></i>
+                            <i class="bi bi-pencil-fill"></i>
                         </button>
 
                         <!-- 3. 기존 폰트 버튼 -->

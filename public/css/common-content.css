@@ -550,6 +550,37 @@
     background-size: 40px 40px;
 }
 
+/* Tool Buttons (Eraser, Clear, Pen) */
+.tool-btn {
+    /* This might be deprecated, using .floating-btn.fab-child instead */
+    /* ... existing ... */
+}
+
+/* 🔥 Neon Glow Check for Active Tool (Pen / Eraser) */
+.floating-btn.fab-child.active-tool {
+    background-color: white;
+    color: #0d6efd;
+    border-color: #0d6efd;
+    box-shadow: 0 0 8px rgba(13, 110, 253, 0.6),
+        0 0 16px rgba(13, 110, 253, 0.4);
+    transform: scale(1.1);
+    z-index: 10;
+}
+
+/* Ensure icons inherit color in active state */
+.floating-btn.fab-child.active-tool i {
+    color: #0d6efd;
+    text-shadow: 0 0 5px rgba(13, 110, 253, 0.5);
+}
+
+/* Pen Toggle Button Active State */
+.floating-btn.pen-btn.active {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+    transform: translateY(0);
+}
+
 /* 콘텐츠 로딩 메시지 */
 .content-loading-message {
     position: absolute;
