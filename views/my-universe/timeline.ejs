@@ -443,22 +443,19 @@
     .timeline-controls {
         position: sticky;
         top: 10px;
-        /* Slight offset from top */
         z-index: 100;
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        padding: 15px;
+        padding: 15px 15px 5px 15px;
+        /* Reduced bottom padding */
         margin: 0 0 20px 0;
-        /* Clear margin */
-        border: 1px solid #E5E5EA;
+        border: none;
+        /* Remove border */
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        /* Stronger shadow for card feel */
         border-radius: 16px;
-        /* Rounded card */
         display: flex;
         flex-direction: column;
-        /* Vertical layout */
         gap: 15px;
     }
 
@@ -525,18 +522,17 @@
         color: #8E8E93;
         letter-spacing: 0.05em;
         width: 40px;
-        /* Fixed width for alignment */
     }
 
     .zoom-slider {
         -webkit-appearance: none;
         width: 100%;
         height: 2px;
-        /* Thin line */
         background: #E5E5EA;
         border-radius: 2px;
         outline: none;
-        margin-bottom: 8px;
+        margin-bottom: 0;
+        /* Removed bottom margin */
     }
 
     .zoom-slider::-webkit-slider-thumb {
@@ -566,8 +562,8 @@
     .zoom-labels {
         display: flex;
         justify-content: space-between;
-        padding: 0 2px;
-        /* Align with slider ends */
+        padding: 4px 2px 0 2px;
+        /* Slight top padding for spacing from slider */
     }
 
     .zoom-labels span {
