@@ -1,4 +1,4 @@
-<!-- Last Updated: Hierarchical Timeline (Year/Month/Week/Day) -->
+<!-- Last Updated: Timeline UI Polish & Logic Fix -->
 <style>
     /* 
      * Subway Style Timeline 
@@ -252,43 +252,56 @@
         white-space: nowrap;
     }
 
+    /* Refined Slider Style */
     .zoom-slider {
         flex: 1;
         -webkit-appearance: none;
         appearance: none;
-        height: 4px;
+        height: 2px;
+        /* Thinner */
         background: #E0E0E0;
         border-radius: 2px;
         cursor: pointer;
     }
 
+    /* Thumb Style: Smaller & Gray */
     .zoom-slider::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        width: 16px;
-        height: 16px;
-        background: #007AFF;
+        width: 12px;
+        height: 12px;
+        background: #8E8E93;
+        /* Gray */
         border-radius: 50%;
         cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        margin-top: -5px;
+        /* Adjust if needed, depending on track height logic in some browsers, but usually auto-centers */
     }
 
+    .zoom-slider::-moz-range-thumb {
+        width: 12px;
+        height: 12px;
+        background: #8E8E93;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Labels Alignment (Flex Space-Between) */
     .zoom-labels {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        text-align: center;
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        padding: 0 2px;
+    }
+
+    .zoom-labels span {
         font-size: 0.65rem;
         color: #8E8E93;
-        margin-top: 6px;
-        padding: 0 8px;
-    }
-
-    .zoom-level-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #007AFF;
-        min-width: 50px;
-        text-align: right;
+        width: 30px;
+        text-align: center;
     }
 
     /* Summary Card for Year/Month/Week views */
@@ -323,7 +336,7 @@
                     <span>Day</span>
                 </div>
             </div>
-            <span class="zoom-level-label" id="zoomLevelLabel">Week</span>
+            <!-- REMOVED zoomLevelLabel as requested -->
         </div>
 
         <div class="timeline-list" id="timelineList">
@@ -345,7 +358,7 @@
 </div>
 
 <script>
-    // Inject server-side data (Fixed Syntax)
+    // Inject server-side data (Fixed Syntax with No Space)
     const rawTimelineData = <% - JSON.stringify(locals.timelineItems || []) %>;
 
     // Process data dates
@@ -357,8 +370,6 @@
             _year: date.getFullYear(),
             _month: date.getMonth() + 1,
             _day: date.getDate(),
-            // Calculate Week of Month (approx implementation)
-            // Using ISO week logic might be complex vs locale, simple math is robust enough for "Week 1,2,3,4"
             _weekOfMonth: Math.ceil(date.getDate() / 7)
         };
     });
@@ -375,16 +386,11 @@
 
     function setZoomBySlider(value) {
         const levels = { 1: 'year', 2: 'month', 3: 'week', 4: 'day' };
-        const labels = { 1: 'Year', 2: 'Month', 3: 'Week', 4: 'Day' };
         const level = levels[value] || 'week';
 
         // Update wrapper data attribute (for global styles just in case)
         const wrapper = document.querySelector('.timeline-wrapper');
         if (wrapper) wrapper.dataset.zoom = level;
-
-        // Update label
-        const labelEl = document.getElementById('zoomLevelLabel');
-        if (labelEl) labelEl.textContent = labels[value] || 'Week';
 
         // Render Timeline Content
         renderTimeline(level);
@@ -426,16 +432,12 @@
         data.forEach(item => {
             let key;
             if (level === 'year') {
-                // Key: YYYY-MM
                 key = `${item._year}-${String(item._month).padStart(2, '0')}`;
             } else if (level === 'month') {
-                // Key: YYYY-MM-Week
                 key = `${item._year}-${String(item._month).padStart(2, '0')}-W${item._weekOfMonth}`;
             } else if (level === 'week') {
-                // Key: YYYY-MM-DD
-                key = item.dateStr; // Use full date as key
+                key = item.dateStr;
             } else {
-                // Day: YYYY-MM-DD
                 key = item.dateStr;
             }
             if (!groups[key]) groups[key] = [];
@@ -461,7 +463,6 @@
             title = `${parseInt(w.replace('W', ''))}주차`;
             subTitle = `${parseInt(m)}월`;
         } else if (level === 'week') {
-            // For 'week' level, we show each DAY
             const date = items[0]._date;
             const days = ['일', '월', '화', '수', '목', '금', '토'];
             title = `${date.getDate()}일 (${days[date.getDay()]})`;
@@ -494,7 +495,6 @@
     }
 
     function renderDayGroup(dateStr, items) {
-        // Sort items by time descending
         items.sort((a, b) => b.timeStr.localeCompare(a.timeStr));
 
         let html = `
@@ -512,7 +512,6 @@
                 iconClass = isSuccess ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
             }
 
-            // Tags (up to 2)
             let tagsHtml = '';
             if (item.tags) {
                 item.tags.split(',').slice(0, 2).forEach(tag => {
@@ -520,7 +519,6 @@
                 });
             }
 
-            // Platform badge
             let platformHtml = '';
             if (item.platform && item.platform !== 'LOG') {
                 const badgeClass = item.platform === '스크래치' ? 'scratch' : (item.platform === '파이썬' ? 'python' : '');
@@ -565,7 +563,6 @@
     }
 
     function zoomInFrom(level) {
-        // Logic to zoom in one level deeper
         const slider = document.querySelector('.zoom-slider');
         let nextVal = parseInt(slider.value) + 1;
         if (nextVal <= 4) {
@@ -575,7 +572,6 @@
     }
 
     function handleClick(element) {
-        // Read data attributes
         const title = element.dataset.title;
         const time = element.dataset.time;
         const url = element.dataset.url;
@@ -587,11 +583,9 @@
         const examName = element.dataset.exam || '';
         const problemNumber = element.dataset.problem || '';
 
-        // Active state handling
         document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
 
-        // Update detail panel with nice animation
         const panel = document.getElementById('detailPanel');
         panel.style.opacity = '0';
 
@@ -615,7 +609,6 @@
 
                 contentHtml = `
                     <div class="animate-fade-in d-flex flex-column h-100 w-100">
-                        <!-- Top: Problem Content (Iframe) -->
                         <div class="flex-grow-1 position-relative rounded-4 overflow-hidden mb-3" 
                              style="background: #FFFFFF; border: 1px solid #E5E5EA; min-height: 0;">
                             <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="z-index: 0;">
@@ -628,7 +621,6 @@
                                 loading="lazy"></iframe>
                         </div>
                         
-                        <!-- Bottom: Metadata Card -->
                         <div class="bg-white rounded-4 p-4 shadow-sm border border-light" style="flex-shrink: 0;">
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <div class="d-flex align-items-center gap-2 text-muted small">
