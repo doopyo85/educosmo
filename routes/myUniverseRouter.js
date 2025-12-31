@@ -403,7 +403,7 @@ router.get('/timeline', async (req, res) => {
 
             ) AS UnifiedTimeline
             ORDER BY created_at DESC
-            LIMIT 50
+            LIMIT 300
         `, [studentId, studentId, studentId, studentId, studentId, studentId, studentId]);
 
         // Process logs for view
@@ -527,7 +527,7 @@ router.get('/student/:id', async (req, res) => {
                 )
             ) AS UnifiedTimeline
             ORDER BY created_at DESC
-            LIMIT 50
+            LIMIT 300
         `, [studentId, studentId, studentId, studentId]);
 
         // Process logs for view

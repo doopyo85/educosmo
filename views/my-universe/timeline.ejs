@@ -442,8 +442,8 @@
 <div class="timeline-wrapper" data-zoom="week">
     <!-- Left: Timeline List -->
     <div class="timeline-container">
-        <!-- Horizontal Zoom Slider -->
-        <div class="zoom-slider-container">
+        <!-- Horizontal Zoom Slider (Hidden for Accordion View) -->
+        <div class="zoom-slider-container" style="display: none;">
             <span class="zoom-slider-title">ZOOM</span>
             <div style="flex: 1;">
                 <input type="range" class="zoom-slider" min="1" max="4" value="3" oninput="setZoomBySlider(this.value)">
@@ -509,56 +509,96 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Initialize with Week view (Level 3)
-        const initialZoom = 3;
-        const slider = document.querySelector('.zoom-slider');
-        if (slider) {
-            slider.value = initialZoom;
-            setZoomBySlider(initialZoom);
-        }
+        // Initialize with Year view (Level 1)
+        renderTimeline('year');
     });
 
-    function setZoomBySlider(value) {
-        const levels = { 1: 'year', 2: 'month', 3: 'week', 4: 'day' };
-        const level = levels[value] || 'week';
+    // Toggle expansion: Year -> Month -> Week -> Day -> Items
+    function toggleGroup(element, currentLevel, key) {
+        // Find or create container
+        let container = element.nextElementSibling;
 
-        // Update wrapper data attribute
-        const wrapper = document.querySelector('.timeline-wrapper');
-        if (wrapper) wrapper.dataset.zoom = level;
+        // If container exists and is an expansion container, toggle it
+        if (container && container.classList.contains('expansion-container')) {
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                element.classList.add('expanded');
+            } else {
+                container.style.display = 'none';
+                element.classList.remove('expanded');
+            }
+            return;
+        }
 
-        // Render Timeline Content
-        renderTimeline(level);
+        // Create new container
+        container = document.createElement('div');
+        container.className = 'expansion-container';
+        container.style.paddingLeft = '20px'; // Indent for hierarchy
+        container.style.borderLeft = '1px solid #E5E5EA'; // Vertical guide line
+        container.style.marginLeft = '22px'; // Align with marker center
+
+        // Animate in
+        container.style.animation = 'fadeIn 0.3s ease-out';
+
+        // Insert after the clicked element
+        element.parentNode.insertBefore(container, element.nextElementSibling);
+        element.classList.add('expanded');
+
+        // Determine next level
+        const levels = ['year', 'month', 'week', 'day', 'item'];
+        const nextIdx = levels.indexOf(currentLevel) + 1;
+        const nextLevel = levels[nextIdx];
+
+        if (!nextLevel) return;
+
+        // Filter data for this group
+        const subset = timelineData.filter(item => {
+            if (currentLevel === 'year') return String(item._year) === key;
+            if (currentLevel === 'month') return `${item._year}-${String(item._month).padStart(2, '0')}` === key;
+            if (currentLevel === 'week') return `${item._year}-${String(item._month).padStart(2, '0')}-W${item._weekOfMonth}` === key;
+            if (currentLevel === 'day') return item.dateStr === key;
+            return false;
+        });
+
+        if (nextLevel === 'item') {
+            // Render actual log items
+            container.innerHTML = renderDayGroup(key, subset, true); // true = raw items without date header
+        } else {
+            // Group next level
+            const grouped = groupData(subset, nextLevel);
+            let html = '';
+            // Sort descending
+            Object.keys(grouped).sort((a, b) => b.localeCompare(a)).forEach(subKey => {
+                const subGroup = grouped[subKey];
+                // Render summary card for the next level
+                html += renderSummaryCard(nextLevel, subKey, subGroup);
+            });
+            container.innerHTML = html;
+        }
     }
 
     function renderTimeline(levelKey) {
         const container = document.getElementById('timelineList');
         if (!container) return;
 
+        // If not already populated or if forced (levelKey provided often implies reset)
+        // Actually, for accordion, we usually just render 'year' once.
+        // But let's support re-rendering.
+
         container.innerHTML = '';
-        const grouped = groupData(timelineData, levelKey);
+        const level = levelKey || 'year';
+        const grouped = groupData(timelineData, level);
         let html = '';
 
         // Sort keys descending (latest first)
         Object.keys(grouped).sort((a, b) => b.localeCompare(a)).forEach(key => {
-            const group = grouped[key];
-            if (levelKey === 'day') {
-                html += renderDayGroup(key, group);
-            } else {
-                html += renderSummaryCard(levelKey, key, group);
-            }
+            html += renderSummaryCard(level, key, grouped[key]);
         });
 
         if (html === '') {
             html = `<div class="text-center text-muted mt-5 py-5"><i class="bi bi-inbox display-4 opacity-25"></i><p class="mt-3">기록된 활동이 없습니다.</p></div>`;
         }
         container.innerHTML = html;
-
-        // Re-attach fade-in animation
-        const items = container.querySelectorAll('.timeline-item');
-        items.forEach((item, index) => {
-            item.style.opacity = '0';
-            item.style.animation = `fadeIn 0.3s ease-out ${index * 0.05}s forwards`;
-        });
     }
 
     function groupData(data, level) {
@@ -566,11 +606,11 @@
         data.forEach(item => {
             let key;
             if (level === 'year') {
-                key = `${item._year}-${String(item._month).padStart(2, '0')}`;
+                key = String(item._year);
             } else if (level === 'month') {
-                key = `${item._year}-${String(item._month).padStart(2, '0')}-W${item._weekOfMonth}`;
+                key = `${item._year}-${String(item._month).padStart(2, '0')}`;
             } else if (level === 'week') {
-                key = item.dateStr;
+                key = `${item._year}-${String(item._month).padStart(2, '0')}-W${item._weekOfMonth}`;
             } else {
                 key = item.dateStr;
             }
@@ -589,22 +629,28 @@
         let subTitle = '';
 
         if (level === 'year') {
+            title = `${key}년`;
+            subTitle = `Total ${total}`;
+        } else if (level === 'month') {
             const [y, m] = key.split('-');
             title = `${parseInt(m)}월`;
             subTitle = `${y}년`;
-        } else if (level === 'month') {
-            const [y, m, w] = key.split('-');
-            title = `${parseInt(w.replace('W', ''))}주차`;
-            subTitle = `${parseInt(m)}월`;
         } else if (level === 'week') {
+            const [y, m, w] = key.split('-');
+            title = `${w.replace('W', '')}주차`;
+            subTitle = `${parseInt(m)}월`;
+        } else if (level === 'day') {
+            // For Day, we display specific date
             const date = items[0]._date;
             const days = ['일', '월', '화', '수', '목', '금', '토'];
             title = `${date.getDate()}일 (${days[date.getDay()]})`;
-            subTitle = `${date.getMonth() + 1}월`;
+            // subTitle = `${date.getMonth() + 1}월`; 
+            // Don't need month in subtitle if parent is week/month, but good for context
         }
 
+        // Onclick calls toggleGroup instead of zoomInFrom
         return `
-            <div class="timeline-item summary-card mb-2" onclick="zoomInFrom('${level}')" style="background: #FFFFFF; border: 1px solid #E5E5EA; box-shadow: 0 1px 3px rgba(0,0,0,0.03);"> 
+            <div class="timeline-item summary-card mb-2" onclick="toggleGroup(this, '${level}', '${key}')" style="background: #FFFFFF; border: 1px solid #E5E5EA; box-shadow: 0 1px 3px rgba(0,0,0,0.03);"> 
                 <div class="timeline-marker" style="background:#007AFF; width:12px; height:12px; border-radius:50%; top:18px; left:17px;"></div>
                 
                 <div class="timeline-content-row">
@@ -631,13 +677,8 @@
     function renderDayGroup(dateStr, items) {
         items.sort((a, b) => b.timeStr.localeCompare(a.timeStr));
 
-        let html = `
-            <div class="mb-2 mt-4">
-                <span class="timeline-group-date shadow-sm text-primary bg-primary-subtle border-0">
-                    ${dateStr}
-                </span>
-            </div>
-        `;
+        let html = '';
+        // Header removed for accordion view preference
 
         items.forEach(item => {
             const isSuccess = item.isCorrect === 'true' || item.isCorrect === '1' || item.isCorrect === true;
@@ -723,14 +764,7 @@
         return html;
     }
 
-    function zoomInFrom(level) {
-        const slider = document.querySelector('.zoom-slider');
-        let nextVal = parseInt(slider.value) + 1;
-        if (nextVal <= 4) {
-            slider.value = nextVal;
-            setZoomBySlider(nextVal);
-        }
-    }
+    // zoomInFrom removed as slider is gone
 
     function handleClick(element) {
         const title = element.dataset.title;
