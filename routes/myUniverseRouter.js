@@ -178,14 +178,39 @@ const processLogs = async (logs, currentUser) => {
         } else if (['entry', 'scratch'].includes(log.type)) {
             try {
                 const detail = JSON.parse(log.metadata || '{}');
+                let filename = '';
+
                 if (log.type === 'entry' && detail.s3Url) {
                     const s3UrlEncoded = encodeURIComponent(detail.s3Url);
                     const userID = currentUser && currentUser.userID ? currentUser.userID : '';
                     const role = currentUser && currentUser.role ? currentUser.role : 'student';
                     finalUrl = `/entry_editor/?s3Url=${s3UrlEncoded}&userID=${userID}&role=${role}`;
+
+                    // Extract filename for tag lookup
+                    const parts = detail.s3Url.split('/');
+                    filename = decodeURIComponent(parts[parts.length - 1] || '');
                 } else if (log.type === 'scratch' && detail.s3Url) {
                     const s3UrlEncoded = encodeURIComponent(detail.s3Url);
                     finalUrl = `/scratch/?project_file=${s3UrlEncoded}`;
+
+                    // Extract filename for tag lookup
+                    const parts = detail.s3Url.split('/');
+                    filename = decodeURIComponent(parts[parts.length - 1] || '');
+                }
+
+                // Tag Lookup (Same logic as in getFriendlyInfo)
+                if (filename) {
+                    // Normalize: remove extension and lower case
+                    const key = filename.replace(/\.(ent|sb2|sb3)$/i, '').toLowerCase();
+
+                    // Try exact match or match with underscores replaced by spaces if needed
+                    // But the map keys are likely created from "exam_problem" format.
+                    // Let's assume the filename matches the key format in the sheet.
+                    const meta = metadataMap.get(key);
+                    if (meta) {
+                        tags = meta.tags || '';
+                        concept = meta.concept || '';
+                    }
                 }
             } catch (e) { }
         } else if (log.type === 'learn') {
@@ -194,6 +219,17 @@ const processLogs = async (logs, currentUser) => {
                 if (detail.progress) {
                     // Pass progress to be used in view
                     log.progress = detail.progress;
+                }
+
+                // Try to resolve tags for Learn items using title as key
+                // Use a normalized key from the title (assuming title might be the problem ID)
+                if (log.title) {
+                    const key = log.title.trim().toLowerCase();
+                    const meta = metadataMap.get(key);
+                    if (meta) {
+                        tags = meta.tags || '';
+                        concept = meta.concept || '';
+                    }
                 }
             } catch (e) { }
             finalUrl = '#';
