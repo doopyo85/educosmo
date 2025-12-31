@@ -217,7 +217,8 @@ const processLogs = async (logs, currentUser) => {
             // Enhanced fields for SOLVE items
             tags: tags,
             concept: concept,
-            isCorrect: isCorrect
+            isCorrect: isCorrect,
+            isoDate: dateObj.toISOString() // [FIX] Add standard ISO date for reliable client-side parsing
         };
     });
 };

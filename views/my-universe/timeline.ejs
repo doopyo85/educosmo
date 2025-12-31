@@ -91,37 +91,49 @@
         position: absolute;
         top: 0;
         bottom: 0;
-        left: 28px;
-        width: 2px;
+        left: 21px;
+        /* Match marker left position */
+        width: 1px;
+        /* Thinner line */
         background: #E5E5EA;
         z-index: 0;
     }
 
     .timeline-group-date {
-        font-size: 0.85rem;
-        font-weight: 700;
+        font-size: 0.75rem;
+        /* Smaller font */
+        font-weight: 600;
         color: #86868B;
         background: #FFFFFF;
         position: relative;
         z-index: 1;
         display: inline-block;
-        margin: 15px 0 8px 0;
-        padding: 4px 10px;
-        border-radius: 12px;
+        margin: 10px 0 4px 0;
+        /* Reduced margin */
+        padding: 2px 8px;
+        /* Reduced padding */
+        border-radius: 8px;
         border: 1px solid #F2F2F7;
     }
 
     .timeline-item {
         position: relative;
-        padding: 10px 10px 10px 50px;
-        margin-bottom: 8px;
+        padding: 8px 8px 8px 40px;
+        /* Reduced padding */
+        margin-bottom: 4px;
+        /* Reduced margin */
         cursor: pointer;
         transition: all 0.2s ease;
-        border-radius: 12px;
+        border-radius: 8px;
+        /* Slightly tighter radius */
+        border: 1px solid transparent;
+        /* Prevent layout shift on hover if needed */
     }
 
     .timeline-item:hover {
         background-color: #F9F9F9;
+        border-color: #E5E5EA;
+        /* Subtle border on hover */
     }
 
     .timeline-item.active {
@@ -131,9 +143,12 @@
     /* Station Marker (Dash) */
     .timeline-marker {
         position: absolute;
-        left: 28px;
-        top: 18px;
-        width: 16px;
+        left: 21px;
+        /* Adjusted for smaller padding */
+        top: 16px;
+        /* Adjusted for smaller padding */
+        width: 14px;
+        /* Slightly smaller */
         height: 2px;
         background: #C7C7CC;
         z-index: 2;
@@ -179,13 +194,15 @@
     .timeline-title {
         font-weight: 600;
         color: #1D1D1F;
-        font-size: 0.9rem;
-        line-height: 1.3;
+        font-size: 0.8rem;
+        /* Smaller font */
+        line-height: 1.2;
     }
 
     .timeline-icon-small {
         color: var(--timeline-dot-color);
-        font-size: 1rem;
+        font-size: 0.9rem;
+        /* Smaller icon */
     }
 
     /* Empty State */
@@ -400,14 +417,22 @@
 
     // Process data dates
     const timelineData = rawTimelineData.map(item => {
-        const date = new Date(item.dateStr);
+        // [FIX] Use isoDate for reliable parsing, fallback to item.dateStr passed to constructor if needed 
+        // (though new Date(isoDate) is standard)
+        const date = new Date(item.isoDate || item.dateStr);
+
+        // Safety check for Invalid Date
+        if (isNaN(date.getTime())) {
+            console.warn('Invalid date detected:', item);
+        }
+
         return {
             ...item,
             _date: date,
-            _year: date.getFullYear(),
-            _month: date.getMonth() + 1,
-            _day: date.getDate(),
-            _weekOfMonth: Math.ceil(date.getDate() / 7)
+            _year: !isNaN(date.getTime()) ? date.getFullYear() : 0,
+            _month: !isNaN(date.getTime()) ? date.getMonth() + 1 : 0,
+            _day: !isNaN(date.getTime()) ? date.getDate() : 0,
+            _weekOfMonth: !isNaN(date.getTime()) ? Math.ceil(date.getDate() / 7) : 0
         };
     });
 
