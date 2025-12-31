@@ -1,4 +1,4 @@
-<!-- Last Updated: Timeline UI Polish & Logic Fix -->
+<!-- Last Updated: Timeline Robust Fix -->
 <style>
     /* 
      * Subway Style Timeline 
@@ -259,6 +259,11 @@
         appearance: none;
         height: 2px;
         /* Thinner */
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        display: block;
+        /* Strict resets */
         background: #E0E0E0;
         border-radius: 2px;
         cursor: pointer;
@@ -276,7 +281,7 @@
         cursor: pointer;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         margin-top: -5px;
-        /* Adjust if needed, depending on track height logic in some browsers, but usually auto-centers */
+        /* Adjust if needed */
     }
 
     .zoom-slider::-moz-range-thumb {
@@ -298,6 +303,8 @@
         /* Align centers of labels with 12px thumb travel bounds */
         margin-left: auto;
         margin-right: auto;
+        padding: 0;
+        box-sizing: border-box;
     }
 
     .zoom-labels span {
@@ -328,6 +335,10 @@
     }
 </style>
 
+<!-- Hidden element to safe-transfer JSON data -->
+<div id="timelineDataSource" data-items="<%= JSON.stringify(locals.timelineItems || []) %>" style="display: none;">
+</div>
+
 <div class="timeline-wrapper" data-zoom="week">
     <!-- Left: Timeline List -->
     <div class="timeline-container">
@@ -343,7 +354,6 @@
                     <span>Day</span>
                 </div>
             </div>
-            <!-- REMOVED zoomLevelLabel as requested -->
         </div>
 
         <div class="timeline-list" id="timelineList">
@@ -365,8 +375,17 @@
 </div>
 
 <script>
-    // Inject server-side data (Fixed Syntax No Space)
-    const rawTimelineData = <% -JSON.stringify(locals.timelineItems || []) %>;
+    // Data Loading Strategy: Read from DOM data attribute
+    // This avoids EJS <%- %> tag syntax issues entirely.
+    let rawTimelineData = [];
+    try {
+        const sourceEl = document.getElementById('timelineDataSource');
+        if (sourceEl && sourceEl.dataset.items) {
+            rawTimelineData = JSON.parse(sourceEl.dataset.items);
+        }
+    } catch (e) {
+        console.error('Failed to parse timeline data:', e);
+    }
 
     // Process data dates
     const timelineData = rawTimelineData.map(item => {
@@ -395,7 +414,7 @@
         const levels = { 1: 'year', 2: 'month', 3: 'week', 4: 'day' };
         const level = levels[value] || 'week';
 
-        // Update wrapper data attribute (for global styles just in case)
+        // Update wrapper data attribute
         const wrapper = document.querySelector('.timeline-wrapper');
         if (wrapper) wrapper.dataset.zoom = level;
 
