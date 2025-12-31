@@ -342,6 +342,113 @@ ON UserFiles(user_id, file_category, is_deleted);
 | `2025-12-26-18-01-53-scratch-gui-directory-structure.txt` | Scratch GUI 구조 탐색 |
 
 ---
+---
 
-**작성자**: Claude AI Assistant  
-**최종 수정**: 2025년 12월 27일
+# 추가 명세: 저장소(S3) 및 갤러리 구현
+
+## 1. 개요
+본 섹션은 **Scratch** 및 **Entry** 프로젝트의 S3 저장 구조, 데이터베이스 스키마, 그리고 갤러리 공유 시스템의 구현 상태를 정리합니다.
+
+---
+
+## 2. AWS S3 저장 구조 (Folder Structure)
+
+모든 콘텐츠는 `educodingnplaycontents` 버킷 (`ap-northeast-2`)에 저장됩니다.
+
+### 2.1. 폴더 경로 규칙
+
+| 플랫폼 | 저장 유형 (Type) | S3 키 (Path) 패턴 | 파일 형식 | 비고 |
+| :--- | :--- | :--- | :--- | :--- |
+| **Scratch** | 자동저장 (Autosave) | `users/{userID}/scratch/autosave/{projectName}_{timestamp}.sb3` | `.sb3` | 자동저장은 용량 산정 제외 (일부 로직) |
+| **Scratch** | 프로젝트 (Projects) | `users/{userID}/scratch/projects/{projectName}_{timestamp}.sb3` | `.sb3` | 일반 저장 |
+| **Scratch** | 썸네일 (Thumbnails) | `users/{userID}/scratch/{type}/thumbnails/{projectName}_{timestamp}.png` | `.png` | `{type}`은 `autosave` 또는 `projects` |
+| **Entry** | 자동저장/프로젝트 | `users/{userID}/entry/{type}/{projectName}_{timestamp}.ent` | `.ent` | `saveType` 파라미터에 따라 결정 (기본: `projects`) |
+| **Entry** | 썸네일 | `users/{userID}/entry/{type}/thumbnails/{projectName}_{timestamp}.png` | `.png` | |
+| **공통** | 사용자 파일 (삭제됨) | `users/{userID}/{platform}/draft/...` | - | 구 버전 로직의 흔적 (`s3Manager.js` 주석 참조) |
+
+> **참고**: `users/{userID}` 경로는 로그인이 완료된 사용자의 고유 ID를 기반으로 생성됩니다.
+
+---
+
+## 3. 데이터베이스 스키마 (Database)
+
+프로젝트 저장과 갤러리 공유를 위해 주요 테이블들이 유기적으로 연결되어 있습니다.
+
+### 3.1. 프로젝트 저장 테이블 (`ProjectSubmissions`)
+사용자가 저장한 프로젝트의 원본 메타데이터를 관리합니다.
+
+| 컬럼명 | 타입 | 설명 |
+| :--- | :--- | :--- |
+| `id` | INT | Primary Key |
+| `user_id` | INT | `Users` 테이블 FK |
+| `platform` | VARCHAR | `scratch`, `entry` 등 |
+| `project_name` | VARCHAR | 프로젝트 제목 |
+| `s3_url` | VARCHAR | S3 전체 URL |
+| `s3_key` | VARCHAR | S3 파일 키 (삭제 시 사용) |
+| `save_type` | VARCHAR | `projects` (일반), `autosave` (자동) |
+| `file_size_kb` | FLOAT | 파일 크기 (KB) |
+| `thumbnail_url` | VARCHAR | 썸네일 이미지 URL |
+| `is_deleted` | BOOLEAN | 삭제 여부 (Soft Delete) |
+
+### 3.2. 갤러리 공유 테이블 (`gallery_projects`)
+사용자가 `ProjectSubmissions`의 프로젝트를 갤러리에 공유할 때 생성되는 레코드입니다.
+
+| 컬럼명 | 타입 | 설명 |
+| :--- | :--- | :--- |
+| `id` | INT | Primary Key |
+| `user_id` | INT | 작성자 ID |
+| `submission_id` | INT | `ProjectSubmissions` 원본 ID (연동용) |
+| `title` | VARCHAR | 갤러리에 노출될 제목 |
+| `description` | TEXT | 작품 설명 |
+| `platform` | VARCHAR | `entry`, `scratch` 등 |
+| `s3_url` | VARCHAR | 공유 시점의 S3 파일 URL |
+| `embed_url` | VARCHAR | 플레이어 임베드용 URL |
+| `visibility` | ENUM | `public` (전체공개), `class` (센터공개), `private` (나만보기) |
+| `view_count` | INT | 조회수 |
+| `like_count` | INT | 좋아요 수 |
+| `is_active` | BOOLEAN | 활성화 여부 (삭제 시 0) |
+
+### 3.3. 기타 관련 테이블
+- **`UserFiles`**: 사용자 저장 용량(Quota) 관리를 위한 병렬 테이블.
+- **`gallery_likes`**: 갤러리 작품 좋아요 이력 (`gallery_id`, `user_id`).
+- **`gallery_views`**: 갤러리 작품 조회 이력 (중복 조회 방지).
+
+---
+
+## 4. 로직 및 메서드 구현 (Implementation Logic)
+
+### 4.1. 저장 로직 (Save Process)
+- **위치**: `routes/scratchRouter.js`, `routes/entryRouter.js`
+- **프로세스**:
+  1. 클라이언트에서 프로젝트 데이터(JSON)와 썸네일(Base64) 전송.
+  2. **Quota Check**: `quotaChecker`를 통해 사용자 남은 용량 확인 (자동저장 제외).
+  3. **S3 Upload**: `s3Manager.uploadProject` 호출하여 `.sb3` 또는 `.ent` 파일 업로드.
+  4. **DB Save**: 
+     - `ProjectSubmissions` 테이블에 메타데이터 저장.
+     - `UserFiles` 테이블에 용량 정보 동기화 (병렬 모델).
+
+### 4.2. 공유 로직 (Share Process)
+- **위치**: `routes/api/galleryApiRouter.js` (`POST /share`)
+- **프로세스**:
+  1. 사용자가 내 프로젝트 목록(`ProjectSubmissions`)에서 공유할 항목 선택.
+  2. 제목, 설명, 공개 범위(`visibility`) 입력.
+  3. **Embed URL 생성**:
+     - Entry: `/entry_editor/?s3Url={url}&mode=play&embed=1`
+     - Scratch: `/scratch/?project_file={url}&mode=player&embed=1`
+  4. `gallery_projects` 테이블에 INSERT.
+
+### 4.3. 파일 로드 (Load Process)
+- **Entry**: `/entry_editor` 라우트에서 `s3Url` 파라미터를 받아 `EntFileManager`가 S3에서 파일을 다운로드 후 에디터에 주입.
+- **Scratch**: `/scratch` 라우트 또는 API가 `s3Url`을 받아 `.sb3` 파일을 로드.
+
+---
+
+## 5. 요약 Matrix
+
+| 구분 | Scratch | Entry |
+| :--- | :--- | :--- |
+| **Router** | `scratchRouter.js` | `entryRouter.js` |
+| **S3 Path** | `.../scratch/{type}/...` | `.../entry/{type}/...` |
+| **File Ext** | `.sb3` | `.ent` |
+| **Embed URL** | `/scratch/?project_file=...` | `/entry_editor/?s3Url=...` |
+| **DB Table** | `ProjectSubmissions` (`platform='scratch'`) | `ProjectSubmissions` (`platform='entry'`) |

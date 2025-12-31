@@ -233,6 +233,19 @@
         background-color: #F2F2F7;
     }
 
+    /* Animation Keyframes */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     /* Horizontal Zoom Slider (Top) */
     .zoom-slider-container {
         display: flex;
@@ -246,10 +259,8 @@
     }
 
     .zoom-slider-title {
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: #86868B;
-        white-space: nowrap;
+        display: none;
+        /* Hide ZOOM label */
     }
 
     /* Refined Slider Style */
