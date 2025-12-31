@@ -442,6 +442,33 @@
 <div class="timeline-wrapper" data-zoom="week">
     <!-- Left: Timeline List -->
     <div class="timeline-container">
+        <!-- 🔥 Filters (New) -->
+        <div class="filter-container mb-3" style="padding: 0 5px;">
+            <div class="d-flex gap-2 flex-wrap">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="filterAll" value="ALL" checked
+                        onchange="handleFilterChange('ALL')">
+                    <label class="form-check-label small fw-bold" for="filterAll">All</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="filterLearn" value="LEARN"
+                        onchange="handleFilterChange('LEARN')">
+                    <label class="form-check-label small text-muted" for="filterLearn">Learn</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="filterSolve" value="SOLVE"
+                        onchange="handleFilterChange('SOLVE')">
+                    <label class="form-check-label small text-muted" for="filterSolve">Solve</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="filterProject" value="PROJECT"
+                        onchange="handleFilterChange('PROJECT')">
+                    <label class="form-check-label small text-muted" for="filterProject">Project</label>
+                </div>
+            </div>
+            <hr class="my-2" style="border-top: 1px solid #E5E5EA;">
+        </div>
+
         <!-- Horizontal Zoom Slider (Restored) -->
         <div class="zoom-slider-container">
             <span class="zoom-slider-title">ZOOM</span>
@@ -508,16 +535,81 @@
         };
     });
 
+    // Global filtered data
+    let filteredTimelineData = [...timelineData];
+    let activeFilters = new Set(['ALL']);
+
     document.addEventListener('DOMContentLoaded', () => {
-        // Initialize with default view (Year = 1) or whatever slider is at
+        // Initialize with Day view (Year = 1, Day = 4)
         const slider = document.querySelector('.zoom-slider');
         if (slider) {
-            slider.value = 1; // Default to Year
-            setZoomBySlider(1);
+            slider.value = 4; // Default to Day
+            setZoomBySlider(4);
         } else {
-            renderTimeline('year');
+            renderTimeline('day');
         }
     });
+
+    function handleFilterChange(type) {
+        const checkbox = document.getElementById(`filter${type === 'ALL' ? 'All' : type.charAt(0) + type.slice(1).toLowerCase()}`);
+
+        if (type === 'ALL') {
+            if (checkbox.checked) {
+                // If All checked, uncheck others and reset
+                document.getElementById('filterLearn').checked = false;
+                document.getElementById('filterSolve').checked = false;
+                document.getElementById('filterProject').checked = false;
+                activeFilters.clear();
+                activeFilters.add('ALL');
+            } else {
+                // Prevent unchecking All if it's the only one
+                if (activeFilters.size === 1 && activeFilters.has('ALL')) {
+                    checkbox.checked = true;
+                    return;
+                }
+                activeFilters.delete('ALL');
+            }
+        } else {
+            // Specific filter
+            if (checkbox.checked) {
+                activeFilters.add(type);
+                // Uncheck All
+                activeFilters.delete('ALL');
+                document.getElementById('filterAll').checked = false;
+            } else {
+                activeFilters.delete(type);
+                // If no filters left, check All
+                if (activeFilters.size === 0) {
+                    activeFilters.add('ALL');
+                    document.getElementById('filterAll').checked = true;
+                }
+            }
+        }
+
+        applyFilters();
+    }
+
+    function applyFilters() {
+        if (activeFilters.has('ALL')) {
+            filteredTimelineData = [...timelineData];
+        } else {
+            filteredTimelineData = timelineData.filter(item => {
+                const type = (item.action_type || '').toUpperCase();
+                const platform = (item.platform || '').toUpperCase();
+
+                // Match logic
+                if (activeFilters.has('LEARN') && type === 'LEARN') return true;
+                if (activeFilters.has('SOLVE') && type === 'SOLVE') return true;
+                if (activeFilters.has('PROJECT') && (type === 'GALLERY' || platform === 'SCRATCH' || platform === 'ENTRY' || item.title.toUpperCase().includes('PROJECT'))) return true;
+
+                return false;
+            });
+        }
+
+        // Re-render current view
+        const slider = document.querySelector('.zoom-slider');
+        setZoomBySlider(slider ? slider.value : 4);
+    }
 
     function setZoomBySlider(val) {
         // Map slider (1-4) to levels
@@ -572,7 +664,7 @@
         if (!nextLevel) return;
 
         // Filter data for this group
-        const subset = timelineData.filter(item => {
+        const subset = filteredTimelineData.filter(item => {
             if (currentLevel === 'year') return String(item._year) === key;
             if (currentLevel === 'month') return `${item._year}-${String(item._month).padStart(2, '0')}` === key;
             if (currentLevel === 'week') return `${item._year}-${String(item._month).padStart(2, '0')}-W${item._weekOfMonth}` === key;
@@ -607,8 +699,18 @@
 
         container.innerHTML = '';
         const level = levelKey || 'year';
-        const grouped = groupData(timelineData, level);
+        // Group data
+        const grouped = groupData(filteredTimelineData, level);
         let html = '';
+
+        // Render summary cards or list
+        if (Object.keys(grouped).length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="text-muted"><i class="bi bi-inbox fs-4 d-block mb-2"></i>No activity found for this period.</div>
+                </div>`;
+            return;
+        }
 
         // Sort keys descending (latest first)
         Object.keys(grouped).sort((a, b) => b.localeCompare(a)).forEach(key => {
@@ -882,9 +984,9 @@
     function generateSplitLayout(iframeUrl, time, statusClass, statusIcon, statusText, title, subTitle, tagsHtml, linkUrl, linkText) {
         // Prepare embed URL (add embed=1 if needed, though usually handled by backend)
         return `
-            <div class="animate-fade-in d-flex flex-column h-100 w-100">
-                <div class="flex-grow-1 position-relative rounded-4 overflow-hidden mb-3" 
-                     style="background: #FFFFFF; border: 1px solid #E5E5EA; min-height: 0;">
+            <div class="animate-fade-in d-flex flex-column h-100 w-100 gap-3">
+                <div class="position-relative rounded-4 overflow-hidden"
+                    style="flex: 8; background: #FFFFFF; border: 1px solid #E5E5EA; min-height: 0;">
                     <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="z-index: 0;">
                         <div class="spinner-border spinner-border-sm me-2" role="status"></div> Loading...
                     </div>
@@ -894,8 +996,8 @@
                         frameborder="0"
                         loading="lazy"></iframe>
                 </div>
-                
-                <div class="bg-white rounded-4 p-4 shadow-sm border border-light" style="flex-shrink: 0;">
+
+                <div class="bg-white rounded-4 p-4 shadow-sm border border-light" style="flex: 2; overflow-y: auto;">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div class="d-flex align-items-center gap-2 text-muted small">
                             <i class="bi bi-calendar-event"></i> ${time}
@@ -904,18 +1006,18 @@
                             <i class="bi ${statusIcon}"></i> ${statusText}
                         </div>
                     </div>
-                    
+
                     <h3 class="fw-bold text-dark mb-2" style="font-size: 1.25rem;">${title}</h3>
                     <div class="text-secondary small mb-3">${subTitle}</div>
-                    
+
                     <div class="d-flex align-items-center justify-content-between mt-auto">
                         <div class="d-flex gap-1 flex-wrap">
                             ${tagsHtml}
                         </div>
                         ${linkUrl && linkUrl !== '#' ? `
-                        <a href="${linkUrl}" target="_blank" class="btn btn-sm btn-primary rounded-pill px-3">
-                            ${linkText} <i class="bi bi-arrow-right ms-1"></i>
-                        </a>` : ''}
+                            <a href="${linkUrl}" target="_blank" class="btn btn-sm btn-primary rounded-pill px-3">
+                                ${linkText} <i class="bi bi-arrow-right ms-1"></i>
+                            </a>` : ''}
                     </div>
                 </div>
             </div>
