@@ -433,6 +433,117 @@
         border-color: #007AFF;
         box-shadow: 0 4px 12px rgba(0, 122, 255, 0.1);
     }
+
+    .summary-card:hover .card {
+        border-color: #007AFF;
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.1);
+    }
+
+    /* Floating Timeline Controls */
+    .timeline-controls {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        padding: 10px 15px;
+        margin: -20px -15px 15px -15px;
+        /* Negative margin to pull to edge of container padding */
+        border-bottom: 1px solid #E5E5EA;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .filter-btn {
+        border: none;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        background: #F2F2F7;
+        color: #8E8E93;
+    }
+
+    .filter-btn:hover {
+        transform: translateY(-1px);
+        filter: brightness(0.95);
+    }
+
+    /* Active States */
+    .filter-btn[data-value="ALL"].active {
+        background: #1C1C1E;
+        color: #FFFFFF;
+    }
+
+    .filter-btn[data-value="LEARN"].active {
+        background: #30B0C7;
+        color: #FFFFFF;
+    }
+
+    .filter-btn[data-value="SOLVE"].active {
+        background: #34C759;
+        color: #FFFFFF;
+    }
+
+    .filter-btn[data-value="PROJECT"].active {
+        background: #AF52DE;
+        /* Common color for projects/gallery */
+        color: #FFFFFF;
+    }
+
+    /* Inactive Tint States (optional, currently using gray for inactive) */
+    .filter-btn[data-value="LEARN"]:not(.active) {
+        color: #30B0C7;
+        background: rgba(48, 176, 199, 0.1);
+    }
+
+    .filter-btn[data-value="SOLVE"]:not(.active) {
+        color: #34C759;
+        background: rgba(52, 199, 89, 0.1);
+    }
+
+    .filter-btn[data-value="PROJECT"]:not(.active) {
+        color: #AF52DE;
+        background: rgba(175, 82, 222, 0.1);
+    }
+
+    /* Compact Slider in Header */
+    .controls-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .zoom-compact {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #F2F2F7;
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+
+    .zoom-compact input[type=range] {
+        width: 80px;
+        accent-color: #007AFF;
+    }
+
+    .zoom-compact span {
+        font-size: 0.7rem;
+        color: #8E8E93;
+        font-weight: 600;
+        min-width: 35px;
+        text-align: center;
+    }
 </style>
 
 <!-- Hidden element to safe-transfer JSON data -->
@@ -442,43 +553,28 @@
 <div class="timeline-wrapper" data-zoom="week">
     <!-- Left: Timeline List -->
     <div class="timeline-container">
-        <!-- 🔥 Filters (New) -->
-        <div class="filter-container mb-3" style="padding: 0 5px;">
-            <div class="d-flex gap-2 flex-wrap">
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="filterAll" value="ALL" checked
-                        onchange="handleFilterChange('ALL')">
-                    <label class="form-check-label small fw-bold" for="filterAll">All</label>
+        <!-- 🔥 Floating Controls (Filters + Zoom) -->
+        <div class="timeline-controls">
+            <div class="controls-row">
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="filter-btn active" data-value="ALL" onclick="handleFilterClick(this, 'ALL')">
+                        All
+                    </button>
+                    <button class="filter-btn" data-value="LEARN" onclick="handleFilterClick(this, 'LEARN')">
+                        Learn
+                    </button>
+                    <button class="filter-btn" data-value="SOLVE" onclick="handleFilterClick(this, 'SOLVE')">
+                        Solve
+                    </button>
+                    <button class="filter-btn" data-value="PROJECT" onclick="handleFilterClick(this, 'PROJECT')">
+                        Project
+                    </button>
                 </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="filterLearn" value="LEARN"
-                        onchange="handleFilterChange('LEARN')">
-                    <label class="form-check-label small text-muted" for="filterLearn">Learn</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="filterSolve" value="SOLVE"
-                        onchange="handleFilterChange('SOLVE')">
-                    <label class="form-check-label small text-muted" for="filterSolve">Solve</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="filterProject" value="PROJECT"
-                        onchange="handleFilterChange('PROJECT')">
-                    <label class="form-check-label small text-muted" for="filterProject">Project</label>
-                </div>
-            </div>
-            <hr class="my-2" style="border-top: 1px solid #E5E5EA;">
-        </div>
 
-        <!-- Horizontal Zoom Slider (Restored) -->
-        <div class="zoom-slider-container">
-            <span class="zoom-slider-title">ZOOM</span>
-            <div style="flex: 1;">
-                <input type="range" class="zoom-slider" min="1" max="4" value="1" oninput="setZoomBySlider(this.value)">
-                <div class="zoom-labels">
-                    <span>Year</span>
-                    <span>Month</span>
-                    <span>Week</span>
-                    <span>Day</span>
+                <div class="zoom-compact">
+                    <span id="zoomLabel">Day</span>
+                    <input type="range" class="zoom-slider-compact" min="1" max="4" value="4"
+                        oninput="updateZoom(this.value)">
                 </div>
             </div>
         </div>
@@ -541,52 +637,52 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         // Initialize with Day view (Year = 1, Day = 4)
-        const slider = document.querySelector('.zoom-slider');
+        const slider = document.querySelector('.zoom-slider-compact');
         if (slider) {
-            slider.value = 4; // Default to Day
+            // Ensure slider matches default logic
             setZoomBySlider(4);
         } else {
-            renderTimeline('day');
+            setZoomBySlider(4);
         }
     });
 
-    function handleFilterChange(type) {
-        const checkbox = document.getElementById(`filter${type === 'ALL' ? 'All' : type.charAt(0) + type.slice(1).toLowerCase()}`);
+    function updateZoom(val) {
+        setZoomBySlider(val);
+        // Update label
+        const labels = { 1: 'Year', 2: 'Month', 3: 'Week', 4: 'Day' };
+        const labelEl = document.getElementById('zoomLabel');
+        if (labelEl) labelEl.textContent = labels[val] || '';
+    }
 
+    function handleFilterClick(btn, type) {
         if (type === 'ALL') {
-            if (checkbox.checked) {
-                // If All checked, uncheck others and reset
-                document.getElementById('filterLearn').checked = false;
-                document.getElementById('filterSolve').checked = false;
-                document.getElementById('filterProject').checked = false;
-                activeFilters.clear();
-                activeFilters.add('ALL');
-            } else {
-                // Prevent unchecking All if it's the only one
-                if (activeFilters.size === 1 && activeFilters.has('ALL')) {
-                    checkbox.checked = true;
-                    return;
-                }
-                activeFilters.delete('ALL');
-            }
+            // Activate All, deactivate others
+            activeFilters.clear();
+            activeFilters.add('ALL');
         } else {
-            // Specific filter
-            if (checkbox.checked) {
-                activeFilters.add(type);
-                // Uncheck All
-                activeFilters.delete('ALL');
-                document.getElementById('filterAll').checked = false;
-            } else {
+            // Toggle specific
+            if (activeFilters.has(type)) {
                 activeFilters.delete(type);
-                // If no filters left, check All
-                if (activeFilters.size === 0) {
-                    activeFilters.add('ALL');
-                    document.getElementById('filterAll').checked = true;
-                }
+                // If nothing left, activate All
+                if (activeFilters.size === 0) activeFilters.add('ALL');
+            } else {
+                activeFilters.add(type);
+                activeFilters.delete('ALL');
             }
         }
-
+        updateFilterUI();
         applyFilters();
+    }
+
+    function updateFilterUI() {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            const val = b.dataset.value;
+            if (activeFilters.has(val)) {
+                b.classList.add('active');
+            } else {
+                b.classList.remove('active');
+            }
+        });
     }
 
     function applyFilters() {
@@ -595,19 +691,20 @@
         } else {
             filteredTimelineData = timelineData.filter(item => {
                 const type = (item.action_type || '').toUpperCase();
+                // Normalize platform for project filter
                 const platform = (item.platform || '').toUpperCase();
 
                 // Match logic
                 if (activeFilters.has('LEARN') && type === 'LEARN') return true;
                 if (activeFilters.has('SOLVE') && type === 'SOLVE') return true;
-                if (activeFilters.has('PROJECT') && (type === 'GALLERY' || platform === 'SCRATCH' || platform === 'ENTRY' || item.title.toUpperCase().includes('PROJECT'))) return true;
+                if (activeFilters.has('PROJECT') && (type === 'GALLERY' || platform === 'SCRATCH' || platform === 'ENTRY' || (item.title && item.title.toUpperCase().includes('PROJECT')))) return true;
 
                 return false;
             });
         }
 
-        // Re-render current view
-        const slider = document.querySelector('.zoom-slider');
+        // Re-render current view using the compact slider value
+        const slider = document.querySelector('.zoom-slider-compact');
         setZoomBySlider(slider ? slider.value : 4);
     }
 
