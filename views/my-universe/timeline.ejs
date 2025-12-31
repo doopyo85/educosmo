@@ -439,29 +439,37 @@
         box-shadow: 0 4px 12px rgba(0, 122, 255, 0.1);
     }
 
-    /* Floating Timeline Controls */
+    /* Floating Timeline Controls (Card Style) */
     .timeline-controls {
         position: sticky;
-        top: 0;
+        top: 10px;
+        /* Slight offset from top */
         z-index: 100;
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        padding: 10px 15px;
-        margin: -20px -15px 15px -15px;
-        /* Negative margin to pull to edge of container padding */
-        border-bottom: 1px solid #E5E5EA;
+        padding: 15px;
+        margin: 0 0 20px 0;
+        /* Clear margin */
+        border: 1px solid #E5E5EA;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        /* Stronger shadow for card feel */
+        border-radius: 16px;
+        /* Rounded card */
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        border-radius: 20px 20px 0 0;
+        /* Vertical layout */
+        gap: 15px;
     }
 
     .filter-btn {
-        border: none;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 0.75rem;
+        border: 1px solid transparent;
+        /* Prepare for border if needed */
+        padding: 4px 10px;
+        /* Slimmer padding */
+        border-radius: 8px;
+        /* Tighter radius (less pill-like, more button-like?) User said "tight" */
+        font-size: 0.7rem;
         font-weight: 700;
         transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
         display: inline-flex;
@@ -470,6 +478,7 @@
         cursor: pointer;
         background: #F2F2F7;
         color: #8E8E93;
+        line-height: 1.2;
     }
 
     .filter-btn:hover {
@@ -495,11 +504,10 @@
 
     .filter-btn[data-value="PROJECT"].active {
         background: #AF52DE;
-        /* Common color for projects/gallery */
         color: #FFFFFF;
     }
 
-    /* Inactive Tint States (optional, currently using gray for inactive) */
+    /* Inactive Tint States */
     .filter-btn[data-value="LEARN"]:not(.active) {
         color: #30B0C7;
         background: rgba(48, 176, 199, 0.1);
@@ -515,34 +523,75 @@
         background: rgba(175, 82, 222, 0.1);
     }
 
-    /* Compact Slider in Header */
-    .controls-row {
+    /* Restored Slider Styling */
+    .zoom-slider-container {
         display: flex;
         align-items: center;
-        justify-content: space-between;
         gap: 15px;
+        width: 100%;
     }
 
-    .zoom-compact {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: #F2F2F7;
-        padding: 4px 10px;
-        border-radius: 12px;
-    }
-
-    .zoom-compact input[type=range] {
-        width: 80px;
-        accent-color: #007AFF;
-    }
-
-    .zoom-compact span {
+    .zoom-slider-title {
         font-size: 0.7rem;
+        font-weight: 700;
         color: #8E8E93;
-        font-weight: 600;
-        min-width: 35px;
-        text-align: center;
+        letter-spacing: 0.05em;
+        width: 40px;
+        /* Fixed width for alignment */
+    }
+
+    .zoom-slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 4px;
+        background: #E5E5EA;
+        /* Light gray track */
+        border-radius: 2px;
+        outline: none;
+        margin-bottom: 8px;
+        /* Space for labels */
+    }
+
+    .zoom-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        /* Smaller thumb */
+        height: 16px;
+        border-radius: 50%;
+        background: #FFFFFF;
+        border: 2px solid #E5E5EA;
+        /* Gray border matching track */
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .zoom-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
+        border-color: #007AFF;
+        /* Blue on hover */
+    }
+
+    .zoom-slider::-webkit-slider-thumb:active {
+        background: #007AFF;
+        border-color: #007AFF;
+    }
+
+    .zoom-labels {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 2px;
+        /* Align with slider ends */
+    }
+
+    .zoom-labels span {
+        font-size: 0.65rem;
+        color: #8E8E93;
+        width: 0;
+        display: flex;
+        justify-content: center;
+        white-space: nowrap;
     }
 </style>
 
@@ -637,9 +686,10 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         // Initialize with Day view (Year = 1, Day = 4)
-        const slider = document.querySelector('.zoom-slider-compact');
+        const slider = document.querySelector('.zoom-slider');
         if (slider) {
             // Ensure slider matches default logic
+            slider.value = 4;
             setZoomBySlider(4);
         } else {
             setZoomBySlider(4);
@@ -703,8 +753,8 @@
             });
         }
 
-        // Re-render current view using the compact slider value
-        const slider = document.querySelector('.zoom-slider-compact');
+        // Re-render current view using the slider value
+        const slider = document.querySelector('.zoom-slider');
         setZoomBySlider(slider ? slider.value : 4);
     }
 
