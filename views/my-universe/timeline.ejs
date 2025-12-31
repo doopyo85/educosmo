@@ -294,14 +294,21 @@
         display: flex;
         justify-content: space-between;
         margin-top: 8px;
-        padding: 0 2px;
+        width: calc(100% - 12px);
+        /* Align centers of labels with 12px thumb travel bounds */
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .zoom-labels span {
         font-size: 0.65rem;
         color: #8E8E93;
-        width: 30px;
-        text-align: center;
+        width: 0;
+        /* Zero width to make flex-justify align the point */
+        display: flex;
+        justify-content: center;
+        /* Center text around the point */
+        white-space: nowrap;
     }
 
     /* Summary Card for Year/Month/Week views */
@@ -358,8 +365,8 @@
 </div>
 
 <script>
-    // Inject server-side data (Fixed Syntax with No Space)
-    const rawTimelineData = <% - JSON.stringify(locals.timelineItems || []) %>;
+    // Inject server-side data (Fixed Syntax No Space)
+    const rawTimelineData = <% -JSON.stringify(locals.timelineItems || []) %>;
 
     // Process data dates
     const timelineData = rawTimelineData.map(item => {
