@@ -532,24 +532,26 @@
         }
 
         return `
-            <div class="timeline-item summary-card mb-3" onclick="zoomInFrom('${level}')">
-                <div class="timeline-marker" style="background:#007AFF; width:12px; height:12px; border-radius:50%; top:22px; left:26px;"></div> 
-                <div class="card shadow-sm col-10">
-                    <div class="card-body d-flex align-items-center justify-content-between p-4">
+            <div class="timeline-item summary-card mb-2" onclick="zoomInFrom('${level}')"> <!-- mb-3 -> mb-2 -->
+                <div class="timeline-marker" style="background:#007AFF; width:12px; height:12px; border-radius:50%; top:16px; left:22px;"></div> <!-- Adjusted marker position -->
+                <div class="card shadow-sm col-11" style="border-radius: 12px;"> <!-- increased width -->
+                    <div class="card-body d-flex align-items-center justify-content-between p-3"> <!-- p-4 -> p-3 -->
                         <div>
-                            <div class="text-muted small mb-1">${subTitle}</div>
-                            <h4 class="fw-bold mb-0 text-dark">${title}</h4>
+                            <div class="text-muted small mb-0" style="font-size: 0.7rem;">${subTitle}</div>
+                            <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.9rem;">${title}</h6> <!-- h4 -> h6 -->
                         </div>
-                        <div class="text-end">
-                            <span class="badge bg-primary-subtle text-primary rounded-pill mb-1 px-3 py-2">
-                                Total ${total}
-                            </span>
-                            <div class="small text-muted mt-1">
-                                ${solves > 0 ? `<span class="me-2"><i class="bi bi-check-circle-fill text-success me-1"></i>${solves}</span>` : ''}
-                                ${projects > 0 ? `<span><i class="bi bi-rocket-takeoff-fill text-secondary me-1"></i>${projects}</span>` : ''}
+                        <div class="text-end d-flex align-items-center gap-3">
+                            <div>
+                                <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                                    Total ${total}
+                                </span>
+                                <div class="small text-muted mt-1" style="font-size: 0.65rem;">
+                                    ${solves > 0 ? `<span class="me-2"><i class="bi bi-check-circle-fill text-success me-1"></i>${solves}</span>` : ''}
+                                    ${projects > 0 ? `<span><i class="bi bi-rocket-takeoff-fill text-secondary me-1"></i>${projects}</span>` : ''}
+                                </div>
                             </div>
+                            <i class="bi bi-chevron-right text-muted small"></i>
                         </div>
-                        <i class="bi bi-chevron-right text-muted ms-3"></i>
                     </div>
                 </div>
             </div>
