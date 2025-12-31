@@ -100,73 +100,103 @@
     }
 
     .timeline-group-date {
-        font-size: 0.75rem;
-        /* Smaller font */
-        font-weight: 600;
-        color: #86868B;
-        background: #FFFFFF;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #64748B;
+        /* Slate 500 */
+        background: #F8FAFC;
+        /* Slate 50 */
         position: relative;
         z-index: 1;
         display: inline-block;
-        margin: 10px 0 4px 0;
-        /* Reduced margin */
-        padding: 2px 8px;
-        /* Reduced padding */
-        border-radius: 8px;
-        border: 1px solid #F2F2F7;
+        margin: 12px 0 6px 0;
+        padding: 4px 10px;
+        border-radius: 99px;
+        /* Pill shape */
+        border: 1px solid #E2E8F0;
+        letter-spacing: 0.02em;
     }
 
     .timeline-item {
         position: relative;
-        padding: 8px 8px 8px 40px;
-        /* Reduced padding */
-        margin-bottom: 4px;
-        /* Reduced margin */
+        padding: 12px 14px 12px 42px;
+        /* Balanced padding */
+        margin-bottom: 6px;
         cursor: pointer;
-        transition: all 0.2s ease;
-        border-radius: 8px;
-        /* Slightly tighter radius */
+        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        /* Smooth eased transition */
+        border-radius: 10px;
+        /* Modern radius */
         border: 1px solid transparent;
-        /* Prevent layout shift on hover if needed */
     }
 
     .timeline-item:hover {
-        background-color: #F9F9F9;
-        border-color: #E5E5EA;
-        /* Subtle border on hover */
+        background-color: #FFFFFF;
+        border-color: rgba(0, 0, 0, 0.05);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        /* Premium subtle lift */
+        transform: translateY(-1px);
     }
 
     .timeline-item.active {
-        background-color: #EFF6FF;
+        background-color: #F8FAFC;
+        /* Very subtle blue-gray */
+        border-color: #E2E8F0;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+
+    /* Active Left Border Accent */
+    .timeline-item.active::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 10px;
+        bottom: 10px;
+        width: 3px;
+        background-color: #007AFF;
+        border-radius: 0 4px 4px 0;
     }
 
     /* Station Marker (Dash) */
+    /* Station Marker (Dot) for better alignment */
     .timeline-marker {
         position: absolute;
-        left: 21px;
-        /* Adjusted for smaller padding */
-        top: 16px;
-        /* Adjusted for smaller padding */
-        width: 14px;
-        /* Slightly smaller */
-        height: 2px;
-        background: #C7C7CC;
+        left: 22px;
+        /* Center with line at 21px + line width 1px... wait, circle center */
+        /* Line is at left: 21px, width 1px. Center is 21.5px */
+        /* Dot should be centered at 21.5px */
+        /* If Dot is 10px wide, left should be 21.5 - 5 = 16.5px */
+        left: 17px;
+        top: 20px;
+        /* Align with text baseline visually */
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        /* Circle */
+        background: #FFFFFF;
+        border: 2px solid #C7C7CC;
         z-index: 2;
+        transition: all 0.2s ease;
     }
 
     /* Success/Fail marker colors */
     .timeline-item[data-correct="true"] .timeline-marker,
     .timeline-item[data-correct="1"] .timeline-marker {
+        border-color: #34C759;
         background: #34C759;
+        /* Solid fill for success */
+        box-shadow: 0 0 0 2px #FFFFFF inset;
+        /* Ring effect */
     }
 
     .timeline-item[data-correct="false"] .timeline-marker,
     .timeline-item[data-correct="0"] .timeline-marker {
+        border-color: #FF3B30;
         background: #FF3B30;
     }
 
     .timeline-item:hover .timeline-marker {
-        transform: scaleX(1.3);
+        transform: scale(1.2);
     }
 
     .timeline-item.active .timeline-marker {
@@ -193,10 +223,11 @@
 
     .timeline-title {
         font-weight: 600;
-        color: #1D1D1F;
-        font-size: 0.8rem;
-        /* Smaller font */
-        line-height: 1.2;
+        color: #1E293B;
+        /* Slate 800 for high contrast */
+        font-size: 0.85rem;
+        line-height: 1.4;
+        letter-spacing: -0.01em;
     }
 
     .timeline-icon-small {
@@ -218,36 +249,42 @@
         opacity: 0.3;
     }
 
-    /* Platform Badge Styling */
+    /* Platform Badge Styling - Premium Soft Pastel */
     .platform-badge {
-        display: inline-block;
-        font-size: 0.7rem;
-        font-weight: 700;
-        padding: 2px 6px;
-        border: 1px solid #007AFF;
-        color: #007AFF;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 2px 7px;
+        border: none;
+        /* Removed outline */
         border-radius: 6px;
-        margin-right: 6px;
+        margin-right: 8px;
+        /* Slightly more breathing room */
         vertical-align: middle;
-        background-color: rgba(0, 122, 255, 0.05);
+        background-color: rgba(0, 122, 255, 0.1);
+        /* Soft Blue */
+        color: #007AFF;
+        letter-spacing: -0.01em;
     }
 
     .platform-badge.scratch {
-        border-color: #FF9500;
         color: #FF9500;
-        background-color: rgba(255, 149, 0, 0.05);
+        background-color: rgba(255, 149, 0, 0.1);
+        /* Soft Orange */
     }
 
     .platform-badge.python {
-        border-color: #34C759;
         color: #34C759;
-        background-color: rgba(52, 199, 89, 0.05);
+        background-color: rgba(52, 199, 89, 0.1);
+        /* Soft Green */
     }
 
     .platform-badge.system {
-        border-color: #8E8E93;
-        color: #8E8E93;
-        background-color: #F2F2F7;
+        color: #64748B;
+        background-color: #F1F5F9;
+        /* Slate 100 */
     }
 
     /* Animation Keyframes */
@@ -357,9 +394,17 @@
     }
 
     .summary-card .card {
-        border-radius: 16px;
+        border-radius: 12px;
         background: #FFFFFF;
-        border: 1px solid #F2F2F7;
+        border: 1px solid #E5E5EA;
+        /* Subtle border */
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        transition: all 0.2s ease;
+    }
+
+    .summary-card:hover .card {
+        border-color: #007AFF;
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.1);
     }
 </style>
 
