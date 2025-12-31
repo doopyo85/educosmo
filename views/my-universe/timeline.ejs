@@ -543,39 +543,36 @@
     .zoom-slider {
         -webkit-appearance: none;
         width: 100%;
-        height: 4px;
+        height: 2px;
+        /* Thin line */
         background: #E5E5EA;
-        /* Light gray track */
         border-radius: 2px;
         outline: none;
         margin-bottom: 8px;
-        /* Space for labels */
     }
 
     .zoom-slider::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        width: 16px;
-        /* Smaller thumb */
-        height: 16px;
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
-        background: #FFFFFF;
-        border: 2px solid #E5E5EA;
-        /* Gray border matching track */
+        background: #8E8E93;
+        /* Gray circle */
+        border: none;
         cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         transition: all 0.2s ease;
     }
 
     .zoom-slider::-webkit-slider-thumb:hover {
-        transform: scale(1.1);
-        border-color: #007AFF;
+        transform: scale(1.2);
+        background: #007AFF;
         /* Blue on hover */
     }
 
     .zoom-slider::-webkit-slider-thumb:active {
         background: #007AFF;
-        border-color: #007AFF;
+        transform: scale(1.2);
     }
 
     .zoom-labels {
@@ -604,26 +601,33 @@
     <div class="timeline-container">
         <!-- 🔥 Floating Controls (Filters + Zoom) -->
         <div class="timeline-controls">
-            <div class="controls-row">
-                <div class="d-flex gap-2 flex-wrap">
-                    <button class="filter-btn active" data-value="ALL" onclick="handleFilterClick(this, 'ALL')">
-                        All
-                    </button>
-                    <button class="filter-btn" data-value="LEARN" onclick="handleFilterClick(this, 'LEARN')">
-                        Learn
-                    </button>
-                    <button class="filter-btn" data-value="SOLVE" onclick="handleFilterClick(this, 'SOLVE')">
-                        Solve
-                    </button>
-                    <button class="filter-btn" data-value="PROJECT" onclick="handleFilterClick(this, 'PROJECT')">
-                        Project
-                    </button>
-                </div>
+            <!-- 1. Filters Row -->
+            <div class="d-flex gap-2 flex-wrap justify-content-start">
+                <button class="filter-btn active" data-value="ALL" onclick="handleFilterClick(this, 'ALL')">
+                    All
+                </button>
+                <button class="filter-btn" data-value="LEARN" onclick="handleFilterClick(this, 'LEARN')">
+                    Learn
+                </button>
+                <button class="filter-btn" data-value="SOLVE" onclick="handleFilterClick(this, 'SOLVE')">
+                    Solve
+                </button>
+                <button class="filter-btn" data-value="PROJECT" onclick="handleFilterClick(this, 'PROJECT')">
+                    Project
+                </button>
+            </div>
 
-                <div class="zoom-compact">
-                    <span id="zoomLabel">Day</span>
-                    <input type="range" class="zoom-slider-compact" min="1" max="4" value="4"
-                        oninput="updateZoom(this.value)">
+            <!-- 2. Zoom Slider Row (Restored) -->
+            <div class="zoom-slider-container">
+                <div style="flex: 1;">
+                    <input type="range" class="zoom-slider" min="1" max="4" value="4"
+                        oninput="setZoomBySlider(this.value)">
+                    <div class="zoom-labels">
+                        <span>Year</span>
+                        <span>Month</span>
+                        <span>Week</span>
+                        <span>Day</span>
+                    </div>
                 </div>
             </div>
         </div>
