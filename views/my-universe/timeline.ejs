@@ -856,6 +856,16 @@
             html = `<div class="text-center text-muted mt-5 py-5"><i class="bi bi-inbox display-4 opacity-25"></i><p class="mt-3">기록된 활동이 없습니다.</p></div>`;
         }
         container.innerHTML = html;
+
+        // Auto-expand the first group if it's 'day' view (Latest date)
+        if (level === 'day' && Object.keys(grouped).length > 0) {
+            const firstCard = container.querySelector('.summary-card');
+            if (firstCard) {
+                // Simulate click to expand or call toggleGroup directly?
+                // toggleGroup expects (element, level, key). simpler to click.
+                firstCard.click();
+            }
+        }
     }
 
     function groupData(data, level) {
