@@ -221,8 +221,24 @@ const processLogs = async (logs, currentUser) => {
                     log.progress = detail.progress;
                 }
 
-                // Try to resolve tags/content for Learn items using title as key
-                if (log.title) {
+                // [NEW] Check for explicit exam/problem in metadata (like solve)
+                const examName = detail.exam_name || '';
+                const problemNumber = detail.problem_number || '';
+
+                if (examName && problemNumber) {
+                    const key = `${examName.toLowerCase()}_${problemNumber.toLowerCase()}`;
+                    const meta = metadataMap.get(key);
+
+                    // If explicit metadata exists, use it to generate URL directly
+                    finalUrl = `/quiz/${encodeURIComponent(examName)}?p=${encodeURIComponent(problemNumber)}&embed=true`;
+
+                    if (meta) {
+                        tags = meta.tags || '';
+                        concept = meta.concept || '';
+                    }
+                }
+                // Fallback: Try to resolve tags/content using title as key
+                else if (log.title) {
                     const key = log.title.trim().toLowerCase();
                     const meta = metadataMap.get(key);
                     if (meta) {
