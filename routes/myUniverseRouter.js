@@ -228,7 +228,8 @@ const processLogs = async (logs, currentUser) => {
             concept: concept,
             isCorrect: isCorrect,
             progress: log.progress || 0, // [NEW] Learning progress
-            isoDate: dateObj.toISOString() // [FIX] Add standard ISO date for reliable client-side parsing
+            isoDate: dateObj.toISOString(), // [FIX] Add standard ISO date for reliable client-side parsing
+            embedUrl: finalUrl.includes('/entry_editor/') || finalUrl.includes('/scratch/') ? finalUrl : null
         };
     });
 };

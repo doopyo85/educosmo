@@ -442,11 +442,11 @@
 <div class="timeline-wrapper" data-zoom="week">
     <!-- Left: Timeline List -->
     <div class="timeline-container">
-        <!-- Horizontal Zoom Slider (Hidden for Accordion View) -->
-        <div class="zoom-slider-container" style="display: none;">
+        <!-- Horizontal Zoom Slider (Restored) -->
+        <div class="zoom-slider-container">
             <span class="zoom-slider-title">ZOOM</span>
             <div style="flex: 1;">
-                <input type="range" class="zoom-slider" min="1" max="4" value="3" oninput="setZoomBySlider(this.value)">
+                <input type="range" class="zoom-slider" min="1" max="4" value="1" oninput="setZoomBySlider(this.value)">
                 <div class="zoom-labels">
                     <span>Year</span>
                     <span>Month</span>
@@ -509,9 +509,28 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Initialize with Year view (Level 1)
-        renderTimeline('year');
+        // Initialize with default view (Year = 1) or whatever slider is at
+        const slider = document.querySelector('.zoom-slider');
+        if (slider) {
+            slider.value = 1; // Default to Year
+            setZoomBySlider(1);
+        } else {
+            renderTimeline('year');
+        }
     });
+
+    function setZoomBySlider(val) {
+        // Map slider (1-4) to levels
+        const levels = {
+            1: 'year',
+            2: 'month',
+            3: 'week',
+            4: 'day'
+        };
+        const level = levels[val] || 'year';
+        // Re-render the root timeline at this level
+        renderTimeline(level);
+    }
 
     // Toggle expansion: Year -> Month -> Week -> Day -> Items
     function toggleGroup(element, currentLevel, key) {
@@ -533,9 +552,10 @@
         // Create new container
         container = document.createElement('div');
         container.className = 'expansion-container';
-        container.style.paddingLeft = '20px'; // Indent for hierarchy
-        container.style.borderLeft = '1px solid #E5E5EA'; // Vertical guide line
-        container.style.marginLeft = '22px'; // Align with marker center
+        // Indentation removed per user request (Left Align All)
+        // container.style.paddingLeft = '20px'; 
+        // container.style.borderLeft = '1px solid #E5E5EA'; 
+        // container.style.marginLeft = '22px';
 
         // Animate in
         container.style.animation = 'fadeIn 0.3s ease-out';
@@ -740,7 +760,8 @@
                     data-concept="${item.concept || ''}"
                     data-correct="${item.isCorrect}"
                     data-exam="${item.exam_name || ''}"
-                    data-problem="${item.problem_number || ''}">
+                    data-problem="${item.problem_number || ''}"
+                    data-embed="${item.embedUrl || ''}">
                     
                     <div class="timeline-marker"></div>
                     
@@ -777,6 +798,14 @@
         const isCorrect = element.dataset.correct;
         const examName = element.dataset.exam || '';
         const problemNumber = element.dataset.problem || '';
+        // New data attribute for embed URL (needs to be added to renderDayGroup too)
+        // Since we didn't add data-embed yet, let's infer or rely on url if it matches pattern? 
+        // Better: We must assume renderDayGroup will be updated to include data-embed.
+        // For now, let's check correctly.
+
+        // Wait! I need to update renderDayGroup to output data-embed first! 
+        // But assuming I will do that next, here is the logic.
+        const embedUrl = element.dataset.embed || '';
 
         document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
@@ -787,60 +816,30 @@
         setTimeout(() => {
             let contentHtml = '';
 
+            // Condition 1: Problem Solving (SOLVE)
             if (type === 'SOLVE' && examName && problemNumber) {
                 const problemUrl = `/quiz/${examName}?p=${problemNumber.replace('p', '')}`;
-
                 const isSuccess = isCorrect === 'true' || isCorrect === '1';
                 const statusClass = isSuccess ? 'text-success' : 'text-danger';
                 const statusIcon = isSuccess ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
                 const statusText = isSuccess ? 'Completed' : 'Failed';
+                let tagsHtml = tags ? tags.split(',').map(tag => `<span class="badge bg-light text-secondary border me-1">${tag.trim()}</span>`).join('') : '';
 
-                let tagsHtml = '';
-                if (tags) {
-                    tagsHtml = tags.split(',').map(tag =>
-                        `<span class="badge bg-light text-secondary border me-1">${tag.trim()}</span>`
-                    ).join('');
-                }
+                contentHtml = generateSplitLayout(problemUrl, time, statusClass, statusIcon, statusText, title, concept, tagsHtml, '/my-universe/problems', '문제풀이 이동');
+            }
+            // Condition 2: Project with Embed URL (Scratch/Entry via Gallery Logic)
+            else if (embedUrl) {
+                // Determine status (usually Completed for projects, or leave generic)
+                const statusClass = 'text-primary';
+                const statusIcon = 'bi-check-circle-fill';
+                const statusText = 'Project';
+                let tagsHtml = tags ? tags.split(',').map(tag => `<span class="badge bg-light text-secondary border me-1">${tag.trim()}</span>`).join('') : '';
 
-                contentHtml = `
-                    <div class="animate-fade-in d-flex flex-column h-100 w-100">
-                        <div class="flex-grow-1 position-relative rounded-4 overflow-hidden mb-3" 
-                             style="background: #FFFFFF; border: 1px solid #E5E5EA; min-height: 0;">
-                            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="z-index: 0;">
-                                <div class="spinner-border spinner-border-sm me-2" role="status"></div> Loading...
-                            </div>
-                            <iframe src="${problemUrl}"
-                                class="position-absolute top-0 start-0 w-100 h-100 border-0"
-                                style="z-index: 1; background: #FFFFFF;"
-                                frameborder="0"
-                                loading="lazy"></iframe>
-                        </div>
-                        
-                        <div class="bg-white rounded-4 p-4 shadow-sm border border-light" style="flex-shrink: 0;">
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <div class="d-flex align-items-center gap-2 text-muted small">
-                                    <i class="bi bi-calendar-event"></i> ${time}
-                                </div>
-                                <div class="${statusClass} fw-bold d-flex align-items-center gap-1">
-                                    <i class="bi ${statusIcon}"></i> ${statusText}
-                                </div>
-                            </div>
-                            
-                            <h3 class="fw-bold text-dark mb-2" style="font-size: 1.25rem;">${title}</h3>
-                            <div class="text-secondary small mb-3">${concept || ''}</div>
-                            
-                            <div class="d-flex align-items-center justify-content-between mt-auto">
-                                <div class="d-flex gap-1 flex-wrap">
-                                    ${tagsHtml}
-                                </div>
-                                <a href="/my-universe/problems" class="btn btn-sm btn-primary rounded-pill px-3">
-                                    문제풀이 이동 <i class="bi bi-arrow-right ms-1"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
+                // Use the embed URL directly
+                contentHtml = generateSplitLayout(embedUrl, time, statusClass, statusIcon, statusText, title, concept || 'My Project', tagsHtml, url, '원본 보기');
+            }
+            // Condition 3: Default View (Link or Text)
+            else {
                 let actionHtml = '';
                 if (url && url !== '#' && !url.startsWith('{')) {
                     actionHtml = `
@@ -877,5 +876,49 @@
             panel.innerHTML = contentHtml;
             panel.style.opacity = '1';
         }, 200);
+    }
+
+    // Helper to generate consistent split layout
+    function generateSplitLayout(iframeUrl, time, statusClass, statusIcon, statusText, title, subTitle, tagsHtml, linkUrl, linkText) {
+        // Prepare embed URL (add embed=1 if needed, though usually handled by backend)
+        return `
+            <div class="animate-fade-in d-flex flex-column h-100 w-100">
+                <div class="flex-grow-1 position-relative rounded-4 overflow-hidden mb-3" 
+                     style="background: #FFFFFF; border: 1px solid #E5E5EA; min-height: 0;">
+                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="z-index: 0;">
+                        <div class="spinner-border spinner-border-sm me-2" role="status"></div> Loading...
+                    </div>
+                    <iframe src="${iframeUrl}"
+                        class="position-absolute top-0 start-0 w-100 h-100 border-0"
+                        style="z-index: 1; background: #FFFFFF;"
+                        frameborder="0"
+                        loading="lazy"></iframe>
+                </div>
+                
+                <div class="bg-white rounded-4 p-4 shadow-sm border border-light" style="flex-shrink: 0;">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2 text-muted small">
+                            <i class="bi bi-calendar-event"></i> ${time}
+                        </div>
+                        <div class="${statusClass} fw-bold d-flex align-items-center gap-1">
+                            <i class="bi ${statusIcon}"></i> ${statusText}
+                        </div>
+                    </div>
+                    
+                    <h3 class="fw-bold text-dark mb-2" style="font-size: 1.25rem;">${title}</h3>
+                    <div class="text-secondary small mb-3">${subTitle}</div>
+                    
+                    <div class="d-flex align-items-center justify-content-between mt-auto">
+                        <div class="d-flex gap-1 flex-wrap">
+                            ${tagsHtml}
+                        </div>
+                        ${linkUrl && linkUrl !== '#' ? `
+                        <a href="${linkUrl}" target="_blank" class="btn btn-sm btn-primary rounded-pill px-3">
+                            ${linkText} <i class="bi bi-arrow-right ms-1"></i>
+                        </a>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
     }
 </script>
