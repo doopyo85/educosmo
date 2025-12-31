@@ -642,6 +642,14 @@
                 platformHtml = `<span class="platform-badge me-2 ${badgeClass}">${item.platform}</span>`;
             }
 
+            let statusIconHtml = '';
+            // Only show check/x circle for SOLVE items, and place on the right
+            if (item.action_type === 'SOLVE' && item.isCorrect !== null) {
+                const isSuccess = item.isCorrect === 'true' || item.isCorrect === '1' || item.isCorrect === true;
+                const icon = isSuccess ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
+                statusIconHtml = `<i class="bi ${icon} ms-2" style="font-size: 1rem;"></i>`;
+            }
+
             html += `
                 <div class="timeline-item" onclick="handleClick(this)"
                     data-type="${item.action_type}"
@@ -657,46 +665,12 @@
                     
                     <div class="timeline-marker"></div>
                     
-            let statusIconHtml = '';
-            // Only show check/x circle for SOLVE items, and place on the right
-            if (item.action_type === 'SOLVE' && item.isCorrect !== null) {
-                 const isSuccess = item.isCorrect === 'true' || item.isCorrect === '1' || item.isCorrect === true;
-                 const icon = isSuccess ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
-                 statusIconHtml = `< i class="bi ${icon} ms-2" style = "font-size: 1rem;" ></i > `;
-            }
-
-            // Clean left icon: Use simple dot or platform icon? 
-            // Design request implies "Check circle is only for problems".
-            // Let's keep the platform badging in title and remove the left heavy icon column to make it cleaner,
-            // or just use a small neutral indicator if needed.
-            // For now, I will keep the left icon column but make it very subtle for all text,
-            // and removed the large success/fail coloring from the LEFT icon.
-
-            html += `
-                < div class="timeline-item" onclick = "handleClick(this)"
-            data - type="${item.action_type}"
-            data - title="${item.title}"
-            data - time="${item.dateStr} ${item.timeStr}"
-            data - url="${item.url}"
-            data - status="${item.status}"
-            data - tags="${item.tags || ''}"
-            data - concept="${item.concept || ''}"
-            data - correct="${item.isCorrect}"
-            data - exam="${item.exam_name || ''}"
-            data - problem="${item.problem_number || ''}" >
-                    
-                    <div class="timeline-marker"></div>
-                    
                     <div class="timeline-content-row">
-                        <!-- Left Icon Area: Simplified or Removed as per "compact" request? 
-                             Kept empty or minimal to let Title breathe. 
-                             Actually, let's remove the left icon column if the badge handles the type info. -->
-                        
                         <div class="timeline-main-info w-100 justify-content-between">
                             <div class="d-flex align-items-center flex-wrap">
                                 ${platformHtml}
                                 <span class="timeline-title me-2">${item.title}</span>
-                                ${statusIconHtml} <!-- Icon to the right of title -->
+                                ${statusIconHtml}
                                 ${tagsHtml}
                             </div>
                             <div class="timeline-meta" style="white-space: nowrap;">
@@ -704,8 +678,6 @@
                             </div>
                         </div>
                     </div>
-                </div >
-                `;
                 </div>
             `;
         });
