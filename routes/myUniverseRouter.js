@@ -210,8 +210,12 @@ const processLogs = async (logs, currentUser) => {
                     tags = meta.tags || '';
                     concept = meta.concept || '';
                 }
+
+                // 🔥 Generate Embed URL for Quiz
+                if (examName && problemNumber) {
+                    finalUrl = `/quiz/${encodeURIComponent(examName)}?p=${encodeURIComponent(problemNumber)}&embed=true`;
+                }
             } catch (e) { }
-            finalUrl = '#';
         }
 
         return {

@@ -78,6 +78,21 @@ class QuizComponent extends Component {
 
       await this.loadUserProgress();
 
+      // 🔥 Initial Logic for Embed/Page Mode
+      if (window.QUIZ_CONFIG && window.QUIZ_CONFIG.examName) {
+        console.log('🚀 QuizComponent Auto-Start with Config:', window.QUIZ_CONFIG);
+        this.options.examName = window.QUIZ_CONFIG.examName;
+        this.active = true; // Force activate
+        this.show(); // Ensure visible
+
+        // Load initial problem
+        const problemNum = window.QUIZ_CONFIG.initialProblem;
+        // Need to set currentProblemNumber global potentially if other components rely on it, 
+        // OR just load it directly.
+        window.currentProblemNumber = parseInt(problemNum);
+        this.loadQuizForProblem(this.options.examName, problemNum);
+      }
+
       this.state.initialized = true;
       console.log('퀴즈 컴포넌트 초기화 완료');
 

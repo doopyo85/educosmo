@@ -28,46 +28,95 @@
         <link rel="stylesheet" href="/css/styles.css">
         <link rel="stylesheet" href="/css/components/explanation.css">
         <link rel="stylesheet" href="/css/components/layout-toggle.css">
+        <link rel="stylesheet" href="/css/components/layout-toggle.css">
         <link rel="stylesheet" href="/css/components/jupyter.css">
-        <!-- Ace Editor -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.8/ace.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.8/ext-language_tools.js"></script>
 
-        <!-- 🔥 Pyodide (pythontest 페이지 전용) -->
-        <% if (typeof pageType !=='undefined' && pageType==='pythontest' ) { %>
-            <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
-            <script src="/js/components/ide/PyodideTerminal.js"></script>
+        <!-- 🔥 Embedded Mode CSS -->
+        <% if (typeof isEmbed !=='undefined' && isEmbed) { %>
+            <style>
+                /* Hide Navigation and Header */
+                #navigation-component,
+                .header,
+                header,
+                .problem-top-nav,
+                #ide-width-resize-handle,
+                .content-width-resize-handle {
+                    display: none !important;
+                }
+
+                /* Adjust Main Area for Embed */
+                .mainArea {
+                    left: 0 !important;
+                    width: 100% !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    height: 100vh !important;
+                }
+
+                .main-container {
+                    padding-top: 0 !important;
+                }
+
+                /* Content Container needs to fill space */
+                .content-container {
+                    width: 100% !important;
+                    height: 100% !important;
+                    padding: 10px !important;
+                }
+
+                body {
+                    background-color: transparent !important;
+                    overflow: hidden;
+                }
+            </style>
             <% } %>
+                <!-- Ace Editor -->
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.8/ace.js"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.8/ext-language_tools.js"></script>
 
-                <!-- 🔥 IDE 관련 스크립트 - 컴포넌트 시스템보다 먼저 로드 -->
-                <script src="/js/components/ide/FileTree.js"></script>
-                <script src="/js/components/ide/CodeEditorTabs.js"></script>
-                <script src="/js/components/ide/CodeEditor.js"></script>
-                <script src="/js/components/ide/Terminal.js"></script>
-                <script src="/js/components/ide/TerminalInput.js"></script>
-                <script src="/js/components/ide/TerminalResize.js"></script>
-                <script src="/js/components/ide/IDEWidthResize.js"></script>
+                <!-- 🔥 Pyodide (pythontest 페이지 전용) -->
+                <% if (typeof pageType !=='undefined' && pageType==='pythontest' ) { %>
+                    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+                    <script src="/js/components/ide/PyodideTerminal.js"></script>
+                    <% } %>
 
-                <!-- Python 자동완성 (선택적) -->
-                <script src="/js/components/ide/PythonAutoCompleter.js"></script>
+                        <!-- 🔥 IDE 관련 스크립트 - 컴포넌트 시스템보다 먼저 로드 -->
+                        <script src="/js/components/ide/FileTree.js"></script>
+                        <script src="/js/components/ide/CodeEditorTabs.js"></script>
+                        <script src="/js/components/ide/CodeEditor.js"></script>
+                        <script src="/js/components/ide/Terminal.js"></script>
+                        <script src="/js/components/ide/TerminalInput.js"></script>
+                        <script src="/js/components/ide/TerminalResize.js"></script>
+                        <script src="/js/components/ide/IDEWidthResize.js"></script>
 
-                <script>
-                    // 디버깅 정보 출력
-                    console.log('서버에서 전달된 페이지 타입:', '<%= typeof pageType !== "undefined" ? pageType : "undefined" %>');
+                        <!-- Python 자동완성 (선택적) -->
+                        <script src="/js/components/ide/PythonAutoCompleter.js"></script>
 
-                    // 페이지 타입 설정 (서버에서 전달받은 값을 우선 사용)
-                    window.PAGE_TYPE = '<%= typeof pageType !== "undefined" ? pageType : "template" %>';
-                    window.USE_COMPONENT_SYSTEM = true;
+                        <script>
+                            // 디버깅 정보 출력
+                            console.log('서버에서 전달된 페이지 타입:', '<%= typeof pageType !== "undefined" ? pageType : "undefined" %>');
 
-                    // HTML 요소에도 데이터 속성으로 설정
-                    document.documentElement.dataset.pageType = window.PAGE_TYPE;
+                            // 페이지 타입 설정 (서버에서 전달받은 값을 우선 사용)
+                            window.PAGE_TYPE = '<%= typeof pageType !== "undefined" ? pageType : "template" %>';
+                            window.USE_COMPONENT_SYSTEM = true;
 
-                    console.log('Template 페이지 설정:', {
-                        pageType: window.PAGE_TYPE,
-                        useComponentSystem: window.USE_COMPONENT_SYSTEM,
-                        htmlDataset: document.documentElement.dataset.pageType
-                    });
-                </script>
+                            // HTML 요소에도 데이터 속성으로 설정
+                            document.documentElement.dataset.pageType = window.PAGE_TYPE;
+
+                            console.log('Template 페이지 설정:', {
+                                pageType: window.PAGE_TYPE,
+                                useComponentSystem: window.USE_COMPONENT_SYSTEM,
+                                htmlDataset: document.documentElement.dataset.pageType
+                            });
+                            if (window.PAGE_TYPE === 'quiz') {
+                                window.QUIZ_CONFIG = {
+                                    examName: '<%= typeof examName !== "undefined" ? examName : "" %>',
+                                    initialProblem: '<%= typeof initialProblem !== "undefined" ? initialProblem : "1" %>',
+                                    isEmbed: <%= typeof isEmbed !== "undefined" ? isEmbed : false %>
+                         };
+                                console.log('Quiz Config:', window.QUIZ_CONFIG);
+                            }
+                        </script>
     </head>
 
     <body class="layout-html" data-page-type="template">

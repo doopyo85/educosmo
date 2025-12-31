@@ -546,6 +546,9 @@ if (isMain || SERVICE_TYPE === 'entry') {
 const entDebugRouter = require('./routes/api/debug/entDebugRouter');
 app.use('/api/debug/ent', entDebugRouter);
 
+// 🔥 Quiz Page Router (For Embedding)
+app.use('/quiz', authenticateUser, require('./routes/quizPageRouter'));
+
 // 🔥 My Universe 라우터
 app.use('/my-universe', authenticateUser, myUniverseRouter);
 
