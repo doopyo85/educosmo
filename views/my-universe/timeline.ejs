@@ -463,12 +463,10 @@
     }
 
     .filter-btn {
-        border: 1px solid transparent;
-        /* Prepare for border if needed */
+        border: 1px solid #E5E5EA;
+        /* Gray border default */
         padding: 4px 10px;
-        /* Slimmer padding */
         border-radius: 8px;
-        /* Tighter radius (less pill-like, more button-like?) User said "tight" */
         font-size: 0.7rem;
         font-weight: 700;
         transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -476,51 +474,41 @@
         align-items: center;
         gap: 5px;
         cursor: pointer;
-        background: #F2F2F7;
+        background: #FFFFFF;
+        /* White background default */
         color: #8E8E93;
+        /* Gray text default */
         line-height: 1.2;
     }
 
     .filter-btn:hover {
         transform: translateY(-1px);
-        filter: brightness(0.95);
+        background: #F2F2F7;
     }
 
-    /* Active States */
+    /* Active States - Pastel/Vibrant */
     .filter-btn[data-value="ALL"].active {
         background: #1C1C1E;
         color: #FFFFFF;
+        border-color: #1C1C1E;
     }
 
     .filter-btn[data-value="LEARN"].active {
         background: #30B0C7;
         color: #FFFFFF;
+        border-color: #30B0C7;
     }
 
     .filter-btn[data-value="SOLVE"].active {
         background: #34C759;
         color: #FFFFFF;
+        border-color: #34C759;
     }
 
     .filter-btn[data-value="PROJECT"].active {
         background: #AF52DE;
         color: #FFFFFF;
-    }
-
-    /* Inactive Tint States */
-    .filter-btn[data-value="LEARN"]:not(.active) {
-        color: #30B0C7;
-        background: rgba(48, 176, 199, 0.1);
-    }
-
-    .filter-btn[data-value="SOLVE"]:not(.active) {
-        color: #34C759;
-        background: rgba(52, 199, 89, 0.1);
-    }
-
-    .filter-btn[data-value="PROJECT"]:not(.active) {
-        color: #AF52DE;
-        background: rgba(175, 82, 222, 0.1);
+        border-color: #AF52DE;
     }
 
     /* Restored Slider Styling */
