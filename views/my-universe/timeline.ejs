@@ -217,8 +217,11 @@
 
     .timeline-time {
         font-size: 0.75rem;
-        color: #86868B;
-        min-width: 50px;
+        color: #999999;
+        /* Lighter Gray */
+        min-width: 60px;
+        text-align: right;
+        /* Align right for cleaner look if placed on right, but here usually flex item */
     }
 
     .timeline-title {
@@ -255,36 +258,52 @@
         align-items: center;
         justify-content: center;
         font-size: 0.65rem;
-        font-weight: 600;
-        padding: 2px 7px;
+        font-weight: 700;
+        padding: 3px 8px;
         border: none;
-        /* Removed outline */
-        border-radius: 6px;
+        border-radius: 4px;
         margin-right: 8px;
-        /* Slightly more breathing room */
         vertical-align: middle;
         background-color: rgba(0, 122, 255, 0.1);
-        /* Soft Blue */
         color: #007AFF;
-        letter-spacing: -0.01em;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
     }
 
     .platform-badge.scratch {
         color: #FF9500;
+        /* Orange */
         background-color: rgba(255, 149, 0, 0.1);
-        /* Soft Orange */
     }
 
     .platform-badge.python {
         color: #34C759;
+        /* Green */
         background-color: rgba(52, 199, 89, 0.1);
-        /* Soft Green */
+    }
+
+    .platform-badge.entry {
+        color: #007AFF;
+        /* Blue */
+        background-color: rgba(0, 122, 255, 0.1);
+    }
+
+    .platform-badge.gallery {
+        color: #AF52DE;
+        /* Purple */
+        background-color: rgba(175, 82, 222, 0.1);
+    }
+
+    .platform-badge.learn {
+        color: #30B0C7;
+        /* Cyan */
+        background-color: rgba(48, 176, 199, 0.1);
     }
 
     .platform-badge.system {
-        color: #64748B;
-        background-color: #F1F5F9;
-        /* Slate 100 */
+        color: #8E8E93;
+        /* Gray */
+        background-color: #F2F2F7;
     }
 
     /* Animation Keyframes */
@@ -624,9 +643,44 @@
 
         items.forEach(item => {
             const isSuccess = item.isCorrect === 'true' || item.isCorrect === '1' || item.isCorrect === true;
-            let iconClass = item.iconClass;
-            if (item.action_type === 'SOLVE' && item.isCorrect !== null) {
-                iconClass = isSuccess ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
+
+            // Badge Logic
+            let badgeClass = '';
+            let badgeText = item.platform || 'General';
+            const type = item.action_type || '';
+            const platformLower = (item.platform || '').toLowerCase();
+
+            if (platformLower.includes('scratch') || platformLower.includes('스크래치')) badgeClass = 'scratch';
+            else if (platformLower.includes('python') || platformLower.includes('파이썬')) badgeClass = 'python';
+            else if (platformLower.includes('entry') || platformLower.includes('엔트리')) badgeClass = 'entry';
+            else if (type === 'GALLERY') { badgeClass = 'gallery'; badgeText = 'GALLERY'; }
+            else if (type === 'LEARN') { badgeClass = 'learn'; badgeText = 'LEARN'; }
+            else if (type === 'SOLVE') { badgeClass = 'python'; badgeText = 'SOLVE'; }
+            else if (type === 'LOG' || platformLower === 'system') { badgeClass = 'system'; }
+
+            const platformHtml = `<span class="platform-badge me-2 ${badgeClass}">${badgeText}</span>`;
+
+            // Title Formatting
+            let displayTitle = item.title;
+            // Clean up paths log /python_project -> python project
+            if (displayTitle.startsWith('/') || displayTitle.includes('_')) {
+                displayTitle = displayTitle.replace(/^\//, '').replace(/_/g, ' ');
+                // Capitalize first letter of each word
+                displayTitle = displayTitle.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())));
+            }
+
+            // Progress Display for Learn items
+            let progressHtml = '';
+            if (type === 'LEARN' && item.progress > 0) {
+                progressHtml = `<span class="ms-2 badge bg-info-subtle text-info border border-info-subtle rounded-pill" style="font-size: 0.6rem;">${item.progress}%</span>`;
+            }
+
+            let statusIconHtml = '';
+            // Only show check/x circle for SOLVE items, and place on the right
+            if (type === 'SOLVE' && item.isCorrect !== null) {
+                const isSuccess = item.isCorrect === 'true' || item.isCorrect === '1' || item.isCorrect === true;
+                const icon = isSuccess ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
+                statusIconHtml = `<i class="bi ${icon} ms-2" style="font-size: 1rem;"></i>`;
             }
 
             let tagsHtml = '';
@@ -634,20 +688,6 @@
                 item.tags.split(',').slice(0, 2).forEach(tag => {
                     tagsHtml += `<span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.65rem;">${tag.trim()}</span>`;
                 });
-            }
-
-            let platformHtml = '';
-            if (item.platform && item.platform !== 'LOG') {
-                const badgeClass = item.platform === '스크래치' ? 'scratch' : (item.platform === '파이썬' ? 'python' : '');
-                platformHtml = `<span class="platform-badge me-2 ${badgeClass}">${item.platform}</span>`;
-            }
-
-            let statusIconHtml = '';
-            // Only show check/x circle for SOLVE items, and place on the right
-            if (item.action_type === 'SOLVE' && item.isCorrect !== null) {
-                const isSuccess = item.isCorrect === 'true' || item.isCorrect === '1' || item.isCorrect === true;
-                const icon = isSuccess ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
-                statusIconHtml = `<i class="bi ${icon} ms-2" style="font-size: 1rem;"></i>`;
             }
 
             html += `
@@ -669,11 +709,12 @@
                         <div class="timeline-main-info w-100 justify-content-between">
                             <div class="d-flex align-items-center flex-wrap">
                                 ${platformHtml}
-                                <span class="timeline-title me-2">${item.title}</span>
+                                <span class="timeline-title me-2">${displayTitle}</span>
+                                ${progressHtml}
                                 ${statusIconHtml}
                                 ${tagsHtml}
                             </div>
-                            <div class="timeline-meta" style="white-space: nowrap;">
+                            <div class="timeline-time">
                                 ${item.timeStr}
                             </div>
                         </div>

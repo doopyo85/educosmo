@@ -188,6 +188,15 @@ const processLogs = async (logs, currentUser) => {
                     finalUrl = `/scratch/?project_file=${s3UrlEncoded}`;
                 }
             } catch (e) { }
+        } else if (log.type === 'learn') {
+            try {
+                const detail = JSON.parse(log.metadata || '{}');
+                if (detail.progress) {
+                    // Pass progress to be used in view
+                    log.progress = detail.progress;
+                }
+            } catch (e) { }
+            finalUrl = '#';
         } else if (log.type === 'solve') {
             // Parse metadata to get exam_name and problem_number for metadata lookup
             try {
@@ -218,6 +227,7 @@ const processLogs = async (logs, currentUser) => {
             tags: tags,
             concept: concept,
             isCorrect: isCorrect,
+            progress: log.progress || 0, // [NEW] Learning progress
             isoDate: dateObj.toISOString() // [FIX] Add standard ISO date for reliable client-side parsing
         };
     });
