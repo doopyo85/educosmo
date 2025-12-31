@@ -221,18 +221,27 @@ const processLogs = async (logs, currentUser) => {
                     log.progress = detail.progress;
                 }
 
-                // Try to resolve tags for Learn items using title as key
-                // Use a normalized key from the title (assuming title might be the problem ID)
+                // Try to resolve tags/content for Learn items using title as key
                 if (log.title) {
                     const key = log.title.trim().toLowerCase();
                     const meta = metadataMap.get(key);
                     if (meta) {
                         tags = meta.tags || '';
                         concept = meta.concept || '';
+
+                        // 🔥 Generate Embed URL for Learn (same as Solve if mapped)
+                        if (meta.examName && meta.problemNumber) {
+                            finalUrl = `/quiz/${encodeURIComponent(meta.examName)}?p=${encodeURIComponent(meta.problemNumber)}&embed=true`;
+                        } else {
+                            finalUrl = '#';
+                        }
+                    } else {
+                        finalUrl = '#'; // Default fallback
                     }
+                } else {
+                    finalUrl = '#';
                 }
-            } catch (e) { }
-            finalUrl = '#';
+            } catch (e) { finalUrl = '#'; }
         } else if (log.type === 'solve') {
             // Parse metadata to get exam_name and problem_number for metadata lookup
             try {

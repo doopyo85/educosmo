@@ -1066,13 +1066,21 @@
 
                 contentHtml = generateSplitLayout(problemUrl, time, statusClass, statusIcon, statusText, title, concept, tagsSpans, '/my-universe/problems', '문제풀이 이동');
             }
-            // Condition 2: Project with Embed URL (Scratch/Entry via Gallery Logic)
+            // Condition 2: Embeddable Content (Project / Learn with content)
             else if (embedUrl) {
-                const statusClass = 'text-primary';
-                const statusIcon = 'bi-check-circle-fill';
-                const statusText = 'Project';
+                let statusClass = 'text-primary';
+                let statusIcon = 'bi-check-circle-fill';
+                let statusText = 'Project';
+                let linkText = '원본 보기';
 
-                contentHtml = generateSplitLayout(embedUrl, time, statusClass, statusIcon, statusText, title, concept || 'My Project', tagsSpans, url, '원본 보기');
+                if (type === 'LEARN') {
+                    statusClass = 'text-info';
+                    statusIcon = 'bi-book-half';
+                    statusText = 'Learning'; // Or 'Concept'
+                    linkText = '학습 하기';
+                }
+
+                contentHtml = generateSplitLayout(embedUrl, time, statusClass, statusIcon, statusText, title, concept || (type === 'LEARN' ? 'Learning Content' : 'My Project'), tagsSpans, url, linkText);
             }
             // Condition 3: Default View (Link or Text)
             else {
