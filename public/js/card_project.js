@@ -314,8 +314,8 @@ class ProjectCardManager {
         const projects = {};
 
         data.forEach(row => {
-            // 구글 시트 데이터 구조: [카테고리, 콘텐츠명, 기능, S3entURL, C.T요소, imgURL, entURL]
-            const [category, name, type, s3entURL, ctElement = '', imgUrl = '', entURL = ''] = row;
+            // 구글 시트 데이터 구조: [카테고리, 콘텐츠명, 기능, entURL, C.T요소, imgURL, S3entURL]
+            const [category, name, type, entURL = '', ctElement = '', imgUrl = '', s3entURL = ''] = row;
 
             if (!category || !name) return;
 
@@ -333,8 +333,11 @@ class ProjectCardManager {
                     img: imgUrl,
                     // CPE용 (기본/완성/확장)
                     basic: '',
+                    basicPlayEntry: '',  // playentry.org URL
                     complete: '',
+                    completePlayEntry: '',
                     extension: '',
+                    extensionPlayEntry: '',
                     // COS용 (정답/풀이) - 문제는 imgUrl
                     answer: '',
                     solution: '',
@@ -342,32 +345,34 @@ class ProjectCardManager {
                 };
             }
 
-            // 🔥 entURL(G열)이 있으면 우선 사용, 없으면 s3entURL(D열) 사용
-            const finalUrl = (entURL && entURL.trim() !== '') ? entURL : s3entURL;
+            // 🔥 entURL(D열): playentry.org URL, s3entURL(G열): S3 다운로드 URL
 
             // 타입에 따라 URL 할당
             const typeLower = type.toLowerCase();
             switch (typeLower) {
                 case '기본':
-                    projects[category][projectKey].basic = finalUrl;
+                    projects[category][projectKey].basicPlayEntry = entURL;  // D열: playentry.org URL
+                    projects[category][projectKey].basic = s3entURL;  // G열: S3 파일 URL
                     break;
                 case '완성':
-                    projects[category][projectKey].complete = finalUrl;
+                    projects[category][projectKey].completePlayEntry = entURL;
+                    projects[category][projectKey].complete = s3entURL;
                     break;
                 case '확장':
-                    projects[category][projectKey].extension = finalUrl;
+                    projects[category][projectKey].extensionPlayEntry = entURL;
+                    projects[category][projectKey].extension = s3entURL;
                     break;
                 case '문제':  // 🔥 COS 문제 이미지 URL
-                    projects[category][projectKey].img = finalUrl;
+                    projects[category][projectKey].img = imgUrl;
                     break;
                 case '정답':
-                    projects[category][projectKey].answer = finalUrl;
+                    projects[category][projectKey].answer = s3entURL;
                     break;
                 case '풀이':
-                    projects[category][projectKey].solution = finalUrl;
+                    projects[category][projectKey].solution = s3entURL;
                     break;
                 case 'ppt':
-                    projects[category][projectKey].ppt = finalUrl;
+                    projects[category][projectKey].ppt = s3entURL;
                     break;
             }
         });
@@ -927,8 +932,10 @@ class ProjectCardManager {
         ` : '';
 
         // CPE용 버튼 (기본/완성/확장)
+        // 학생: [기본] 버튼은 playentry.org URL로 연결
+        // 교사: [완성][확장] 버튼은 S3 파일을 8070 포트로 로드
         const cpeButtons = !isCOS ? `
-            ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary') : ''}
+            ${project.basicPlayEntry ? `<button class="btn btn-secondary btn-sm entry-playentry-btn" data-url="${project.basicPlayEntry}">기본</button>` : ''}
             ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary') : ''}
             ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary') : ''}
         ` : '';
@@ -1308,6 +1315,18 @@ class ProjectCardManager {
                     this.loadProjectInEntryGUI(projectUrl);
                 } else if (this.config.projectType === 'appinventor') {
                     this.loadProjectInAppInventor(projectUrl);
+                }
+            }
+
+            // Entry [기본] 버튼 - playentry.org로 이동
+            if (e.target.classList.contains('entry-playentry-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const playentryUrl = e.target.getAttribute('data-url');
+                if (playentryUrl) {
+                    console.log('🎯 [기본] 버튼 클릭 - playentry.org로 이동:', playentryUrl);
+                    window.open(playentryUrl, '_blank');
                 }
             }
 

@@ -31,13 +31,13 @@ class BrokenPostCleaner {
                     title,
                     author,
                     author_type,
+                    board_scope,
                     created_at,
                     views,
                     LENGTH(content) as content_length,
                     SUBSTRING(content, 1, 100) as content_preview
                 FROM board_posts
-                WHERE board_scope = 'COMMUNITY'
-                  AND content LIKE '%board/images/temp/%'
+                WHERE content LIKE '%board/images/temp/%'
                 ORDER BY created_at DESC
             `);
 
@@ -48,6 +48,7 @@ class BrokenPostCleaner {
                 posts.forEach((post, index) => {
                     console.log(`\n${index + 1}. [ID: ${post.id}] ${post.title}`);
                     console.log(`   작성자: ${post.author} (${post.author_type})`);
+                    console.log(`   범위: ${post.board_scope}`);
                     console.log(`   작성일: ${post.created_at}`);
                     console.log(`   조회수: ${post.views}`);
                     console.log(`   내용 길이: ${post.content_length} bytes`);
@@ -78,8 +79,7 @@ class BrokenPostCleaner {
         try {
             const result = await queryDatabase(`
                 DELETE FROM board_posts
-                WHERE board_scope = 'COMMUNITY'
-                  AND content LIKE '%board/images/temp/%'
+                WHERE content LIKE '%board/images/temp/%'
             `);
 
             const deletedCount = result.affectedRows || 0;
@@ -97,7 +97,7 @@ class BrokenPostCleaner {
      * 3. 게시글 비공개 처리 (안전한 대안)
      */
     async hideBrokenPosts() {
-        this.log('🔒 이미지 소실된 게시글 비공개 처리 시작...');
+        this.log('🔒 이미지 소실된 게시글 비공개 처리 시작 (모든 범위)...');
 
         if (this.dryRun) {
             this.log('⚠️ DRY-RUN 모드: 실제 변경하지 않습니다', 'WARN');
@@ -109,8 +109,7 @@ class BrokenPostCleaner {
                 UPDATE board_posts
                 SET is_public = 0,
                     title = CONCAT('[이미지 손실] ', title)
-                WHERE board_scope = 'COMMUNITY'
-                  AND content LIKE '%board/images/temp/%'
+                WHERE content LIKE '%board/images/temp/%'
                   AND is_public = 1
             `);
 
@@ -137,9 +136,9 @@ class BrokenPostCleaner {
                     COUNT(*) as total_posts,
                     SUM(CASE WHEN content LIKE '%board/images/temp/%' THEN 1 ELSE 0 END) as broken_posts,
                     SUM(CASE WHEN is_public = 1 THEN 1 ELSE 0 END) as public_posts,
+                    SUM(CASE WHEN content LIKE '%board/images/temp/%' AND is_public = 1 THEN 1 ELSE 0 END) as public_broken_posts,
                     MAX(created_at) as latest_post
                 FROM board_posts
-                WHERE board_scope = 'COMMUNITY'
             `);
 
             const stat = stats[0];
@@ -150,7 +149,8 @@ class BrokenPostCleaner {
             console.log('\n=== 게시글 통계 ===');
             console.log(`전체 게시글: ${stat.total_posts}개`);
             console.log(`공개 게시글: ${stat.public_posts}개`);
-            console.log(`이미지 소실: ${stat.broken_posts}개 (${brokenPercentage}%)`);
+            console.log(`이미지 소실 (전체): ${stat.broken_posts}개 (${brokenPercentage}%)`);
+            console.log(`이미지 소실 (공개): ${stat.public_broken_posts}개`);
             console.log(`최근 게시일: ${stat.latest_post || 'N/A'}`);
             console.log('===================\n');
 

@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= category.name %> - 게시판</title>
+    <title>
+        <%= category.name %> - 게시판
+    </title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/board-layout.css">
     <style>
@@ -14,12 +18,12 @@
             background-color: #f8f9fa;
             font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         }
-        
+
         .list-header {
             padding: 25px 30px 20px 30px;
             border-bottom: 1px solid #f0f0f0;
         }
-        
+
         .list-title {
             font-size: 24px;
             font-weight: bold;
@@ -29,21 +33,29 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .category-icon {
             font-size: 28px;
         }
-        
-        .category-icon.notice { color: #dc3545; }
-        .category-icon.education { color: #28a745; }
-        .category-icon.free { color: #17a2b8; }
-        
+
+        .category-icon.notice {
+            color: #dc3545;
+        }
+
+        .category-icon.education {
+            color: #28a745;
+        }
+
+        .category-icon.free {
+            color: #17a2b8;
+        }
+
         .search-section {
             padding: 20px 30px;
             background-color: #f8f9fa;
             border-bottom: 1px solid #f0f0f0;
         }
-        
+
         .list-controls {
             padding: 15px 30px;
             background-color: #fafafa;
@@ -52,17 +64,17 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .post-count {
             color: #6c757d;
             font-size: 14px;
         }
-        
+
         /* 🔥 게시글 목록 - 한 줄 형태로 수정 */
         .post-list {
             background-color: white;
         }
-        
+
         .post-item {
             padding: 12px 25px;
             border-bottom: 1px solid #f1f3f4;
@@ -72,21 +84,21 @@
             align-items: center;
             gap: 15px;
         }
-        
+
         .post-item:hover {
             background-color: #f8f9fa;
         }
-        
+
         .post-item.notice {
             background-color: #fff3cd;
             border-left: 4px solid #ffc107;
         }
-        
+
         .post-item.pinned {
             background-color: #f0f7ff;
             border-left: 4px solid #0066cc;
         }
-        
+
         /* 🔥 번호 영역 */
         .post-number {
             min-width: 50px;
@@ -96,13 +108,14 @@
             font-size: 13px;
             flex-shrink: 0;
         }
-        
+
         /* 🔥 제목 영역 */
         .post-title-section {
             flex: 1;
-            min-width: 0; /* 텍스트 오버플로우를 위해 필요 */
+            min-width: 0;
+            /* 텍스트 오버플로우를 위해 필요 */
         }
-        
+
         .post-title {
             font-size: 15px;
             color: #495057;
@@ -116,11 +129,11 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
+
         .post-title:hover {
             color: #0066cc;
         }
-        
+
         /* 🔥 상태 백지들 */
         .post-badges {
             display: flex;
@@ -128,7 +141,7 @@
             align-items: center;
             flex-shrink: 0;
         }
-        
+
         .badge-new {
             background-color: #dc3545;
             color: white;
@@ -137,7 +150,7 @@
             border-radius: 3px;
             font-weight: bold;
         }
-        
+
         .badge-pinned {
             background-color: #ffc107;
             color: #000;
@@ -146,7 +159,7 @@
             border-radius: 3px;
             font-weight: bold;
         }
-        
+
         .badge-notice {
             background-color: #dc3545;
             color: white;
@@ -155,7 +168,7 @@
             border-radius: 3px;
             font-weight: bold;
         }
-        
+
         /* 🔥 메타 정보 (작성자, 시간, 조회수) */
         .post-meta-info {
             display: flex;
@@ -165,69 +178,69 @@
             color: #6c757d;
             flex-shrink: 0;
         }
-        
+
         .meta-author {
             font-weight: 500;
             min-width: 60px;
             text-align: center;
         }
-        
+
         .meta-views {
             min-width: 40px;
             text-align: center;
             font-weight: 500;
         }
-        
+
         .meta-time {
             min-width: 50px;
             text-align: center;
         }
-        
+
         .attachment-icon {
             color: #6c757d;
             font-size: 12px;
         }
-        
+
         .pagination-container {
             background-color: #fff;
             padding: 20px 30px;
             border-top: 1px solid #f0f0f0;
             border-radius: 0 0 8px 8px;
         }
-        
+
         .pagination {
             margin: 0;
         }
-        
+
         .page-link {
             color: #6c757d;
             border: 1px solid #dee2e6;
             padding: 8px 12px;
         }
-        
+
         .page-link:hover {
             color: #0066cc;
             background-color: #f8f9fa;
         }
-        
+
         .page-item.active .page-link {
             background-color: #0066cc;
             border-color: #0066cc;
         }
-        
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             background-color: #fff;
             color: #6c757d;
         }
-        
+
         .empty-state i {
             font-size: 48px;
             margin-bottom: 16px;
             opacity: 0.5;
         }
-        
+
         .write-btn {
             background-color: #0066cc;
             border: none;
@@ -238,14 +251,15 @@
             font-weight: 500;
             transition: background-color 0.2s;
         }
-        
+
         .write-btn:hover {
             background-color: #0052a3;
             color: white;
         }
-        
+
         /* 반응형 */
         @media (max-width: 768px) {
+
             .list-header,
             .search-section,
             .list-controls,
@@ -253,35 +267,35 @@
                 padding-left: 20px;
                 padding-right: 20px;
             }
-            
+
             .list-controls {
                 flex-direction: column;
                 gap: 10px;
                 align-items: stretch;
             }
-            
+
             .post-item {
                 padding: 10px 20px;
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 8px;
             }
-            
+
             .post-title-section {
                 width: 100%;
             }
-            
+
             .post-title {
                 white-space: normal;
                 overflow: visible;
                 text-overflow: initial;
             }
-            
+
             .post-meta-info {
                 justify-content: space-between;
                 width: 100%;
             }
-            
+
             .meta-author,
             .meta-views,
             .meta-time {
@@ -289,7 +303,7 @@
                 text-align: left;
             }
         }
-        
+
         @media (max-width: 576px) {
             .post-meta-info {
                 font-size: 11px;
@@ -298,265 +312,273 @@
         }
     </style>
 </head>
+
 <body>
     <%- include('../partials/header') %>
-    
-    <div class="board-layout-container">
-        <!-- 🔥 왼쪽 네비게이션 (항상 고정) -->
-        <div class="board-sidebar">
-            <div class="board-sidebar-header">
-                <i class="bi bi-grid-3x3-gap"></i> 게시판
-            </div>
-            
-            <a href="/board" class="board-category-item">
-                <i class="bi bi-house"></i> 전체 게시판
-            </a>
-            
-            <a href="/board/notice" class="board-category-item <%= category.slug === 'notice' ? 'active' : '' %>">
-                <i class="bi bi-megaphone"></i> 업데이트 노트
-            </a>
-            
-            <a href="/board/education" class="board-category-item <%= category.slug === 'education' ? 'active' : '' %>">
-                <i class="bi bi-book"></i> 교육정보
-            </a>
-            
-            <a href="/board/free" class="board-category-item <%= category.slug === 'free' ? 'active' : '' %>">
-                <i class="bi bi-chat-dots"></i> 자유게시판
-            </a>
-        </div>
-        
-        <!-- 🔥 메인 콘텐츠 (고정 너비) -->
-        <div class="board-main-content">
-            <!-- 헤더 -->
-            <div class="list-header">
-                <h1 class="list-title">
-                    <% if (category.slug === 'notice') { %>
-                        <i class="bi bi-megaphone category-icon notice"></i>
-                    <% } else if (category.slug === 'education') { %>
-                        <i class="bi bi-book category-icon education"></i>
-                    <% } else { %>
-                        <i class="bi bi-chat-dots category-icon free"></i>
-                    <% } %>
-                    <%= category.name %>
-                </h1>
-            </div>
-            
-            <!-- 검색 영역 -->
-            <div class="search-section">
-                <form method="GET" action="/board/<%= category.slug %>" class="row g-3">
-                    <div class="col-md-2">
-                        <select name="searchType" class="form-select form-select-sm">
-                            <option value="title" <%= searchType === 'title' ? 'selected' : '' %>>제목</option>
-                            <option value="content" <%= searchType === 'content' ? 'selected' : '' %>>내용</option>
-                            <option value="author" <%= searchType === 'author' ? 'selected' : '' %>>작성자</option>
-                        </select>
-                    </div>
-                    <div class="col-md-8">
-                        <input type="text" name="search" class="form-control form-control-sm" 
-                               placeholder="검색어를 입력하세요" value="<%= search %>">
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">
-                            <i class="bi bi-search"></i> 검색
-                        </button>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- 목록 컨트롤 -->
-            <div class="list-controls">
-                <div class="post-count">
-                    총 <strong><%= totalPosts %></strong>개의 글 
-                    (<%= currentPage %>/<%= totalPages %> 페이지)
+
+        <div class="board-layout-container">
+            <!-- 🔥 왼쪽 네비게이션 (항상 고정) -->
+            <div class="board-sidebar">
+                <div class="board-sidebar-header">
+                    <i class="bi bi-grid-3x3-gap"></i> 게시판
                 </div>
-                <!-- 🔥 글쓰기 버튼 제거 (오른쪽 스티키 버튼으로 대체) -->
+
+                <a href="/board" class="board-category-item">
+                    <i class="bi bi-house"></i> 전체 게시판
+                </a>
+
+                <a href="/board/notice" class="board-category-item <%= category.slug === 'notice' ? 'active' : '' %>">
+                    <i class="bi bi-megaphone"></i> 업데이트 노트
+                </a>
+
+                <a href="/board/education"
+                    class="board-category-item <%= category.slug === 'education' ? 'active' : '' %>">
+                    <i class="bi bi-book"></i> 교육정보
+                </a>
+
+                <a href="/board/free" class="board-category-item <%= category.slug === 'free' ? 'active' : '' %>">
+                    <i class="bi bi-chat-dots"></i> 자유게시판
+                </a>
             </div>
-            
-            <!-- 게시글 목록 -->
-            <div class="post-list">
-                <% if (posts.length > 0) { %>
-                    <% posts.forEach((post, index) => { %>
-                        <div class="post-item <%= post.is_notice ? 'notice' : '' %> <%= post.is_pinned ? 'pinned' : '' %>" 
-                             onclick="location.href='/board/<%= category.slug %>/<%= post.id %>'">
-                            
-                            <!-- 번호 -->
-                            <div class="post-number">
-                                <% if (post.is_pinned) { %>
-                                    <span class="badge bg-warning text-dark">고정</span>
-                                <% } else if (post.is_notice) { %>
-                                    <span class="badge bg-danger">공지</span>
+
+            <!-- 🔥 메인 콘텐츠 (고정 너비) -->
+            <div class="board-main-content">
+                <!-- 헤더 -->
+                <div class="list-header" style="<%= category.slug === 'free' ? 'border-bottom: none;' : '' %>">
+                    <h1 class="list-title">
+                        <% if (category.slug==='notice' ) { %>
+                            <i class="bi bi-megaphone category-icon notice"></i>
+                            <% } else if (category.slug==='education' ) { %>
+                                <i class="bi bi-book category-icon education"></i>
                                 <% } else { %>
-                                    <%= totalPosts - (currentPage - 1) * 20 - index %>
-                                <% } %>
-                            </div>
-                            
-                            <!-- 제목 섹션 -->
-                            <div class="post-title-section">
-                                <div class="post-title">
-                                    <%= post.title %>
-                                    <% if (post.has_attachment) { %>
-                                        <i class="bi bi-paperclip attachment-icon"></i>
+                                    <i class="bi bi-chat-dots category-icon free"></i>
                                     <% } %>
+                                        <%= category.name %>
+                    </h1>
+                </div>
+
+                <!-- 검색 영역 -->
+                <div class="search-section">
+                    <form method="GET" action="/board/<%= category.slug %>" class="row g-3">
+                        <div class="col-md-2">
+                            <select name="searchType" class="form-select form-select-sm">
+                                <option value="title" <%=searchType==='title' ? 'selected' : '' %>>제목</option>
+                                <option value="content" <%=searchType==='content' ? 'selected' : '' %>>내용</option>
+                                <option value="author" <%=searchType==='author' ? 'selected' : '' %>>작성자</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <input type="text" name="search" class="form-control form-control-sm"
+                                placeholder="검색어를 입력하세요" value="<%= search %>">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="bi bi-search"></i> 검색
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 목록 컨트롤 -->
+                <div class="list-controls">
+                    <div class="post-count">
+                        총 <strong>
+                            <%= totalPosts %>
+                        </strong>개의 글
+                        (<%= currentPage %>/<%= totalPages %> 페이지)
+                    </div>
+                    <!-- 🔥 글쓰기 버튼 제거 (오른쪽 스티키 버튼으로 대체) -->
+                </div>
+
+                <!-- 게시글 목록 -->
+                <div class="post-list">
+                    <% if (posts.length> 0) { %>
+                        <% posts.forEach((post, index)=> { %>
+                            <div class="post-item <%= post.is_notice ? 'notice' : '' %> <%= post.is_pinned ? 'pinned' : '' %>"
+                                onclick="location.href='/board/<%= category.slug %>/<%= post.id %>'">
+
+                                <!-- 번호 -->
+                                <div class="post-number">
+                                    <% if (post.is_pinned) { %>
+                                        <span class="badge bg-warning text-dark">고정</span>
+                                        <% } else if (post.is_notice) { %>
+                                            <span class="badge bg-danger">공지</span>
+                                            <% } else { %>
+                                                <%= totalPosts - (currentPage - 1) * 20 - index %>
+                                                    <% } %>
+                                </div>
+
+                                <!-- 제목 섹션 -->
+                                <div class="post-title-section">
+                                    <div class="post-title">
+                                        <%= post.title %>
+                                            <% if (post.has_attachment) { %>
+                                                <i class="bi bi-paperclip attachment-icon"></i>
+                                                <% } %>
+                                    </div>
+                                </div>
+
+                                <!-- 상태 백지들 -->
+                                <div class="post-badges">
+                                    <% const now=new Date(); const postDate=new Date(post.created_at); const isNew=(now
+                                        - postDate) < 24 * 60 * 60 * 1000; %>
+                                        <% if (isNew) { %>
+                                            <span class="badge-new">N</span>
+                                            <% } %>
+                                </div>
+
+                                <!-- 메타 정보 -->
+                                <div class="post-meta-info">
+                                    <span class="meta-author">
+                                        <%= post.author_name || post.author %>
+                                    </span>
+                                    <span class="meta-views">
+                                        <%= post.views || 0 %>
+                                    </span>
+                                    <span class="meta-time">
+                                        <% const date=new Date(post.created_at); const today=new Date(); const
+                                            diffTime=today - date; const diffDays=Math.floor(diffTime / (1000 * 60 * 60
+                                            * 24)); if (diffDays===0) { // 오늘 const
+                                            hours=String(date.getHours()).padStart(2, '0' ); const
+                                            minutes=String(date.getMinutes()).padStart(2, '0' ); %>
+                                            <%= hours %>:<%= minutes %>
+                                                    <% } else if (diffDays < 7) { %>
+                                                        <%= diffDays %>일 전
+                                                            <% } else { %>
+                                                                <%= (date.getMonth() + 1) %>/<%= date.getDate() %>
+                                                                        <% } %>
+                                    </span>
                                 </div>
                             </div>
-                            
-                            <!-- 상태 백지들 -->
-                            <div class="post-badges">
-                                <% 
-                                    const now = new Date();
-                                    const postDate = new Date(post.created_at);
-                                    const isNew = (now - postDate) < 24 * 60 * 60 * 1000;
-                                %>
-                                <% if (isNew) { %>
-                                    <span class="badge-new">N</span>
-                                <% } %>
-                            </div>
-                            
-                            <!-- 메타 정보 -->
-                            <div class="post-meta-info">
-                                <span class="meta-author"><%= post.author_name || post.author %></span>
-                                <span class="meta-views"><%= post.views || 0 %></span>
-                                <span class="meta-time">
-                                    <% 
-                                        const date = new Date(post.created_at);
-                                        const today = new Date();
-                                        const diffTime = today - date;
-                                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                                        
-                                        if (diffDays === 0) {
-                                            // 오늘
-                                            const hours = String(date.getHours()).padStart(2, '0');
-                                            const minutes = String(date.getMinutes()).padStart(2, '0');
-                                    %>
-                                        <%= hours %>:<%= minutes %>
-                                    <% } else if (diffDays < 7) { %>
-                                        <%= diffDays %>일 전
-                                    <% } else { %>
-                                        <%= (date.getMonth() + 1) %>/<%= date.getDate() %>
+                            <% }); %>
+                                <% } else { %>
+                                    <div class="empty-state">
+                                        <i class="bi bi-inbox"></i>
+                                        <h5>게시글이 없습니다</h5>
+                                        <% if (search) { %>
+                                            <p>'<%= search %>' 검색 결과가 없습니다.</p>
+                                            <a href="/board/<%= category.slug %>" class="btn btn-outline-secondary">전체
+                                                목록 보기</a>
+                                            <% } else { %>
+                                                <p>첫 번째 게시글을 작성해보세요!</p>
+                                                <% if (canWrite) { %>
+                                                    <a href="/board/<%= category.slug %>/write"
+                                                        class="btn btn-primary">글쓰기</a>
+                                                    <% } %>
+                                                        <% } %>
+                                    </div>
                                     <% } %>
-                                </span>
-                            </div>
-                        </div>
-                    <% }); %>
-                <% } else { %>
-                    <div class="empty-state">
-                        <i class="bi bi-inbox"></i>
-                        <h5>게시글이 없습니다</h5>
-                        <% if (search) { %>
-                            <p>'<%= search %>' 검색 결과가 없습니다.</p>
-                            <a href="/board/<%= category.slug %>" class="btn btn-outline-secondary">전체 목록 보기</a>
-                        <% } else { %>
-                            <p>첫 번째 게시글을 작성해보세요!</p>
-                            <% if (canWrite) { %>
-                                <a href="/board/<%= category.slug %>/write" class="btn btn-primary">글쓰기</a>
-                            <% } %>
-                        <% } %>
-                    </div>
-                <% } %>
-            </div>
-            
-            <!-- 페이지네이션 -->
-            <% if (totalPages > 1) { %>
-                <div class="pagination-container">
-                    <nav aria-label="게시글 페이지네이션">
-                        <ul class="pagination justify-content-center">
-                            <!-- 이전 페이지 -->
-                            <% if (currentPage > 1) { %>
-                                <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) + '&searchType=' + searchType : '' %>">
-                                        <i class="bi bi-chevron-left"></i>
-                                    </a>
-                                </li>
-                            <% } %>
-                            
-                            <!-- 페이지 번호들 -->
-                            <% 
-                                let startPage = Math.max(1, currentPage - 2);
-                                let endPage = Math.min(totalPages, currentPage + 2);
-                            %>
-                            
-                            <% if (startPage > 1) { %>
-                                <li class="page-item">
-                                    <a class="page-link" href="?page=1<%= search ? '&search=' + encodeURIComponent(search) + '&searchType=' + searchType : '' %>">1</a>
-                                </li>
-                                <% if (startPage > 2) { %>
-                                    <li class="page-item disabled">
-                                        <span class="page-link">...</span>
-                                    </li>
-                                <% } %>
-                            <% } %>
-                            
-                            <% for (let i = startPage; i <= endPage; i++) { %>
-                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                    <a class="page-link" href="?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) + '&searchType=' + searchType : '' %>">
-                                        <%= i %>
-                                    </a>
-                                </li>
-                            <% } %>
-                            
-                            <% if (endPage < totalPages) { %>
-                                <% if (endPage < totalPages - 1) { %>
-                                    <li class="page-item disabled">
-                                        <span class="page-link">...</span>
-                                    </li>
-                                <% } %>
-                                <li class="page-item">
-                                    <a class="page-link" href="?page=<%= totalPages %><%= search ? '&search=' + encodeURIComponent(search) + '&searchType=' + searchType : '' %>">
-                                        <%= totalPages %>
-                                    </a>
-                                </li>
-                            <% } %>
-                            
-                            <!-- 다음 페이지 -->
-                            <% if (currentPage < totalPages) { %>
-                                <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) + '&searchType=' + searchType : '' %>">
-                                        <i class="bi bi-chevron-right"></i>
-                                    </a>
-                                </li>
-                            <% } %>
-                        </ul>
-                    </nav>
                 </div>
-            <% } %>
+
+                <!-- 페이지네이션 -->
+                <% if (totalPages> 1) { %>
+                    <div class="pagination-container">
+                        <nav aria-label="게시글 페이지네이션">
+                            <ul class="pagination justify-content-center">
+                                <!-- 이전 페이지 -->
+                                <% if (currentPage> 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                            href="?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) + '&searchType=' + searchType : '' %>">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                    <% } %>
+
+                                        <!-- 페이지 번호들 -->
+                                        <% let startPage=Math.max(1, currentPage - 2); let endPage=Math.min(totalPages,
+                                            currentPage + 2); %>
+
+                                            <% if (startPage> 1) { %>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                        href="?page=1<%= search ? '&search=' + encodeURIComponent(search) + '&searchType=' + searchType : '' %>">1</a>
+                                                </li>
+                                                <% if (startPage> 2) { %>
+                                                    <li class="page-item disabled">
+                                                        <span class="page-link">...</span>
+                                                    </li>
+                                                    <% } %>
+                                                        <% } %>
+
+                                                            <% for (let i=startPage; i <=endPage; i++) { %>
+                                                                <li
+                                                                    class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                                                    <a class="page-link"
+                                                                        href="?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) + '&searchType=' + searchType : '' %>">
+                                                                        <%= i %>
+                                                                    </a>
+                                                                </li>
+                                                                <% } %>
+
+                                                                    <% if (endPage < totalPages) { %>
+                                                                        <% if (endPage < totalPages - 1) { %>
+                                                                            <li class="page-item disabled">
+                                                                                <span class="page-link">...</span>
+                                                                            </li>
+                                                                            <% } %>
+                                                                                <li class="page-item">
+                                                                                    <a class="page-link"
+                                                                                        href="?page=<%= totalPages %><%= search ? '&search=' + encodeURIComponent(search) + '&searchType=' + searchType : '' %>">
+                                                                                        <%= totalPages %>
+                                                                                    </a>
+                                                                                </li>
+                                                                                <% } %>
+
+                                                                                    <!-- 다음 페이지 -->
+                                                                                    <% if (currentPage < totalPages) {
+                                                                                        %>
+                                                                                        <li class="page-item">
+                                                                                            <a class="page-link"
+                                                                                                href="?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) + '&searchType=' + searchType : '' %>">
+                                                                                                <i
+                                                                                                    class="bi bi-chevron-right"></i>
+                                                                                            </a>
+                                                                                        </li>
+                                                                                        <% } %>
+                            </ul>
+                        </nav>
+                    </div>
+                    <% } %>
+            </div>
+
+            <!-- 🔥 오른쪽 액션 버튼 그룹 (글쓰기만) -->
+            <div class="board-action-buttons">
+                <% if (canWrite) { %>
+                    <a href="/board/<%= category.slug %>/write" class="board-floating-btn" title="글쓰기">
+                        <i class="bi bi-pencil-square"></i>
+                        <span class="btn-text">글쓰기</span>
+                    </a>
+                    <% } %>
+            </div>
         </div>
-        
-        <!-- 🔥 오른쪽 액션 버튼 그룹 (글쓰기만) -->
-        <div class="board-action-buttons">
-            <% if (canWrite) { %>
-                <a href="/board/<%= category.slug %>/write" class="board-floating-btn" title="글쓰기">
-                    <i class="bi bi-pencil-square"></i>
-                    <span class="btn-text">글쓰기</span>
-                </a>
-            <% } %>
-        </div>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        // 🔥 조회수 포맷 함수 추가
-        function formatViews(views) {
-            if (views >= 1000000) {
-                return (views / 1000000).toFixed(1).replace('.0', '') + 'M';
-            }
-            if (views >= 1000) {
-                return (views / 1000).toFixed(1).replace('.0', '') + 'k';
-            }
-            return views.toString();
-        }
-        
-        // 페이지 로드 후 포맷 적용
-        document.addEventListener('DOMContentLoaded', function() {
-            // 조회수 포맷 적용
-            document.querySelectorAll('.meta-views').forEach(function(element) {
-                const views = parseInt(element.textContent);
-                if (!isNaN(views)) {
-                    element.textContent = formatViews(views);
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script>
+            // 🔥 조회수 포맷 함수 추가
+            function formatViews(views) {
+                if (views >= 1000000) {
+                    return (views / 1000000).toFixed(1).replace('.0', '') + 'M';
                 }
+                if (views >= 1000) {
+                    return (views / 1000).toFixed(1).replace('.0', '') + 'k';
+                }
+                return views.toString();
+            }
+
+            // 페이지 로드 후 포맷 적용
+            document.addEventListener('DOMContentLoaded', function () {
+                // 조회수 포맷 적용
+                document.querySelectorAll('.meta-views').forEach(function (element) {
+                    const views = parseInt(element.textContent);
+                    if (!isNaN(views)) {
+                        element.textContent = formatViews(views);
+                    }
+                });
             });
-        });
-    </script>
-    <%- include('../partials/footer') %>
+        </script>
+        <%- include('../partials/footer') %>
 </body>
+
 </html>

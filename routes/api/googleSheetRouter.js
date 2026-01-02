@@ -85,7 +85,7 @@ router.get('/sb3', async (req, res) => {
 
 router.get('/ent', async (req, res) => {
   try {
-    const data = await getSheetData('ent!A2:F');
+    const data = await getSheetData('ent!A2:G');
     console.log(`✅ ENT Sheet Data Loaded: ${data ? data.length : 0} rows`);
     res.json(data);
   } catch (error) {
