@@ -1300,14 +1300,34 @@ class ProjectCardManager {
                 }
             }
 
-            // 다운로드 버튼 (그대로 유지)
+            // 다운로드 버튼 (Extension 연동)
             if (e.target.classList.contains('entry-legacy-btn')) {
                 e.preventDefault();
                 e.stopPropagation();
 
                 const projectUrl = e.target.getAttribute('data-url');
                 if (projectUrl) {
-                    this.downloadEntryFile(projectUrl);
+                    // 카드에서 프로젝트 정보 추출
+                    const card = e.target.closest('.project-card');
+                    const projectName = card?.querySelector('.project-card-title')?.textContent || 'Entry Project';
+
+                    // 사용자 ID 가져오기
+                    const userID = this.userID || document.getElementById('user-id')?.value || 'guest';
+
+                    console.log('🚀 Entry 다운로드 버튼 클릭 - Extension 연동:', projectName);
+
+                    if (window.extensionBridge) {
+                        window.extensionBridge.openEditor({
+                            platform: 'entry',
+                            missionId: 'entry_download_open', // 고유 ID 부여
+                            userId: userID,
+                            missionTitle: projectName,
+                            templateUrl: projectUrl
+                        });
+                    } else {
+                        console.warn('ExtensionBridge not found, falling back to download');
+                        this.downloadEntryFile(projectUrl);
+                    }
                 }
             }
         });
