@@ -1,4 +1,3 @@
-```javascript
 const EntryAdapter = require('./adapters/EntryAdapter');
 const ScratchAdapter = require('./adapters/ScratchAdapter');
 const S3Manager = require('../lib_storage/s3Manager');
