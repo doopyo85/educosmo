@@ -10,85 +10,116 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/styles.css">
     <style>
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
         .guide-hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 60px 0;
+            background: #ffffff;
+            color: #212529;
+            padding: 80px 0;
             text-align: center;
+            border-bottom: 1px solid #e9ecef;
         }
 
         .guide-section {
-            padding: 40px 0;
+            padding: 60px 0;
         }
 
         .feature-card {
             background: white;
-            border-radius: 12px;
-            padding: 32px;
-            /* Increased padding */
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 40px 30px;
+            margin-bottom: 24px;
             height: 100%;
         }
 
-        /* Hover animation removed as requested */
-
         .step-badge {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background: #212529;
             color: white;
-            width: 48px;
-            /* Slightly larger */
-            height: 48px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
+            font-weight: 700;
+            font-size: 1.1rem;
             margin-right: 16px;
             flex-shrink: 0;
         }
 
         .platform-icon {
-            font-size: 56px;
-            /* Larger icon */
-            margin-bottom: 20px;
+            font-size: 48px;
+            margin-bottom: 24px;
+            color: #212529;
         }
 
         .download-btn {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background-color: #212529;
             color: white;
             border: none;
-            padding: 16px 40px;
-            /* Larger button */
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 18px;
+            padding: 15px 40px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
             text-decoration: none;
             display: inline-block;
+            transition: background-color 0.2s;
         }
 
         .download-btn:hover {
+            background-color: #000;
             color: white;
         }
 
         .code-block {
-            background: #2d3748;
-            color: #edf2f7;
-            padding: 20px;
-            border-radius: 8px;
+            background: #f1f3f5;
+            color: #212529;
+            padding: 15px 20px;
+            border-radius: 6px;
             margin: 16px 0;
             font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 1.1rem;
+            border: 1px solid #dee2e6;
+            font-weight: 600;
+        }
+
+        .card {
+            border: 1px solid #dee2e6;
+            box-shadow: none;
+            border-radius: 8px;
+        }
+
+        .card-header {
+            background-color: #ffffff;
+            border-bottom: 1px solid #dee2e6;
+            padding: 20px 30px;
+        }
+
+        .card-header h4 {
+            color: #212529;
+            font-weight: 700;
             font-size: 1.2rem;
-            /* Larger text */
-            font-weight: bold;
-            border: 2px solid #4a5568;
-            position: relative;
         }
 
         .card-body {
-            padding: 2rem;
-            /* More spacing in instruction cards */
+            padding: 30px;
+            line-height: 1.6;
+        }
+
+        .text-muted {
+            color: #6c757d !important;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            color: #212529;
         }
     </style>
 </head>
@@ -150,96 +181,137 @@
 
                 <!-- Chrome 설치 -->
                 <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header">
                         <h4 class="mb-0"><i class="bi bi-browser-chrome"></i> Chrome 브라우저에서 설치</h4>
                     </div>
                     <div class="card-body">
-                        <div class="mb-3">
-                            <span class="step-badge">1</span>
-                            <strong>확장프로그램 다운로드</strong>
-                            <p class="ms-5 mt-2">아래 버튼을 클릭하여 확장프로그램을 다운로드하세요.</p>
-                            <div class="ms-5">
-                                <a href="/extension/codingnplay-extension.zip"
-                                    class="download-btn text-decoration-none">
-                                    <i class="bi bi-download"></i> 확장프로그램 다운로드
-                                </a>
+                        <div class="mb-4">
+                            <div class="d-flex">
+                                <span class="step-badge">1</span>
+                                <div>
+                                    <strong class="d-block fs-5 mb-2">확장프로그램 다운로드</strong>
+                                    <p class="mb-2">아래 버튼을 클릭하여 확장프로그램을 다운로드하세요.</p>
+                                    <a href="/extension/codingnplay-extension.zip" class="download-btn">
+                                        <i class="bi bi-download"></i> 확장프로그램 다운로드
+                                    </a>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <span class="step-badge">2</span>
-                            <strong>압축 해제</strong>
-                            <p class="ms-5 mt-2">다운로드한 ZIP 파일을 원하는 위치에 압축 해제하세요.</p>
-                        </div>
-
-                        <div class="mb-3">
-                            <span class="step-badge">3</span>
-                            <strong>Chrome 확장프로그램 페이지 열기</strong>
-                            <p class="ms-5 mt-2">새 탭을 열고 주소창에 아래 주소를 입력하세요 (복사해서 붙여넣기):</p>
-                            <div class="code-block ms-5">
-                                chrome://extensions
+                        <div class="mb-4">
+                            <div class="d-flex">
+                                <span class="step-badge">2</span>
+                                <div>
+                                    <strong class="d-block fs-5 mb-2">압축 해제</strong>
+                                    <p class="mb-0">다운로드한 ZIP 파일을 원하는 위치에 압축 해제하세요.</p>
+                                </div>
                             </div>
-                            <p class="ms-5 text-danger"><small>* 보안상의 이유로 링크를 클릭해서 바로 이동할 수 없습니다.</small></p>
                         </div>
 
-                        <div class="mb-3">
-                            <span class="step-badge">4</span>
-                            <strong>개발자 모드 활성화</strong>
-                            <p class="ms-5 mt-2">우측 상단의 "개발자 모드" 토글을 켜세요.</p>
+                        <div class="mb-4">
+                            <div class="d-flex">
+                                <span class="step-badge">3</span>
+                                <div>
+                                    <strong class="d-block fs-5 mb-2">Chrome 확장프로그램 페이지 열기</strong>
+                                    <p class="mb-2">새 탭을 열고 주소창에 아래 주소를 입력하세요:</p>
+                                    <div class="code-block">
+                                        chrome://extensions
+                                    </div>
+                                    <p class="text-danger small mb-0">* 보안상의 이유로 링크를 클릭해서 바로 이동할 수 없습니다.</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <span class="step-badge">5</span>
-                            <strong>확장프로그램 로드</strong>
-                            <p class="ms-5 mt-2">"압축해제된 확장 프로그램을 로드합니다" 버튼을 클릭하고 압축 해제한 폴더를 선택하세요.</p>
+                        <div class="mb-4">
+                            <div class="d-flex">
+                                <span class="step-badge">4</span>
+                                <div>
+                                    <strong class="d-block fs-5 mb-2">개발자 모드 활성화</strong>
+                                    <p class="mb-0">우측 상단의 "개발자 모드" 토글을 켜세요.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex">
+                                <span class="step-badge">5</span>
+                                <div>
+                                    <strong class="d-block fs-5 mb-2">확장프로그램 로드</strong>
+                                    <p class="mb-0">"압축해제된 확장 프로그램을 로드합니다" 버튼을 클릭하고 압축 해제한 폴더를 선택하세요.</p>
+                                </div>
+                            </div>
                         </div>
 
                         <div>
-                            <span class="step-badge">6</span>
-                            <strong>설치 완료!</strong>
-                            <p class="ms-5 mt-2">브라우저 우측 상단에 확장프로그램 아이콘이 표시됩니다.</p>
+                            <div class="d-flex">
+                                <span class="step-badge">6</span>
+                                <div>
+                                    <strong class="d-block fs-5 mb-2">설치 완료!</strong>
+                                    <p class="mb-0">브라우저 우측 상단에 확장프로그램 아이콘이 표시됩니다.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Edge 설치 -->
                 <div class="card mb-4">
-                    <div class="card-header bg-info text-white">
+                    <div class="card-header">
                         <h4 class="mb-0"><i class="bi bi-browser-edge"></i> Edge 브라우저에서 설치</h4>
                     </div>
                     <div class="card-body">
-                        <div class="mb-3">
-                            <span class="step-badge">1</span>
-                            <strong>확장프로그램 다운로드 및 압축 해제</strong>
-                            <p class="ms-5 mt-2">위의 Chrome 설치 방법 1-2단계와 동일합니다.</p>
-                        </div>
-
-                        <div class="mb-3">
-                            <span class="step-badge">2</span>
-                            <strong>Edge 확장 페이지 열기</strong>
-                            <p class="ms-5 mt-2">새 탭을 열고 주소창에 아래 주소를 입력하세요 (복사해서 붙여넣기):</p>
-                            <div class="code-block ms-5">
-                                edge://extensions
+                        <div class="mb-4">
+                            <div class="d-flex">
+                                <span class="step-badge">1</span>
+                                <div>
+                                    <strong class="d-block fs-5 mb-2">확장프로그램 다운로드 및 압축 해제</strong>
+                                    <p class="mb-0">위의 Chrome 설치 방법 1-2단계와 동일합니다.</p>
+                                </div>
                             </div>
-                            <p class="ms-5 text-danger"><small>* 보안상의 이유로 링크를 클릭해서 바로 이동할 수 없습니다.</small></p>
                         </div>
 
-                        <div class="mb-3">
-                            <span class="step-badge">3</span>
-                            <strong>개발자 모드 활성화</strong>
-                            <p class="ms-5 mt-2">좌측 하단의 "개발자 모드" 토글을 켜세요.</p>
+                        <div class="mb-4">
+                            <div class="d-flex">
+                                <span class="step-badge">2</span>
+                                <div>
+                                    <strong class="d-block fs-5 mb-2">Edge 확장 페이지 열기</strong>
+                                    <p class="mb-2">새 탭을 열고 주소창에 아래 주소를 입력하세요:</p>
+                                    <div class="code-block">
+                                        edge://extensions
+                                    </div>
+                                    <p class="text-danger small mb-0">* 보안상의 이유로 링크를 클릭해서 바로 이동할 수 없습니다.</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <span class="step-badge">4</span>
-                            <strong>확장프로그램 로드</strong>
-                            <p class="ms-5 mt-2">"압축을 푼 항목 로드" 버튼을 클릭하고 압축 해제한 폴더를 선택하세요.</p>
+                        <div class="mb-4">
+                            <div class="d-flex">
+                                <span class="step-badge">3</span>
+                                <div>
+                                    <strong class="d-block fs-5 mb-2">개발자 모드 활성화</strong>
+                                    <p class="mb-0">좌측 하단의 "개발자 모드" 토글을 켜세요.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex">
+                                <span class="step-badge">4</span>
+                                <div>
+                                    <strong class="d-block fs-5 mb-2">확장프로그램 로드</strong>
+                                    <p class="mb-0">"압축을 푼 항목 로드" 버튼을 클릭하고 압축 해제한 폴더를 선택하세요.</p>
+                                </div>
+                            </div>
                         </div>
 
                         <div>
-                            <span class="step-badge">5</span>
-                            <strong>설치 완료!</strong>
-                            <p class="ms-5 mt-2">브라우저 우측 상단에 확장프로그램 아이콘이 표시됩니다.</p>
+                            <div class="d-flex">
+                                <span class="step-badge">5</span>
+                                <div>
+                                    <strong class="d-block fs-5 mb-2">설치 완료!</strong>
+                                    <p class="mb-0">브라우저 우측 상단에 확장프로그램 아이콘이 표시됩니다.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
