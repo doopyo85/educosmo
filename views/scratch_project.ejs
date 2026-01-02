@@ -14,6 +14,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="/header.js"></script>
+    <script src="/js/extension-bridge.js"></script>
 
     <script>
         const projectType = 'scratch';
@@ -36,15 +37,15 @@
                 <div class="apple-toolbar-container">
                     <!-- 고정 버튼 (왼쪽) -->
                     <div class="d-flex align-items-center gap-2">
-                        <button id="newProjectBtn" class="apple-btn-primary">
-                            <i class="bi bi-plus-lg"></i> 새로 시작하기
-                        </button>
-                        <a href="https://scratch.mit.edu" target="_blank" class="apple-btn-primary">
-                            <i class="bi bi-box-arrow-up-right"></i> scratch.mit.edu
+                        <!-- 🔥 External Link -->
+                        <a href="https://scratch.mit.edu/projects/editor/" target="_blank" class="apple-btn-primary"
+                            id="openOfficialScratchBtn">
+                            <i class="bi bi-box-arrow-up-right"></i> Scratch 공식 에디터 열기
                         </a>
-                        <!-- 🔥 불러오기 버튼 추가 -->
+
+                        <!-- 🔥 불러오기 버튼 (유지: 기존 S3 파일 확인용) -->
                         <button onclick="openScratchProjectLoadModal()" class="apple-btn-primary">
-                            <i class="bi bi-folder2-open"></i> 불러오기
+                            <i class="bi bi-folder2-open"></i> 내 프로젝트 보기
                         </button>
                         <div class="apple-divider mx-3"></div>
                     </div>
@@ -58,6 +59,12 @@
             <div id="edu-content">
                 <div id="content-container" class="tab-content mt-3"></div>
             </div>
+
+            <!-- 🔥 안내 메시지 -->
+            <div class="alert alert-info text-center mt-4">
+                <i class="bi bi-info-circle-fill"></i>
+                코딩앤플레이 확장 프로그램을 설치하면 공식 에디터에서 작성한 코드를 바로 제출할 수 있습니다.
+            </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
@@ -68,21 +75,24 @@
 
         <script>
             /**
-             * 🔥 Scratch 프로젝트 불러오기 (ProjectStorageModal 사용)
-             * - scratch-gui는 project_file 파라미터로 S3 URL을 받아 프로젝트를 로드함
-             * - API에서 presigned URL을 받아 project_file로 전달
+             * 🔥 Scratch 프로젝트 확인 (불러오기 아님, 다운로드 제공)
              */
             function openScratchProjectLoadModal() {
                 const modal = new ProjectStorageModal({
                     platform: 'scratch',
                     onLoad: (data) => {
                         console.log('📂 Scratch 프로젝트 선택됨:', data);
-                        
-                        // presigned URL이 있으면 project_file 파라미터로 전달
+
+                        // 다운로드 또는 공식 에디터에서 열기 안내
                         if (data.url) {
-                            const scratchEditorUrl = `/scratch?project_file=${encodeURIComponent(data.url)}`;
-                            console.log('🚀 Scratch 에디터 URL:', scratchEditorUrl);
-                            window.open(scratchEditorUrl, '_blank');
+                            // 바로 다운로드
+                            const link = document.createElement('a');
+                            link.href = data.url;
+                            link.download = data.title || 'project.sb3';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            alert('프로젝트가 다운로드되었습니다. Scratch 공식 에디터에서 "컴퓨터에서 불러오기"를 사용하세요.');
                         } else {
                             alert('프로젝트 URL을 가져올 수 없습니다.');
                         }
@@ -91,20 +101,16 @@
                 modal.openLoadModal();
             }
 
-            // 🔥 새로 시작하기 버튼
-            document.getElementById('newProjectBtn').addEventListener('click', function () {
-                console.log('🎯 새로 시작하기 버튼 클릭');
-
-                // Scratch 에디터로 이동 (자체 서버)
-                window.open('/scratch', '_blank');
-
+            // 🔥 공식 사이트 이동 로그
+            document.getElementById('openOfficialScratchBtn').addEventListener('click', function () {
+                console.log('Target: Official Scratch');
                 // 학습 활동 기록
                 try {
                     fetch('/learning/log', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            action: 'scratch_new_project',
+                            action: 'scratch_open_official',
                             data: {
                                 userID: document.getElementById('user-id').value,
                                 timestamp: new Date().toISOString()

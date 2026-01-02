@@ -190,13 +190,23 @@ store.setMaxListeners(20);
 
 // CORS 설정
 app.use(cors({
-  origin: [
-    'https://app.codingnplay.co.kr',
-    'https://cosmoedu.co.kr',
-    'http://localhost:3000',
-    'https://localhost:3000',
-    'https://pong2.app'
-  ],
+  origin: function(origin, callback) {
+    // 허용된 Origin 목록
+    const allowedOrigins = [
+      'https://app.codingnplay.co.kr',
+      'https://cosmoedu.co.kr',
+      'http://localhost:3000',
+      'https://localhost:3000',
+      'https://pong2.app'
+    ];
+
+    // Chrome Extension Origin 허용 (chrome-extension://)
+    if (!origin || allowedOrigins.includes(origin) || origin.startsWith('chrome-extension://') || origin.startsWith('moz-extension://')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
@@ -508,8 +518,14 @@ if (isMain || SERVICE_TYPE === 'entry') {
 // 🔥 통합 프로젝트 저장 시스템 라우터
 app.use('/api/projects', authenticateUser, require('./routes/api/projectRouter'));
 
-// 🔥 S3 브라우저 API 라우터
+// 🔥 통합 S3 브라우저 API 라우터
 app.use('/api/s3', authenticateUser, require('./routes/api/s3BrowserRouter'));
+
+// 🔥 External Submission Router (Extension)
+app.use('/api/external', require('./routes/api/externalSubmissionRouter'));
+
+// 🔥 Extension API Router (Presigned URL based)
+app.use('/api/extension', require('./routes/api/extensionRouter'));
 
 // 페이지 라우터 등록
 const routes = {
@@ -773,6 +789,15 @@ app.get('/scratch_project', authenticateUser, checkPageAccess('/scratch_project'
 
 app.get('/scratch', authenticateUser, (req, res) => {
   res.redirect(config.SERVICES.SCRATCH);
+});
+
+// 🔥 Extension Guide Page
+app.get('/extension-guide', (req, res) => {
+  res.render('extension-guide', {
+    role: req.session.role || 'guest',
+    userID: req.session.userID || null,
+    centerID: req.session.centerID || null
+  });
 });
 
 // 🔥 COS 자격증 문제풀이 에디터 (문제 이미지 + 에디터 분할 화면)

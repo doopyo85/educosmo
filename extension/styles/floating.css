@@ -1,0 +1,323 @@
+/**
+ * 코딩앤플레이 확장프로그램 - 플로팅 버튼 스타일
+ */
+
+/* ============================================
+   컨테이너
+   ============================================ */
+#cnp-floating-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+}
+
+.cnp-floating-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* ============================================
+   과제 정보 배지
+   ============================================ */
+.cnp-mission-info {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  animation: cnp-slideIn 0.3s ease;
+}
+
+.cnp-mission-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cnp-mission-title {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================
+   버튼 그룹
+   ============================================ */
+.cnp-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.cnp-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.cnp-btn:hover {
+  transform: translateY(-2px);
+}
+
+.cnp-btn:active {
+  transform: translateY(0);
+}
+
+/* 제출 버튼 */
+.cnp-btn-submit {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  padding: 14px 24px;
+  font-size: 15px;
+  box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4);
+}
+
+.cnp-btn-submit:hover {
+  box-shadow: 0 6px 20px rgba(56, 239, 125, 0.5);
+}
+
+/* 정보 버튼 */
+.cnp-btn-info {
+  background: white;
+  color: #666;
+  padding: 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.cnp-btn-info:hover {
+  background: #f5f5f5;
+}
+
+.cnp-icon {
+  font-size: 16px;
+}
+
+/* ============================================
+   모달 공통
+   ============================================ */
+.cnp-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999999;
+}
+
+.cnp-modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.cnp-modal-content {
+  position: relative;
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: cnp-modalIn 0.3s ease;
+}
+
+.cnp-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.cnp-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.cnp-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.cnp-modal-close:hover {
+  color: #333;
+}
+
+.cnp-modal-body {
+  margin-bottom: 24px;
+}
+
+.cnp-modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* ============================================
+   파일 업로드 모달
+   ============================================ */
+.cnp-guide {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.cnp-guide p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.cnp-guide-highlight {
+  background: #fff3cd;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 12px 0 !important;
+  font-weight: 600;
+  color: #856404;
+}
+
+.cnp-file-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.cnp-btn-file {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 24px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.cnp-file-name {
+  font-size: 13px;
+  color: #999;
+}
+
+.cnp-file-name.selected {
+  color: #11998e;
+  font-weight: 600;
+}
+
+.cnp-btn-cancel {
+  background: #f5f5f5;
+  color: #666;
+  padding: 12px 24px;
+}
+
+.cnp-btn-confirm {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  padding: 12px 24px;
+  box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3);
+}
+
+.cnp-btn-confirm:disabled {
+  background: #ccc;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================
+   진행 상태 모달
+   ============================================ */
+.cnp-modal-progress {
+  text-align: center;
+  padding: 40px;
+}
+
+.cnp-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #11998e;
+  border-radius: 50%;
+  animation: cnp-spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+/* ============================================
+   완료 모달
+   ============================================ */
+.cnp-modal-complete {
+  text-align: center;
+  padding: 40px;
+}
+
+.cnp-complete-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+}
+
+.cnp-modal-complete h3 {
+  margin: 0 0 8px;
+  color: #11998e;
+}
+
+.cnp-modal-complete p {
+  margin: 0 0 24px;
+  color: #666;
+}
+
+/* ============================================
+   애니메이션
+   ============================================ */
+@keyframes cnp-slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes cnp-modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes cnp-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

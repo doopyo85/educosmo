@@ -1,0 +1,1835 @@
+# 코딩앤플레이 학습도우미 확장프로그램 명세서
+
+## 📋 문서 정보
+
+| 항목 | 내용 |
+|------|------|
+| 문서명 | 코딩앤플레이 학습도우미 Chrome/Edge 확장프로그램 기술 명세서 |
+| 버전 | 1.0.0 |
+| 작성일 | 2025-01-02 |
+| 배포방식 | 개발자 모드 (스토어 등록 없음) |
+
+---
+
+## 1. 개요
+
+### 1.1 목적
+
+본 확장프로그램은 코딩앤플레이 학습 플랫폼에서 외부 공식 코딩 도구(Entry, Scratch, App Inventor)와의 연동을 지원합니다. 코딩앤플레이는 에디터를 직접 제공하지 않고, 공식 에디터에서 생성된 학습 결과물만을 수집·분석·저장합니다.
+
+### 1.2 핵심 원칙
+
+```
+❌ 하지 않는 것
+- 에디터 직접 호스팅
+- 코드 실행 환경 제공
+- 외부 API 자동 크롤링
+
+⭕ 하는 것  
+- 공식 에디터로 프로젝트 열기 (새 창)
+- 사용자 명시적 제출로 결과 파일 수집
+- S3 저장 및 학습 이력 관리
+```
+
+### 1.3 지원 플랫폼
+
+| 플랫폼 | 공식 URL | 파일 형식 | 자동 추출 |
+|--------|----------|----------|----------|
+| Scratch | scratch.mit.edu | .sb3 | ✅ (공유 프로젝트) |
+| Entry | playentry.org | .ent |⚠️ 파일 선택 |
+| App Inventor | ai2.appinventor.mit.edu | .aia | ⚠️ 파일 선택 |
+
+---
+
+## 2. 시스템 아키텍처
+
+### 2.1 전체 구조
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        사용자 브라우저                            │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │              크롬/엣지 확장프로그램                          │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │  │
+│  │  │ background  │  │  content    │  │   popup     │        │  │
+│  │  │   .js       │  │   .js       │  │   .html     │        │  │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘        │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                              │                                   │
+│         ┌────────────────────┼────────────────────┐              │
+│         ▼                    ▼                    ▼              │
+│  ┌─────────────┐      ┌─────────────┐      ┌─────────────┐      │
+│  │ playentry   │      │ scratch     │      │ appinventor │      │
+│  │ .org        │      │ .mit.edu    │      │ .mit.edu    │      │
+│  │ (공식)       │      │ (공식)       │      │ (공식)       │      │
+│  └─────────────┘      └─────────────┘      └─────────────┘      │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼ 제출
+┌─────────────────────────────────────────────────────────────────┐
+│                    코딩앤플레이 서버                              │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │  app.codingnplay.co.kr                                    │  │
+│  │  ├── /api/mission/:id      ← 과제 정보 조회                 │  │
+│  │  ├── /api/submit           ← 제출 데이터 수신               │  │
+│  │  └── /api/upload-url       ← S3 Presigned URL 발급         │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                               │                                  │
+│                               ▼                                  │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │  AWS S3 (codingnplay-learning-data)                       │  │
+│  │  ├── scratch/{userId}/{missionId}/                        │  │
+│  │  │   ├── project.sb3                                      │  │
+│  │  │   ├── metadata.json                                    │  │
+│  │  │   └── screenshot.png (선택)                             │  │
+│  │  ├── entry/{userId}/{missionId}/                          │  │
+│  │  │   ├── project.ent                                      │  │
+│  │  │   └── metadata.json                                    │  │
+│  │  └── appinventor/{userId}/{missionId}/                    │  │
+│  │      ├── project.aia                                      │  │
+│  │      └── metadata.json                                    │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 2.2 데이터 흐름
+
+```
+[Phase 1: 프로젝트 열기]
+─────────────────────────────────────────────────────────────────
+1. 사용자가 educodingnplay에서 과제 선택
+2. "프로젝트 열기" 버튼 클릭
+3. 확장프로그램이 과제 정보(missionId, userId, platform, templateUrl) 저장
+4. 해당 플랫폼 공식 에디터를 새 탭으로 열기
+   - Entry: https://playentry.org/ws/new (또는 템플릿 URL)
+   - Scratch: https://scratch.mit.edu/projects/editor
+   - App Inventor: https://ai2.appinventor.mit.edu
+
+[Phase 2: 코딩 작업]
+─────────────────────────────────────────────────────────────────
+5. 사용자가 공식 에디터에서 코딩 작업 수행
+6. 확장프로그램 플로팅 버튼이 화면에 표시됨
+
+[Phase 3: 제출]
+─────────────────────────────────────────────────────────────────
+7. 사용자가 플로팅 "제출하기" 버튼 클릭
+8. 플랫폼별 파일 수집:
+   - Scratch (공유됨): API로 자동 추출
+   - Scratch (비공유) / Entry / App Inventor: 파일 선택 다이얼로그
+9. 서버에서 S3 Presigned URL 발급
+10. 파일 직접 S3 업로드
+11. 메타데이터 서버 전송 → DB 저장
+12. 완료 알림
+```
+
+---
+
+## 3. 파일 구조
+
+```
+codingnplay-extension/
+├── manifest.json              # 확장프로그램 설정
+├── background.js              # 서비스 워커 (API 통신, 이벤트 처리)
+├── content.js                 # 콘텐츠 스크립트 (플로팅 버튼, 파일 수집)
+├── popup/
+│   ├── popup.html             # 팝업 UI
+│   ├── popup.css              # 팝업 스타일
+│   └── popup.js               # 팝업 로직
+├── styles/
+│   └── floating.css           # 플로팅 버튼 스타일
+├── lib/
+│   └── utils.js               # 공통 유틸리티
+├── icons/
+│   ├── icon16.png
+│   ├── icon48.png
+│   └── icon128.png
+└── README.md                  # 설치 가이드
+```
+
+---
+
+## 4. 상세 명세
+
+### 4.1 manifest.json
+
+```json
+{
+  "manifest_version": 3,
+  "name": "코딩앤플레이 학습도우미",
+  "version": "1.0.0",
+  "description": "Entry, Scratch, App Inventor 과제 제출 도우미",
+  
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs"
+  ],
+  
+  "host_permissions": [
+    "https://playentry.org/*",
+    "https://scratch.mit.edu/*",
+    "https://projects.scratch.mit.edu/*",
+    "https://ai2.appinventor.mit.edu/*",
+    "https://code.appinventor.mit.edu/*",
+    "https://app.codingnplay.co.kr/*"
+  ],
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "https://playentry.org/ws/*",
+        "https://playentry.org/ws",
+        "https://scratch.mit.edu/projects/*",
+        "https://ai2.appinventor.mit.edu/*"
+      ],
+      "js": ["lib/utils.js", "content.js"],
+      "css": ["styles/floating.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://app.codingnplay.co.kr/*"
+      ],
+      "js": ["lib/utils.js", "content-codingnplay.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "background": {
+    "service_worker": "background.js"
+  },
+  
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
+```
+
+### 4.2 background.js (서비스 워커)
+
+```javascript
+/**
+ * 코딩앤플레이 확장프로그램 - Background Service Worker
+ * 
+ * 역할:
+ * - 메시지 라우팅
+ * - API 통신
+ * - 탭 관리
+ */
+
+// ============================================
+// 상수 정의
+// ============================================
+const CONFIG = {
+  API_BASE: 'https://app.codingnplay.co.kr/api',
+  PLATFORMS: {
+    scratch: {
+      name: 'Scratch',
+      editorUrl: 'https://scratch.mit.edu/projects/editor',
+      projectUrlPattern: /scratch\.mit\.edu\/projects\/(\d+)/,
+      fileExtension: '.sb3'
+    },
+    entry: {
+      name: 'Entry',
+      editorUrl: 'https://playentry.org/ws/new',
+      projectUrlPattern: /playentry\.org\/ws\/([a-zA-Z0-9]+)/,
+      fileExtension: '.ent'
+    },
+    appinventor: {
+      name: 'App Inventor',
+      editorUrl: 'https://ai2.appinventor.mit.edu',
+      projectUrlPattern: /appinventor\.mit\.edu/,
+      fileExtension: '.aia'
+    }
+  }
+};
+
+// ============================================
+// 메시지 핸들러
+// ============================================
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('[Background] 메시지 수신:', message.action);
+  
+  switch (message.action) {
+    case 'OPEN_EDITOR':
+      handleOpenEditor(message.data);
+      sendResponse({ success: true });
+      break;
+      
+    case 'GET_MISSION_INFO':
+      handleGetMissionInfo(sendResponse);
+      return true; // 비동기 응답
+      
+    case 'SUBMIT_PROJECT':
+      handleSubmitProject(message.data, sendResponse);
+      return true; // 비동기 응답
+      
+    case 'GET_UPLOAD_URL':
+      handleGetUploadUrl(message.data, sendResponse);
+      return true; // 비동기 응답
+      
+    case 'FETCH_SCRATCH_PROJECT':
+      handleFetchScratchProject(message.projectId, sendResponse);
+      return true; // 비동기 응답
+      
+    default:
+      console.warn('[Background] 알 수 없는 액션:', message.action);
+      sendResponse({ success: false, error: 'Unknown action' });
+  }
+});
+
+// ============================================
+// 에디터 열기
+// ============================================
+async function handleOpenEditor(data) {
+  const { platform, missionId, userId, templateUrl, missionTitle } = data;
+  
+  // 과제 정보 저장
+  await chrome.storage.local.set({
+    currentMission: {
+      platform,
+      missionId,
+      userId,
+      missionTitle,
+      templateUrl,
+      startedAt: new Date().toISOString()
+    }
+  });
+  
+  // 에디터 URL 결정
+  let editorUrl = templateUrl || CONFIG.PLATFORMS[platform]?.editorUrl;
+  
+  if (!editorUrl) {
+    console.error('[Background] 알 수 없는 플랫폼:', platform);
+    return;
+  }
+  
+  // 새 탭으로 에디터 열기
+  chrome.tabs.create({ url: editorUrl });
+  
+  console.log('[Background] 에디터 열기:', { platform, editorUrl, missionId });
+}
+
+// ============================================
+// 과제 정보 조회
+// ============================================
+async function handleGetMissionInfo(sendResponse) {
+  try {
+    const result = await chrome.storage.local.get('currentMission');
+    sendResponse({ 
+      success: true, 
+      data: result.currentMission || null 
+    });
+  } catch (error) {
+    console.error('[Background] 과제 정보 조회 실패:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+// ============================================
+// S3 업로드 URL 발급
+// ============================================
+async function handleGetUploadUrl(data, sendResponse) {
+  const { platform, missionId, userId, fileName, fileType } = data;
+  
+  try {
+    const response = await fetch(`${CONFIG.API_BASE}/upload-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        platform,
+        missionId,
+        userId,
+        fileName,
+        fileType
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const result = await response.json();
+    sendResponse({ success: true, data: result });
+    
+  } catch (error) {
+    console.error('[Background] 업로드 URL 발급 실패:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+// ============================================
+// 프로젝트 제출
+// ============================================
+async function handleSubmitProject(data, sendResponse) {
+  const { platform, missionId, userId, projectUrl, s3Key, fileName } = data;
+  
+  try {
+    const response = await fetch(`${CONFIG.API_BASE}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        platform,
+        missionId,
+        userId,
+        projectUrl,
+        s3Key,
+        fileName,
+        submittedAt: new Date().toISOString()
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    // 과제 정보 클리어 (선택적)
+    // await chrome.storage.local.remove('currentMission');
+    
+    sendResponse({ success: true, data: result });
+    
+  } catch (error) {
+    console.error('[Background] 제출 실패:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+// ============================================
+// Scratch 프로젝트 데이터 추출 (공유된 프로젝트)
+// ============================================
+async function handleFetchScratchProject(projectId, sendResponse) {
+  try {
+    const response = await fetch(
+      `https://projects.scratch.mit.edu/${projectId}`,
+      { method: 'GET' }
+    );
+    
+    if (!response.ok) {
+      // 공유되지 않은 프로젝트
+      sendResponse({ 
+        success: false, 
+        error: 'NOT_SHARED',
+        message: '프로젝트가 공유되지 않았습니다. 파일을 직접 업로드해주세요.'
+      });
+      return;
+    }
+    
+    const data = await response.json();
+    sendResponse({ success: true, data });
+    
+  } catch (error) {
+    console.error('[Background] Scratch 프로젝트 추출 실패:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+// ============================================
+// 확장프로그램 설치 시
+// ============================================
+chrome.runtime.onInstalled.addListener((details) => {
+  console.log('[Background] 확장프로그램 설치/업데이트:', details.reason);
+  
+  // 초기 설정
+  chrome.storage.local.set({
+    extensionVersion: chrome.runtime.getManifest().version,
+    installedAt: new Date().toISOString()
+  });
+});
+```
+
+### 4.3 content.js (에디터 페이지용)
+
+```javascript
+/**
+ * 코딩앤플레이 확장프로그램 - Content Script (에디터 페이지)
+ * 
+ * 역할:
+ * - 플로팅 제출 버튼 표시
+ * - 프로젝트 파일 수집
+ * - 제출 처리
+ */
+
+(function() {
+  'use strict';
+  
+  // ============================================
+  // 상수 및 설정
+  // ============================================
+  const PLATFORMS = {
+    'playentry.org': {
+      id: 'entry',
+      name: 'Entry',
+      fileExtension: '.ent',
+      exportGuide: '파일 → 내 컴퓨터에 저장하기'
+    },
+    'scratch.mit.edu': {
+      id: 'scratch', 
+      name: 'Scratch',
+      fileExtension: '.sb3',
+      exportGuide: '파일 → 컴퓨터에 저장하기'
+    },
+    'appinventor.mit.edu': {
+      id: 'appinventor',
+      name: 'App Inventor', 
+      fileExtension: '.aia',
+      exportGuide: 'Projects → Export selected project (.aia) to my computer'
+    }
+  };
+  
+  // ============================================
+  // 플랫폼 감지
+  // ============================================
+  function detectPlatform() {
+    const hostname = window.location.hostname;
+    
+    for (const [domain, config] of Object.entries(PLATFORMS)) {
+      if (hostname.includes(domain.split('.')[0])) {
+        return config;
+      }
+    }
+    return null;
+  }
+  
+  // ============================================
+  // 프로젝트 ID 추출
+  // ============================================
+  function extractProjectId(platform) {
+    const url = window.location.href;
+    
+    switch (platform.id) {
+      case 'scratch': {
+        const match = url.match(/\/projects\/(\d+)/);
+        return match ? match[1] : null;
+      }
+      case 'entry': {
+        const match = url.match(/\/ws\/([a-zA-Z0-9]+)/);
+        return match ? match[1] : null;
+      }
+      case 'appinventor': {
+        // App Inventor는 URL에 프로젝트 ID가 없음
+        return null;
+      }
+      default:
+        return null;
+    }
+  }
+  
+  // ============================================
+  // 플로팅 버튼 UI 생성
+  // ============================================
+  function createFloatingButton(platform) {
+    // 이미 존재하면 스킵
+    if (document.getElementById('cnp-floating-container')) {
+      return;
+    }
+    
+    const container = document.createElement('div');
+    container.id = 'cnp-floating-container';
+    container.innerHTML = `
+      <div class="cnp-floating-wrapper">
+        <div class="cnp-mission-info" id="cnp-mission-info">
+          <span class="cnp-mission-badge">과제 진행중</span>
+          <span class="cnp-mission-title" id="cnp-mission-title">-</span>
+        </div>
+        <div class="cnp-buttons">
+          <button class="cnp-btn cnp-btn-submit" id="cnp-submit-btn">
+            <span class="cnp-icon">📤</span>
+            <span class="cnp-text">제출하기</span>
+          </button>
+          <button class="cnp-btn cnp-btn-info" id="cnp-info-btn">
+            <span class="cnp-icon">ℹ️</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- 파일 업로드 모달 -->
+      <div class="cnp-modal" id="cnp-upload-modal" style="display: none;">
+        <div class="cnp-modal-backdrop"></div>
+        <div class="cnp-modal-content">
+          <div class="cnp-modal-header">
+            <h3>📁 프로젝트 파일 제출</h3>
+            <button class="cnp-modal-close" id="cnp-modal-close">&times;</button>
+          </div>
+          <div class="cnp-modal-body">
+            <div class="cnp-guide">
+              <p><strong>1단계:</strong> ${platform.name} 에디터에서</p>
+              <p class="cnp-guide-highlight">"${platform.exportGuide}"</p>
+              <p><strong>2단계:</strong> 아래에서 저장된 파일 선택</p>
+            </div>
+            <div class="cnp-file-input-wrapper">
+              <input type="file" 
+                     id="cnp-file-input" 
+                     accept="${platform.fileExtension}"
+                     style="display: none;" />
+              <button class="cnp-btn cnp-btn-file" id="cnp-select-file-btn">
+                📂 ${platform.fileExtension} 파일 선택
+              </button>
+              <span class="cnp-file-name" id="cnp-file-name">선택된 파일 없음</span>
+            </div>
+          </div>
+          <div class="cnp-modal-footer">
+            <button class="cnp-btn cnp-btn-cancel" id="cnp-cancel-btn">취소</button>
+            <button class="cnp-btn cnp-btn-confirm" id="cnp-confirm-btn" disabled>
+              제출하기
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 진행 상태 모달 -->
+      <div class="cnp-modal" id="cnp-progress-modal" style="display: none;">
+        <div class="cnp-modal-backdrop"></div>
+        <div class="cnp-modal-content cnp-modal-progress">
+          <div class="cnp-spinner"></div>
+          <p id="cnp-progress-text">제출 중...</p>
+        </div>
+      </div>
+      
+      <!-- 완료 모달 -->
+      <div class="cnp-modal" id="cnp-complete-modal" style="display: none;">
+        <div class="cnp-modal-backdrop"></div>
+        <div class="cnp-modal-content cnp-modal-complete">
+          <div class="cnp-complete-icon">✅</div>
+          <h3>제출 완료!</h3>
+          <p>과제가 성공적으로 제출되었습니다.</p>
+          <button class="cnp-btn cnp-btn-confirm" id="cnp-complete-close-btn">확인</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(container);
+    
+    // 이벤트 바인딩
+    bindEvents(platform);
+    
+    // 과제 정보 로드
+    loadMissionInfo();
+  }
+  
+  // ============================================
+  // 이벤트 바인딩
+  // ============================================
+  function bindEvents(platform) {
+    const submitBtn = document.getElementById('cnp-submit-btn');
+    const infoBtn = document.getElementById('cnp-info-btn');
+    const uploadModal = document.getElementById('cnp-upload-modal');
+    const closeBtn = document.getElementById('cnp-modal-close');
+    const cancelBtn = document.getElementById('cnp-cancel-btn');
+    const confirmBtn = document.getElementById('cnp-confirm-btn');
+    const selectFileBtn = document.getElementById('cnp-select-file-btn');
+    const fileInput = document.getElementById('cnp-file-input');
+    const fileNameSpan = document.getElementById('cnp-file-name');
+    const completeCloseBtn = document.getElementById('cnp-complete-close-btn');
+    
+    let selectedFile = null;
+    
+    // 제출 버튼 클릭
+    submitBtn.addEventListener('click', async () => {
+      // Scratch 공유 프로젝트인 경우 자동 추출 시도
+      if (platform.id === 'scratch') {
+        const projectId = extractProjectId(platform);
+        if (projectId) {
+          const autoResult = await tryAutoFetchScratch(projectId);
+          if (autoResult.success) {
+            await submitProject(autoResult.data, platform, true);
+            return;
+          }
+        }
+      }
+      
+      // 파일 선택 모달 표시
+      uploadModal.style.display = 'flex';
+    });
+    
+    // 정보 버튼 클릭
+    infoBtn.addEventListener('click', () => {
+      chrome.runtime.sendMessage({ action: 'GET_MISSION_INFO' }, (response) => {
+        if (response?.data) {
+          alert(`현재 과제: ${response.data.missionTitle || response.data.missionId}\n시작 시간: ${new Date(response.data.startedAt).toLocaleString()}`);
+        } else {
+          alert('진행 중인 과제가 없습니다.');
+        }
+      });
+    });
+    
+    // 모달 닫기
+    closeBtn.addEventListener('click', () => {
+      uploadModal.style.display = 'none';
+      resetFileInput();
+    });
+    
+    cancelBtn.addEventListener('click', () => {
+      uploadModal.style.display = 'none';
+      resetFileInput();
+    });
+    
+    // 파일 선택 버튼
+    selectFileBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+    
+    // 파일 선택됨
+    fileInput.addEventListener('change', (e) => {
+      selectedFile = e.target.files[0];
+      if (selectedFile) {
+        fileNameSpan.textContent = selectedFile.name;
+        fileNameSpan.classList.add('selected');
+        confirmBtn.disabled = false;
+      } else {
+        resetFileInput();
+      }
+    });
+    
+    // 제출 확인
+    confirmBtn.addEventListener('click', async () => {
+      if (selectedFile) {
+        uploadModal.style.display = 'none';
+        await submitProject(selectedFile, platform, false);
+        resetFileInput();
+      }
+    });
+    
+    // 완료 모달 닫기
+    completeCloseBtn.addEventListener('click', () => {
+      document.getElementById('cnp-complete-modal').style.display = 'none';
+    });
+    
+    // 모달 백드롭 클릭
+    document.querySelectorAll('.cnp-modal-backdrop').forEach(backdrop => {
+      backdrop.addEventListener('click', () => {
+        uploadModal.style.display = 'none';
+        document.getElementById('cnp-complete-modal').style.display = 'none';
+        resetFileInput();
+      });
+    });
+    
+    function resetFileInput() {
+      selectedFile = null;
+      fileInput.value = '';
+      fileNameSpan.textContent = '선택된 파일 없음';
+      fileNameSpan.classList.remove('selected');
+      confirmBtn.disabled = true;
+    }
+  }
+  
+  // ============================================
+  // 과제 정보 로드
+  // ============================================
+  function loadMissionInfo() {
+    chrome.runtime.sendMessage({ action: 'GET_MISSION_INFO' }, (response) => {
+      const missionInfo = document.getElementById('cnp-mission-info');
+      const missionTitle = document.getElementById('cnp-mission-title');
+      
+      if (response?.data) {
+        missionTitle.textContent = response.data.missionTitle || `과제 #${response.data.missionId}`;
+        missionInfo.style.display = 'flex';
+      } else {
+        missionInfo.style.display = 'none';
+      }
+    });
+  }
+  
+  // ============================================
+  // Scratch 자동 추출 시도
+  // ============================================
+  async function tryAutoFetchScratch(projectId) {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { action: 'FETCH_SCRATCH_PROJECT', projectId },
+        (response) => {
+          resolve(response || { success: false });
+        }
+      );
+    });
+  }
+  
+  // ============================================
+  // 프로젝트 제출
+  // ============================================
+  async function submitProject(fileOrData, platform, isAutoFetch) {
+    const progressModal = document.getElementById('cnp-progress-modal');
+    const progressText = document.getElementById('cnp-progress-text');
+    const completeModal = document.getElementById('cnp-complete-modal');
+    
+    try {
+      progressModal.style.display = 'flex';
+      progressText.textContent = '과제 정보 확인 중...';
+      
+      // 과제 정보 가져오기
+      const missionResponse = await new Promise((resolve) => {
+        chrome.runtime.sendMessage({ action: 'GET_MISSION_INFO' }, resolve);
+      });
+      
+      if (!missionResponse?.data) {
+        throw new Error('진행 중인 과제가 없습니다. 코딩앤플레이에서 과제를 선택해주세요.');
+      }
+      
+      const { missionId, userId } = missionResponse.data;
+      const projectId = extractProjectId(platform);
+      const projectUrl = window.location.href;
+      
+      // 파일 데이터 준비
+      let fileData, fileName, fileType;
+      
+      if (isAutoFetch) {
+        // Scratch 자동 추출 데이터
+        progressText.textContent = '프로젝트 데이터 변환 중...';
+        const jsonString = JSON.stringify(fileOrData);
+        fileData = new Blob([jsonString], { type: 'application/json' });
+        fileName = `project_${projectId || Date.now()}${platform.fileExtension}`;
+        fileType = 'application/json';
+      } else {
+        // 사용자가 선택한 파일
+        fileData = fileOrData;
+        fileName = fileOrData.name;
+        fileType = fileOrData.type || 'application/octet-stream';
+      }
+      
+      // S3 업로드 URL 발급
+      progressText.textContent = '업로드 준비 중...';
+      const uploadUrlResponse = await new Promise((resolve) => {
+        chrome.runtime.sendMessage({
+          action: 'GET_UPLOAD_URL',
+          data: { platform: platform.id, missionId, userId, fileName, fileType }
+        }, resolve);
+      });
+      
+      if (!uploadUrlResponse?.success) {
+        throw new Error('업로드 URL 발급 실패: ' + (uploadUrlResponse?.error || '알 수 없는 오류'));
+      }
+      
+      const { uploadUrl, s3Key } = uploadUrlResponse.data;
+      
+      // S3에 파일 업로드
+      progressText.textContent = '파일 업로드 중...';
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': fileType },
+        body: fileData
+      });
+      
+      if (!uploadResponse.ok) {
+        throw new Error('파일 업로드 실패');
+      }
+      
+      // 제출 정보 서버에 저장
+      progressText.textContent = '제출 정보 저장 중...';
+      const submitResponse = await new Promise((resolve) => {
+        chrome.runtime.sendMessage({
+          action: 'SUBMIT_PROJECT',
+          data: { 
+            platform: platform.id, 
+            missionId, 
+            userId, 
+            projectUrl,
+            projectId,
+            s3Key, 
+            fileName 
+          }
+        }, resolve);
+      });
+      
+      if (!submitResponse?.success) {
+        throw new Error('제출 정보 저장 실패: ' + (submitResponse?.error || '알 수 없는 오류'));
+      }
+      
+      // 완료
+      progressModal.style.display = 'none';
+      completeModal.style.display = 'flex';
+      
+    } catch (error) {
+      console.error('[CNP] 제출 오류:', error);
+      progressModal.style.display = 'none';
+      alert('제출 실패: ' + error.message);
+    }
+  }
+  
+  // ============================================
+  // 초기화
+  // ============================================
+  function init() {
+    const platform = detectPlatform();
+    
+    if (!platform) {
+      console.log('[CNP] 지원하지 않는 플랫폼');
+      return;
+    }
+    
+    console.log('[CNP] 플랫폼 감지:', platform.name);
+    
+    // DOM 로드 완료 후 버튼 생성
+    if (document.readyState === 'complete') {
+      createFloatingButton(platform);
+    } else {
+      window.addEventListener('load', () => createFloatingButton(platform));
+    }
+  }
+  
+  // 초기화 실행
+  init();
+  
+})();
+```
+
+### 4.4 content-codingnplay.js (코딩앤플레이 페이지용)
+
+```javascript
+/**
+ * 코딩앤플레이 확장프로그램 - Content Script (코딩앤플레이 페이지)
+ * 
+ * 역할:
+ * - "프로젝트 열기" 버튼 감지
+ * - 과제 정보 추출 후 에디터 열기
+ */
+
+(function() {
+  'use strict';
+  
+  // ============================================
+  // 프로젝트 열기 버튼 감지 및 처리
+  // ============================================
+  function setupProjectOpenListener() {
+    // 방법 1: 특정 클래스/ID를 가진 버튼 감지
+    document.addEventListener('click', (e) => {
+      const button = e.target.closest('[data-action="open-editor"]');
+      
+      if (button) {
+        e.preventDefault();
+        
+        const platform = button.dataset.platform;      // 'scratch', 'entry', 'appinventor'
+        const missionId = button.dataset.missionId;
+        const userId = button.dataset.userId;
+        const templateUrl = button.dataset.templateUrl;
+        const missionTitle = button.dataset.missionTitle;
+        
+        if (platform && missionId && userId) {
+          chrome.runtime.sendMessage({
+            action: 'OPEN_EDITOR',
+            data: { platform, missionId, userId, templateUrl, missionTitle }
+          });
+        } else {
+          console.error('[CNP] 필수 데이터 누락:', { platform, missionId, userId });
+        }
+      }
+    });
+    
+    console.log('[CNP] 코딩앤플레이 페이지 리스너 설정 완료');
+  }
+  
+  // ============================================
+  // 전역 함수 노출 (선택적)
+  // ============================================
+  window.CodingnplayExtension = {
+    openEditor: function(data) {
+      chrome.runtime.sendMessage({
+        action: 'OPEN_EDITOR',
+        data: data
+      });
+    }
+  };
+  
+  // 초기화
+  setupProjectOpenListener();
+  
+})();
+```
+
+### 4.5 styles/floating.css
+
+```css
+/**
+ * 코딩앤플레이 확장프로그램 - 플로팅 버튼 스타일
+ */
+
+/* ============================================
+   컨테이너
+   ============================================ */
+#cnp-floating-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+}
+
+.cnp-floating-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* ============================================
+   과제 정보 배지
+   ============================================ */
+.cnp-mission-info {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  animation: cnp-slideIn 0.3s ease;
+}
+
+.cnp-mission-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cnp-mission-title {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================
+   버튼 그룹
+   ============================================ */
+.cnp-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.cnp-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.cnp-btn:hover {
+  transform: translateY(-2px);
+}
+
+.cnp-btn:active {
+  transform: translateY(0);
+}
+
+/* 제출 버튼 */
+.cnp-btn-submit {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  padding: 14px 24px;
+  font-size: 15px;
+  box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4);
+}
+
+.cnp-btn-submit:hover {
+  box-shadow: 0 6px 20px rgba(56, 239, 125, 0.5);
+}
+
+/* 정보 버튼 */
+.cnp-btn-info {
+  background: white;
+  color: #666;
+  padding: 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.cnp-btn-info:hover {
+  background: #f5f5f5;
+}
+
+.cnp-icon {
+  font-size: 16px;
+}
+
+/* ============================================
+   모달 공통
+   ============================================ */
+.cnp-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999999;
+}
+
+.cnp-modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.cnp-modal-content {
+  position: relative;
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: cnp-modalIn 0.3s ease;
+}
+
+.cnp-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.cnp-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.cnp-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.cnp-modal-close:hover {
+  color: #333;
+}
+
+.cnp-modal-body {
+  margin-bottom: 24px;
+}
+
+.cnp-modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* ============================================
+   파일 업로드 모달
+   ============================================ */
+.cnp-guide {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.cnp-guide p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.cnp-guide-highlight {
+  background: #fff3cd;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 12px 0 !important;
+  font-weight: 600;
+  color: #856404;
+}
+
+.cnp-file-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.cnp-btn-file {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 24px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.cnp-file-name {
+  font-size: 13px;
+  color: #999;
+}
+
+.cnp-file-name.selected {
+  color: #11998e;
+  font-weight: 600;
+}
+
+.cnp-btn-cancel {
+  background: #f5f5f5;
+  color: #666;
+  padding: 12px 24px;
+}
+
+.cnp-btn-confirm {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  padding: 12px 24px;
+  box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3);
+}
+
+.cnp-btn-confirm:disabled {
+  background: #ccc;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================
+   진행 상태 모달
+   ============================================ */
+.cnp-modal-progress {
+  text-align: center;
+  padding: 40px;
+}
+
+.cnp-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #11998e;
+  border-radius: 50%;
+  animation: cnp-spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+/* ============================================
+   완료 모달
+   ============================================ */
+.cnp-modal-complete {
+  text-align: center;
+  padding: 40px;
+}
+
+.cnp-complete-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+}
+
+.cnp-modal-complete h3 {
+  margin: 0 0 8px;
+  color: #11998e;
+}
+
+.cnp-modal-complete p {
+  margin: 0 0 24px;
+  color: #666;
+}
+
+/* ============================================
+   애니메이션
+   ============================================ */
+@keyframes cnp-slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes cnp-modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes cnp-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+```
+
+### 4.6 popup/popup.html
+
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>코딩앤플레이</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <img src="../icons/icon48.png" alt="로고" class="logo">
+      <h1>코딩앤플레이</h1>
+    </header>
+    
+    <main class="popup-main">
+      <section class="status-section" id="mission-status">
+        <div class="status-icon">📋</div>
+        <div class="status-content">
+          <h3>진행 중인 과제</h3>
+          <p id="mission-title">없음</p>
+        </div>
+      </section>
+      
+      <section class="platform-section">
+        <h3>지원 플랫폼</h3>
+        <div class="platform-list">
+          <div class="platform-item">
+            <span class="platform-icon">🐱</span>
+            <span>Scratch</span>
+          </div>
+          <div class="platform-item">
+            <span class="platform-icon">🎮</span>
+            <span>Entry</span>
+          </div>
+          <div class="platform-item">
+            <span class="platform-icon">📱</span>
+            <span>App Inventor</span>
+          </div>
+        </div>
+      </section>
+      
+      <section class="actions-section">
+        <a href="https://app.codingnplay.co.kr" target="_blank" class="action-btn primary">
+          코딩앤플레이 열기
+        </a>
+      </section>
+    </main>
+    
+    <footer class="popup-footer">
+      <p>버전 1.0.0</p>
+    </footer>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
+```
+
+### 4.7 popup/popup.css
+
+```css
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 300px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.popup-container {
+  background: white;
+  margin: 8px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Header */
+.popup-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.logo {
+  width: 36px;
+  height: 36px;
+}
+
+.popup-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Main */
+.popup-main {
+  padding: 20px;
+}
+
+/* Status Section */
+.status-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.status-icon {
+  font-size: 28px;
+}
+
+.status-content h3 {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.status-content p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Platform Section */
+.platform-section h3 {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.platform-list {
+  display: flex;
+  gap: 8px;
+}
+
+.platform-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #666;
+}
+
+.platform-icon {
+  font-size: 24px;
+}
+
+/* Actions */
+.actions-section {
+  margin-top: 20px;
+}
+
+.action-btn {
+  display: block;
+  text-align: center;
+  padding: 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4);
+}
+
+/* Footer */
+.popup-footer {
+  text-align: center;
+  padding: 12px;
+  background: #f8f9fa;
+}
+
+.popup-footer p {
+  font-size: 11px;
+  color: #999;
+}
+```
+
+### 4.8 popup/popup.js
+
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+  // 현재 과제 정보 로드
+  chrome.runtime.sendMessage({ action: 'GET_MISSION_INFO' }, (response) => {
+    const missionTitle = document.getElementById('mission-title');
+    
+    if (response?.data) {
+      missionTitle.textContent = response.data.missionTitle || `과제 #${response.data.missionId}`;
+      missionTitle.style.color = '#11998e';
+    } else {
+      missionTitle.textContent = '없음';
+    }
+  });
+});
+```
+
+### 4.9 lib/utils.js
+
+```javascript
+/**
+ * 코딩앤플레이 확장프로그램 - 공통 유틸리티
+ */
+
+const CNPUtils = {
+  /**
+   * Base64 인코딩
+   */
+  toBase64: function(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+  },
+  
+  /**
+   * 파일을 Base64로 읽기
+   */
+  readFileAsBase64: function(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  },
+  
+  /**
+   * 파일을 ArrayBuffer로 읽기
+   */
+  readFileAsArrayBuffer: function(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  },
+  
+  /**
+   * 날짜 포맷팅
+   */
+  formatDate: function(date) {
+    const d = new Date(date);
+    return d.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  },
+  
+  /**
+   * 디바운스
+   */
+  debounce: function(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+};
+
+// 전역 노출
+if (typeof window !== 'undefined') {
+  window.CNPUtils = CNPUtils;
+}
+```
+
+---
+
+## 5. 서버 API 명세
+
+### 5.1 과제 정보 조회
+
+```
+GET /api/mission/:missionId
+
+Response:
+{
+  "missionId": "m001",
+  "title": "스크래치로 게임 만들기",
+  "platform": "scratch",
+  "templateUrl": "https://scratch.mit.edu/projects/123456/editor",
+  "description": "점프 게임을 만들어보세요",
+  "dueDate": "2025-01-10T23:59:59Z"
+}
+```
+
+### 5.2 S3 업로드 URL 발급
+
+```
+POST /api/upload-url
+
+Request:
+{
+  "platform": "scratch",
+  "missionId": "m001",
+  "userId": "user123",
+  "fileName": "project.sb3",
+  "fileType": "application/octet-stream"
+}
+
+Response:
+{
+  "uploadUrl": "https://codingnplay-learning-data.s3.amazonaws.com/...",
+  "s3Key": "scratch/user123/m001/project_1704200000000.sb3",
+  "expiresIn": 3600
+}
+```
+
+### 5.3 제출 정보 저장
+
+```
+POST /api/submit
+
+Request:
+{
+  "platform": "scratch",
+  "missionId": "m001",
+  "userId": "user123",
+  "projectUrl": "https://scratch.mit.edu/projects/123456",
+  "projectId": "123456",
+  "s3Key": "scratch/user123/m001/project_1704200000000.sb3",
+  "fileName": "project.sb3",
+  "submittedAt": "2025-01-02T12:00:00Z"
+}
+
+Response:
+{
+  "success": true,
+  "submissionId": "sub_abc123",
+  "message": "제출이 완료되었습니다."
+}
+```
+
+---
+
+## 6. 코딩앤플레이 웹 연동
+
+### 6.1 프로젝트 열기 버튼 예시
+
+```html
+<!-- 코딩앤플레이 과제 페이지에서 사용 -->
+<button 
+  data-action="open-editor"
+  data-platform="scratch"
+  data-mission-id="m001"
+  data-user-id="user123"
+  data-template-url="https://scratch.mit.edu/projects/editor"
+  data-mission-title="스크래치로 게임 만들기"
+  class="btn-open-editor"
+>
+  🚀 프로젝트 열기
+</button>
+
+<button 
+  data-action="open-editor"
+  data-platform="entry"
+  data-mission-id="m002"
+  data-user-id="user123"
+  data-template-url="https://playentry.org/ws/new"
+  data-mission-title="엔트리로 애니메이션 만들기"
+  class="btn-open-editor"
+>
+  🚀 프로젝트 열기
+</button>
+
+<button 
+  data-action="open-editor"
+  data-platform="appinventor"
+  data-mission-id="m003"
+  data-user-id="user123"
+  data-mission-title="앱 인벤터로 계산기 만들기"
+  class="btn-open-editor"
+>
+  🚀 프로젝트 열기
+</button>
+```
+
+### 6.2 JavaScript API 방식 (선택적)
+
+```javascript
+// 확장프로그램 설치 확인
+if (window.CodingnplayExtension) {
+  // 확장프로그램으로 에디터 열기
+  window.CodingnplayExtension.openEditor({
+    platform: 'scratch',
+    missionId: 'm001',
+    userId: 'user123',
+    missionTitle: '스크래치로 게임 만들기',
+    templateUrl: 'https://scratch.mit.edu/projects/editor'
+  });
+} else {
+  // 확장프로그램 미설치 시 안내
+  alert('코딩앤플레이 확장프로그램을 설치해주세요.');
+  window.open('/extension-guide', '_blank');
+}
+```
+
+---
+
+## 7. 설치 가이드
+
+### 7.1 개발자 모드 설치 (Chrome)
+
+```
+1. 확장프로그램 폴더 다운로드 및 압축 해제
+
+2. Chrome 브라우저 열기
+   → 주소창에 chrome://extensions 입력
+
+3. 우측 상단 "개발자 모드" 토글 ON
+
+4. "압축해제된 확장 프로그램을 로드합니다" 클릭
+
+5. 압축 해제한 codingnplay-extension 폴더 선택
+
+6. 설치 완료! 
+   → 브라우저 우측 상단에 확장프로그램 아이콘 표시
+```
+
+### 7.2 개발자 모드 설치 (Edge)
+
+```
+1. 확장프로그램 폴더 다운로드 및 압축 해제
+
+2. Edge 브라우저 열기
+   → 주소창에 edge://extensions 입력
+
+3. 좌측 하단 "개발자 모드" 토글 ON
+
+4. "압축을 푼 항목 로드" 클릭
+
+5. 압축 해제한 codingnplay-extension 폴더 선택
+
+6. 설치 완료!
+```
+
+---
+
+## 8. S3 저장 구조
+
+```
+s3://codingnplay-learning-data/
+├── scratch/
+│   └── {userId}/
+│       └── {missionId}/
+│           ├── project_{timestamp}.sb3
+│           └── metadata_{timestamp}.json
+├── entry/
+│   └── {userId}/
+│       └── {missionId}/
+│           ├── project_{timestamp}.ent
+│           └── metadata_{timestamp}.json
+└── appinventor/
+    └── {userId}/
+        └── {missionId}/
+            ├── project_{timestamp}.aia
+            └── metadata_{timestamp}.json
+```
+
+### metadata.json 예시
+
+```json
+{
+  "submissionId": "sub_abc123",
+  "userId": "user123",
+  "missionId": "m001",
+  "platform": "scratch",
+  "projectUrl": "https://scratch.mit.edu/projects/123456",
+  "projectId": "123456",
+  "fileName": "project.sb3",
+  "fileSize": 245678,
+  "submittedAt": "2025-01-02T12:00:00Z",
+  "userAgent": "Mozilla/5.0..."
+}
+```
+
+---
+
+## 9. 보안 고려사항
+
+### 9.1 인증
+- 코딩앤플레이 세션 쿠키 기반 인증
+- API 호출 시 credentials: 'include' 사용
+- CORS 설정: app.codingnplay.co.kr 허용
+
+### 9.2 S3 업로드
+- Presigned URL 사용 (만료 시간: 1시간)
+- 서버에서 URL 발급 시 사용자 인증 확인
+- 파일 크기 제한: 50MB
+
+### 9.3 데이터 검증
+- 파일 확장자 검증
+- MIME 타입 검증
+- 악성 파일 업로드 방지
+
+---
+
+## 10. 향후 확장 계획
+
+### Phase 2: 고급 기능
+- [ ] 스크린샷 자동 캡처
+- [ ] 코딩 시간 트래킹
+- [ ] 오프라인 지원
+
+### Phase 3: 분석 기능
+- [ ] .sb3 / .ent / .aia 파일 파싱
+- [ ] 블록 사용 통계
+- [ ] 자동 채점
+
+### Phase 4: 스토어 등록 (선택)
+- [ ] Chrome Web Store 등록
+- [ ] Edge Add-ons 등록
+- [ ] Firefox Add-ons 등록
+
+---
+
+## 11. 문서 이력
+
+| 버전 | 날짜 | 변경 내용 |
+|------|------|----------|
+| 1.0.0 | 2025-01-02 | 최초 작성 |
+
+---
+
+**끝.**

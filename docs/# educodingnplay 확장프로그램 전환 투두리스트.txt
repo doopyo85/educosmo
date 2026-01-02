@@ -1,0 +1,125 @@
+📋 educodingnplay 확장프로그램 전환 투두리스트
+
+Phase 1: 확장프로그램 개발 (1~2주)
+□ 1.1 기본 구조 생성
+  □ manifest.json 작성
+  □ 아이콘 제작 (16x16, 48x48, 128x128)
+  
+□ 1.2 background.js 개발
+  □ 메시지 라우팅 구현
+  □ chrome.storage 과제 정보 저장/조회
+  □ API 통신 함수 (upload-url, submit)
+  □ Scratch API 자동 추출 함수
+  
+□ 1.3 content.js 개발 (에디터 페이지용)
+  □ 플랫폼 감지 로직 (Entry/Scratch/AppInventor)
+  □ 플로팅 제출 버튼 UI
+  □ 파일 선택 모달 UI
+  □ 진행/완료 모달 UI
+  □ S3 업로드 로직
+  
+□ 1.4 content-codingnplay.js 개발
+  □ "프로젝트 열기" 버튼 감지
+  □ data-* 속성에서 과제 정보 추출
+  □ 에디터 새 탭 열기
+  
+□ 1.5 popup UI 개발
+  □ 현재 과제 정보 표시
+  □ 코딩앤플레이 바로가기
+  
+□ 1.6 스타일링
+  □ floating.css (플로팅 버튼)
+  □ popup.css
+
+Phase 2: 서버 API 추가 (3~5일)
+□ 2.1 새 API 엔드포인트 추가 (server.js)
+  □ GET  /api/mission/:missionId   - 과제 정보 조회
+  □ POST /api/upload-url           - S3 Presigned URL 발급
+  □ POST /api/submit               - 제출 정보 저장
+  
+□ 2.2 S3 Presigned URL 발급 로직
+  □ @aws-sdk/s3-request-presigner 설치
+  □ getSignedUrl 함수 구현
+  □ 파일 경로 규칙: {platform}/{userId}/{missionId}/
+  
+□ 2.3 제출 데이터 DB 저장
+  □ submissions 테이블/컬렉션 설계
+  □ 제출 이력 저장 로직
+  
+□ 2.4 CORS 설정
+  □ 확장프로그램 Origin 허용
+
+Phase 3: 코딩앤플레이 웹 수정 (3~5일)
+□ 3.1 과제 페이지 UI 수정
+  □ 기존 "에디터 열기" 버튼 → data-* 속성 추가
+    - data-action="open-editor"
+    - data-platform="scratch|entry|appinventor"
+    - data-mission-id
+    - data-user-id
+    - data-template-url
+    - data-mission-title
+    
+□ 3.2 확장프로그램 설치 안내 페이지
+  □ 설치 가이드 페이지 생성
+  □ 확장프로그램 ZIP 다운로드 링크
+  □ 스크린샷/GIF 설치 가이드
+  
+□ 3.3 확장프로그램 미설치 감지
+  □ window.CodingnplayExtension 존재 여부 체크
+  □ 미설치 시 안내 팝업
+  
+□ 3.4 제출 이력 조회 UI
+  □ 학생별 제출 목록 페이지
+  □ 파일 다운로드 링크 (S3)
+
+Phase 4: 기존 코드 제거 (1일)
+□ 4.1 Entry 관련 제거
+  □ /entry/ 폴더 삭제
+  □ /lib/@entrylabs/ 폴더 삭제
+  □ 8070 프록시 서버 종료/삭제
+  □ entry_editor 라우트 제거
+  
+□ 4.2 Scratch 관련 제거 (있다면)
+  □ scratch 에디터 관련 파일 삭제
+  □ 관련 라우트 제거
+  
+□ 4.3 S3 정리
+  □ 기존 .ent 템플릿 파일 → 유지 또는 이동
+  □ 새 버킷 구조 적용: codingnplay-learning-data
+
+Phase 5: 테스트 (2~3일)
+□ 5.1 확장프로그램 테스트
+  □ Chrome 개발자 모드 설치 테스트
+  □ Edge 개발자 모드 설치 테스트
+  □ 플로팅 버튼 표시 확인
+  
+□ 5.2 플랫폼별 테스트
+  □ Scratch 공유 프로젝트 자동 추출
+  □ Scratch 비공유 프로젝트 파일 업로드
+  □ Entry 파일 업로드
+  □ App Inventor 파일 업로드
+  
+□ 5.3 전체 플로우 테스트
+  □ 코딩앤플레이 → 에디터 열기 → 코딩 → 제출 → 확인
+  □ S3 파일 저장 확인
+  □ DB 제출 이력 확인
+
+Phase 6: 배포 (1일)
+□ 6.1 확장프로그램 배포
+  □ 폴더 ZIP 압축
+  □ 다운로드 서버 업로드
+  □ 버전 관리 체계 수립
+  
+□ 6.2 서버 배포
+  □ Git push → 서버 pull
+  □ PM2 재시작
+  □ 기존 서비스 중단 최소화
+  
+□ 6.3 사용자 공지
+  □ 확장프로그램 설치 안내
+  □ 기존 방식 종료 안내
+
+📊 예상 일정
+Phase작업예상 기간1확장프로그램 개발1~2주2서버 API 추가3~5일3웹 수정3~5일4기존 코드 제거1일5테스트2~3일6배포1일총3~4주
+
+어떤 Phase부터 시작할까요?

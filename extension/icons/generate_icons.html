@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>코딩앤플레이 아이콘 생성기</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin: 10px;
+      display: inline-block;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    button:hover {
+      background: #764ba2;
+    }
+  </style>
+</head>
+<body>
+  <h1>코딩앤플레이 확장프로그램 아이콘 생성</h1>
+  <p>아래 버튼을 클릭하여 각 아이콘을 다운로드하세요.</p>
+
+  <div>
+    <canvas id="canvas16" width="16" height="16"></canvas>
+    <canvas id="canvas48" width="48" height="48"></canvas>
+    <canvas id="canvas128" width="128" height="128"></canvas>
+  </div>
+
+  <div>
+    <button onclick="generateIcons()">아이콘 생성</button>
+    <button onclick="downloadIcon(16)">icon16.png 다운로드</button>
+    <button onclick="downloadIcon(48)">icon48.png 다운로드</button>
+    <button onclick="downloadIcon(128)">icon128.png 다운로드</button>
+  </div>
+
+  <script>
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+
+      // 배경 그라디언트
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#667eea');
+      gradient.addColorStop(1, '#764ba2');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+
+      // 텍스트 (C&P)
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${size * 0.35}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('C&P', size / 2, size / 2);
+    }
+
+    function generateIcons() {
+      [16, 48, 128].forEach(size => {
+        const canvas = document.getElementById(`canvas${size}`);
+        drawIcon(canvas, size);
+      });
+      alert('아이콘이 생성되었습니다! 각 다운로드 버튼을 클릭하세요.');
+    }
+
+    function downloadIcon(size) {
+      const canvas = document.getElementById(`canvas${size}`);
+      const link = document.createElement('a');
+      link.download = `icon${size}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // 페이지 로드 시 자동 생성
+    window.onload = generateIcons;
+  </script>
+</body>
+</html>

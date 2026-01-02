@@ -1,0 +1,18 @@
+아이콘 파일이 필요합니다:
+
+1. icon16.png (16x16 픽셀)
+2. icon48.png (48x48 픽셀)
+3. icon128.png (128x128 픽셀)
+
+디자인 가이드:
+- 코딩앤플레이 브랜드 색상 사용
+- 간단하고 명확한 로고
+- 투명 배경 (PNG)
+
+임시로 온라인 아이콘 생성기를 사용하거나, 디자이너에게 요청하세요.
+
+추천 도구:
+- https://www.favicon-generator.org/
+- https://realfavicongenerator.net/
+- Canva
+- Figma
