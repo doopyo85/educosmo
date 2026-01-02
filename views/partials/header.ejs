@@ -288,6 +288,50 @@
     </div>
 </div>
 
+<!-- 내 정보 수정 모달 -->
+<div class="modal fade" id="myInfoModal" tabindex="-1" aria-labelledby="myInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="myInfoModalLabel">내 정보 수정</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="myInfoForm">
+                    <div class="mb-3">
+                        <label for="infoCenterName" class="form-label">소속 센터</label>
+                        <input type="text" class="form-control" id="infoCenterName" readonly disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="infoUserID" class="form-label">아이디</label>
+                        <input type="text" class="form-control" id="infoUserID" readonly disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="infoName" class="form-label">이름</label>
+                        <input type="text" class="form-control" id="infoName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="infoEmail" class="form-label">이메일</label>
+                        <input type="email" class="form-control" id="infoEmail">
+                    </div>
+                    <div class="mb-3">
+                        <label for="infoPhone" class="form-label">전화번호</label>
+                        <input type="tel" class="form-control" id="infoPhone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="infoPassword" class="form-label">비밀번호 변경 (변경시에만 입력)</label>
+                        <input type="password" class="form-control" id="infoPassword" placeholder="새 비밀번호">
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                        <button type="submit" class="btn btn-primary">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- 🔥 내 파일 모달 (전체화면) -->
 <div class="modal fade" id="myFilesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
@@ -307,6 +351,7 @@
 <% if (locals.userID !=='nuri' ) { %>
     <!-- 🦝 너구리톡 위젯 -->
     <%- include('nuguri_widget') %>
+        <script src="/js/nuguri.js"></script>
         <% } %>
 
             <script>
