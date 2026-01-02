@@ -1645,9 +1645,8 @@ class ContentComponent extends Component {
         });
       }
 
-      // (3) 지우개 버튼 & 옵션 토글
+      // (3) 지우개 버튼 (단일 토글)
       const eraserBtn = document.getElementById('drawing-eraser-btn');
-      const eraserOptions = document.getElementById('fab-eraser-options'); // 지우개 옵션 팝업
 
       if (eraserBtn) {
         eraserBtn.addEventListener('click', () => {
@@ -1658,11 +1657,6 @@ class ContentComponent extends Component {
             this.setToolMode('pen');
           } else {
             this.setToolMode('eraser');
-            // Show options only when Activating
-            if (eraserOptions) {
-              eraserOptions.classList.add('visible');
-              setTimeout(() => eraserOptions.classList.remove('visible'), 3000);
-            }
           }
         });
       }
@@ -1710,6 +1704,19 @@ class ContentComponent extends Component {
       if (!this.drawingCanvasInstance && window.DrawingCanvas) {
         console.log('ContentComponent: DrawingCanvas 초기화');
         this.drawingCanvasInstance = new window.DrawingCanvas('drawing-canvas');
+
+        // 🔥 초기 색상 설정 (Crimson)
+        this.setDrawingColor('#D32F2F');
+      } else if (this.drawingCanvasInstance) {
+        // 이미 초기화되어 있다면 색상 리셋
+        this.setDrawingColor('#D32F2F');
+      }
+
+      // UI 인디케이터 초기화
+      const colorIndicator = document.querySelector('.color-indicator');
+      if (colorIndicator) {
+        colorIndicator.style.backgroundColor = '#D32F2F';
+        colorIndicator.style.boxShadow = '0 0 2px rgba(0,0,0,0.5)';
       }
     }
   }

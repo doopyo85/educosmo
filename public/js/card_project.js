@@ -314,8 +314,8 @@ class ProjectCardManager {
         const projects = {};
 
         data.forEach(row => {
-            // 구글 시트 데이터 구조: [카테고리, 콘텐츠명, 기능, entURL, C.T요소, imgURL]
-            const [category, name, type, url, ctElement = '', imgUrl = ''] = row;
+            // 구글 시트 데이터 구조: [카테고리, 콘텐츠명, 기능, S3entURL, C.T요소, imgURL, entURL]
+            const [category, name, type, s3entURL, ctElement = '', imgUrl = '', entURL = ''] = row;
 
             if (!category || !name) return;
 
@@ -342,29 +342,32 @@ class ProjectCardManager {
                 };
             }
 
+            // 🔥 entURL(G열)이 있으면 우선 사용, 없으면 s3entURL(D열) 사용
+            const finalUrl = (entURL && entURL.trim() !== '') ? entURL : s3entURL;
+
             // 타입에 따라 URL 할당
             const typeLower = type.toLowerCase();
             switch (typeLower) {
                 case '기본':
-                    projects[category][projectKey].basic = url;
+                    projects[category][projectKey].basic = finalUrl;
                     break;
                 case '완성':
-                    projects[category][projectKey].complete = url;
+                    projects[category][projectKey].complete = finalUrl;
                     break;
                 case '확장':
-                    projects[category][projectKey].extension = url;
+                    projects[category][projectKey].extension = finalUrl;
                     break;
                 case '문제':  // 🔥 COS 문제 이미지 URL
-                    projects[category][projectKey].img = url;
+                    projects[category][projectKey].img = finalUrl;
                     break;
                 case '정답':
-                    projects[category][projectKey].answer = url;
+                    projects[category][projectKey].answer = finalUrl;
                     break;
                 case '풀이':
-                    projects[category][projectKey].solution = url;
+                    projects[category][projectKey].solution = finalUrl;
                     break;
                 case 'ppt':
-                    projects[category][projectKey].ppt = url;
+                    projects[category][projectKey].ppt = finalUrl;
                     break;
             }
         });

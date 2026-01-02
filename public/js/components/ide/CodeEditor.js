@@ -27,7 +27,7 @@ class CodeEditor {
 
     // 🔥 폰트 크기 관리 - 향상된 버전
     this.fontState = {
-      currentFontSize: parseInt(localStorage.getItem('ide-font-size') || '14'),
+      currentFontSize: parseInt(localStorage.getItem('ide-font-size') || '16'),
       minFontSize: 10,
       maxFontSize: 24
     };

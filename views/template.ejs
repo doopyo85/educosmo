@@ -186,7 +186,7 @@
                             <div class="fab-wrapper">
                                 <button id="drawing-color-btn" class="floating-btn fab-child" title="색상 선택">
                                     <span class="color-indicator"
-                                        style="background-color: #333333; box-shadow: 0 0 2px rgba(0,0,0,0.5);"></span>
+                                        style="background-color: #D32F2F; box-shadow: 0 0 2px rgba(0,0,0,0.5);"></span>
                                 </button>
                                 <!-- 색상 선택 팝업 (좌측) -->
                                 <div id="fab-color-palette" class="fab-popup left">
@@ -224,19 +224,18 @@
                                 </div>
                             </div>
 
-                            <!-- 지우개 버튼 (부분 지우개) -->
+                            <!-- 지우개 버튼 (단일 토글) -->
                             <div class="fab-wrapper">
-                                <button id="drawing-eraser-btn" class="floating-btn fab-child" title="지우개 (클릭: 끄기/켜기)">
+                                <button id="drawing-eraser-btn" class="floating-btn fab-child" title="지우개 (켜기/끄기)">
                                     <i class="bi bi-eraser"></i>
                                 </button>
-                                <!-- 지우개 옵션 (토글 시 표시) -->
-                                <div id="fab-eraser-options" class="fab-popup left" style="width: auto; padding: 0;">
-                                    <!-- 모두 지우기 (아이콘) - 회색조, 원형 유지 -->
-                                    <button id="drawing-clear-all" class="text-btn" title="모두 지우기"
-                                        style="font-size: 16px; width: 32px; height: 32px; padding: 0; color: #555; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                        <i class="bi bi-trash3"></i>
-                                    </button>
-                                </div>
+                            </div>
+
+                            <!-- 🔥 수정: 모두 지우기 버튼 (메인으로 이동) -->
+                            <div class="fab-wrapper">
+                                <button id="drawing-clear-all" class="floating-btn fab-child" title="모두 지우기">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -607,24 +606,28 @@
                     };
                 }
 
-                // 🔥 새로 추가: 폰트 크기 조절 기능
-                let currentFontSize = 16; // 기본 폰트 크기
+                // 🔥 새로 추가: 폰트 크기 조절 기능 (Zoom 방식)
+                let currentZoom = 1.0; // 기본 줌 레벨
 
                 function adjustContentFontSize(delta) {
                     const iframe = document.getElementById('iframeContent');
                     if (!iframe) return;
 
-                    currentFontSize = Math.max(12, Math.min(24, currentFontSize + delta));
+                    // Zoom 레벨 조정 (0.5 ~ 2.0)
+                    currentZoom = Math.max(0.5, Math.min(2.0, currentZoom + (delta * 0.1)));
+                    // 소수점 보정
+                    currentZoom = parseFloat(currentZoom.toFixed(1));
 
                     // iframe 내부 스타일 조정
                     try {
                         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                         if (iframeDoc && iframeDoc.body) {
-                            iframeDoc.body.style.fontSize = currentFontSize + 'px';
-                            console.log('콘텐츠 폰트 크기 변경:', currentFontSize + 'px');
+                            // 🔥 수정: fontSize 대신 zoom 속성 사용
+                            iframeDoc.body.style.zoom = currentZoom;
+                            console.log('콘텐츠 Zoom 변경:', currentZoom);
                         }
                     } catch (error) {
-                        console.warn('iframe 폰트 크기 조정 실패:', error);
+                        console.warn('iframe Zoom 조정 실패:', error);
                     }
                 }
 
