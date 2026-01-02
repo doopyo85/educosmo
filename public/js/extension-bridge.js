@@ -14,13 +14,25 @@ class ExtensionBridge {
    * 확장프로그램 설치 여부 확인
    */
   checkExtension() {
-    // 확장프로그램이 window.CodingnplayExtension을 노출함
-    this.isExtensionInstalled = typeof window.CodingnplayExtension !== 'undefined';
+    // 1. 즉시 확인
+    const marker = document.getElementById('codingnplay-extension-installed');
+    this.isExtensionInstalled = !!marker;
 
     if (this.isExtensionInstalled) {
-      console.log('✅ 코딩앤플레이 확장프로그램이 설치되어 있습니다.');
+      console.log('✅ 코딩앤플레이 확장프로그램 감지됨 (DOM Marker)');
     } else {
-      console.log('⚠️ 코딩앤플레이 확장프로그램이 설치되지 않았습니다.');
+      // 2. 늦은 로딩을 위해 주기적 확인 (최대 3초)
+      let attempts = 0;
+      const interval = setInterval(() => {
+        const lateMarker = document.getElementById('codingnplay-extension-installed');
+        if (lateMarker) {
+          this.isExtensionInstalled = true;
+          console.log('✅ 코딩앤플레이 확장프로그램 감지됨 (Late Load)');
+          clearInterval(interval);
+        }
+        attempts++;
+        if (attempts > 30) clearInterval(interval); // 3초 후 중단
+      }, 100);
     }
 
     return this.isExtensionInstalled;
@@ -28,21 +40,20 @@ class ExtensionBridge {
 
   /**
    * 에디터 열기 (확장프로그램 사용)
-   *
-   * @param {Object} options
-   * @param {string} options.platform - 'scratch' | 'entry' | 'appinventor'
-   * @param {string} options.missionId - 과제 ID
-   * @param {string} options.userId - 사용자 ID
-   * @param {string} options.missionTitle - 과제 제목
-   * @param {string} [options.templateUrl] - 템플릿 URL (선택)
    */
   openEditor(options) {
-    const { platform, missionId, userId, missionTitle, templateUrl } = options;
+    // 호출 시점 재확인
+    if (!this.isExtensionInstalled) {
+      const marker = document.getElementById('codingnplay-extension-installed');
+      if (marker) this.isExtensionInstalled = true;
+    }
 
     if (!this.isExtensionInstalled) {
       this.showInstallGuide();
       return false;
     }
+
+    const { platform, missionId, userId, missionTitle, templateUrl } = options;
 
     // Validation
     if (!platform || !missionId || !userId) {
@@ -52,21 +63,24 @@ class ExtensionBridge {
     }
 
     try {
-      // 확장프로그램 호출
-      window.CodingnplayExtension.openEditor({
-        platform,
-        missionId,
-        userId,
-        missionTitle: missionTitle || `과제 ${missionId}`,
-        templateUrl: templateUrl || null
+      // CustomEvent Dispatch
+      const event = new CustomEvent('cnp-open-editor', {
+        detail: {
+          platform,
+          missionId,
+          userId,
+          missionTitle: missionTitle || `과제 ${missionId}`,
+          templateUrl: templateUrl || null
+        }
       });
+      window.dispatchEvent(event);
 
-      console.log('🚀 확장프로그램을 통해 에디터 열기:', options);
+      console.log('🚀 확장프로그램으로 요청 전송 (Event):', options);
       return true;
 
     } catch (error) {
-      console.error('확장프로그램 호출 실패:', error);
-      alert('확장프로그램 호출에 실패했습니다. 페이지를 새로고침하거나 확장프로그램을 재설치해주세요.');
+      console.error('이벤트 발송 실패:', error);
+      alert('확장프로그램 통신 오류가 발생했습니다.');
       return false;
     }
   }
