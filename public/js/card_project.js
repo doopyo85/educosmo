@@ -1327,6 +1327,10 @@ class ProjectCardManager {
                 const projectUrl = e.target.getAttribute('data-url');
                 const projectName = e.target.getAttribute('data-project-name') || 'Scratch Project';
 
+                console.log('🔍 [DEBUG] Scratch 다운로드 버튼 클릭됨');
+                console.log('🔍 [DEBUG] window.extensionBridge:', window.extensionBridge);
+                console.log('🔍 [DEBUG] Extension Marker:', document.getElementById('codingnplay-extension-installed'));
+
                 if (projectUrl) {
                     // 사용자 ID 가져오기
                     const userID = this.userID || document.getElementById('user-id')?.value || 'guest';
@@ -1334,15 +1338,17 @@ class ProjectCardManager {
                     console.log('🚀 Scratch 다운로드 버튼 클릭 - Extension 연동:', projectName);
 
                     if (window.extensionBridge) {
-                        window.extensionBridge.openEditor({
+                        console.log('✅ ExtensionBridge 감지됨 - 확장프로그램으로 요청 전송');
+                        const result = window.extensionBridge.openEditor({
                             platform: 'scratch',
                             missionId: `scratch_download_${Date.now()}`, // 고유 ID 부여
                             userId: userID,
                             missionTitle: projectName,
                             templateUrl: projectUrl
                         });
+                        console.log('🔍 [DEBUG] openEditor 결과:', result);
                     } else {
-                        console.warn('ExtensionBridge not found, showing install guide');
+                        console.warn('❌ ExtensionBridge not found, showing install guide');
                         alert('확장프로그램이 설치되지 않았습니다.\n\n확장프로그램 설치 가이드 페이지로 이동합니다.');
                         window.open('/extension-guide', '_blank');
                     }
