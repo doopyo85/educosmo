@@ -992,63 +992,30 @@ app.get('/debug-session', (req, res) => {
 });
 
 // =====================================================================
-// Cron Jobs
+// Cron Jobs - 통합 일일 정리 작업
 // =====================================================================
 
+// 🔥 통합 일일 정리: S3 temp 파일, ENT 파일, Entry 에셋, 구독 상태
+// 매일 새벽 2시 실행 (서버 부하 최소화)
 if (isMain) {
-  cron.schedule(config.CRON.SUBSCRIPTION_UPDATE, async () => {
+  const { runDailyCleanup } = require('./scripts/dailyCleanup');
+
+  cron.schedule('0 2 * * *', async () => {
     try {
-      await db.queryDatabase(
-        `UPDATE Users SET subscription_status = 'expired' 
-       WHERE subscription_expiry < CURDATE() AND subscription_status = 'active'`
-      );
-    } catch (error) {
-      console.error('구독 만료 상태 업데이트 중 오류:', error);
-    }
-  });
-}
+      console.log('🧹 일일 정리 작업 시작 (통합 Cron)');
+      const result = await runDailyCleanup();
 
-if (isMain) {
-  cron.schedule('0 0 * * *', async () => {
-    try {
-      const entryAssetsDir = path.join(__dirname, 'public', 'entry-assets');
-      if (fs.existsSync(entryAssetsDir)) {
-        const sessionDirs = fs.readdirSync(entryAssetsDir);
-        const now = Date.now();
-        let cleanedCount = 0;
-
-        for (const sessionDir of sessionDirs) {
-          const sessionPath = path.join(entryAssetsDir, sessionDir);
-          const stats = fs.statSync(sessionPath);
-
-          if (now - stats.mtime.getTime() > 60 * 60 * 1000) {
-            await fs.promises.rm(sessionPath, { recursive: true, force: true });
-            cleanedCount++;
-          }
-        }
-
-        if (cleanedCount > 0 && process.env.NODE_ENV === 'development') {
-          console.log(`Entry 에셋 정리 완료: ${cleanedCount}개 세션 디렉토리 삭제`);
-        }
+      if (result.success) {
+        console.log(`✅ 일일 정리 작업 완료 (소요 시간: ${Math.floor(result.duration / 1000)}초)`);
+      } else {
+        console.error('⚠️ 일일 정리 작업 중 일부 오류 발생');
       }
     } catch (error) {
-      console.error('Entry 에셋 정리 중 오류:', error);
+      console.error('❌ 일일 정리 작업 실패:', error);
     }
   });
-}
 
-const { scheduledCleanup } = require('./scripts/cleanup-ent-files');
-if (isMain) {
-  cron.schedule('*/5 * * * *', async () => {
-    try {
-      const result = await scheduledCleanup();
-      if (result.success && result.deletedFiles > 0 && process.env.NODE_ENV === 'development') {
-        console.log(`ENT 파일 정리 완료: ${result.deletedFiles}개 파일 삭제`);
-      }
-    } catch (error) {
-      console.error('ENT 파일 정리 cron 오류:', error);
-    }
-  });
+  console.log('✅ 통합 일일 정리 Cron 등록 완료 (매일 새벽 2시)');
 }
 
 app.get('/api/ws/proxy/:port', (req, res) => {
@@ -1249,16 +1216,9 @@ app.post('/api/admin/temp-files/cleanup', checkAdminRole, async (req, res) => {
   }
 });
 
-if (isMain) {
-  cron.schedule('0 2 * * *', async () => {
-    try {
-      const { cleanupTemporaryFiles } = require('./lib_board/attachmentService');
-      await cleanupTemporaryFiles();
-    } catch (error) {
-      console.error('S3 임시 파일 정리 오류:', error);
-    }
-  });
-}
+// 🔥 기존 개별 S3 temp 정리 cron은 통합 dailyCleanup으로 대체되었습니다.
+// 위의 "통합 일일 정리 Cron"을 참고하세요.
+
 // 서버 시작
 const PORT = Number(process.env.PORT);
 

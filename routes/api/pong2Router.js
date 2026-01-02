@@ -257,7 +257,7 @@ router.get('/boards/:id', async (req, res) => {
 // ==========================================
 router.post('/boards', requireDbUser, async (req, res) => {
     try {
-        const { title, content, board_type, nest_id, image_url } = req.body; // board_type: 'COMMUNITY' or 'TEACHER'
+        let { title, content, board_type, nest_id, image_url } = req.body; // board_type: 'COMMUNITY' or 'TEACHER'
 
         // Validate basic input
         if (!title || !content) {
@@ -267,7 +267,15 @@ router.post('/boards', requireDbUser, async (req, res) => {
         const authorName = req.user.nickname || req.user.name;
         const authorId = req.user.id;
         const authorType = req.user.type; // 'PAID' or 'PONG2'
-        const imageUrl = image_url || null; // 🔥 이미지 URL 추가
+
+        // 🔥 Step 1: content 내 temp 이미지를 정식 경로로 이동
+        const { processContentImages } = require('../../lib_board/s3Utils');
+        console.log('=== Pong2 게시글 작성: 이미지 영구화 시작 ===');
+        const imageResult = await processContentImages(content);
+        content = imageResult.content;  // 업데이트된 content
+        console.log(`이동된 이미지: ${imageResult.movedImages.length}개`);
+
+        let imageUrl = image_url || null; // 🔥 이미지 URL 추가
 
         // Determine Scope AND Category
         let boardScope = 'COMMUNITY';
@@ -283,7 +291,7 @@ router.post('/boards', requireDbUser, async (req, res) => {
         }
 
         const result = await queryDatabase(`
-            INSERT INTO board_posts 
+            INSERT INTO board_posts
             (category_id, title, content, image_url, author, author_id, author_type, board_scope, is_public, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
         `, [categoryId, title, content, imageUrl, authorName, authorId, authorType, boardScope]);

@@ -278,6 +278,51 @@ Jupyter 노트북 완전 격리
 페이지별 접근 제어
 
 
+🕐 Cron 작업 정책 (통합 일일 정리)
+정책 개요
+- 모든 임시 파일 정리 작업을 **하루 1회 동일 시간대 (새벽 2시)** 실행
+- 개별 cron 작업을 통합하여 서버 부하 최소화
+- 로그 통합 관리로 유지보수 효율성 향상
+
+통합 Cron 스케줄
+시간작업내용매일 새벽 2시1. S3 임시 파일 정리 (board/images/temp/, board/attachments/temp/)
+2. ENT 파일 정리 (temp/ent_files/*.ent - 30분 이상)
+3. Entry 에셋 정리 (public/entry-assets/* - 24시간 이상)
+4. 구독 상태 업데이트 (만료된 구독 처리)
+실행 파일
+- scripts/dailyCleanup.js - 통합 정리 스크립트
+- server.js:1003 - cron.schedule('0 2 * * *')
+
+S3 임시 파일 영구화 정책 🔥
+게시판 이미지 처리
+
+1. 업로드: multer-s3 → board/images/temp/ (S3)
+2. 게시글 작성: processContentImages() 호출
+3. 자동 이동: temp/ → board/images/YYYY/MM/
+4. 24시간 후: temp 폴더의 잔여 파일 삭제
+
+적용 파일
+
+- lib_board/fileUpload.js:182 - temp 폴더 업로드
+- lib_board/s3Utils.js:352 - processContentImages() 함수
+- routes/api/boardApiRouter.js:357 - 게시글 작성 시 호출
+- routes/api/pong2Router.js:274 - Pong2 게시글 작성 시 호출
+
+Temp 디렉토리 관리 정책
+유지 필요
+- /var/www/html/temp/ent_files/ - Entry 프로젝트 압축 해제 및 이미지 서빙용
+- /var/www/html/temp/cleanup.log - 정리 작업 로그
+
+삭제 가능
+- /var/www/html/temp/entry_uploads/ - S3 직접 업로드로 대체됨
+- /var/www/html/temp/entry_projects/ - 사용 안함
+
+정리 주기
+- ENT 파일: 30분 이상 된 파일 삭제
+- Entry 에셋: 24시간 이상 된 파일 삭제
+- S3 temp: 24시간 이상 된 파일 삭제
+
+
 🚀 주요 개선 포인트
 완료된 기능
 ✅ 컴포넌트 시스템 구축
@@ -287,6 +332,8 @@ Jupyter 노트북 완전 격리
 ✅ 템플릿 기반 노트북 생성 🔥
 ✅ 퀴즈 시스템
 ✅ 해설 팝업
+✅ 통합 Cron 정리 시스템 🔥 (2026-01-02)
+✅ S3 임시 파일 영구화 🔥 (2026-01-02)
 예정 기능
 🔲 학생 진도관리 대시보드
 🔲 실시간 협업 기능 (WebSocket)

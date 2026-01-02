@@ -233,7 +233,7 @@
                                                                             </li>
                                                                             <li>
                                                                                 <a class="dropdown-item" href="#"
-                                                                                    onclick="openMyProfile(); return false;">
+                                                                                    onclick="openMyInfoModal(); return false;">
                                                                                     <i
                                                                                         class="bi bi-pencil-square me-2"></i>내
                                                                                     정보
@@ -390,7 +390,7 @@
                 /**
                  * 내 정보 수정 모달 열기
                  */
-                async function openMyProfile() {
+                async function openMyInfoModal() {
                     try {
                         const response = await fetch('/api/my-profile-detail');
                         const result = await response.json();

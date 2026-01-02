@@ -53,8 +53,6 @@ class CardLinkManager {
         try {
             if (mode === 'portal') {
                 const data = await window.googleSheetsAPI.getData('PORTAL');
-                console.log('📊 Portal Data Sample (first row):', data[0]);
-                console.log('   Row length:', data[0]?.length);
                 this.currentData = data;
                 this.extractCategoriesForPortal(data);
             }
@@ -468,14 +466,8 @@ class CardLinkManager {
             const imageUrl = row[4];
             const entURL = row[6]; // G열: entURL
 
-            // 디버깅 로그
-            console.log(`🔍 Card: "${title}"`);
-            console.log(`   D열(stageURL): ${stageURL}`);
-            console.log(`   G열(entURL): ${entURL}`);
-
             // entURL(G열)이 있으면 그것을 사용하고, 없으면 stageURL(D열) 사용
             let linkUrl = (entURL && entURL.trim() !== '') ? entURL : (stageURL || '#');
-            console.log(`   최종 사용 URL: ${linkUrl}`);
 
             if (linkUrl !== '#' && !linkUrl.startsWith('http')) linkUrl = 'https://' + linkUrl;
             const tags = row[5] ? row[5].split(',').map(t => `<span class="badge bg-light text-secondary border me-1">#${t.trim()}</span>`).join('') : '';

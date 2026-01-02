@@ -667,6 +667,180 @@ router.get('/student/:id/observatory', async (req, res) => {
 
 
 // ============================================
+// Teacher View: Student Problems
+// ============================================
+router.get('/student/:id/problems', async (req, res) => {
+    try {
+        const studentId = req.params.id;
+        const teacherRole = req.session.role;
+        const teacherCenterId = req.session.centerID;
+
+        // Teacher/Admin check
+        if (!['teacher', 'manager', 'admin'].includes(teacherRole)) {
+            return res.status(403).send('권한이 없습니다.');
+        }
+
+        const [student] = await db.queryDatabase(
+            'SELECT * FROM Users WHERE id = ? AND role = "student"',
+            [studentId]
+        );
+
+        if (!student) {
+            return res.status(404).send('학생을 찾을 수 없습니다.');
+        }
+
+        // Center check
+        if (teacherRole !== 'admin' && student.centerID !== teacherCenterId) {
+            return res.status(403).send('다른 센터 학생입니다.');
+        }
+
+        // 1. Fetch QuizResults (Targeting Student ID)
+        const problems = await db.queryDatabase(`
+            SELECT * FROM QuizResults 
+            WHERE user_id = ?
+            ORDER BY timestamp DESC
+            LIMIT 100
+        `, [studentId]);
+
+        // 2. Fetch Problems Sheet Metadata
+        const { getSheetData } = require('../lib_google/sheetService');
+        let metadataMap = new Map();
+        try {
+            const problemsSheet = await getSheetData('problems!A2:N500');
+            if (problemsSheet && problemsSheet.length > 0) {
+                problemsSheet.forEach(row => {
+                    while (row.length < 14) row.push('');
+                    const key = `${(row[1] || '').toLowerCase()}_${(row[2] || '').toLowerCase()}`;
+                    metadataMap.set(key, {
+                        concept: row[3] || '',
+                        difficulty: row[10] || '1',
+                        questionType: row[11] || '',
+                        tags: row[12] || '',
+                        testCases: row[9] || '[]'
+                    });
+                });
+            }
+        } catch (sheetErr) {
+            console.error('Failed to load problem metadata:', sheetErr);
+        }
+
+        // 3. Calculate Accuracy Rates
+        const statsMap = new Map();
+        problems.forEach(p => {
+            const key = `${(p.exam_name || '').toLowerCase()}_${(p.problem_number || '').toLowerCase()}`;
+            if (!statsMap.has(key)) {
+                statsMap.set(key, { total: 0, correct: 0 });
+            }
+            statsMap.get(key).total++;
+            if (p.is_correct) statsMap.get(key).correct++;
+        });
+
+        // 4. Enrich problems
+        const enrichedProblems = problems.map(p => {
+            const key = `${(p.exam_name || '').toLowerCase()}_${(p.problem_number || '').toLowerCase()}`;
+            const meta = metadataMap.get(key) || {};
+            const stats = statsMap.get(key) || { total: 1, correct: 0 };
+
+            let passedTests = 0;
+            let totalTests = 0;
+            if (p.execution_results) {
+                try {
+                    const results = JSON.parse(p.execution_results);
+                    if (Array.isArray(results)) {
+                        totalTests = results.length;
+                        passedTests = results.filter(r => r.passed).length;
+                    }
+                } catch (e) { }
+            }
+
+            return {
+                ...p,
+                concept: meta.concept || '',
+                difficulty: meta.difficulty || '1',
+                questionType: meta.questionType || '',
+                tags: meta.tags || '',
+                passedTests,
+                totalTests,
+                accuracyRate: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0,
+                totalAttempts: stats.total,
+                successAttempts: stats.correct
+            };
+        });
+
+        // 5. Group by Exam
+        const examGroupsMap = new Map();
+        enrichedProblems.forEach(p => {
+            const examKey = p.exam_name || 'Unknown';
+            const problemKey = p.problem_number || 'Unknown';
+
+            if (!examGroupsMap.has(examKey)) {
+                examGroupsMap.set(examKey, {
+                    exam_name: examKey,
+                    problems: new Map(),
+                    latestTimestamp: null
+                });
+            }
+            const examGroup = examGroupsMap.get(examKey);
+
+            if (!examGroup.problems.has(problemKey)) {
+                examGroup.problems.set(problemKey, {
+                    problem_number: problemKey,
+                    concept: p.concept,
+                    tags: p.tags,
+                    difficulty: p.difficulty,
+                    accuracyRate: p.accuracyRate,
+                    totalAttempts: p.totalAttempts,
+                    successAttempts: p.successAttempts,
+                    latestStatus: null,
+                    latestTimestamp: null,
+                    latestPassedTests: 0,
+                    latestTotalTests: 0,
+                    attempts: []
+                });
+            }
+
+            const problemGroup = examGroup.problems.get(problemKey);
+            problemGroup.attempts.push(p);
+
+            if (!problemGroup.latestTimestamp || new Date(p.timestamp) > new Date(problemGroup.latestTimestamp)) {
+                problemGroup.latestStatus = p.is_correct;
+                problemGroup.latestTimestamp = p.timestamp;
+                problemGroup.latestPassedTests = p.passedTests;
+                problemGroup.latestTotalTests = p.totalTests;
+            }
+
+            if (!examGroup.latestTimestamp || new Date(p.timestamp) > new Date(examGroup.latestTimestamp)) {
+                examGroup.latestTimestamp = p.timestamp;
+            }
+        });
+
+        const groupedByExam = Array.from(examGroupsMap.values()).map(exam => ({
+            exam_name: exam.exam_name,
+            latestTimestamp: exam.latestTimestamp,
+            problems: Array.from(exam.problems.values())
+                .sort((a, b) => new Date(b.latestTimestamp) - new Date(a.latestTimestamp))
+        })).sort((a, b) => new Date(b.latestTimestamp) - new Date(a.latestTimestamp));
+
+        res.render('my-universe/index', {
+            activeTab: 'problems',
+            problems: enrichedProblems,
+            groupedByExam: groupedByExam,
+            student,        // Pass student info
+            readOnly: true, // Teacher view is read-only
+            userID: req.session.userID,
+            userRole: req.session.role,
+            is_logined: req.session.is_logined,
+            centerID: req.session.centerID
+        });
+
+    } catch (error) {
+        console.error('Student Problems Error:', error);
+        res.status(500).send('Error loading student problems');
+    }
+});
+
+
+// ============================================
 // Problems Tab (Enhanced with Sheet Metadata)
 // ============================================
 router.get('/problems', async (req, res) => {
