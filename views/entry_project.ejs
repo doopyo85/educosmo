@@ -38,8 +38,10 @@
                     <!-- 고정 버튼 (왼쪽) -->
                     <div class="d-flex align-items-center gap-2">
                         <!-- 🔥 External Link -->
-                        <a href="https://playentry.org/ws/new" target="_blank" class="apple-btn-primary"
-                            id="openOfficialEntryBtn">
+                        <!-- 🔥 External Link (Extension Bridge) -->
+                        <a href="#" class="apple-btn-primary" id="openOfficialEntryBtn" data-action="open-editor"
+                            data-platform="entry" data-mission-id="entry_new_project" data-user-id="<%= userID %>"
+                            data-mission-title="새 프로젝트">
                             <i class="bi bi-box-arrow-up-right"></i> Entry 공식 에디터 열기
                         </a>
 
