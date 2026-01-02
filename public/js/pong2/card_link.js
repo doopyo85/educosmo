@@ -462,8 +462,12 @@ class CardLinkManager {
         return filtered.map(row => {
             const title = row[1];
             const description = row[2];
-            let linkUrl = row[3] || '#';
+            const stageURL = row[3];
             const imageUrl = row[4];
+            const entURL = row[6]; // G열: entURL
+
+            // entURL(G열)이 있으면 그것을 사용하고, 없으면 stageURL(D열) 사용
+            let linkUrl = (entURL && entURL.trim() !== '') ? entURL : (stageURL || '#');
             if (linkUrl !== '#' && !linkUrl.startsWith('http')) linkUrl = 'https://' + linkUrl;
             const tags = row[5] ? row[5].split(',').map(t => `<span class="badge bg-light text-secondary border me-1">#${t.trim()}</span>`).join('') : '';
             const clickAction = `window.open('${linkUrl}', '_blank')`;
@@ -471,7 +475,7 @@ class CardLinkManager {
             return `
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="card h-100 shadow-sm" onclick="${clickAction}">
-                         <img src="${imageUrl}" class="card-img-top object-fit-cover" alt="${title}" 
+                         <img src="${imageUrl}" class="card-img-top object-fit-cover" alt="${title}"
                               onerror="this.src='/resource/default-image.png'">
                         <div class="card-body">
                             <h6 class="card-title fw-bold text-truncate">${title}</h6>
