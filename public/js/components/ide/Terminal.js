@@ -76,7 +76,7 @@ class Terminal {
     }
 
     outputElement.style.fontFamily = "'Consolas', 'Monaco', 'Courier New', monospace";
-    outputElement.style.fontSize = "14px";
+    outputElement.style.fontSize = "var(--terminal-font-size, 20px)";
     outputElement.style.lineHeight = "1.4";
     outputElement.style.whiteSpace = "pre-wrap";
     outputElement.style.wordWrap = "break-word";
