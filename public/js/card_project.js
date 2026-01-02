@@ -864,18 +864,25 @@ class ProjectCardManager {
             ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary') : ''}
         ` : '';
 
+        // 다운로드 버튼 (COS가 아닌 경우에만 표시)
+        const downloadBtn = !isCOS && project.basic ? `
+            <button class="scratch-download-btn" data-url="${project.basic}" data-project-name="${projectName}">
+                <i class="bi bi-download"></i> 다운로드
+            </button>
+        ` : '';
+
         return `
             ${pptBtn}
             <div class="project-card-header">
                 <h3 class="project-card-title">${projectName}</h3>
             </div>
-            
+
             ${project.img && !isCOS ? `
                 <div class="project-card-image">
                     <img src="${project.img}" alt="${projectName}">
                 </div>
             ` : ''}
-            
+
             <div class="project-card-tags">
                 <span class="project-card-tag">
                     <i class="bi bi-cpu"></i> ${project.ctElement || '블록코딩'}
@@ -886,11 +893,12 @@ class ProjectCardManager {
                     </span>
                 ` : ''}
             </div>
-            
+
             <div class="project-card-actions">
                 <div class="project-card-btn-group">
                     ${isCOS ? cosButtons : cpsButtons}
                 </div>
+                ${downloadBtn}
             </div>
         `;
     }
@@ -1300,7 +1308,7 @@ class ProjectCardManager {
                 }
             }
 
-            // 다운로드 버튼 (그대로 유지)
+            // Entry 다운로드 버튼
             if (e.target.classList.contains('entry-legacy-btn')) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1308,6 +1316,36 @@ class ProjectCardManager {
                 const projectUrl = e.target.getAttribute('data-url');
                 if (projectUrl) {
                     this.downloadEntryFile(projectUrl);
+                }
+            }
+
+            // Scratch 다운로드 버튼 (Extension 연동)
+            if (e.target.classList.contains('scratch-download-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const projectUrl = e.target.getAttribute('data-url');
+                const projectName = e.target.getAttribute('data-project-name') || 'Scratch Project';
+
+                if (projectUrl) {
+                    // 사용자 ID 가져오기
+                    const userID = this.userID || document.getElementById('user-id')?.value || 'guest';
+
+                    console.log('🚀 Scratch 다운로드 버튼 클릭 - Extension 연동:', projectName);
+
+                    if (window.extensionBridge) {
+                        window.extensionBridge.openEditor({
+                            platform: 'scratch',
+                            missionId: `scratch_download_${Date.now()}`, // 고유 ID 부여
+                            userId: userID,
+                            missionTitle: projectName,
+                            templateUrl: projectUrl
+                        });
+                    } else {
+                        console.warn('ExtensionBridge not found, showing install guide');
+                        alert('확장프로그램이 설치되지 않았습니다.\n\n확장프로그램 설치 가이드 페이지로 이동합니다.');
+                        window.open('/extension-guide', '_blank');
+                    }
                 }
             }
         });
