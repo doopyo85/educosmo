@@ -38,11 +38,15 @@
                     <!-- 고정 버튼 (왼쪽) -->
                     <div class="d-flex align-items-center gap-2">
                         <!-- 🔥 External Link -->
-                        <a href="http://localhost:8070" target="_blank" class="apple-btn-primary">
-                            <i class="bi bi-box-arrow-up-right"></i> 기본
+                        <!-- 🔥 External Link (Extension Bridge) -->
+                        <a href="#" class="apple-btn-primary" id="openOfficialEntryBtn" data-action="open-editor"
+                            data-platform="entry" data-mission-id="entry_new_project" data-user-id="<%= userID %>"
+                            data-mission-title="새 프로젝트">
+                            <i class="bi bi-box-arrow-up-right"></i> Entry 공식 에디터 열기
                         </a>
-                        <a href="http://localhost:8070" target="_blank" class="apple-btn-secondary">
-                            <i class="bi bi-box-arrow-up-right"></i> 확장
+
+                        <a href="https://playentry.org" target="_blank" class="apple-btn-secondary">
+                            <i class="bi bi-link"></i> playentry.org
                         </a>
 
                         <!-- 🔥 불러오기 버튼 추가 -->
@@ -77,7 +81,7 @@
 
         <script>
             /**
-             * 🔥 Entry 프로젝트 불러오기 (다운로드 제공 - Extension 연동)
+             * 🔥 Entry 프로젝트 불러오기 (다운로드 제공)
              */
             function openEntryProjectLoadModal() {
                 const modal = new ProjectStorageModal({
@@ -85,22 +89,14 @@
                     onLoad: (data) => {
                         console.log('📂 Entry 프로젝트 선택됨:', data);
                         if (data.url) {
-                            // 확장프로그램을 통해 에디터 열기
-                            const userID = document.getElementById('user-id').value;
-
-                            // extensionBridge가 로드되었는지 확인
-                            if (window.extensionBridge) {
-                                window.extensionBridge.openEditor({
-                                    platform: 'entry',
-                                    missionId: 'entry_load_project', // 임시 ID
-                                    userId: userID,
-                                    missionTitle: data.title || '불러온 프로젝트',
-                                    templateUrl: data.url
-                                });
-                            } else {
-                                alert('확장프로그램 브리지가 로드되지 않았습니다.');
-                            }
-
+                            // 바로 다운로드
+                            const link = document.createElement('a');
+                            link.href = data.url;
+                            link.download = data.title || 'project.ent';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            alert('프로젝트가 다운로드되었습니다. Entry 공식 에디터에서 "오프라인 작품 불러오기"를 사용하세요.');
                         } else {
                             alert('프로젝트 URL을 찾을 수 없습니다.');
                         }
