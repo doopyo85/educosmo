@@ -418,43 +418,49 @@
                     }
                 }
 
-                // 정보 저장 처리
-                const myInfoForm = document.getElementById('myInfoForm');
-                if (myInfoForm) {
-                    myInfoForm.addEventListener('submit', async function (e) {
-                        e.preventDefault();
+                // 정보 저장 처리 (IIFE to prevent redeclaration error)
+                (function () {
+                    const myInfoForm = document.getElementById('myInfoForm');
+                    if (myInfoForm) {
+                        // Remove existing listener to prevent duplicates if re-run
+                        const newForm = myInfoForm.cloneNode(true);
+                        myInfoForm.parentNode.replaceChild(newForm, myInfoForm);
 
-                        const formData = {
-                            name: document.getElementById('infoName').value,
-                            email: document.getElementById('infoEmail').value,
-                            phone: document.getElementById('infoPhone').value,
-                            password: document.getElementById('infoPassword').value
-                        };
+                        newForm.addEventListener('submit', async function (e) {
+                            e.preventDefault();
 
-                        try {
-                            const response = await fetch('/api/my-profile-detail', {
-                                method: 'PUT',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify(formData)
-                            });
+                            const formData = {
+                                name: document.getElementById('infoName').value,
+                                email: document.getElementById('infoEmail').value,
+                                phone: document.getElementById('infoPhone').value,
+                                password: document.getElementById('infoPassword').value
+                            };
 
-                            const result = await response.json();
-                            if (result.success) {
-                                alert('수정이 완료되었습니다.');
+                            try {
+                                const response = await fetch('/api/my-profile-detail', {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(formData)
+                                });
 
-                                // 모달 닫기
-                                const modalEl = document.getElementById('myInfoModal');
-                                const modal = bootstrap.Modal.getInstance(modalEl);
-                                modal.hide();
-                            } else {
-                                alert('수정 실패: ' + result.message);
+                                const result = await response.json();
+                                if (result.success) {
+                                    alert('수정이 완료되었습니다.');
+
+                                    // 모달 닫기
+                                    const modalEl = document.getElementById('myInfoModal');
+                                    const modal = bootstrap.Modal.getInstance(modalEl);
+                                    modal.hide();
+                                } else {
+                                    alert('수정 실패: ' + result.message);
+                                }
+                            } catch (error) {
+                                console.error('프로필 저장 오류:', error);
+                                alert('저장 중 오류가 발생했습니다.');
                             }
-                        } catch (error) {
-                            console.error('프로필 저장 오류:', error);
-                            alert('저장 중 오류가 발생했습니다.');
-                        }
-                    });
-                }
+                        });
+                    }
+                })();
             </script>
