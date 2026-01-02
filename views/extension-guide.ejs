@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>확장프로그램 설치 가이드 - 코딩앤플레이</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/styles.css">
     <style>
         .guide-hero {
@@ -22,283 +24,305 @@
         .feature-card {
             background: white;
             border-radius: 12px;
-            padding: 24px;
+            padding: 32px;
+            /* Increased padding */
             margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            height: 100%;
         }
 
-        .feature-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-        }
+        /* Hover animation removed as requested */
 
         .step-badge {
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            /* Slightly larger */
+            height: 48px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            font-size: 1.2rem;
             margin-right: 16px;
+            flex-shrink: 0;
         }
 
         .platform-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
+            font-size: 56px;
+            /* Larger icon */
+            margin-bottom: 20px;
         }
 
         .download-btn {
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
             border: none;
-            padding: 14px 32px;
+            padding: 16px 40px;
+            /* Larger button */
             border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            transition: transform 0.2s;
+            font-weight: 700;
+            font-size: 18px;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .download-btn:hover {
-            transform: scale(1.05);
             color: white;
         }
 
         .code-block {
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
-            padding: 16px;
-            border-radius: 4px;
+            background: #2d3748;
+            color: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
             margin: 16px 0;
-            font-family: 'Courier New', monospace;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 1.2rem;
+            /* Larger text */
+            font-weight: bold;
+            border: 2px solid #4a5568;
+            position: relative;
+        }
+
+        .card-body {
+            padding: 2rem;
+            /* More spacing in instruction cards */
         }
     </style>
 </head>
+
 <body>
     <%- include('partials/header') %>
 
-    <!-- Hero Section -->
-    <div class="guide-hero">
-        <div class="container">
-            <h1 class="display-4 fw-bold mb-3">
-                <i class="bi bi-puzzle"></i> 코딩앤플레이 학습도우미
-            </h1>
-            <p class="lead">Entry, Scratch, App Inventor 프로젝트를 쉽고 빠르게 제출하세요</p>
+        <!-- Hero Section -->
+        <div class="guide-hero">
+            <div class="container">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="bi bi-puzzle"></i> 코딩앤플레이 학습도우미
+                </h1>
+                <p class="lead">Entry, Scratch, App Inventor 프로젝트를 쉽고 빠르게 제출하세요</p>
+            </div>
         </div>
-    </div>
 
-    <div class="container mt-5 mb-5">
-        <!-- 특징 소개 -->
-        <section class="guide-section">
-            <h2 class="text-center fw-bold mb-4">주요 기능</h2>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="feature-card text-center">
-                        <div class="platform-icon">🐱</div>
-                        <h4>Scratch 지원</h4>
-                        <p class="text-muted">
-                            공유된 프로젝트는 자동 추출<br>
-                            .sb3 파일 업로드 지원
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-card text-center">
-                        <div class="platform-icon">🎮</div>
-                        <h4>Entry 지원</h4>
-                        <p class="text-muted">
-                            .ent 파일 업로드<br>
-                            간편한 제출 프로세스
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-card text-center">
-                        <div class="platform-icon">📱</div>
-                        <h4>App Inventor 지원</h4>
-                        <p class="text-muted">
-                            .aia 파일 업로드<br>
-                            앱 프로젝트 관리
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 설치 방법 -->
-        <section class="guide-section">
-            <h2 class="text-center fw-bold mb-5">설치 방법</h2>
-
-            <!-- Chrome 설치 -->
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="bi bi-browser-chrome"></i> Chrome 브라우저에서 설치</h4>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <span class="step-badge">1</span>
-                        <strong>확장프로그램 다운로드</strong>
-                        <p class="ms-5 mt-2">아래 버튼을 클릭하여 확장프로그램을 다운로드하세요.</p>
-                        <div class="ms-5">
-                            <a href="/extension/codingnplay-extension.zip" class="download-btn text-decoration-none">
-                                <i class="bi bi-download"></i> 확장프로그램 다운로드
-                            </a>
+        <div class="container mt-5 mb-5">
+            <!-- 특징 소개 -->
+            <section class="guide-section">
+                <h2 class="text-center fw-bold mb-4">주요 기능</h2>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="feature-card text-center">
+                            <div class="platform-icon">🐱</div>
+                            <h4>Scratch 지원</h4>
+                            <p class="text-muted">
+                                공유된 프로젝트는 자동 추출<br>
+                                .sb3 파일 업로드 지원
+                            </p>
                         </div>
                     </div>
-
-                    <div class="mb-3">
-                        <span class="step-badge">2</span>
-                        <strong>압축 해제</strong>
-                        <p class="ms-5 mt-2">다운로드한 ZIP 파일을 원하는 위치에 압축 해제하세요.</p>
-                    </div>
-
-                    <div class="mb-3">
-                        <span class="step-badge">3</span>
-                        <strong>Chrome 확장프로그램 페이지 열기</strong>
-                        <p class="ms-5 mt-2">Chrome 브라우저 주소창에 다음을 입력하세요:</p>
-                        <div class="code-block ms-5">
-                            chrome://extensions
+                    <div class="col-md-4">
+                        <div class="feature-card text-center">
+                            <div class="platform-icon">🎮</div>
+                            <h4>Entry 지원</h4>
+                            <p class="text-muted">
+                                .ent 파일 업로드<br>
+                                간편한 제출 프로세스
+                            </p>
                         </div>
                     </div>
-
-                    <div class="mb-3">
-                        <span class="step-badge">4</span>
-                        <strong>개발자 모드 활성화</strong>
-                        <p class="ms-5 mt-2">우측 상단의 "개발자 모드" 토글을 켜세요.</p>
-                    </div>
-
-                    <div class="mb-3">
-                        <span class="step-badge">5</span>
-                        <strong>확장프로그램 로드</strong>
-                        <p class="ms-5 mt-2">"압축해제된 확장 프로그램을 로드합니다" 버튼을 클릭하고 압축 해제한 폴더를 선택하세요.</p>
-                    </div>
-
-                    <div>
-                        <span class="step-badge">6</span>
-                        <strong>설치 완료!</strong>
-                        <p class="ms-5 mt-2">브라우저 우측 상단에 확장프로그램 아이콘이 표시됩니다.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Edge 설치 -->
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h4 class="mb-0"><i class="bi bi-browser-edge"></i> Edge 브라우저에서 설치</h4>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <span class="step-badge">1</span>
-                        <strong>확장프로그램 다운로드 및 압축 해제</strong>
-                        <p class="ms-5 mt-2">위의 Chrome 설치 방법 1-2단계와 동일합니다.</p>
-                    </div>
-
-                    <div class="mb-3">
-                        <span class="step-badge">2</span>
-                        <strong>Edge 확장 페이지 열기</strong>
-                        <p class="ms-5 mt-2">Edge 브라우저 주소창에 다음을 입력하세요:</p>
-                        <div class="code-block ms-5">
-                            edge://extensions
+                    <div class="col-md-4">
+                        <div class="feature-card text-center">
+                            <div class="platform-icon">📱</div>
+                            <h4>App Inventor 지원</h4>
+                            <p class="text-muted">
+                                .aia 파일 업로드<br>
+                                앱 프로젝트 관리
+                            </p>
                         </div>
                     </div>
-
-                    <div class="mb-3">
-                        <span class="step-badge">3</span>
-                        <strong>개발자 모드 활성화</strong>
-                        <p class="ms-5 mt-2">좌측 하단의 "개발자 모드" 토글을 켜세요.</p>
-                    </div>
-
-                    <div class="mb-3">
-                        <span class="step-badge">4</span>
-                        <strong>확장프로그램 로드</strong>
-                        <p class="ms-5 mt-2">"압축을 푼 항목 로드" 버튼을 클릭하고 압축 해제한 폴더를 선택하세요.</p>
-                    </div>
-
-                    <div>
-                        <span class="step-badge">5</span>
-                        <strong>설치 완료!</strong>
-                        <p class="ms-5 mt-2">브라우저 우측 상단에 확장프로그램 아이콘이 표시됩니다.</p>
-                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- 사용 방법 -->
-        <section class="guide-section">
-            <h2 class="text-center fw-bold mb-4">사용 방법</h2>
-            <div class="card">
-                <div class="card-body">
-                    <ol class="lead">
-                        <li class="mb-3">코딩앤플레이에서 과제를 선택하고 "프로젝트 열기" 버튼을 클릭합니다.</li>
-                        <li class="mb-3">공식 에디터(Entry, Scratch, App Inventor)가 새 탭으로 열립니다.</li>
-                        <li class="mb-3">프로젝트를 완성합니다.</li>
-                        <li class="mb-3">우측 상단에 표시되는 <span class="badge bg-success">📤 제출하기</span> 플로팅 버튼을 클릭합니다.</li>
-                        <li class="mb-3">안내에 따라 프로젝트 파일을 제출합니다.</li>
-                    </ol>
-                </div>
-            </div>
-        </section>
+            <!-- 설치 방법 -->
+            <section class="guide-section">
+                <h2 class="text-center fw-bold mb-5">설치 방법</h2>
 
-        <!-- 문제 해결 -->
-        <section class="guide-section">
-            <h2 class="text-center fw-bold mb-4">문제 해결</h2>
-            <div class="accordion" id="faqAccordion">
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                            확장프로그램이 작동하지 않아요
-                        </button>
-                    </h2>
-                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            <ul>
-                                <li>Chrome/Edge의 확장프로그램 관리 페이지에서 확장프로그램이 활성화되어 있는지 확인하세요.</li>
-                                <li>페이지를 새로고침하세요.</li>
-                                <li>브라우저를 재시작해보세요.</li>
-                            </ul>
+                <!-- Chrome 설치 -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="bi bi-browser-chrome"></i> Chrome 브라우저에서 설치</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <span class="step-badge">1</span>
+                            <strong>확장프로그램 다운로드</strong>
+                            <p class="ms-5 mt-2">아래 버튼을 클릭하여 확장프로그램을 다운로드하세요.</p>
+                            <div class="ms-5">
+                                <a href="/extension/codingnplay-extension.zip"
+                                    class="download-btn text-decoration-none">
+                                    <i class="bi bi-download"></i> 확장프로그램 다운로드
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="step-badge">2</span>
+                            <strong>압축 해제</strong>
+                            <p class="ms-5 mt-2">다운로드한 ZIP 파일을 원하는 위치에 압축 해제하세요.</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="step-badge">3</span>
+                            <strong>Chrome 확장프로그램 페이지 열기</strong>
+                            <p class="ms-5 mt-2">새 탭을 열고 주소창에 아래 주소를 입력하세요 (복사해서 붙여넣기):</p>
+                            <div class="code-block ms-5">
+                                chrome://extensions
+                            </div>
+                            <p class="ms-5 text-danger"><small>* 보안상의 이유로 링크를 클릭해서 바로 이동할 수 없습니다.</small></p>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="step-badge">4</span>
+                            <strong>개발자 모드 활성화</strong>
+                            <p class="ms-5 mt-2">우측 상단의 "개발자 모드" 토글을 켜세요.</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="step-badge">5</span>
+                            <strong>확장프로그램 로드</strong>
+                            <p class="ms-5 mt-2">"압축해제된 확장 프로그램을 로드합니다" 버튼을 클릭하고 압축 해제한 폴더를 선택하세요.</p>
+                        </div>
+
+                        <div>
+                            <span class="step-badge">6</span>
+                            <strong>설치 완료!</strong>
+                            <p class="ms-5 mt-2">브라우저 우측 상단에 확장프로그램 아이콘이 표시됩니다.</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                            제출 버튼이 보이지 않아요
-                        </button>
-                    </h2>
-                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            <ul>
-                                <li>코딩앤플레이에서 "프로젝트 열기" 버튼을 클릭하여 에디터를 열었는지 확인하세요.</li>
-                                <li>직접 에디터 사이트에 접속한 경우에는 제출 버튼이 표시되지 않습니다.</li>
-                            </ul>
+                <!-- Edge 설치 -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0"><i class="bi bi-browser-edge"></i> Edge 브라우저에서 설치</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <span class="step-badge">1</span>
+                            <strong>확장프로그램 다운로드 및 압축 해제</strong>
+                            <p class="ms-5 mt-2">위의 Chrome 설치 방법 1-2단계와 동일합니다.</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="step-badge">2</span>
+                            <strong>Edge 확장 페이지 열기</strong>
+                            <p class="ms-5 mt-2">새 탭을 열고 주소창에 아래 주소를 입력하세요 (복사해서 붙여넣기):</p>
+                            <div class="code-block ms-5">
+                                edge://extensions
+                            </div>
+                            <p class="ms-5 text-danger"><small>* 보안상의 이유로 링크를 클릭해서 바로 이동할 수 없습니다.</small></p>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="step-badge">3</span>
+                            <strong>개발자 모드 활성화</strong>
+                            <p class="ms-5 mt-2">좌측 하단의 "개발자 모드" 토글을 켜세요.</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="step-badge">4</span>
+                            <strong>확장프로그램 로드</strong>
+                            <p class="ms-5 mt-2">"압축을 푼 항목 로드" 버튼을 클릭하고 압축 해제한 폴더를 선택하세요.</p>
+                        </div>
+
+                        <div>
+                            <span class="step-badge">5</span>
+                            <strong>설치 완료!</strong>
+                            <p class="ms-5 mt-2">브라우저 우측 상단에 확장프로그램 아이콘이 표시됩니다.</p>
                         </div>
                     </div>
                 </div>
+            </section>
 
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                            파일 업로드가 실패해요
-                        </button>
-                    </h2>
-                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            <ul>
-                                <li>파일 크기가 50MB 이하인지 확인하세요.</li>
-                                <li>올바른 파일 형식(.sb3, .ent, .aia)인지 확인하세요.</li>
-                                <li>네트워크 연결을 확인하세요.</li>
-                            </ul>
+            <!-- 사용 방법 -->
+            <section class="guide-section">
+                <h2 class="text-center fw-bold mb-4">사용 방법</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <ol class="lead">
+                            <li class="mb-3">코딩앤플레이에서 과제를 선택하고 "프로젝트 열기" 버튼을 클릭합니다.</li>
+                            <li class="mb-3">공식 에디터(Entry, Scratch, App Inventor)가 새 탭으로 열립니다.</li>
+                            <li class="mb-3">프로젝트를 완성합니다.</li>
+                            <li class="mb-3">우측 상단에 표시되는 <span class="badge bg-success">📤 제출하기</span> 플로팅 버튼을 클릭합니다.
+                            </li>
+                            <li class="mb-3">안내에 따라 프로젝트 파일을 제출합니다.</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 문제 해결 -->
+            <section class="guide-section">
+                <h2 class="text-center fw-bold mb-4">문제 해결</h2>
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq1">
+                                확장프로그램이 작동하지 않아요
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Chrome/Edge의 확장프로그램 관리 페이지에서 확장프로그램이 활성화되어 있는지 확인하세요.</li>
+                                    <li>페이지를 새로고침하세요.</li>
+                                    <li>브라우저를 재시작해보세요.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq2">
+                                제출 버튼이 보이지 않아요
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>코딩앤플레이에서 "프로젝트 열기" 버튼을 클릭하여 에디터를 열었는지 확인하세요.</li>
+                                    <li>직접 에디터 사이트에 접속한 경우에는 제출 버튼이 표시되지 않습니다.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq3">
+                                파일 업로드가 실패해요
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>파일 크기가 50MB 이하인지 확인하세요.</li>
+                                    <li>올바른 파일 형식(.sb3, .ent, .aia)인지 확인하세요.</li>
+                                    <li>네트워크 연결을 확인하세요.</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
-    </div>
+            </section>
+        </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
