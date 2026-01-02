@@ -87,7 +87,18 @@ async function handleOpenEditor(data) {
   });
 
   // 에디터 URL 결정
-  let editorUrl = templateUrl || CONFIG.PLATFORMS[platform]?.editorUrl;
+  let editorUrl = CONFIG.PLATFORMS[platform]?.editorUrl;
+  let shouldDownload = false;
+
+  if (templateUrl) {
+    if (platform === 'entry' || platform === 'appinventor' || templateUrl.match(/\.(ent|sb3|aia)$/i)) {
+      // 파일인 경우: 에디터를 열고 파일은 다운로드
+      shouldDownload = true;
+    } else {
+      // 웹 페이지인 경우 (예: Scratch 프로젝트 페이지): 해당 URL로 이동
+      editorUrl = templateUrl;
+    }
+  }
 
   if (!editorUrl) {
     console.error('[Background] 알 수 없는 플랫폼:', platform);
@@ -97,7 +108,16 @@ async function handleOpenEditor(data) {
   // 새 탭으로 에디터 열기
   chrome.tabs.create({ url: editorUrl });
 
-  console.log('[Background] 에디터 열기:', { platform, editorUrl, missionId });
+  // 파일 다운로드 트리거
+  if (shouldDownload && templateUrl) {
+    console.log('[Background] 템플릿 파일 다운로드 시작:', templateUrl);
+    chrome.downloads.download({
+      url: templateUrl,
+      filename: missionTitle ? `${missionTitle}${CONFIG.PLATFORMS[platform].fileExtension}` : undefined
+    }).catch(err => console.error('[Background] 다운로드 실패:', err));
+  }
+
+  console.log('[Background] 에디터 열기:', { platform, editorUrl, missionId, downloaded: shouldDownload });
 }
 
 // ============================================
