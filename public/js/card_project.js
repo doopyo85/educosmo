@@ -145,11 +145,6 @@ class ProjectCardManager {
             if (this.projectData && this.projectData.length > 0) {
                 const projects = this.groupByProject(this.projectData);
                 this.displayProjects(projects);
-
-                // 🔥 확장프로그램 버튼 이벤트 초기화 (DOM 생성 후)
-                if (window.extensionBridge) {
-                    window.extensionBridge.initializeButtons();
-                }
             } else {
                 this.displayErrorMessage("프로젝트 데이터가 없습니다.");
             }
@@ -832,28 +827,11 @@ class ProjectCardManager {
         }
     }
 
-    // createProjectButton 함수 (projectName 파라미터 추가 및 확장프로그램 속성 적용)
-    createProjectButton(label, url, type, projectName = '', imgUrl = '') {
+    // createProjectButton 함수 (imgUrl 파라미터 추가)
+    createProjectButton(label, url, type, imgUrl = '') {
         const imgAttr = imgUrl ? `data-img="${imgUrl}"` : '';
-
-        // 확장프로그램용 데이터 속성 생성
-        // missionId: 프로젝트명_라벨 (예: Step 1-1_Basic) 공백 제거
-        const safeProjectName = projectName.replace(/\s+/g, '_');
-        const missionId = `${safeProjectName}_${label}`; // 고유 ID 생성
-
-        // 템플릿 URL (기본/완성/확장 등)
-        const templateUrl = url;
-
         return `
-            <button class="btn ${type} btn-sm load-extension-project" 
-                    data-action="open-editor"
-                    data-platform="${this.config.projectType}"
-                    data-mission-id="${missionId}"
-                    data-user-id="${this.userID}"
-                    data-mission-title="${projectName} - ${label}"
-                    data-template-url="${templateUrl}"
-                    data-url="${url}" 
-                    ${imgAttr}>
+            <button class="btn ${type} btn-sm load-project" data-url="${url}" ${imgAttr}>
                 ${label}
             </button>
         `;
@@ -875,15 +853,15 @@ class ProjectCardManager {
         // 정답/풀이 버튼은 에디터 로드 + 이미지 팝업
         const cosButtons = isCOS ? `
             ${project.img ? `<button class="btn btn-info btn-sm" onclick="window.open('${project.img}', '_blank'); event.stopPropagation();">문제</button>` : ''}
-            ${project.answer ? this.createProjectButton('정답', project.answer, 'btn-success', projectName, project.img) : ''}
-            ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', projectName, project.img) : ''}
+            ${project.answer ? this.createProjectButton('정답', project.answer, 'btn-success', project.img) : ''}
+            ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', project.img) : ''}
         ` : '';
 
         // CPS용 버튼 (기본/확장1/확장2)
         const cpsButtons = !isCOS ? `
-            ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary', projectName) : ''}
-            ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', projectName) : ''}
-            ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', projectName) : ''}
+            ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary') : ''}
+            ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary') : ''}
+            ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary') : ''}
         ` : '';
 
         return `
@@ -933,15 +911,15 @@ class ProjectCardManager {
         // 정답/풀이 버튼은 에디터 로드 + 이미지 팝업
         const cosButtons = isCOS ? `
             ${project.img ? `<button class="btn btn-info btn-sm" onclick="window.open('${project.img}', '_blank'); event.stopPropagation();">문제</button>` : ''}
-            ${project.answer ? this.createProjectButton('정답', project.answer, 'btn-success', projectName, project.img) : ''}
-            ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', projectName, project.img) : ''}
+            ${project.answer ? this.createProjectButton('정답', project.answer, 'btn-success', project.img) : ''}
+            ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', project.img) : ''}
         ` : '';
 
         // CPE용 버튼 (기본/완성/확장)
         const cpeButtons = !isCOS ? `
-            ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary', projectName) : ''}
-            ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary', projectName) : ''}
-            ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary', projectName) : ''}
+            ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary') : ''}
+            ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary') : ''}
+            ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary') : ''}
         ` : '';
 
         // 다운로드 버튼 (COS가 아닌 경우에만 표시)
@@ -1001,8 +979,8 @@ class ProjectCardManager {
             
             <div class="project-card-actions">
                 <div class="project-card-btn-group">
-                    ${project.basic ? this.createProjectButton('본문', project.basic, 'btn-secondary', projectName) : ''}
-                    ${this.viewConfig.showPractice && project.practice ? this.createProjectButton('연습', project.practice, 'btn-secondary', projectName) : ''}
+                    ${project.basic ? this.createProjectButton('본문', project.basic, 'btn-secondary') : ''}
+                    ${this.viewConfig.showPractice && project.practice ? this.createProjectButton('연습', project.practice, 'btn-secondary') : ''}
                 </div>
             </div>
         `;

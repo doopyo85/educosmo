@@ -14,7 +14,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="/header.js"></script>
-    <script src="/js/extension-bridge.js"></script>
 
     <script>
         const projectType = 'entry';
@@ -37,21 +36,15 @@
                 <div class="apple-toolbar-container">
                     <!-- 고정 버튼 (왼쪽) -->
                     <div class="d-flex align-items-center gap-2">
-                        <!-- 🔥 External Link -->
-                        <!-- 🔥 External Link (Extension Bridge) -->
-                        <a href="#" class="apple-btn-primary" id="openOfficialEntryBtn" data-action="open-editor"
-                            data-platform="entry" data-mission-id="entry_new_project" data-user-id="<%= userID %>"
-                            data-mission-title="새 프로젝트">
-                            <i class="bi bi-box-arrow-up-right"></i> Entry 공식 에디터 열기
+                        <button id="newProjectBtn" class="apple-btn-primary">
+                            <i class="bi bi-plus-lg"></i> 새로 시작하기
+                        </button>
+                        <a href="https://playentry.org" target="_blank" class="apple-btn-primary">
+                            <i class="bi bi-box-arrow-up-right"></i> playentry.org
                         </a>
-
-                        <a href="https://playentry.org" target="_blank" class="apple-btn-secondary">
-                            <i class="bi bi-link"></i> playentry.org
-                        </a>
-
                         <!-- 🔥 불러오기 버튼 추가 -->
                         <button onclick="openEntryProjectLoadModal()" class="apple-btn-primary">
-                            <i class="bi bi-folder2-open"></i> 내 프로젝트 보기
+                            <i class="bi bi-folder2-open"></i> 불러오기
                         </button>
                         <div class="apple-divider mx-3"></div>
                     </div>
@@ -65,12 +58,6 @@
             <div id="edu-content">
                 <div id="content-container" class="tab-content mt-3"></div>
             </div>
-
-            <!-- 🔥 안내 메시지 -->
-            <div class="alert alert-info text-center mt-4">
-                <i class="bi bi-info-circle-fill"></i>
-                코딩앤플레이 확장 프로그램을 설치하면 공식 에디터에서 작성한 코드를 바로 제출할 수 있습니다.
-            </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
@@ -81,7 +68,7 @@
 
         <script>
             /**
-             * 🔥 Entry 프로젝트 불러오기 (다운로드 제공)
+             * 🔥 Entry 프로젝트 불러오기 (ProjectStorageModal 사용)
              */
             function openEntryProjectLoadModal() {
                 const modal = new ProjectStorageModal({
@@ -89,14 +76,10 @@
                     onLoad: (data) => {
                         console.log('📂 Entry 프로젝트 선택됨:', data);
                         if (data.url) {
-                            // 바로 다운로드
-                            const link = document.createElement('a');
-                            link.href = data.url;
-                            link.download = data.title || 'project.ent';
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            alert('프로젝트가 다운로드되었습니다. Entry 공식 에디터에서 "오프라인 작품 불러오기"를 사용하세요.');
+                            // S3 URL을 사용하여 Entry 워크스페이스 열기
+                            // 주의: S3 URL은 Presigned URL이므로 인코딩 필요
+                            const entryEditorUrl = `/entry/entry_editor?s3Url=${encodeURIComponent(data.url)}`;
+                            window.open(entryEditorUrl, '_blank');
                         } else {
                             alert('프로젝트 URL을 찾을 수 없습니다.');
                         }
@@ -105,16 +88,22 @@
                 modal.openLoadModal();
             }
 
-            // 🔥 공식 사이트 이동 로그
-            document.getElementById('openOfficialEntryBtn').addEventListener('click', function () {
-                console.log('Target: Official Entry');
+
+
+            // 🔥 새로 시작하기 버튼
+            document.getElementById('newProjectBtn').addEventListener('click', function () {
+                console.log('🎯 새로 시작하기 버튼 클릭');
+
+                // Entry 워크스페이스로 이동 (자체 서버)
+                window.open('/entry/', '_blank');
+
                 // 학습 활동 기록
                 try {
                     fetch('/learning/log', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            action: 'entry_open_official',
+                            action: 'entry_new_project',
                             data: {
                                 userID: document.getElementById('user-id').value,
                                 timestamp: new Date().toISOString()
