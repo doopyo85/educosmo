@@ -53,7 +53,7 @@ class ExtensionBridge {
       return false;
     }
 
-    const { platform, missionId, userId, missionTitle, templateUrl } = options;
+    const { platform, missionId, userId, missionTitle, templateUrl, openUrl } = options;
 
     // Validation
     if (!platform || !missionId || !userId) {
@@ -70,7 +70,8 @@ class ExtensionBridge {
           missionId,
           userId,
           missionTitle: missionTitle || `과제 ${missionId}`,
-          templateUrl: templateUrl || null
+          templateUrl: templateUrl || null,
+          openUrl: openUrl || null
         }
       });
       window.dispatchEvent(event);
@@ -174,17 +175,12 @@ class ExtensionBridge {
           missionId: button.dataset.missionId,
           userId: button.dataset.userId,
           missionTitle: button.dataset.missionTitle,
-          templateUrl: button.dataset.templateUrl
+          templateUrl: button.dataset.templateUrl,
+          openUrl: button.dataset.openUrl
         };
 
+        // openUrl이 있으면 Extension으로 전달만 하고, Extension이 탭을 열도록 함
         this.openEditor(options);
-
-        // 🔥 Explicit Navigation (if data-open-url is present)
-        // Used when we want to open a specific Web URL (e.g. D column)
-        // instead of relying on the Extension's template loading logic.
-        if (button.dataset.openUrl) {
-          window.open(button.dataset.openUrl, '_blank');
-        }
       });
     });
 

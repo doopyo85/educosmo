@@ -88,7 +88,7 @@
       <div class="cnp-island" id="cnp-island">
         <div class="cnp-island-content">
           <div class="cnp-island-left" id="cnp-island-left">
-            <img src="${chrome.runtime.getURL('icons/icon48.png')}" class="cnp-island-logo" alt="CNP" />
+            <img src="${chrome.runtime.getURL('icons/nuguri.png')}" class="cnp-island-logo" alt="CNP" />
             <span class="cnp-island-title" id="cnp-mission-title">과제 없음</span>
           </div>
           <div class="cnp-island-divider"></div>

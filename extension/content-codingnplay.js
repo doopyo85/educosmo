@@ -36,7 +36,8 @@
           missionId: data.missionId,
           userId: data.userId,
           missionTitle: data.missionTitle || '(없음)',
-          templateUrl: data.templateUrl || '(없음)'
+          templateUrl: data.templateUrl || '(없음)',
+          openUrl: data.openUrl || '(없음)'
         });
         
         chrome.runtime.sendMessage({
