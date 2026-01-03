@@ -404,6 +404,33 @@ main {
     -webkit-box-reflect: below 1px linear-gradient(transparent, transparent, #0006);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
+    /* Entrance Animation */
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* Staggered Animation Delays */
+.swiper-slide:nth-child(1) .pongtube-card-inner {
+    animation-delay: 0.1s;
+}
+
+.swiper-slide:nth-child(2) .pongtube-card-inner {
+    animation-delay: 0.2s;
+}
+
+.swiper-slide:nth-child(3) .pongtube-card-inner {
+    animation-delay: 0.3s;
+}
+
+.swiper-slide:nth-child(4) .pongtube-card-inner {
+    animation-delay: 0.4s;
+}
+
+.swiper-slide:nth-child(5) .pongtube-card-inner {
+    animation-delay: 0.5s;
+}
+
+.swiper-slide:nth-child(6) .pongtube-card-inner {
+    animation-delay: 0.6s;
 }
 
 .swiper-slide.pongtube-slide:hover .pongtube-card-inner {

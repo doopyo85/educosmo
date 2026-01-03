@@ -905,7 +905,7 @@ class ProjectCardManager {
         }
 
         const cpsButtons = !isCOS ? `
-            ${project.basicWebUrl ? `<button class="btn btn-secondary btn-sm scratch-basic-btn" data-url="${project.basicWebUrl}" ${scratchExtAttrs} data-open-url="${project.basicWebUrl}">기본</button>` : ''}
+            ${project.basicWebUrl ? `<button class="btn btn-secondary btn-sm scratch-basic-btn" data-url="${project.basicWebUrl}" data-template-url="${project.basic}" ${scratchExtAttrs} data-open-url="${project.basicWebUrl}">기본</button>` : ''}
             ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', '', scratchExtAttrs + ` data-template-url="${project.ext1}"`) : ''}
             ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', '', scratchExtAttrs + ` data-template-url="${project.ext2}"`) : ''}
         ` : '';
@@ -986,7 +986,7 @@ class ProjectCardManager {
         }
 
         const cpeButtons = !isCOS ? `
-            ${project.basicPlayEntry ? `<button class="btn btn-secondary btn-sm entry-basic-btn" data-url="${project.basicPlayEntry}" ${entryExtAttrs} data-open-url="${project.basicPlayEntry}">기본</button>` : ''}
+            ${project.basicPlayEntry ? `<button class="btn btn-secondary btn-sm entry-basic-btn" data-url="${project.basicPlayEntry}" data-template-url="${project.basic}" ${entryExtAttrs} data-open-url="${project.basicPlayEntry}">기본</button>` : ''}
             ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary', '', entryExtAttrs + ` data-template-url="${project.complete}"`) : ''}
             ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary', '', entryExtAttrs + ` data-template-url="${project.extension}"`) : ''}
         ` : '';
