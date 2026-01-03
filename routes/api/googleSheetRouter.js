@@ -65,7 +65,8 @@ router.get('/onlineclass', async (req, res) => {
 
 router.get('/sb2', async (req, res) => {
   try {
-    const data = await getSheetData('sb2!A2:F');
+    const data = await getSheetData('sb2!A2:H');
+    console.log(`✅ SB2 Sheet Data Loaded: ${data ? data.length : 0} rows`);
     res.json(data);
   } catch (error) {
     console.error('sb2 시트 오류:', error);
@@ -75,7 +76,8 @@ router.get('/sb2', async (req, res) => {
 
 router.get('/sb3', async (req, res) => {
   try {
-    const data = await getSheetData('sb3!A2:F');
+    const data = await getSheetData('sb3!A2:H');
+    console.log(`✅ SB3 Sheet Data Loaded: ${data ? data.length : 0} rows`);
     res.json(data);
   } catch (error) {
     console.error('sb3 시트 오류:', error);
