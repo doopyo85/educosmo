@@ -247,7 +247,8 @@ class ProjectCardManager {
         data.forEach(row => {
             if (!Array.isArray(row) || row.length < 4) return;
 
-            // 데이터 구조: [카테고리, 콘텐츠명, 기능, sb3URL(Web), C.T요소, 활용교구, S3sb2URL(File), imgURL]
+            // 데이터 구조: [카테고리, 콘텐츠명, 기능, D열URL, C.T요소, 활용교구, G열URL, imgURL]
+            // sb3! 시트: D열 = scratch.mit.edu URL, G열 = S3 sb3 파일
             const [category, name, type, webUrl, ctElement = '', tools = '', s3Url = '', imgUrl = ''] = row;
 
             if (!category || !name) return;
@@ -268,6 +269,7 @@ class ProjectCardManager {
                     img: imgUrl,
                     // CPS용 (기본/확장1/확장2)
                     basic: '',
+                    basicWebUrl: '',  // D열: scratch.mit.edu URL
                     ext1: '',
                     ext2: '',
                     // COS용 (정답/풀이) - 문제는 imgUrl
@@ -281,8 +283,8 @@ class ProjectCardManager {
             const typeLower = type.toLowerCase();
             switch (typeLower) {
                 case '기본':
-                    projects[category][projectKey].basic = s3Url;     // S3 파일 (다운로드용)
-                    projects[category][projectKey].webUrl = webUrl;   // 웹 에디터 URL (이동용)
+                    projects[category][projectKey].basic = s3Url;          // G열: S3 파일 (다운로드용)
+                    projects[category][projectKey].basicWebUrl = webUrl;   // D열: scratch.mit.edu URL (이동용)
                     break;
                 case '확장1':
                     projects[category][projectKey].ext1 = s3Url;
@@ -882,9 +884,9 @@ class ProjectCardManager {
         `.replace(/\s+/g, ' ');
 
         // CPS용 버튼 (기본/확장1/확장2)
-        // 기본 버튼: webUrl 사용 (스크래치 웹 에디터로 이동) -> data-open-url 사용, templateUrl 제거 (다운로드 방지)
+        // 🔥 기본 버튼: D열 URL 사용 (scratch.mit.edu로 이동)
         const cpsButtons = !isCOS ? `
-            ${project.webUrl ? this.createProjectButton('기본', project.webUrl, 'btn-secondary', '', baseAttrs + ` data-open-url="${project.webUrl}"`) : ''}
+            ${project.basicWebUrl ? this.createProjectButton('기본', project.basicWebUrl, 'btn-secondary', '', baseAttrs + ` data-open-url="${project.basicWebUrl}"`) : ''}
             ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext1}"`) : ''}
             ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext2}"`) : ''}
         ` : '';
