@@ -72,14 +72,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // 에디터 열기
 // ============================================
 async function handleOpenEditor(data) {
-  const { platform, missionId, userId, templateUrl, missionTitle } = data;
+  const { platform, missionId, userId, templateUrl, openUrl, missionTitle } = data;
 
   console.log('[Background] 에디터 열기 요청:', {
     platform,
     missionId,
     userId,
     missionTitle: missionTitle || '(없음)',
-    templateUrl: templateUrl || '(없음)'
+    templateUrl: templateUrl || '(없음)',
+    openUrl: openUrl || '(없음)'
   });
 
   // 과제 정보 저장
@@ -89,6 +90,7 @@ async function handleOpenEditor(data) {
     userId,
     missionTitle: missionTitle || null,
     templateUrl: templateUrl || null,
+    openUrl: openUrl || null,
     startedAt: new Date().toISOString()
   };
 
@@ -100,17 +102,26 @@ async function handleOpenEditor(data) {
   console.log('[Background] 저장된 과제 정보 확인:', stored.currentMission);
 
   // 에디터 URL 결정
-  let editorUrl = CONFIG.PLATFORMS[platform]?.editorUrl;
+  let editorUrl;
   let shouldDownload = false;
 
-  if (templateUrl) {
+  // openUrl이 있으면 우선 사용 (D열: 공식 프로젝트 URL)
+  if (openUrl) {
+    editorUrl = openUrl;
+    console.log('[Background] openUrl 사용:', openUrl);
+  } else if (templateUrl) {
+    // templateUrl이 있는 경우 (G열: S3 파일 또는 내부 서버)
     if (platform === 'entry' || platform === 'appinventor' || templateUrl.match(/\.(ent|sb3|aia)$/i)) {
-      // 파일인 경우: 에디터를 열고 파일은 다운로드
+      // 파일인 경우: 새 에디터를 열고 파일은 다운로드
+      editorUrl = CONFIG.PLATFORMS[platform]?.editorUrl;
       shouldDownload = true;
     } else {
-      // 웹 페이지인 경우 (예: Scratch 프로젝트 페이지): 해당 URL로 이동
+      // 웹 페이지인 경우: 해당 URL로 이동
       editorUrl = templateUrl;
     }
+  } else {
+    // 둘 다 없으면 기본 에디터
+    editorUrl = CONFIG.PLATFORMS[platform]?.editorUrl;
   }
 
   if (!editorUrl) {
@@ -124,10 +135,10 @@ async function handleOpenEditor(data) {
   // 파일 다운로드 트리거
   if (shouldDownload && templateUrl) {
     console.log('[Background] 템플릿 파일 다운로드 시작:', templateUrl);
-    const downloadFilename = missionTitle 
-      ? `${missionTitle}${CONFIG.PLATFORMS[platform].fileExtension}` 
+    const downloadFilename = missionTitle
+      ? `${missionTitle}${CONFIG.PLATFORMS[platform].fileExtension}`
       : undefined;
-    
+
     chrome.downloads.download({
       url: templateUrl,
       filename: downloadFilename

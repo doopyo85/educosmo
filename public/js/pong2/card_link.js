@@ -70,8 +70,12 @@ class CardLinkManager {
                         if (ytId) row[4] = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
                     }
                     return row;
+
                 });
                 this.extractCategoriesForPortal(this.currentData);
+                // Remove 'YouTube' category to hide it from tabs
+                this.categories.delete('YouTube');
+                this.categories.delete('유튜브');
             }
             else if (mode === 'portfolio') {
                 const boards = await window.pong2API.getBoards('portfolio', 50);
@@ -356,20 +360,7 @@ class CardLinkManager {
         if (!container) return;
 
         if (this.currentMode === 'youtube') {
-            const cards = this.createSwiperSlidesForYouTube();
-            container.innerHTML = `
-                <div class="col-12 text-center mb-4">
-                    <h2 class="fw-bold text-white">PongTube <span class="badge bg-danger">Shorts</span></h2>
-                </div>
-                <div class="swiper pongtube-swiper pongtube-container">
-                    <div class="swiper-wrapper">
-                        ${cards}
-                    </div>
-                    <div class="swiper-pagination"></div>
-                </div>
-             `;
-            this.initSwiper();
-            return;
+            // YouTube mode now uses standard tab rendering
         }
 
         const contentHTML = Array.from(this.categories).map((category, index) => {
@@ -474,18 +465,26 @@ class CardLinkManager {
             const clickAction = `window.open('${linkUrl}', '_blank')`;
 
             return `
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm" onclick="${clickAction}">
-                         <img src="${imageUrl}" class="card-img-top object-fit-cover" alt="${title}"
-                              onerror="this.src='/resource/default-image.png'">
-                        <div class="card-body">
-                            <h6 class="card-title fw-bold text-truncate">${title}</h6>
-                            <p class="card-text small text-secondary three-line-clamp mb-2">${description}</p>
-                            <div class="mt-auto">${tags}</div>
-                        </div>
+            const isShorts = category.toLowerCase().includes('shorts') || category.includes('쇼츠');
+            const colClass = isShorts ? 'col-lg-2 col-md-3 col-sm-4' : 'col-lg-3 col-md-4 col-sm-6';
+            const cardClass = isShorts ? 'card h-100 shadow-sm card-shorts' : 'card h-100 shadow-sm';
+            
+            // Shorts: Remove description text to save space if needed, or keep it.
+            // For now, we keep it but CSS might hide it or adjust it.
+            
+            return `
+                < div class="${colClass} mb-4" >
+                    <div class="${cardClass}" onclick="${clickAction}">
+                        <img src="${imageUrl}" class="card-img-top object-fit-cover" alt="${title}"
+                            onerror="this.src='/resource/default-image.png'">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold text-truncate">${title}</h6>
+                                <p class="card-text small text-secondary three-line-clamp mb-2">${description}</p>
+                                <div class="mt-auto">${tags}</div>
+                            </div>
                     </div>
-                </div>
-            `;
+                </div >
+                `;
         }).join('');
     }
 
@@ -504,16 +503,16 @@ class CardLinkManager {
                 ? `window.cardManager.openVideoModal('${videoId}')`
                 : `window.open('${linkUrl}', '_blank')`;
             return `
-                <div class="swiper-slide pongtube-slide" onclick="${clickAction}">
+                < div class="swiper-slide pongtube-slide" onclick = "${clickAction}" >
                     <div class="pongtube-card-inner">
                         <img src="${imageUrl}" alt="${title}" onerror="this.src='/resource/default-image.png'">
-                        <div class="slide-overlay">
-                            <h5 class="text-truncate">${title}</h5>
-                            <p class="text-truncate">${description}</p>
-                        </div>
+                            <div class="slide-overlay">
+                                <h5 class="text-truncate">${title}</h5>
+                                <p class="text-truncate">${description}</p>
+                            </div>
                     </div>
-                </div>
-            `;
+                </div >
+                `;
         }).join('');
     }
 

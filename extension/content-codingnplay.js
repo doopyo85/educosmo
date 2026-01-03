@@ -67,6 +67,7 @@
         const missionId = button.dataset.missionId;
         const userId = button.dataset.userId;
         const templateUrl = button.dataset.templateUrl;
+        const openUrl = button.dataset.openUrl;
         const missionTitle = button.dataset.missionTitle;
 
         console.log('[CNP-EXT] 추출된 데이터:', {
@@ -74,16 +75,18 @@
           missionId: missionId || '(없음)',
           userId: userId || '(없음)',
           missionTitle: missionTitle || '(없음)',
-          templateUrl: templateUrl || '(없음)'
+          templateUrl: templateUrl || '(없음)',
+          openUrl: openUrl || '(없음)'
         });
 
         if (platform && missionId && userId) {
-          const messageData = { 
-            platform, 
-            missionId, 
-            userId, 
-            templateUrl: templateUrl || null, 
-            missionTitle: missionTitle || null 
+          const messageData = {
+            platform,
+            missionId,
+            userId,
+            templateUrl: templateUrl || null,
+            openUrl: openUrl || null,
+            missionTitle: missionTitle || null
           };
           
           console.log('[CNP-EXT] Background로 메시지 전송:', messageData);

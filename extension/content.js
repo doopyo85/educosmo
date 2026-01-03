@@ -88,7 +88,7 @@
       <div class="cnp-island" id="cnp-island">
         <div class="cnp-island-content">
           <div class="cnp-island-left" id="cnp-island-left">
-            <span class="cnp-island-icon">📋</span>
+            <img src="${chrome.runtime.getURL('icons/icon48.png')}" class="cnp-island-logo" alt="CNP" />
             <span class="cnp-island-title" id="cnp-mission-title">과제 없음</span>
           </div>
           <div class="cnp-island-divider"></div>
@@ -276,19 +276,16 @@
   function loadMissionInfo() {
     chrome.runtime.sendMessage({ action: 'GET_MISSION_INFO' }, (response) => {
       console.log('[CNP] 과제 정보 로드:', response);
-      
+
       const island = document.getElementById('cnp-island');
       const missionTitle = document.getElementById('cnp-mission-title');
-      const islandLeft = document.getElementById('cnp-island-left');
-      const iconSpan = islandLeft?.querySelector('.cnp-island-icon');
 
       if (response?.data) {
         // 과제 정보가 있을 때
         const title = response.data.missionTitle || `과제 #${response.data.missionId}`;
         missionTitle.textContent = title;
         island.classList.add('has-mission');
-        if (iconSpan) iconSpan.textContent = '📋';
-        
+
         console.log('[CNP] 과제 정보 설정됨:', {
           missionTitle: response.data.missionTitle,
           missionId: response.data.missionId,
@@ -299,8 +296,7 @@
         // 과제 정보가 없을 때
         missionTitle.textContent = '과제 없음';
         island.classList.remove('has-mission');
-        if (iconSpan) iconSpan.textContent = '⚠️';
-        
+
         console.log('[CNP] 과제 정보 없음');
       }
     });

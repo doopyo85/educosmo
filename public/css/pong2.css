@@ -462,8 +462,48 @@ main {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.pongtube-slide p {
-    font-size: 0.9rem;
-    color: #ddd;
-    margin: 0;
+/* ========================================
+   🔥 Shorts Card Styles
+   ======================================== */
+.card-shorts {
+    border-radius: 15px;
+    background: #121212;
+    color: #fff;
+    border: 1px solid #333;
+    height: 100%;
+    min-height: 480px;
+    /* Force tall card */
+}
+
+.card-shorts .card-img-top {
+    height: 350px;
+    /* Tall vertical image */
+    object-fit: cover;
+    border-bottom: 1px solid #333;
+}
+
+.card-shorts .card-body {
+    background: #1e1e2f;
+    padding: 1rem;
+    flex-grow: 1;
+}
+
+.card-shorts .card-title {
+    color: #fff;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.card-shorts .card-text {
+    color: #aaa;
+    font-size: 0.85rem;
+    /* Optional: hide description for cleaner look 
+       display: none; */
+}
+
+.card-shorts:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-color: #ff0000;
+    /* Red accent for YouTube Shorts */
 }
