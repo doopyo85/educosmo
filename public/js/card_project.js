@@ -880,8 +880,8 @@ class ProjectCardManager {
             ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', project.img) : ''}
         ` : '';
 
-        // 🔥 Extension 연동 속성 (확장1, 확장2용)
-        const extAttrs = `
+        // 🔥 Extension 연동 속성 (과제 정보 전달)
+        const scratchExtAttrs = `
             data-action="open-editor"
             data-platform="scratch"
             data-mission-id="${projectName}"
@@ -890,7 +890,8 @@ class ProjectCardManager {
         `.replace(/\s+/g, ' ');
 
         // CPS용 버튼 (기본/확장1/확장2)
-        // 🔥 기본 버튼: D열 URL 사용 (scratch.mit.edu로 이동) - Extension 연동 제외
+        // 🔥 [기본]: D열 → scratch.mit.edu 공식 페이지로 이동 + Extension에 과제정보 전달
+        // 🔥 [확장1]/[확장2]: G열 → 8601 서버(내부 에디터)로 로드 + Extension에 과제정보 전달
         if (project.basicWebUrl) {
             console.log(`🔍 [${projectName}] basicWebUrl:`, project.basicWebUrl);
         } else {
@@ -898,9 +899,9 @@ class ProjectCardManager {
         }
 
         const cpsButtons = !isCOS ? `
-            ${project.basicWebUrl ? `<button class="btn btn-secondary btn-sm scratch-basic-btn" data-url="${project.basicWebUrl}">기본</button>` : ''}
-            ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', '', extAttrs + ` data-template-url="${project.ext1}"`) : ''}
-            ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', '', extAttrs + ` data-template-url="${project.ext2}"`) : ''}
+            ${project.basicWebUrl ? `<button class="btn btn-secondary btn-sm scratch-basic-btn" data-url="${project.basicWebUrl}" ${scratchExtAttrs} data-open-url="${project.basicWebUrl}">기본</button>` : ''}
+            ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', '', scratchExtAttrs + ` data-template-url="${project.ext1}"`) : ''}
+            ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', '', scratchExtAttrs + ` data-template-url="${project.ext2}"`) : ''}
         ` : '';
 
         // 다운로드 버튼 (COS가 아닌 경우에만 표시)
@@ -959,21 +960,29 @@ class ProjectCardManager {
         ` : '';
 
         // CPE용 버튼 (기본/완성/확장)
-        // 학생: [기본] 버튼은 playentry.org URL로 연결
-        // 교사: [완성][확장] 버튼은 S3 파일을 8070 포트로 로드
-        // 🔥 Extension 연동을 위한 속성 추가 (data-action="open-editor" 등)
-        const baseAttrs = `
-            data-action="open-editor" 
-            data-platform="entry" 
-            data-mission-id="${projectName}" 
-            data-mission-title="${projectName}" 
+        // 🔥 [기본]: D열 → playentry.org 공식 페이지로 이동 + Extension에 과제정보 전달
+        // 🔥 [완성]/[확장]: G열 → 8070 서버(내부 에디터)로 로드 + Extension에 과제정보 전달
+
+        // Extension 연동 속성 (과제 정보 전달)
+        const entryExtAttrs = `
+            data-action="open-editor"
+            data-platform="entry"
+            data-mission-id="${projectName}"
+            data-mission-title="${projectName}"
             data-user-id="${this.userID}"
-        `.replace(/\s+/g, ' '); // 공백 정리
+        `.replace(/\s+/g, ' ');
+
+        // 디버깅 로그
+        if (project.basicPlayEntry) {
+            console.log(`🔍 [${projectName}] Entry basicPlayEntry:`, project.basicPlayEntry);
+        } else {
+            console.warn(`⚠️ [${projectName}] Entry basicPlayEntry가 비어있습니다!`);
+        }
 
         const cpeButtons = !isCOS ? `
-            ${project.basicPlayEntry ? `<button class="btn btn-secondary btn-sm entry-playentry-btn" data-url="${project.basicPlayEntry}" ${baseAttrs} data-open-url="${project.basicPlayEntry}">기본</button>` : ''}
-            ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.complete}"`) : ''}
-            ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.extension}"`) : ''}
+            ${project.basicPlayEntry ? `<button class="btn btn-secondary btn-sm entry-basic-btn" data-url="${project.basicPlayEntry}" ${entryExtAttrs} data-open-url="${project.basicPlayEntry}">기본</button>` : ''}
+            ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary', '', entryExtAttrs + ` data-template-url="${project.complete}"`) : ''}
+            ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary', '', entryExtAttrs + ` data-template-url="${project.extension}"`) : ''}
         ` : '';
 
         // 다운로드 버튼 (COS가 아닌 경우에만 표시) -> Extension 연동 제거 (순수 다운로드)
@@ -1292,15 +1301,39 @@ class ProjectCardManager {
             }
 
             // Scratch [기본] 버튼 - scratch.mit.edu 프로젝트로 이동
+            // 🔥 Extension에 과제 정보 전달하면서 공식 페이지로 이동
             if (e.target.classList.contains('scratch-basic-btn')) {
                 e.preventDefault();
                 e.stopPropagation();
 
                 const scratchUrl = e.target.getAttribute('data-url');
+                const openUrl = e.target.getAttribute('data-open-url');
+
                 console.log('🎯 Scratch [기본] 버튼 클릭!');
                 console.log('   - data-url:', scratchUrl);
+                console.log('   - data-open-url:', openUrl);
                 console.log('   - 버튼 HTML:', e.target.outerHTML);
 
+                // Extension에 과제 정보 전달
+                const platform = e.target.getAttribute('data-platform');
+                const missionId = e.target.getAttribute('data-mission-id');
+                const missionTitle = e.target.getAttribute('data-mission-title');
+                const userId = e.target.getAttribute('data-user-id');
+
+                if (window.extensionBridge) {
+                    console.log('   🔌 Extension에 과제 정보 전달');
+                    window.extensionBridge.setMission({
+                        platform: platform,
+                        missionId: missionId,
+                        missionTitle: missionTitle,
+                        userId: userId,
+                        openUrl: openUrl
+                    });
+                } else {
+                    console.log('   ⚠️ Extension 없음 - 단순 링크 이동');
+                }
+
+                // scratch.mit.edu로 이동
                 if (scratchUrl) {
                     console.log('   ✅ scratch.mit.edu 프로젝트로 이동:', scratchUrl);
                     window.open(scratchUrl, '_blank');
@@ -1311,17 +1344,44 @@ class ProjectCardManager {
             }
 
             // Entry [기본] 버튼 - playentry.org로 이동
-            // 🔥 data-action="open-editor"가 있는 경우 Extension에 처리를 위임하고 여기서는 무시
-            if (e.target.classList.contains('entry-playentry-btn')) {
-                if (e.target.getAttribute('data-action') === 'open-editor') return;
-
+            // 🔥 Extension에 과제 정보 전달하면서 공식 페이지로 이동
+            if (e.target.classList.contains('entry-basic-btn')) {
                 e.preventDefault();
                 e.stopPropagation();
 
                 const playentryUrl = e.target.getAttribute('data-url');
+                const openUrl = e.target.getAttribute('data-open-url');
+
+                console.log('🎯 Entry [기본] 버튼 클릭!');
+                console.log('   - data-url:', playentryUrl);
+                console.log('   - data-open-url:', openUrl);
+                console.log('   - 버튼 HTML:', e.target.outerHTML);
+
+                // Extension에 과제 정보 전달
+                const platform = e.target.getAttribute('data-platform');
+                const missionId = e.target.getAttribute('data-mission-id');
+                const missionTitle = e.target.getAttribute('data-mission-title');
+                const userId = e.target.getAttribute('data-user-id');
+
+                if (window.extensionBridge) {
+                    console.log('   🔌 Extension에 과제 정보 전달');
+                    window.extensionBridge.setMission({
+                        platform: platform,
+                        missionId: missionId,
+                        missionTitle: missionTitle,
+                        userId: userId,
+                        openUrl: openUrl
+                    });
+                } else {
+                    console.log('   ⚠️ Extension 없음 - 단순 링크 이동');
+                }
+
+                // playentry.org로 이동
                 if (playentryUrl) {
-                    console.log('🎯 Entry [기본] 버튼 클릭 - playentry.org로 이동:', playentryUrl);
+                    console.log('   ✅ playentry.org로 이동:', playentryUrl);
                     window.open(playentryUrl, '_blank');
+                } else {
+                    console.error('   ❌ playentryUrl이 없습니다!');
                 }
                 return;
             }
