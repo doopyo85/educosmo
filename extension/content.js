@@ -53,21 +53,28 @@
   // ============================================
   function extractProjectId(platform) {
     const url = window.location.href;
+    console.log('[CNP] extractProjectId - URL:', url, 'Platform:', platform.id);
 
     switch (platform.id) {
       case 'scratch': {
         const match = url.match(/\/projects\/(\d+)/);
-        return match ? match[1] : null;
+        const projectId = match ? match[1] : null;
+        console.log('[CNP] Scratch projectId 추출:', projectId);
+        return projectId;
       }
       case 'entry': {
         const match = url.match(/\/ws\/([a-zA-Z0-9]+)/);
-        return match ? match[1] : null;
+        const projectId = match ? match[1] : null;
+        console.log('[CNP] Entry projectId 추출:', projectId, 'Match:', match);
+        return projectId;
       }
       case 'appinventor': {
         // App Inventor는 URL에 프로젝트 ID가 없음
+        console.log('[CNP] AppInventor - projectId 없음');
         return null;
       }
       default:
+        console.log('[CNP] 알 수 없는 플랫폼:', platform.id);
         return null;
     }
   }
