@@ -464,27 +464,23 @@ class CardLinkManager {
             const tags = row[5] ? row[5].split(',').map(t => `<span class="badge bg-light text-secondary border me-1">#${t.trim()}</span>`).join('') : '';
             const clickAction = `window.open('${linkUrl}', '_blank')`;
 
-            return `
             const isShorts = category.toLowerCase().includes('shorts') || category.includes('쇼츠');
             const colClass = isShorts ? 'col-lg-2 col-md-3 col-sm-4' : 'col-lg-3 col-md-4 col-sm-6';
             const cardClass = isShorts ? 'card h-100 shadow-sm card-shorts' : 'card h-100 shadow-sm';
-            
-            // Shorts: Remove description text to save space if needed, or keep it.
-            // For now, we keep it but CSS might hide it or adjust it.
-            
+
             return `
-                < div class="${colClass} mb-4" >
+                <div class="${colClass} mb-4">
                     <div class="${cardClass}" onclick="${clickAction}">
                         <img src="${imageUrl}" class="card-img-top object-fit-cover" alt="${title}"
-                            onerror="this.src='/resource/default-image.png'">
-                            <div class="card-body">
-                                <h6 class="card-title fw-bold text-truncate">${title}</h6>
-                                <p class="card-text small text-secondary three-line-clamp mb-2">${description}</p>
-                                <div class="mt-auto">${tags}</div>
-                            </div>
+                             onerror="this.src='/resource/default-image.png'">
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold text-truncate">${title}</h6>
+                            <p class="card-text small text-secondary three-line-clamp mb-2">${description}</p>
+                            <div class="mt-auto">${tags}</div>
+                        </div>
                     </div>
-                </div >
-                `;
+                </div>
+            `;
         }).join('');
     }
 
@@ -520,7 +516,8 @@ class CardLinkManager {
         const modalEl = document.getElementById('videoModal');
         const player = document.getElementById('videoPlayer');
         if (modalEl && player) {
-            player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+            const origin = window.location.origin;
+            player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1&origin=${origin}`;
             const modal = new bootstrap.Modal(modalEl);
             modal.show();
             modalEl.addEventListener('hidden.bs.modal', () => {

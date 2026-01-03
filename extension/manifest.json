@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "코딩앤플레이 학습도우미",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Entry, Scratch, App Inventor 과제 제출 도우미",
   "permissions": [
     "activeTab",
