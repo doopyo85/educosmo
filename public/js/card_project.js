@@ -886,7 +886,7 @@ class ProjectCardManager {
         // CPS용 버튼 (기본/확장1/확장2)
         // 🔥 기본 버튼: D열 URL 사용 (scratch.mit.edu로 이동)
         const cpsButtons = !isCOS ? `
-            ${project.basicWebUrl ? this.createProjectButton('기본', project.basicWebUrl, 'btn-secondary', '', baseAttrs + ` data-open-url="${project.basicWebUrl}"`) : ''}
+            ${project.basicWebUrl ? `<button class="btn btn-secondary btn-sm scratch-basic-btn load-project" data-url="${project.basicWebUrl}" ${baseAttrs} data-open-url="${project.basicWebUrl}">기본</button>` : ''}
             ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext1}"`) : ''}
             ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext2}"`) : ''}
         ` : '';
@@ -1351,6 +1351,21 @@ class ProjectCardManager {
                 }
             }
 
+            // Scratch [기본] 버튼 - scratch.mit.edu 프로젝트로 이동
+            // 🔥 data-action="open-editor"가 있는 경우 Extension에 처리를 위임하고 여기서는 무시
+            if (e.target.classList.contains('scratch-basic-btn')) {
+                if (e.target.getAttribute('data-action') === 'open-editor') return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const scratchUrl = e.target.getAttribute('data-url');
+                if (scratchUrl) {
+                    console.log('🎯 Scratch [기본] 버튼 클릭 - scratch.mit.edu 프로젝트로 이동:', scratchUrl);
+                    window.open(scratchUrl, '_blank');
+                }
+            }
+
             // Entry [기본] 버튼 - playentry.org로 이동
             // 🔥 data-action="open-editor"가 있는 경우 Extension에 처리를 위임하고 여기서는 무시
             if (e.target.classList.contains('entry-playentry-btn')) {
@@ -1361,7 +1376,7 @@ class ProjectCardManager {
 
                 const playentryUrl = e.target.getAttribute('data-url');
                 if (playentryUrl) {
-                    console.log('🎯 [기본] 버튼 클릭 - playentry.org로 이동:', playentryUrl);
+                    console.log('🎯 Entry [기본] 버튼 클릭 - playentry.org로 이동:', playentryUrl);
                     window.open(playentryUrl, '_blank');
                 }
             }
