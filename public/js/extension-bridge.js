@@ -178,6 +178,13 @@ class ExtensionBridge {
         };
 
         this.openEditor(options);
+
+        // 🔥 Explicit Navigation (if data-open-url is present)
+        // Used when we want to open a specific Web URL (e.g. D column)
+        // instead of relying on the Extension's template loading logic.
+        if (button.dataset.openUrl) {
+          window.open(button.dataset.openUrl, '_blank');
+        }
       });
     });
 

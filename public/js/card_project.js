@@ -882,9 +882,9 @@ class ProjectCardManager {
         `.replace(/\s+/g, ' ');
 
         // CPS용 버튼 (기본/확장1/확장2)
-        // 기본 버튼: webUrl 사용 (스크래치 웹 에디터로 이동)
+        // 기본 버튼: webUrl 사용 (스크래치 웹 에디터로 이동) -> data-open-url 사용, templateUrl 제거 (다운로드 방지)
         const cpsButtons = !isCOS ? `
-            ${project.webUrl ? this.createProjectButton('기본', project.webUrl, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.basic}"`) : ''}
+            ${project.webUrl ? this.createProjectButton('기본', project.webUrl, 'btn-secondary', '', baseAttrs + ` data-open-url="${project.webUrl}"`) : ''}
             ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext1}"`) : ''}
             ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext2}"`) : ''}
         ` : '';
@@ -962,7 +962,7 @@ class ProjectCardManager {
         `.replace(/\s+/g, ' '); // 공백 정리
 
         const cpeButtons = !isCOS ? `
-            ${project.basicPlayEntry ? `<button class="btn btn-secondary btn-sm entry-playentry-btn" data-url="${project.basicPlayEntry}" ${baseAttrs} data-template-url="${project.basicPlayEntry}">기본</button>` : ''}
+            ${project.basicPlayEntry ? `<button class="btn btn-secondary btn-sm entry-playentry-btn" data-url="${project.basicPlayEntry}" ${baseAttrs} data-open-url="${project.basicPlayEntry}">기본</button>` : ''}
             ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.complete}"`) : ''}
             ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.extension}"`) : ''}
         ` : '';
