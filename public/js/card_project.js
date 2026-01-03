@@ -285,6 +285,12 @@ class ProjectCardManager {
                 case '기본':
                     projects[category][projectKey].basic = s3Url;          // G열: S3 파일 (다운로드용)
                     projects[category][projectKey].basicWebUrl = webUrl;   // D열: scratch.mit.edu URL (이동용)
+                    console.log('🔍 Scratch 기본 데이터:', {
+                        name: name,
+                        type: type,
+                        webUrl: webUrl,
+                        s3Url: s3Url
+                    });
                     break;
                 case '확장1':
                     projects[category][projectKey].ext1 = s3Url;
@@ -874,21 +880,27 @@ class ProjectCardManager {
             ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', project.img) : ''}
         ` : '';
 
-        // 🔥 Extension 연동 속성 (공통)
-        const baseAttrs = `
-            data-action="open-editor" 
-            data-platform="scratch" 
-            data-mission-id="${projectName}" 
-            data-mission-title="${projectName}" 
+        // 🔥 Extension 연동 속성 (확장1, 확장2용)
+        const extAttrs = `
+            data-action="open-editor"
+            data-platform="scratch"
+            data-mission-id="${projectName}"
+            data-mission-title="${projectName}"
             data-user-id="${this.userID}"
         `.replace(/\s+/g, ' ');
 
         // CPS용 버튼 (기본/확장1/확장2)
-        // 🔥 기본 버튼: D열 URL 사용 (scratch.mit.edu로 이동)
+        // 🔥 기본 버튼: D열 URL 사용 (scratch.mit.edu로 이동) - Extension 연동 제외
+        if (project.basicWebUrl) {
+            console.log(`🔍 [${projectName}] basicWebUrl:`, project.basicWebUrl);
+        } else {
+            console.warn(`⚠️ [${projectName}] basicWebUrl이 비어있습니다!`);
+        }
+
         const cpsButtons = !isCOS ? `
-            ${project.basicWebUrl ? `<button class="btn btn-secondary btn-sm scratch-basic-btn" data-url="${project.basicWebUrl}" ${baseAttrs} data-open-url="${project.basicWebUrl}">기본</button>` : ''}
-            ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext1}"`) : ''}
-            ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext2}"`) : ''}
+            ${project.basicWebUrl ? `<button class="btn btn-secondary btn-sm scratch-basic-btn" data-url="${project.basicWebUrl}">기본</button>` : ''}
+            ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', '', extAttrs + ` data-template-url="${project.ext1}"`) : ''}
+            ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', '', extAttrs + ` data-template-url="${project.ext2}"`) : ''}
         ` : '';
 
         // 다운로드 버튼 (COS가 아닌 경우에만 표시)
@@ -1280,17 +1292,20 @@ class ProjectCardManager {
             }
 
             // Scratch [기본] 버튼 - scratch.mit.edu 프로젝트로 이동
-            // 🔥 data-action="open-editor"가 있는 경우 Extension에 처리를 위임하고 여기서는 무시
             if (e.target.classList.contains('scratch-basic-btn')) {
-                if (e.target.getAttribute('data-action') === 'open-editor') return;
-
                 e.preventDefault();
                 e.stopPropagation();
 
                 const scratchUrl = e.target.getAttribute('data-url');
+                console.log('🎯 Scratch [기본] 버튼 클릭!');
+                console.log('   - data-url:', scratchUrl);
+                console.log('   - 버튼 HTML:', e.target.outerHTML);
+
                 if (scratchUrl) {
-                    console.log('🎯 Scratch [기본] 버튼 클릭 - scratch.mit.edu 프로젝트로 이동:', scratchUrl);
+                    console.log('   ✅ scratch.mit.edu 프로젝트로 이동:', scratchUrl);
                     window.open(scratchUrl, '_blank');
+                } else {
+                    console.error('   ❌ scratchUrl이 없습니다!');
                 }
                 return;
             }
