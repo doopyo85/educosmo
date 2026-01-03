@@ -906,12 +906,6 @@ class ProjectCardManager {
                 <h3 class="project-card-title">${projectName}</h3>
             </div>
 
-            ${project.img && !isCOS ? `
-                <div class="project-card-image">
-                    <img src="${project.img}" alt="${projectName}">
-                </div>
-            ` : ''}
-
             <div class="project-card-tags">
                 <span class="project-card-tag">
                     <i class="bi bi-cpu"></i> ${project.ctElement || '블록코딩'}
@@ -1064,7 +1058,8 @@ class ProjectCardManager {
                 // 이미 버튼 클릭으로 처리되지 않은 경우에만 실행
                 if (!e.target.classList.contains('load-project') &&
                     !e.target.classList.contains('project-ppt-btn') &&
-                    !e.target.classList.contains('entry-legacy-btn')) {
+                    !e.target.classList.contains('entry-legacy-btn') &&
+                    !e.target.classList.contains('scratch-basic-btn')) {
                     this.loadProjectInScratchGUI(project.basic);
                 }
             });
