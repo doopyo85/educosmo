@@ -368,6 +368,12 @@ class ProjectCardManager {
                 case '기본':
                     projects[category][projectKey].basicPlayEntry = entURL;  // D열: playentry.org URL
                     projects[category][projectKey].basic = s3entURL;  // G열: S3 파일 URL
+                    console.log('🔍 Entry 기본 데이터:', {
+                        name: name,
+                        type: type,
+                        entURL: entURL,
+                        s3entURL: s3entURL
+                    });
                     break;
                 case '완성':
                     projects[category][projectKey].completePlayEntry = entURL;
