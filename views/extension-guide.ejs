@@ -4,117 +4,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>확장프로그램 설치 가이드 - 코딩앤플레이</title>
+    <title>Extension Guide - Coding&Play</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #0f172a;
+            --text-primary: #334155;
+            --text-secondary: #64748b;
+            --accent-color: #2563eb;
+            --bg-code: #f1f5f9;
+            --border-color: #e2e8f0;
+        }
+
         body {
             background-color: #ffffff;
-            color: #24292f;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-            line-height: 1.5;
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
         }
 
         .readme-container {
-            max-width: 800px;
+            max-width: 720px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 80px 24px;
         }
 
-        .readme-header {
-            padding-bottom: 8px;
-            margin-bottom: 30px;
-            border-bottom: 1px solid #d0d7de;
+        /* Typography */
+        h1,
+        h2,
+        h3 {
+            color: var(--primary-color);
+            font-weight: 700;
+            letter-spacing: -0.025em;
         }
 
         h1 {
-            border-bottom: 1px solid #d0d7de;
-            padding-bottom: 0.3em;
-            font-size: 2em;
-            font-weight: 600;
-            margin-bottom: 24px;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            border: none;
         }
 
         h2 {
-            border-bottom: 1px solid #d0d7de;
-            padding-bottom: 0.3em;
-            font-size: 1.5em;
-            font-weight: 600;
-            margin-top: 36px;
-            margin-bottom: 16px;
+            font-size: 1.5rem;
+            margin-top: 3.5rem;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
         }
 
         h3 {
-            font-size: 1.25em;
+            font-size: 1.1rem;
             font-weight: 600;
-            margin-top: 24px;
-            margin-bottom: 16px;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
         }
 
         p {
-            margin-bottom: 16px;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
         }
 
+        .lead {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Lists */
         ul,
         ol {
-            padding-left: 2em;
-            margin-bottom: 16px;
+            padding-left: 1.5rem;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
         }
 
         li {
-            margin-bottom: 0.25em;
+            margin-bottom: 0.5rem;
+            padding-left: 0.5rem;
         }
 
+        /* Code Blocks */
         code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.875em;
+            color: #ec4899;
+            /* Pinkish-red for inline code */
+            background: rgba(236, 72, 153, 0.1);
             padding: 0.2em 0.4em;
-            margin: 0;
-            font-size: 85%;
-            background-color: #f6f8fa;
-            border-radius: 6px;
-            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
-            color: #24292f;
+            border-radius: 4px;
         }
 
         pre {
-            padding: 16px;
-            overflow: auto;
-            font-size: 85%;
-            line-height: 1.45;
-            background-color: #f6f8fa;
-            border-radius: 6px;
-            margin-bottom: 16px;
+            background-color: var(--primary-color);
+            /* Dark theme for code blocks */
+            color: #f8fafc;
+            padding: 1.25rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         pre code {
-            background-color: transparent;
+            background: transparent;
+            color: inherit;
             padding: 0;
-            font-size: 100%;
         }
 
+        /* Buttons */
         .btn-download {
-            display: inline-block;
-            background-color: #2da44e;
-            color: #ffffff;
-            padding: 8px 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
             border-radius: 6px;
+            font-weight: 500;
+            font-size: 1rem;
             text-decoration: none;
-            font-weight: 600;
-            margin-bottom: 16px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         .btn-download:hover {
-            background-color: #2c974b;
-            color: #ffffff;
-            text-decoration: none;
+            background-color: #1e293b;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            color: white;
         }
 
+        .btn-download i {
+            margin-right: 8px;
+        }
+
+        /* Notes & Blockquotes */
         blockquote {
-            padding: 0 1em;
-            color: #57606a;
-            border-left: 0.25em solid #d0d7de;
-            margin-bottom: 16px;
+            border-left: 4px solid var(--accent-color);
+            background-color: #eff6ff;
+            padding: 1rem 1.5rem;
+            border-radius: 0 4px 4px 0;
+            margin: 2rem 0;
+            color: #1e3a8a;
+            font-size: 0.95rem;
+        }
+
+        blockquote p {
+            margin: 0;
+        }
+
+        /* Utilities */
+        .text-accent {
+            color: var(--accent-color);
+            font-weight: 600;
         }
     </style>
 </head>
@@ -123,85 +177,84 @@
     <%- include('partials/header') %>
 
         <div class="readme-container">
-            <!-- Content mimicking a README.md -->
 
-            <h1>🧩 코딩앤플레이 학습도우미 (Extension Guide)</h1>
+            <header class="mb-5">
+                <h1>Extension Guide</h1>
+                <p class="lead">
+                    코딩앤플레이 학습도우미는 Scratch, Entry, App Inventor 프로젝트 연동을 위한 필수 도구입니다.
+                    아래 가이드를 따라 설치를 완료해주세요.
+                </p>
+                <div>
+                    <a href="/downloads/codingnplay-extension-v1.1.1.zip" class="btn-download">
+                        <i class="bi bi-download"></i>
+                        Download v1.1.1
+                    </a>
+                </div>
+            </header>
 
-            <p>
-                코딩앤플레이 학습도우미 확장프로그램은 Scratch, Entry, App Inventor 프로젝트를 쉽고 빠르게 제출할 수 있도록 돕는 도구입니다.
-            </p>
+            <section>
+                <h2>주요 기능</h2>
+                <ul>
+                    <li><strong>Scratch</strong> &mdash; .sb3 파일 자동 로드 및 추출</li>
+                    <li><strong>Entry</strong> &mdash; .ent 파일 연동 및 원클릭 제출</li>
+                    <li><strong>App Inventor</strong> &mdash; .aia 프로젝트 관리 최적화</li>
+                </ul>
+            </section>
 
-            <p>
-                <a href="/downloads/codingnplay-extension-v1.1.1.zip" class="btn-download">
-                    <i class="bi bi-download"></i> Latest release (v1.1.1) 다운로드
-                </a>
-            </p>
+            <section>
+                <h2>설치 가이드 (Chrome / Edge)</h2>
 
-            <h2>✨ 주요 기능</h2>
-            <ul>
-                <li><strong>Scratch</strong>: 공유된 프로젝트 자동 추출 및 .sb3 파일 업로드 지원</li>
-                <li><strong>Entry</strong>: .ent 파일 업로드 및 간편한 제출 프로세스</li>
-                <li><strong>App Inventor</strong>: .aia 파일 업로드 및 프로젝트 관리</li>
-            </ul>
+                <blockquote>
+                    <p>본 확장프로그램은 스토어를 통하지 않고 <strong>개발자 모드</strong>를 통해 직접 설치합니다.</p>
+                </blockquote>
 
-            <h2>🚀 설치 방법 (Chrome / Edge)</h2>
+                <h3>1. 파일 준비</h3>
+                <ol>
+                    <li>상단의 다운로드 버튼을 클릭하여 ZIP 파일을 받으세요.</li>
+                    <li>다운로드한 ZIP 파일의 압축을 <strong>완전히 해제</strong>해주세요.</li>
+                </ol>
 
-            <blockquote>
-                <p><strong>Note:</strong> 이 확장프로그램은 개발자 모드를 통해 수동으로 설치해야 합니다.</p>
-            </blockquote>
+                <h3>2. 확장프로그램 페이지 이동</h3>
+                <p>사용 중인 브라우저의 주소창에 아래 명령어를 복사하여 붙여넣으세요.</p>
 
-            <h3>1. 확장프로그램 준비</h3>
-            <ol>
-                <li>위의 다운로드 버튼을 클릭하여 ZIP 파일을 다운로드합니다.</li>
-                <li>다운로드한 ZIP 파일을 원하는 위치에 <strong>압축 해제</strong>합니다.</li>
-            </ol>
+                <p class="mb-2 text-sm text-secondary">Chrome:</p>
+                <pre><code>chrome://extensions</code></pre>
 
-            <h3>2. 브라우저 설정</h3>
-            <p>Chrome 또는 Edge 브라우저를 열고 주소창에 다음 주소를 입력하여 확장프로그램 관리 페이지로 이동합니다.</p>
+                <p class="mb-2 text-sm text-secondary">Edge:</p>
+                <pre><code>edge://extensions</code></pre>
 
-            <p><strong>Chrome:</strong></p>
-            <pre><code>chrome://extensions</code></pre>
+                <h3>3. 확장프로그램 로드</h3>
+                <ol>
+                    <li>페이지 우측 상단의 <span class="text-accent">개발자 모드</span> 스위치를 켭니다.</li>
+                    <li><strong>압축해제된 확장 프로그램을 로드합니다</strong> 버튼을 클릭합니다.</li>
+                    <li>1단계에서 압축을 해제한 폴더를 선택하면 설치가 완료됩니다.</li>
+                </ol>
+            </section>
 
-            <p><strong>Edge:</strong></p>
-            <pre><code>edge://extensions</code></pre>
+            <section>
+                <h2>사용 방법</h2>
+                <ol>
+                    <li>코딩앤플레이에서 원하는 과제의 <strong>[프로젝트 열기]</strong> 버튼을 클릭합니다.</li>
+                    <li>자동으로 열리는 공식 에디터에서 자유롭게 코딩하세요.</li>
+                    <li>작업이 끝나면 우측 상단 플로팅 메뉴의 <strong>[제출하기]</strong> 버튼을 누르세요.</li>
+                </ol>
+            </section>
 
-            <h3>3. 확장프로그램 로드</h3>
-            <ol>
-                <li>페이지 우측 상단(또는 좌측 하단)의 <strong>개발자 모드</strong> 스위치를 켭니다.</li>
-                <li><strong>압축해제된 확장 프로그램을 로드합니다</strong> (Edge: 압축을 푼 항목 로드) 버튼을 클릭합니다.</li>
-                <li>1번 단계에서 압축을 해제한 폴더를 선택합니다.</li>
-            </ol>
+            <section>
+                <h2>자주 묻는 질문</h2>
 
-            <p>설치가 완료되면 브라우저 툴바에 퍼즐 조각 아이콘(🧩)이 나타납니다.</p>
+                <h3>확장프로그램이 작동하지 않나요?</h3>
+                <p>
+                    브라우저 우측 상단 퍼즐 아이콘을 눌러 확장프로그램이 켜져 있는지 확인하고,
+                    페이지를 새로고침(F5) 해주세요.
+                </p>
 
-            <h2>📖 사용 가이드</h2>
-            <ol>
-                <li>코딩앤플레이 웹사이트에서 수행할 과제를 선택하고 <strong>[프로젝트 열기]</strong> (또는 [기본]) 버튼을 클릭합니다.</li>
-                <li>새 탭에서 공식 에디터(Scratch, Entry 등)가 열립니다.</li>
-                <li>프로젝트를 작성하거나 수정합니다.</li>
-                <li>작업이 완료되면 우측 상단에 나타나는 <strong>[📤 제출하기]</strong> 버튼을 클릭합니다.</li>
-                <li>안내에 따라 파일을 제출하면 완료됩니다.</li>
-            </ol>
-
-            <h2>❓ 자주 묻는 질문 (FAQ)</h2>
-
-            <h3>확장프로그램이 작동하지 않습니다.</h3>
-            <ul>
-                <li><code>chrome://extensions</code> 페이지에서 확장프로그램이 <strong>활성화(ON)</strong> 상태인지 확인하세요.</li>
-                <li>브라우저를 껐다 켜거나 페이지를 새로고침(F5) 해보세요.</li>
-            </ul>
-
-            <h3>[제출하기] 버튼이 보이지 않습니다.</h3>
-            <ul>
-                <li>반드시 코딩앤플레이 사이트의 <strong>[프로젝트 열기]</strong> 버튼을 통해 에디터에 접속해야 합니다.</li>
-                <li>에디터 사이트에 직접 접속(즐겨찾기 등)한 경우에는 연동되지 않습니다.</li>
-            </ul>
-
-            <h3>파일 업로드 오류가 발생합니다.</h3>
-            <ul>
-                <li>파일 크기가 50MB를 초과하지 않는지 확인하세요.</li>
-                <li>인터넷 연결 상태를 확인해주세요.</li>
-            </ul>
+                <h3>제출 버튼이 안 보이나요?</h3>
+                <p>
+                    반드시 코딩앤플레이 웹사이트를 경유해서 에디터에 접속해야 합니다.
+                    즐겨찾기나 주소 직접 입력으로 접속할 경우 연동되지 않습니다.
+                </p>
+            </section>
 
         </div>
 
