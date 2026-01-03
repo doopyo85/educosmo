@@ -1306,9 +1306,77 @@ class ProjectCardManager {
                 return;
             }
 
-            // Scratch [기본] 버튼과 Entry [기본] 버튼은 extension-bridge.js에서 처리함
-            // data-action="open-editor" 속성이 있으므로 자동으로 initializeButtons()가 처리
-            // 여기서는 아무것도 하지 않음 (중복 탭 방지)
+            // Scratch [기본] 버튼 처리
+            if (e.target.classList.contains('scratch-basic-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const openUrl = e.target.getAttribute('data-open-url') || e.target.getAttribute('data-url');
+
+                if (!openUrl) {
+                    console.error('Scratch 기본 URL이 없습니다');
+                    return;
+                }
+
+                console.log('🎯 Scratch [기본] 버튼 클릭:', openUrl);
+
+                // Extension이 있는 경우 - Extension에서 처리 (과제 정보 전달)
+                if (window.extensionBridge) {
+                    console.log('✅ Extension 감지 - 과제 정보와 함께 에디터 열기');
+                    const missionId = e.target.getAttribute('data-mission-id') || 'scratch-basic';
+                    const missionTitle = e.target.getAttribute('data-mission-title') || 'Scratch Project';
+                    const userId = e.target.getAttribute('data-user-id') || this.userID || 'guest';
+
+                    window.extensionBridge.openEditor({
+                        platform: 'scratch',
+                        missionId: missionId,
+                        userId: userId,
+                        missionTitle: missionTitle,
+                        openUrl: openUrl
+                    });
+                } else {
+                    // Extension이 없는 경우 - 단순히 URL로 이동
+                    console.log('📂 Extension 없음 - Scratch.mit.edu로 이동');
+                    window.open(openUrl, '_blank');
+                }
+                return;
+            }
+
+            // Entry [기본] 버튼 처리
+            if (e.target.classList.contains('entry-basic-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const openUrl = e.target.getAttribute('data-open-url') || e.target.getAttribute('data-url');
+
+                if (!openUrl) {
+                    console.error('Entry 기본 URL이 없습니다');
+                    return;
+                }
+
+                console.log('🎯 Entry [기본] 버튼 클릭:', openUrl);
+
+                // Extension이 있는 경우 - Extension에서 처리 (과제 정보 전달)
+                if (window.extensionBridge) {
+                    console.log('✅ Extension 감지 - 과제 정보와 함께 에디터 열기');
+                    const missionId = e.target.getAttribute('data-mission-id') || 'entry-basic';
+                    const missionTitle = e.target.getAttribute('data-mission-title') || 'Entry Project';
+                    const userId = e.target.getAttribute('data-user-id') || this.userID || 'guest';
+
+                    window.extensionBridge.openEditor({
+                        platform: 'entry',
+                        missionId: missionId,
+                        userId: userId,
+                        missionTitle: missionTitle,
+                        openUrl: openUrl
+                    });
+                } else {
+                    // Extension이 없는 경우 - 단순히 URL로 이동
+                    console.log('📂 Extension 없음 - playentry.org로 이동');
+                    window.open(openUrl, '_blank');
+                }
+                return;
+            }
 
             // 기존 load-project 버튼 처리 (COS 카드 버튼 등)
             // 🔥 data-action="open-editor"가 있는 경우 Extension에 처리를 위임하고 여기서는 무시
