@@ -36,29 +36,21 @@
                 <!-- 🔥 버튼 및 탭 통합 그룹 (Apple Style) -->
                 <div class="apple-toolbar-container">
                     <!-- 고정 버튼 (왼쪽) -->
-                    <div class="d-flex align-items-center gap-2">
-                        <button id="newProjectBtn" class="apple-btn-primary">
-                            <i class="bi bi-plus-lg"></i> 새로 시작하기
-                        </button>
-                        <a href="https://playentry.org" target="_blank" class="apple-btn-primary">
-                            <i class="bi bi-box-arrow-up-right"></i> playentry.org
-                        </a>
-                        <!-- 🔥 불러오기 버튼 추가 -->
-                        <button onclick="openEntryProjectLoadModal()" class="apple-btn-primary">
-                            <i class="bi bi-folder2-open"></i> 불러오기
-                        </button>
-                        <div class="apple-divider mx-3"></div>
-                    </div>
-
-                    <!-- 동적 탭 (오른쪽) -->
-                    <ul class="nav nav-pills apple-nav-pills" id="categoryTabs" role="tablist"></ul>
+                    <button id="newProjectBtn" class="apple-btn-primary">
+                        <i class="bi bi-plus-lg"></i> 새로 시작하기
+                    </button>
+                    <div class="apple-divider mx-3"></div>
                 </div>
-            </div>
 
-            <!-- 🔥 CPE / CPA 교육 콘텐츠만 출력 -->
-            <div id="edu-content">
-                <div id="content-container" class="tab-content mt-3"></div>
+                <!-- 동적 탭 (오른쪽) -->
+                <ul class="nav nav-pills apple-nav-pills" id="categoryTabs" role="tablist"></ul>
             </div>
+        </div>
+
+        <!-- 🔥 CPE / CPA 교육 콘텐츠만 출력 -->
+        <div id="edu-content">
+            <div id="content-container" class="tab-content mt-3"></div>
+        </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
@@ -68,26 +60,7 @@
         <script src="/js/components/storage/ProjectStorageModal.js"></script>
 
         <script>
-            /**
-             * 🔥 Entry 프로젝트 불러오기 (ProjectStorageModal 사용)
-             */
-            function openEntryProjectLoadModal() {
-                const modal = new ProjectStorageModal({
-                    platform: 'entry',
-                    onLoad: (data) => {
-                        console.log('📂 Entry 프로젝트 선택됨:', data);
-                        if (data.url) {
-                            // S3 URL을 사용하여 Entry 워크스페이스 열기
-                            // 주의: S3 URL은 Presigned URL이므로 인코딩 필요
-                            const entryEditorUrl = `/entry/entry_editor?s3Url=${encodeURIComponent(data.url)}`;
-                            window.open(entryEditorUrl, '_blank');
-                        } else {
-                            alert('프로젝트 URL을 찾을 수 없습니다.');
-                        }
-                    }
-                });
-                modal.openLoadModal();
-            }
+
 
 
 
@@ -95,8 +68,8 @@
             document.getElementById('newProjectBtn').addEventListener('click', function () {
                 console.log('🎯 새로 시작하기 버튼 클릭');
 
-                // Entry 워크스페이스로 이동 (자체 서버)
-                window.open('/entry/', '_blank');
+                // playentry.org 새 프로젝트 페이지로 이동
+                window.open('https://playentry.org/ws/new?type=normal&mode=block&lang=ko', '_blank');
 
                 // 학습 활동 기록
                 try {

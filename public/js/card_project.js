@@ -247,8 +247,8 @@ class ProjectCardManager {
         data.forEach(row => {
             if (!Array.isArray(row) || row.length < 4) return;
 
-            // 데이터 구조: [카테고리, 콘텐츠명, 기능, sb3URL, C.T요소, 활용교구, imgURL]
-            const [category, name, type, url, ctElement = '', tools = '', imgUrl = ''] = row;
+            // 데이터 구조: [카테고리, 콘텐츠명, 기능, sb3URL(Web), C.T요소, 활용교구, S3sb2URL(File), imgURL]
+            const [category, name, type, webUrl, ctElement = '', tools = '', s3Url = '', imgUrl = ''] = row;
 
             if (!category || !name) return;
 
@@ -281,25 +281,26 @@ class ProjectCardManager {
             const typeLower = type.toLowerCase();
             switch (typeLower) {
                 case '기본':
-                    projects[category][projectKey].basic = url;
+                    projects[category][projectKey].basic = s3Url;     // S3 파일 (다운로드용)
+                    projects[category][projectKey].webUrl = webUrl;   // 웹 에디터 URL (이동용)
                     break;
                 case '확장1':
-                    projects[category][projectKey].ext1 = url;
+                    projects[category][projectKey].ext1 = s3Url;
                     break;
                 case '확장2':
-                    projects[category][projectKey].ext2 = url;
+                    projects[category][projectKey].ext2 = s3Url;
                     break;
                 case '문제':  // 🔥 COS 문제 이미지 URL
-                    projects[category][projectKey].img = url;
+                    projects[category][projectKey].img = imgUrl; // imgURL 컬럼 사용
                     break;
                 case '정답':
-                    projects[category][projectKey].answer = url;
+                    projects[category][projectKey].answer = s3Url;
                     break;
                 case '풀이':
-                    projects[category][projectKey].solution = url;
+                    projects[category][projectKey].solution = s3Url;
                     break;
                 case 'ppt':
-                    projects[category][projectKey].ppt = url;
+                    projects[category][projectKey].ppt = webUrl; // PPT는 보통 웹 링크
                     break;
             }
         });
@@ -314,8 +315,14 @@ class ProjectCardManager {
         const projects = {};
 
         data.forEach(row => {
-            // 구글 시트 데이터 구조: [카테고리, 콘텐츠명, 기능, entURL, C.T요소, imgURL, S3entURL]
-            const [category, name, type, entURL = '', ctElement = '', imgUrl = '', s3entURL = ''] = row;
+            // 구글 시트 데이터 구조: [카테고리, 콘텐츠명, 기능, entURL(Web), C.T요소, 활용교구, S3entURL(File)]
+            const [category, name, type, entURL = '', ctElement = '', tools = '', s3entURL = ''] = row;
+
+            // 이미지 URL은 별도로 없으므로 빈값 혹은 다른 로직 필요 시 수정
+            // 현재 구조상 '문제' 타입일 때 imgUrl이 어디에 있는지 확인 필요하나, 
+            // 유저 요청에 따라 우선 tools, s3entURL 매핑 수정
+            let imgUrl = '';
+            if (type === '문제') imgUrl = s3entURL; // 만약 문제 이미지가 S3URL 자리에 있다면
 
             if (!category || !name) return;
 
@@ -875,15 +882,17 @@ class ProjectCardManager {
         `.replace(/\s+/g, ' ');
 
         // CPS용 버튼 (기본/확장1/확장2)
+        // 기본 버튼: webUrl 사용 (스크래치 웹 에디터로 이동)
         const cpsButtons = !isCOS ? `
-            ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.basic}"`) : ''}
+            ${project.webUrl ? this.createProjectButton('기본', project.webUrl, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.basic}"`) : ''}
             ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext1}"`) : ''}
             ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext2}"`) : ''}
         ` : '';
 
         // 다운로드 버튼 (COS가 아닌 경우에만 표시)
+        // 스타일을 entry-legacy-btn 클래스로 변경하여 Entry와 동일하게 맞춤
         const downloadBtn = !isCOS && project.basic ? `
-            <button class="scratch-download-btn" data-url="${project.basic}" data-project-name="${projectName}">
+            <button class="entry-legacy-btn" data-url="${project.basic}" data-project-name="${projectName}">
                 <i class="bi bi-download"></i> 다운로드
             </button>
         ` : '';
@@ -1373,7 +1382,20 @@ class ProjectCardManager {
                 }
             }
 
-            // Scratch 다운로드 버튼 (Extension 연동)
+            // Scratch 다운로드 버튼 (Extension 연동 X, 순수 다운로드)
+            // entry-legacy-btn 클래스를 사용하므로 해당 로직을 공유하거나 별도로 처리
+            // 여기서는 Scratch 파일 다운로드를 위해 entry-legacy-btn 로직을 확장하여 사용
+            if (e.target.classList.contains('entry-legacy-btn') && this.config.projectType === 'scratch') {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const projectUrl = e.target.getAttribute('data-url');
+                if (projectUrl) {
+                    this.downloadEntryFile(projectUrl); // 이름은 Entry지만 일반 파일 다운로드 함수로 사용 가능
+                }
+                return;
+            }
+
             if (e.target.classList.contains('scratch-download-btn')) {
                 e.preventDefault();
                 e.stopPropagation();
