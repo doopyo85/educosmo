@@ -891,6 +891,7 @@ class ProjectCardManager {
 
         // 다운로드 버튼 (COS가 아닌 경우에만 표시)
         // 스타일을 entry-legacy-btn 클래스로 변경하여 Entry와 동일하게 맞춤
+        // 🔥 Extension 연동 제거 (다운로드 전용)
         const downloadBtn = !isCOS && project.basic ? `
             <button class="entry-legacy-btn" data-url="${project.basic}" data-project-name="${projectName}">
                 <i class="bi bi-download"></i> 다운로드
@@ -967,17 +968,9 @@ class ProjectCardManager {
             ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.extension}"`) : ''}
         ` : '';
 
-        // 다운로드 버튼 (COS가 아닌 경우에만 표시) -> Extension 연동 추가
-        const downloadAttrs = `
-            data-action="open-editor" 
-            data-platform="entry" 
-            data-mission-id="${projectName}_download" 
-            data-mission-title="${projectName}" 
-            data-user-id="${this.userID}"
-        `.replace(/\s+/g, ' ');
-
+        // 다운로드 버튼 (COS가 아닌 경우에만 표시) -> Extension 연동 제거 (순수 다운로드)
         const downloadBtn = !isCOS && project.basic ? `
-            <button class="entry-legacy-btn" data-url="${project.basic}" ${downloadAttrs}>
+            <button class="entry-legacy-btn" data-url="${project.basic}" data-project-name="${projectName}">
                 <i class="bi bi-download"></i> 다운로드
             </button>
         ` : '';
@@ -1378,22 +1371,12 @@ class ProjectCardManager {
 
                 const projectUrl = e.target.getAttribute('data-url');
                 if (projectUrl) {
-                    this.downloadEntryFile(projectUrl);
+                    this.downloadEntryFile(projectUrl); // Entry 및 Scratch 파일 다운로드
                 }
-            }
-
-            // Scratch 다운로드 버튼 (Extension 연동 X, 순수 다운로드)
-            // entry-legacy-btn 클래스를 사용하므로 해당 로직을 공유하거나 별도로 처리
-            // 여기서는 Scratch 파일 다운로드를 위해 entry-legacy-btn 로직을 확장하여 사용
-            if (e.target.classList.contains('entry-legacy-btn') && this.config.projectType === 'scratch') {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const projectUrl = e.target.getAttribute('data-url');
-                if (projectUrl) {
-                    this.downloadEntryFile(projectUrl); // 이름은 Entry지만 일반 파일 다운로드 함수로 사용 가능
+                // Scratch의 경우, 이 버튼은 순수 다운로드이므로 다른 로직으로 넘어가지 않도록 여기서 종료
+                if (this.config.projectType === 'scratch') {
+                    return;
                 }
-                return;
             }
 
             if (e.target.classList.contains('scratch-download-btn')) {
