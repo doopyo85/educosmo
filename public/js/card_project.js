@@ -886,7 +886,15 @@ class ProjectCardManager {
             ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', project.img) : ''}
         ` : '';
 
-        // 🔥 Extension 연동 속성 (과제 정보 전달)
+        // 🔥 Extension 연동 속성 - [기본] 버튼용 (data-action 제외, card_project.js에서 직접 처리)
+        const scratchBasicAttrs = `
+            data-platform="scratch"
+            data-mission-id="${projectName}"
+            data-mission-title="${projectName}"
+            data-user-id="${this.userID}"
+        `.replace(/\s+/g, ' ');
+
+        // 🔥 Extension 연동 속성 - [확장1/2] 버튼용 (data-action 포함, content-codingnplay.js에서 처리)
         const scratchExtAttrs = `
             data-action="open-editor"
             data-platform="scratch"
@@ -905,7 +913,7 @@ class ProjectCardManager {
         }
 
         const cpsButtons = !isCOS ? `
-            ${project.basicWebUrl ? `<button class="btn btn-secondary btn-sm scratch-basic-btn" data-url="${project.basicWebUrl}" ${scratchExtAttrs} data-open-url="${project.basicWebUrl}">기본</button>` : ''}
+            ${project.basicWebUrl ? `<button class="btn btn-secondary btn-sm scratch-basic-btn" data-url="${project.basicWebUrl}" ${scratchBasicAttrs} data-open-url="${project.basicWebUrl}">기본</button>` : ''}
             ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', '', scratchExtAttrs + ` data-template-url="${project.ext1}"`) : ''}
             ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', '', scratchExtAttrs + ` data-template-url="${project.ext2}"`) : ''}
         ` : '';
@@ -969,7 +977,15 @@ class ProjectCardManager {
         // 🔥 [기본]: D열 → playentry.org 공식 페이지로 이동 + Extension에 과제정보 전달
         // 🔥 [완성]/[확장]: G열 → 8070 서버(내부 에디터)로 로드 + Extension에 과제정보 전달
 
-        // Extension 연동 속성 (과제 정보 전달)
+        // 🔥 Extension 연동 속성 - [기본] 버튼용 (data-action 제외, card_project.js에서 직접 처리)
+        const entryBasicAttrs = `
+            data-platform="entry"
+            data-mission-id="${projectName}"
+            data-mission-title="${projectName}"
+            data-user-id="${this.userID}"
+        `.replace(/\s+/g, ' ');
+
+        // 🔥 Extension 연동 속성 - [완성/확장] 버튼용 (data-action 포함, content-codingnplay.js에서 처리)
         const entryExtAttrs = `
             data-action="open-editor"
             data-platform="entry"
@@ -986,7 +1002,7 @@ class ProjectCardManager {
         }
 
         const cpeButtons = !isCOS ? `
-            ${project.basicPlayEntry ? `<button class="btn btn-secondary btn-sm entry-basic-btn" data-url="${project.basicPlayEntry}" ${entryExtAttrs} data-open-url="${project.basicPlayEntry}">기본</button>` : ''}
+            ${project.basicPlayEntry ? `<button class="btn btn-secondary btn-sm entry-basic-btn" data-url="${project.basicPlayEntry}" ${entryBasicAttrs} data-open-url="${project.basicPlayEntry}">기본</button>` : ''}
             ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary', '', entryExtAttrs + ` data-template-url="${project.complete}"`) : ''}
             ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary', '', entryExtAttrs + ` data-template-url="${project.extension}"`) : ''}
         ` : '';

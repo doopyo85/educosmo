@@ -14,26 +14,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #0f172a;
+            --primary-color: #1e293b;
             --text-primary: #334155;
             --text-secondary: #64748b;
-            --accent-color: #2563eb;
-            --bg-code: #f1f5f9;
+            --accent-color: #3b82f6;
+            --bg-code: #f8fafc;
             --border-color: #e2e8f0;
         }
 
         body {
             background-color: #ffffff;
             color: var(--text-primary);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.7;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.8;
             -webkit-font-smoothing: antialiased;
+            font-size: 16px;
         }
 
         .readme-container {
-            max-width: 720px;
+            max-width: 700px;
             margin: 0 auto;
-            padding: 80px 24px;
+            padding: 100px 24px;
         }
 
         /* Typography */
@@ -41,86 +42,93 @@
         h2,
         h3 {
             color: var(--primary-color);
-            font-weight: 700;
-            letter-spacing: -0.025em;
+            letter-spacing: -0.02em;
         }
 
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
             line-height: 1.2;
-            border: none;
         }
 
         h2 {
-            font-size: 1.5rem;
-            margin-top: 3.5rem;
-            margin-bottom: 1.25rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 4rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.5rem;
         }
 
         h3 {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 600;
             margin-top: 2.5rem;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             color: var(--primary-color);
         }
 
         p {
             margin-bottom: 1.5rem;
             color: var(--text-primary);
+            font-weight: 400;
         }
 
         .lead {
             font-size: 1.125rem;
             color: var(--text-secondary);
             font-weight: 400;
-            margin-bottom: 2.5rem;
+            margin-bottom: 3rem;
+            line-height: 1.7;
         }
 
         /* Lists */
         ul,
         ol {
-            padding-left: 1.5rem;
+            padding-left: 1.25rem;
             margin-bottom: 2rem;
             color: var(--text-primary);
         }
 
         li {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             padding-left: 0.5rem;
+        }
+
+        li::marker {
+            color: var(--text-secondary);
         }
 
         /* Code Blocks */
         code {
             font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            font-size: 0.875em;
-            color: #ec4899;
-            /* Pinkish-red for inline code */
-            background: rgba(236, 72, 153, 0.1);
+            font-size: 0.85em;
+            color: #d946ef;
+            background: #fdf2f8;
             padding: 0.2em 0.4em;
             border-radius: 4px;
+            font-weight: 500;
         }
 
         pre {
-            background-color: var(--primary-color);
-            /* Dark theme for code blocks */
+            background-color: #0f172a;
             color: #f8fafc;
             padding: 1.25rem;
             border-radius: 8px;
             overflow-x: auto;
-            margin: 1.5rem 0;
+            margin: 1.5rem 0 2.5rem 0;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            font-size: 0.875rem;
+            line-height: 1.6;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
         pre code {
             background: transparent;
             color: inherit;
             padding: 0;
+            font-weight: 400;
         }
 
         /* Buttons */
@@ -130,45 +138,53 @@
             justify-content: center;
             background-color: var(--primary-color);
             color: white;
-            padding: 12px 24px;
+            padding: 10px 20px;
             border-radius: 6px;
             font-weight: 500;
-            font-size: 1rem;
+            font-size: 0.95rem;
             text-decoration: none;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .btn-download:hover {
-            background-color: #1e293b;
+            background-color: #334155;
             transform: translateY(-1px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             color: white;
         }
 
         .btn-download i {
             margin-right: 8px;
+            font-size: 1rem;
         }
 
         /* Notes & Blockquotes */
         blockquote {
-            border-left: 4px solid var(--accent-color);
-            background-color: #eff6ff;
-            padding: 1rem 1.5rem;
-            border-radius: 0 4px 4px 0;
+            background-color: #f8fafc;
+            border-left: 3px solid var(--accent-color);
+            padding: 1rem 1.25rem;
+            border-radius: 0 6px 6px 0;
             margin: 2rem 0;
-            color: #1e3a8a;
-            font-size: 0.95rem;
         }
 
         blockquote p {
             margin: 0;
+            color: #334155;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
 
         /* Utilities */
         .text-accent {
             color: var(--accent-color);
             font-weight: 600;
+        }
+
+        /* Selection */
+        ::selection {
+            background: #e2e8f0;
+            color: #0f172a;
         }
     </style>
 </head>
