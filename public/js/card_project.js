@@ -1326,17 +1326,21 @@ class ProjectCardManager {
                 const missionTitle = e.target.getAttribute('data-mission-title');
                 const userId = e.target.getAttribute('data-user-id');
 
-                if (window.extensionBridge) {
+                if (window.extensionBridge && typeof window.extensionBridge.setMission === 'function') {
                     console.log('   🔌 Extension에 과제 정보 전달');
-                    window.extensionBridge.setMission({
-                        platform: platform,
-                        missionId: missionId,
-                        missionTitle: missionTitle,
-                        userId: userId,
-                        openUrl: openUrl
-                    });
+                    try {
+                        window.extensionBridge.setMission({
+                            platform: platform,
+                            missionId: missionId,
+                            missionTitle: missionTitle,
+                            userId: userId,
+                            openUrl: openUrl
+                        });
+                    } catch (err) {
+                        console.warn('   ⚠️ Extension 호출 실패:', err);
+                    }
                 } else {
-                    console.log('   ⚠️ Extension 없음 - 단순 링크 이동');
+                    console.log('   ⚠️ Extension 없음 또는 setMission 미지원 - 단순 링크 이동');
                 }
 
                 // scratch.mit.edu로 이동
@@ -1369,17 +1373,21 @@ class ProjectCardManager {
                 const missionTitle = e.target.getAttribute('data-mission-title');
                 const userId = e.target.getAttribute('data-user-id');
 
-                if (window.extensionBridge) {
+                if (window.extensionBridge && typeof window.extensionBridge.setMission === 'function') {
                     console.log('   🔌 Extension에 과제 정보 전달');
-                    window.extensionBridge.setMission({
-                        platform: platform,
-                        missionId: missionId,
-                        missionTitle: missionTitle,
-                        userId: userId,
-                        openUrl: openUrl
-                    });
+                    try {
+                        window.extensionBridge.setMission({
+                            platform: platform,
+                            missionId: missionId,
+                            missionTitle: missionTitle,
+                            userId: userId,
+                            openUrl: openUrl
+                        });
+                    } catch (err) {
+                        console.warn('   ⚠️ Extension 호출 실패:', err);
+                    }
                 } else {
-                    console.log('   ⚠️ Extension 없음 - 단순 링크 이동');
+                    console.log('   ⚠️ Extension 없음 또는 setMission 미지원 - 단순 링크 이동');
                 }
 
                 // playentry.org로 이동
