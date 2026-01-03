@@ -835,11 +835,11 @@ class ProjectCardManager {
         }
     }
 
-    // createProjectButton 함수 (imgUrl 파라미터 추가)
-    createProjectButton(label, url, type, imgUrl = '') {
+    // createProjectButton 함수 (imgUrl 파라미터 추가, extraAttrs 추가)
+    createProjectButton(label, url, type, imgUrl = '', extraAttrs = '') {
         const imgAttr = imgUrl ? `data-img="${imgUrl}"` : '';
         return `
-            <button class="btn ${type} btn-sm load-project" data-url="${url}" ${imgAttr}>
+            <button class="btn ${type} btn-sm load-project" data-url="${url}" ${imgAttr} ${extraAttrs}>
                 ${label}
             </button>
         `;
@@ -865,11 +865,20 @@ class ProjectCardManager {
             ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', project.img) : ''}
         ` : '';
 
+        // 🔥 Extension 연동 속성 (공통)
+        const baseAttrs = `
+            data-action="open-editor" 
+            data-platform="scratch" 
+            data-mission-id="${projectName}" 
+            data-mission-title="${projectName}" 
+            data-user-id="${this.userID}"
+        `.replace(/\s+/g, ' ');
+
         // CPS용 버튼 (기본/확장1/확장2)
         const cpsButtons = !isCOS ? `
-            ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary') : ''}
-            ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary') : ''}
-            ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary') : ''}
+            ${project.basic ? this.createProjectButton('기본', project.basic, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.basic}"`) : ''}
+            ${this.viewConfig.showExtensions && project.ext1 ? this.createProjectButton('확장1', project.ext1, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext1}"`) : ''}
+            ${this.viewConfig.showExtensions && project.ext2 ? this.createProjectButton('확장2', project.ext2, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.ext2}"`) : ''}
         ` : '';
 
         // 다운로드 버튼 (COS가 아닌 경우에만 표시)
@@ -934,15 +943,32 @@ class ProjectCardManager {
         // CPE용 버튼 (기본/완성/확장)
         // 학생: [기본] 버튼은 playentry.org URL로 연결
         // 교사: [완성][확장] 버튼은 S3 파일을 8070 포트로 로드
+        // 🔥 Extension 연동을 위한 속성 추가 (data-action="open-editor" 등)
+        const baseAttrs = `
+            data-action="open-editor" 
+            data-platform="entry" 
+            data-mission-id="${projectName}" 
+            data-mission-title="${projectName}" 
+            data-user-id="${this.userID}"
+        `.replace(/\s+/g, ' '); // 공백 정리
+
         const cpeButtons = !isCOS ? `
-            ${project.basicPlayEntry ? `<button class="btn btn-secondary btn-sm entry-playentry-btn" data-url="${project.basicPlayEntry}">기본</button>` : ''}
-            ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary') : ''}
-            ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary') : ''}
+            ${project.basicPlayEntry ? `<button class="btn btn-secondary btn-sm entry-playentry-btn" data-url="${project.basicPlayEntry}" ${baseAttrs} data-template-url="${project.basicPlayEntry}">기본</button>` : ''}
+            ${this.viewConfig.showComplete && project.complete ? this.createProjectButton('완성', project.complete, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.complete}"`) : ''}
+            ${this.viewConfig.showExtension && project.extension ? this.createProjectButton('확장', project.extension, 'btn-secondary', '', baseAttrs + ` data-template-url="${project.extension}"`) : ''}
         ` : '';
 
-        // 다운로드 버튼 (COS가 아닌 경우에만 표시)
+        // 다운로드 버튼 (COS가 아닌 경우에만 표시) -> Extension 연동 추가
+        const downloadAttrs = `
+            data-action="open-editor" 
+            data-platform="entry" 
+            data-mission-id="${projectName}_download" 
+            data-mission-title="${projectName}" 
+            data-user-id="${this.userID}"
+        `.replace(/\s+/g, ' ');
+
         const downloadBtn = !isCOS && project.basic ? `
-            <button class="entry-legacy-btn" data-url="${project.basic}">
+            <button class="entry-legacy-btn" data-url="${project.basic}" ${downloadAttrs}>
                 <i class="bi bi-download"></i> 다운로드
             </button>
         ` : '';
@@ -1255,7 +1281,10 @@ class ProjectCardManager {
             }
 
             // 기존 load-project 버튼 처리 (COS 카드 버튼 등)
+            // 🔥 data-action="open-editor"가 있는 경우 Extension에 처리를 위임하고 여기서는 무시
             if (e.target.classList.contains('load-project')) {
+                if (e.target.getAttribute('data-action') === 'open-editor') return;
+
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -1319,7 +1348,10 @@ class ProjectCardManager {
             }
 
             // Entry [기본] 버튼 - playentry.org로 이동
+            // 🔥 data-action="open-editor"가 있는 경우 Extension에 처리를 위임하고 여기서는 무시
             if (e.target.classList.contains('entry-playentry-btn')) {
+                if (e.target.getAttribute('data-action') === 'open-editor') return;
+
                 e.preventDefault();
                 e.stopPropagation();
 

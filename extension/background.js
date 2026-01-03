@@ -38,7 +38,7 @@ const CONFIG = {
 // 메시지 핸들러
 // ============================================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('[Background] 메시지 수신:', message.action);
+  console.log('[Background] 메시지 수신:', message.action, message.data || '');
 
   switch (message.action) {
     case 'OPEN_EDITOR':
@@ -74,17 +74,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function handleOpenEditor(data) {
   const { platform, missionId, userId, templateUrl, missionTitle } = data;
 
-  // 과제 정보 저장
-  await chrome.storage.local.set({
-    currentMission: {
-      platform,
-      missionId,
-      userId,
-      missionTitle,
-      templateUrl,
-      startedAt: new Date().toISOString()
-    }
+  console.log('[Background] 에디터 열기 요청:', {
+    platform,
+    missionId,
+    userId,
+    missionTitle: missionTitle || '(없음)',
+    templateUrl: templateUrl || '(없음)'
   });
+
+  // 과제 정보 저장
+  const missionData = {
+    platform,
+    missionId,
+    userId,
+    missionTitle: missionTitle || null,
+    templateUrl: templateUrl || null,
+    startedAt: new Date().toISOString()
+  };
+
+  await chrome.storage.local.set({ currentMission: missionData });
+  console.log('[Background] 과제 정보 저장 완료:', missionData);
+
+  // 저장 확인
+  const stored = await chrome.storage.local.get('currentMission');
+  console.log('[Background] 저장된 과제 정보 확인:', stored.currentMission);
 
   // 에디터 URL 결정
   let editorUrl = CONFIG.PLATFORMS[platform]?.editorUrl;
@@ -111,13 +124,17 @@ async function handleOpenEditor(data) {
   // 파일 다운로드 트리거
   if (shouldDownload && templateUrl) {
     console.log('[Background] 템플릿 파일 다운로드 시작:', templateUrl);
+    const downloadFilename = missionTitle 
+      ? `${missionTitle}${CONFIG.PLATFORMS[platform].fileExtension}` 
+      : undefined;
+    
     chrome.downloads.download({
       url: templateUrl,
-      filename: missionTitle ? `${missionTitle}${CONFIG.PLATFORMS[platform].fileExtension}` : undefined
+      filename: downloadFilename
     }).catch(err => console.error('[Background] 다운로드 실패:', err));
   }
 
-  console.log('[Background] 에디터 열기:', { platform, editorUrl, missionId, downloaded: shouldDownload });
+  console.log('[Background] 에디터 열기 완료:', { platform, editorUrl, missionId, downloaded: shouldDownload });
 }
 
 // ============================================
@@ -126,6 +143,8 @@ async function handleOpenEditor(data) {
 async function handleGetMissionInfo(sendResponse) {
   try {
     const result = await chrome.storage.local.get('currentMission');
+    console.log('[Background] 과제 정보 조회:', result.currentMission || '(없음)');
+    
     sendResponse({
       success: true,
       data: result.currentMission || null

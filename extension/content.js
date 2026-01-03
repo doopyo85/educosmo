@@ -2,7 +2,7 @@
  * 코딩앤플레이 확장프로그램 - Content Script (에디터 페이지)
  *
  * 역할:
- * - 플로팅 제출 버튼 표시
+ * - 플로팅 제출 버튼 표시 (Dynamic Island 스타일)
  * - 프로젝트 파일 수집
  * - 제출 처리
  */
@@ -73,7 +73,7 @@
   }
 
   // ============================================
-  // 플로팅 버튼 UI 생성
+  // 플로팅 버튼 UI 생성 (Dynamic Island 스타일)
   // ============================================
   function createFloatingButton(platform) {
     // 이미 존재하면 스킵
@@ -84,18 +84,17 @@
     const container = document.createElement('div');
     container.id = 'cnp-floating-container';
     container.innerHTML = `
-      <div class="cnp-floating-wrapper">
-        <div class="cnp-mission-info" id="cnp-mission-info">
-          <span class="cnp-mission-badge">과제 진행중</span>
-          <span class="cnp-mission-title" id="cnp-mission-title">-</span>
-        </div>
-        <div class="cnp-buttons">
-          <button class="cnp-btn cnp-btn-submit" id="cnp-submit-btn">
-            <span class="cnp-icon">📤</span>
-            <span class="cnp-text">제출하기</span>
-          </button>
-          <button class="cnp-btn cnp-btn-info" id="cnp-info-btn">
-            <span class="cnp-icon">ℹ️</span>
+      <!-- Dynamic Island 스타일 바 -->
+      <div class="cnp-island" id="cnp-island">
+        <div class="cnp-island-content">
+          <div class="cnp-island-left" id="cnp-island-left">
+            <span class="cnp-island-icon">📋</span>
+            <span class="cnp-island-title" id="cnp-mission-title">과제 없음</span>
+          </div>
+          <div class="cnp-island-divider"></div>
+          <button class="cnp-island-btn" id="cnp-submit-btn">
+            <span class="cnp-island-btn-icon">↑</span>
+            <span class="cnp-island-btn-text">제출</span>
           </button>
         </div>
       </div>
@@ -169,7 +168,7 @@
   // ============================================
   function bindEvents(platform) {
     const submitBtn = document.getElementById('cnp-submit-btn');
-    const infoBtn = document.getElementById('cnp-info-btn');
+    const islandLeft = document.getElementById('cnp-island-left');
     const uploadModal = document.getElementById('cnp-upload-modal');
     const closeBtn = document.getElementById('cnp-modal-close');
     const cancelBtn = document.getElementById('cnp-cancel-btn');
@@ -199,13 +198,14 @@
       uploadModal.style.display = 'flex';
     });
 
-    // 정보 버튼 클릭
-    infoBtn.addEventListener('click', () => {
+    // 과제 정보 영역 클릭 (정보 보기)
+    islandLeft.addEventListener('click', () => {
       chrome.runtime.sendMessage({ action: 'GET_MISSION_INFO' }, (response) => {
+        console.log('[CNP] 과제 정보 조회 결과:', response);
         if (response?.data) {
-          alert(`현재 과제: ${response.data.missionTitle || response.data.missionId}\n시작 시간: ${new Date(response.data.startedAt).toLocaleString()}`);
+          alert(`📋 현재 과제 정보\n\n과제명: ${response.data.missionTitle || '없음'}\n과제 ID: ${response.data.missionId || '없음'}\n사용자 ID: ${response.data.userId || '없음'}\n플랫폼: ${response.data.platform || '없음'}\n시작 시간: ${response.data.startedAt ? new Date(response.data.startedAt).toLocaleString() : '없음'}`);
         } else {
-          alert('진행 중인 과제가 없습니다.');
+          alert('진행 중인 과제가 없습니다.\n코딩앤플레이에서 과제를 선택해주세요.');
         }
       });
     });
@@ -275,14 +275,33 @@
   // ============================================
   function loadMissionInfo() {
     chrome.runtime.sendMessage({ action: 'GET_MISSION_INFO' }, (response) => {
-      const missionInfo = document.getElementById('cnp-mission-info');
+      console.log('[CNP] 과제 정보 로드:', response);
+      
+      const island = document.getElementById('cnp-island');
       const missionTitle = document.getElementById('cnp-mission-title');
+      const islandLeft = document.getElementById('cnp-island-left');
+      const iconSpan = islandLeft?.querySelector('.cnp-island-icon');
 
       if (response?.data) {
-        missionTitle.textContent = response.data.missionTitle || `과제 #${response.data.missionId}`;
-        missionInfo.style.display = 'flex';
+        // 과제 정보가 있을 때
+        const title = response.data.missionTitle || `과제 #${response.data.missionId}`;
+        missionTitle.textContent = title;
+        island.classList.add('has-mission');
+        if (iconSpan) iconSpan.textContent = '📋';
+        
+        console.log('[CNP] 과제 정보 설정됨:', {
+          missionTitle: response.data.missionTitle,
+          missionId: response.data.missionId,
+          platform: response.data.platform,
+          displayTitle: title
+        });
       } else {
-        missionInfo.style.display = 'none';
+        // 과제 정보가 없을 때
+        missionTitle.textContent = '과제 없음';
+        island.classList.remove('has-mission');
+        if (iconSpan) iconSpan.textContent = '⚠️';
+        
+        console.log('[CNP] 과제 정보 없음');
       }
     });
   }

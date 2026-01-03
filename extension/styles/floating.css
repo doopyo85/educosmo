@@ -1,5 +1,6 @@
 /**
  * 코딩앤플레이 확장프로그램 - 플로팅 버튼 스타일
+ * Dynamic Island 스타일
  */
 
 /* ============================================
@@ -7,61 +8,138 @@
    ============================================ */
 #cnp-floating-container {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 999999;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
-}
-
-.cnp-floating-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
 }
 
 /* ============================================
-   과제 정보 배지
+   Dynamic Island 바
    ============================================ */
-.cnp-mission-info {
-  display: none;
+.cnp-island {
+  display: flex;
+  align-items: center;
+  background: #1c1c1e;
+  border-radius: 28px;
+  padding: 6px 6px 6px 16px;
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: cnp-island-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cnp-island:hover {
+  transform: scale(1.02);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.cnp-island.has-mission {
+  background: #1c1c1e;
+}
+
+.cnp-island-content {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* ============================================
+   과제 정보 영역 (좌측)
+   ============================================ */
+.cnp-island-left {
+  display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
+  padding-right: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.cnp-island-left:hover {
+  opacity: 0.8;
+}
+
+.cnp-island-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.cnp-island-title {
   font-size: 13px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-  animation: cnp-slideIn 0.3s ease;
-}
-
-.cnp-mission-badge {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.cnp-mission-title {
-  max-width: 200px;
+  font-weight: 500;
+  color: #ffffff;
+  max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  letter-spacing: -0.2px;
+}
+
+/* 과제 없을 때 */
+.cnp-island:not(.has-mission) .cnp-island-title {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* ============================================
-   버튼 그룹
+   구분선
    ============================================ */
-.cnp-buttons {
-  display: flex;
-  gap: 8px;
+.cnp-island-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 4px;
 }
 
+/* ============================================
+   제출 버튼
+   ============================================ */
+.cnp-island-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #34c759;
+  color: white;
+  border: none;
+  border-radius: 22px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  letter-spacing: -0.2px;
+}
+
+.cnp-island-btn:hover {
+  background: #30b350;
+  transform: scale(1.05);
+}
+
+.cnp-island-btn:active {
+  transform: scale(0.98);
+}
+
+.cnp-island-btn-icon {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cnp-island-btn-text {
+  font-size: 13px;
+}
+
+/* ============================================
+   버튼 공통 (모달용)
+   ============================================ */
 .cnp-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   border: none;
   border-radius: 12px;
@@ -73,40 +151,11 @@
 }
 
 .cnp-btn:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .cnp-btn:active {
   transform: translateY(0);
-}
-
-/* 제출 버튼 */
-.cnp-btn-submit {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-  color: white;
-  padding: 14px 24px;
-  font-size: 15px;
-  box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4);
-}
-
-.cnp-btn-submit:hover {
-  box-shadow: 0 6px 20px rgba(56, 239, 125, 0.5);
-}
-
-/* 정보 버튼 */
-.cnp-btn-info {
-  background: white;
-  color: #666;
-  padding: 14px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.cnp-btn-info:hover {
-  background: #f5f5f5;
-}
-
-.cnp-icon {
-  font-size: 16px;
 }
 
 /* ============================================
@@ -130,19 +179,20 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .cnp-modal-content {
   position: relative;
-  background: white;
+  background: #ffffff;
   border-radius: 20px;
   padding: 24px;
   max-width: 400px;
   width: 90%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: cnp-modalIn 0.3s ease;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+  animation: cnp-modal-appear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .cnp-modal-header {
@@ -155,21 +205,30 @@
 .cnp-modal-header h3 {
   margin: 0;
   font-size: 18px;
-  color: #333;
+  font-weight: 600;
+  color: #1c1c1e;
 }
 
 .cnp-modal-close {
-  background: none;
+  background: #f2f2f7;
   border: none;
-  font-size: 24px;
-  color: #999;
+  font-size: 18px;
+  color: #8e8e93;
   cursor: pointer;
-  padding: 0;
+  padding: 8px;
   line-height: 1;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .cnp-modal-close:hover {
-  color: #333;
+  background: #e5e5ea;
+  color: #1c1c1e;
 }
 
 .cnp-modal-body {
@@ -186,7 +245,7 @@
    파일 업로드 모달
    ============================================ */
 .cnp-guide {
-  background: #f8f9fa;
+  background: #f2f2f7;
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 20px;
@@ -195,16 +254,17 @@
 .cnp-guide p {
   margin: 4px 0;
   font-size: 14px;
-  color: #555;
+  color: #3c3c43;
 }
 
 .cnp-guide-highlight {
-  background: #fff3cd;
-  padding: 8px 12px;
+  background: #fff9e6;
+  padding: 10px 12px;
   border-radius: 8px;
   margin: 12px 0 !important;
   font-weight: 600;
-  color: #856404;
+  color: #946c00;
+  border: 1px solid #ffe066;
 }
 
 .cnp-file-input-wrapper {
@@ -215,38 +275,50 @@
 }
 
 .cnp-btn-file {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #007aff;
   color: white;
-  padding: 12px 24px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  padding: 14px 24px;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+.cnp-btn-file:hover {
+  background: #0066d6;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
 }
 
 .cnp-file-name {
   font-size: 13px;
-  color: #999;
+  color: #8e8e93;
 }
 
 .cnp-file-name.selected {
-  color: #11998e;
+  color: #34c759;
   font-weight: 600;
 }
 
 .cnp-btn-cancel {
-  background: #f5f5f5;
-  color: #666;
-  padding: 12px 24px;
+  background: #f2f2f7;
+  color: #3c3c43;
+  padding: 14px 24px;
+}
+
+.cnp-btn-cancel:hover {
+  background: #e5e5ea;
 }
 
 .cnp-btn-confirm {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: #34c759;
   color: white;
-  padding: 12px 24px;
-  box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3);
+  padding: 14px 24px;
+}
+
+.cnp-btn-confirm:hover {
+  background: #30b350;
 }
 
 .cnp-btn-confirm:disabled {
-  background: #ccc;
-  box-shadow: none;
+  background: #c7c7cc;
+  color: #8e8e93;
   cursor: not-allowed;
   transform: none;
 }
@@ -260,13 +332,20 @@
 }
 
 .cnp-spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #11998e;
+  width: 48px;
+  height: 48px;
+  border: 3px solid #f2f2f7;
+  border-top: 3px solid #34c759;
   border-radius: 50%;
-  animation: cnp-spin 1s linear infinite;
+  animation: cnp-spin 0.8s linear infinite;
   margin: 0 auto 20px;
+}
+
+.cnp-modal-progress p {
+  color: #3c3c43;
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0;
 }
 
 /* ============================================
@@ -278,35 +357,38 @@
 }
 
 .cnp-complete-icon {
-  font-size: 60px;
-  margin-bottom: 20px;
+  font-size: 56px;
+  margin-bottom: 16px;
 }
 
 .cnp-modal-complete h3 {
   margin: 0 0 8px;
-  color: #11998e;
+  font-size: 20px;
+  font-weight: 600;
+  color: #34c759;
 }
 
 .cnp-modal-complete p {
   margin: 0 0 24px;
-  color: #666;
+  color: #8e8e93;
+  font-size: 15px;
 }
 
 /* ============================================
    애니메이션
    ============================================ */
-@keyframes cnp-slideIn {
+@keyframes cnp-island-appear {
   from {
     opacity: 0;
-    transform: translateX(20px);
+    transform: scale(0.8) translateY(-20px);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: scale(1) translateY(0);
   }
 }
 
-@keyframes cnp-modalIn {
+@keyframes cnp-modal-appear {
   from {
     opacity: 0;
     transform: scale(0.9) translateY(-20px);
@@ -320,4 +402,33 @@
 @keyframes cnp-spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* ============================================
+   반응형
+   ============================================ */
+@media (max-width: 480px) {
+  .cnp-island {
+    padding: 5px 5px 5px 12px;
+    border-radius: 24px;
+  }
+  
+  .cnp-island-title {
+    max-width: 120px;
+    font-size: 12px;
+  }
+  
+  .cnp-island-btn {
+    padding: 8px 12px;
+    border-radius: 18px;
+  }
+  
+  .cnp-island-btn-text {
+    display: none;
+  }
+  
+  .cnp-modal-content {
+    margin: 16px;
+    padding: 20px;
+  }
 }
