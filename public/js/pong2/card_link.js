@@ -505,10 +505,12 @@ class CardLinkManager {
                 : `window.open('${linkUrl}', '_blank')`;
             return `
                 <div class="swiper-slide pongtube-slide" onclick="${clickAction}">
-                    <img src="${imageUrl}" alt="${title}" onerror="this.src='/resource/default-image.png'">
-                    <div class="slide-overlay">
-                        <h5 class="text-truncate">${title}</h5>
-                        <p class="text-truncate">${description}</p>
+                    <div class="pongtube-card-inner">
+                        <img src="${imageUrl}" alt="${title}" onerror="this.src='/resource/default-image.png'">
+                        <div class="slide-overlay">
+                            <h5 class="text-truncate">${title}</h5>
+                            <p class="text-truncate">${description}</p>
+                        </div>
                     </div>
                 </div>
             `;
