@@ -873,6 +873,146 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- File Upload & S3 Logic ---
+    const dropZone = document.getElementById('dropZone');
+    const msgFileInput = document.getElementById('msgFileInput');
+    const openS3ExplorerBtn = document.getElementById('openS3ExplorerBtn');
+
+    // Drag & Drop
+    dropZone.addEventListener('click', () => msgFileInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.border = '2px solid #007bff';
+        dropZone.style.background = '#e9ecef';
+    });
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.style.border = '2px dashed #ccc';
+        dropZone.style.background = '#f8f9fa';
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.border = '2px dashed #ccc';
+        dropZone.style.background = '#f8f9fa';
+        if (e.dataTransfer.files.length) {
+            handleFileUpload(e.dataTransfer.files[0]);
+        }
+    });
+    msgFileInput.addEventListener('change', () => {
+        if (msgFileInput.files.length) {
+            handleFileUpload(msgFileInput.files[0]);
+        }
+    });
+
+    // Helper: Add File Preview
+    function addFileToPreview(fileData) {
+        document.getElementById('selectedFileContainer').style.display = 'flex';
+        document.getElementById('selectedFileName').textContent = fileData.name;
+        document.getElementById('selectedFileName').dataset.url = fileData.url; // Store URL
+        document.getElementById('selectedFileName').dataset.type = 'file';
+
+        // Hide Dropzone temporarily
+        dropZone.style.display = 'none';
+    }
+
+    // Cancel File
+    document.getElementById('cancelFileBtn').addEventListener('click', () => {
+        document.getElementById('selectedFileContainer').style.display = 'none';
+        document.getElementById('selectedFileName').textContent = '';
+        delete document.getElementById('selectedFileName').dataset.url;
+        dropZone.style.display = 'block';
+        msgFileInput.value = '';
+    });
+
+    // Upload Handler
+    async function handleFileUpload(file) {
+        // Show Loading
+        const statusMsg = document.createElement('div');
+        statusMsg.innerText = '업로드 중...';
+        statusMsg.style.color = 'blue';
+        dropZone.appendChild(statusMsg);
+
+        try {
+            const formData = new FormData();
+            // Correct Folder Path: users/{id}/nuguri_talk/
+            const uploadFolder = `users/${currentUser.id}/nuguri_talk/`;
+            formData.append('folder', uploadFolder);
+            formData.append('files', file);
+
+            const response = await fetch('/api/s3/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            if (result.success && result.results.length > 0) {
+                const uploadedFile = result.results[0];
+                addFileToPreview({
+                    name: uploadedFile.fileName,
+                    url: uploadedFile.s3Url || uploadedFile.key // Use S3 URL
+                });
+            } else {
+                alert('업로드 실패: ' + (result.error || 'Unknown error'));
+            }
+        } catch (err) {
+            console.error('File Upload Error:', err);
+            alert('업로드 중 오류가 발생했습니다.');
+        } finally {
+            statusMsg.remove();
+        }
+    }
+
+    // S3 Explorer Selection
+    openS3ExplorerBtn.addEventListener('click', () => {
+        // Create Modal
+        const s3SelectorModal = document.createElement('div');
+        s3SelectorModal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 20000;
+            display: flex; justify-content: center; align-items: center;
+        `;
+
+        const content = document.createElement('div');
+        content.style.cssText = `
+            width: 800px; height: 600px; background: white; border-radius: 8px;
+            display: flex; flex-direction: column; overflow: hidden;
+        `;
+
+        const header = document.createElement('div');
+        header.style.padding = '10px';
+        header.style.borderBottom = '1px solid #eee';
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.innerHTML = '<strong>S3 보관함에서 선택</strong><button id="closeS3Selector" style="background:none;border:none;cursor:pointer;">&times;</button>';
+
+        const s3BrowserContainer = document.createElement('div');
+        s3BrowserContainer.id = 's3SelectorContainer';
+        s3BrowserContainer.style.flex = 1;
+        s3BrowserContainer.style.overflow = 'hidden';
+
+        content.appendChild(header);
+        content.appendChild(s3BrowserContainer);
+        s3SelectorModal.appendChild(content);
+        document.body.appendChild(s3SelectorModal);
+
+        // Close Handler
+        document.getElementById('closeS3Selector').onclick = () => s3SelectorModal.remove();
+
+        // Initialize S3 Explorer
+        // CRITICAL: Assign to window.s3Explorer so onclick handlers in HTML string work
+        window.s3Explorer = new S3Explorer(s3BrowserContainer, {
+            onFileSelect: (file) => {
+                // file: { key, name, url, ... }
+                addFileToPreview({
+                    name: file.name,
+                    url: file.url
+                });
+                s3SelectorModal.remove();
+            }
+        });
+        // Ensure window.s3ExplorerSelector reference logic if needed, but window.s3Explorer is key.
+    });
+
     // Text Input Counter
     const textInput = document.getElementById('teacherMsgInput');
     textInput.addEventListener('input', () => {

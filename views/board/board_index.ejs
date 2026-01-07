@@ -463,7 +463,9 @@
                         <!-- 메타 정보 -->
                         <div class="post-meta-info">
                             <span class="meta-author">${post.author_name || post.author}</span>
-                            <span class="meta-views">${formatViews(post.views || 0)}</span>
+                            <span class="meta-views"><i class="bi bi-eye"></i> ${formatViews(post.views || 0)}</span>
+                            <span class="meta-views"><i class="bi bi-chat-dots"></i> ${post.comment_count || 0}</span>
+                            <span class="meta-views"><i class="bi bi-hand-thumbs-up"></i> ${post.like_count || 0}</span>
                             <span class="meta-time">${formatTime(post.created_at)}</span>
                         </div>
                     </div>

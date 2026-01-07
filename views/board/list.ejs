@@ -433,7 +433,13 @@
                                         <%= post.author_name || post.author %>
                                     </span>
                                     <span class="meta-views">
-                                        <%= post.views || 0 %>
+                                        <i class="bi bi-eye"></i> <%= post.views || 0 %>
+                                    </span>
+                                    <span class="meta-views">
+                                        <i class="bi bi-chat-dots"></i> <%= post.comment_count || 0 %>
+                                    </span>
+                                    <span class="meta-views">
+                                        <i class="bi bi-hand-thumbs-up"></i> <%= post.like_count || 0 %>
                                     </span>
                                     <span class="meta-time">
                                         <% const date=new Date(post.created_at); const today=new Date(); const
