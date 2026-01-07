@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         socket.on('user_list_update', (users) => {
-            renderUserList(users);
+            updateUserList(users);
         });
 
         // 🛑 Spam Warning Handler

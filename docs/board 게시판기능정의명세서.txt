@@ -12,6 +12,12 @@
 
 ## 🗄️ 데이터베이스 구조
 
+### 프로젝트 통합 구조 (educodingnplay ↔ pong2 공유)
+- **공유 데이터베이스**: educodingnplay MySQL DB
+- **계정 구분**: `author_type` / `user_type` 컬럼으로 PAID/PONG2 구분
+- **자유게시판(id=3)**: 양쪽 프로젝트 공용 게시판
+- **pong2**: Netlify 정적 페이지, API는 educodingnplay 서버 사용
+
 ### 기존 테이블 (분리 완료)
 ```sql
 -- 기존 데이터 백업 완료
@@ -24,7 +30,7 @@ posts (삭제됨 - 데이터 분리 완료)
 CREATE TABLE nuguritalk_posts (
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255) NOT NULL,          -- 메시지 내용
-    content TEXT NOT NULL,                -- 추가 내용  
+    content TEXT NOT NULL,                -- 추가 내용
     author VARCHAR(100) NOT NULL,         -- 작성자명
     author_id INT NULL,                   -- Users 테이블 참조
     image VARCHAR(255) NULL,              -- 첨부 이미지
@@ -47,23 +53,39 @@ CREATE TABLE board_categories (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 게시글 테이블
+-- 게시글 테이블 (PAID/PONG2 통합)
 CREATE TABLE board_posts (
     id INT PRIMARY KEY AUTO_INCREMENT,
+    board_scope ENUM('COMMUNITY','PAID_ONLY') DEFAULT 'COMMUNITY',  -- 공개 범위
     category_id INT NOT NULL,             -- 카테고리 ID
     title VARCHAR(200) NOT NULL,          -- 제목
     content TEXT NOT NULL,                -- 내용
+    image_url VARCHAR(500),               -- 썸네일 이미지
     author VARCHAR(100) NOT NULL,         -- 작성자명
+    author_type ENUM('PAID','PONG2') DEFAULT 'PAID',  -- 작성자 타입
+    author_pong2_id INT,                  -- pong2 사용자 ID
     author_id INT NOT NULL,               -- 작성자 ID
+    source VARCHAR(500),                  -- 출처
+    ccl VARCHAR(50),                      -- 저작권 정보
     views INT DEFAULT 0,                  -- 조회수
+    comment_count INT DEFAULT 0,          -- 댓글 수 (캐시) ✅
+    like_count INT DEFAULT 0,             -- 좋아요 수 (캐시) ✅
+    reaction_like INT DEFAULT 0,          -- 👍 반응 수 ✅
+    reaction_laugh INT DEFAULT 0,         -- 😄 반응 수 ✅
+    reaction_heart INT DEFAULT 0,         -- ❤️ 반응 수 ✅
     is_pinned BOOLEAN DEFAULT FALSE,      -- 고정글 여부
     is_notice BOOLEAN DEFAULT FALSE,      -- 공지사항 여부
-    source VARCHAR(255) NULL,             -- 출처
-    ccl VARCHAR(100) NULL,                -- 저작권 정보
+    is_public BOOLEAN DEFAULT TRUE,       -- 공개 여부
+    attachment_count INT DEFAULT 0,       -- 첨부파일 수
+    has_images BOOLEAN DEFAULT FALSE,     -- 이미지 포함 여부
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES board_categories(id),
-    FOREIGN KEY (author_id) REFERENCES Users(id)
+    FOREIGN KEY (author_id) REFERENCES Users(id),
+    INDEX idx_author_type (author_type),
+    INDEX idx_is_pinned (is_pinned),
+    INDEX idx_comment_count (comment_count),
+    INDEX idx_like_count (like_count)
 );
 
 -- 첨부파일 테이블
@@ -75,18 +97,52 @@ CREATE TABLE board_attachments (
     file_size INT NOT NULL,               -- 파일 크기
     file_type VARCHAR(100) NOT NULL,      -- MIME 타입
     s3_url VARCHAR(500),                  -- S3 저장 URL
+    is_image BOOLEAN DEFAULT FALSE,       -- 이미지 여부
     download_count INT DEFAULT 0,         -- 다운로드 횟수
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES board_posts(id) ON DELETE CASCADE
+);
+
+-- 댓글 테이블 (PAID/PONG2 공유) ✅
+CREATE TABLE BoardComments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    post_id INT NOT NULL,                 -- 게시글 ID
+    parent_id INT NULL,                   -- 부모 댓글 ID (대댓글용)
+    content TEXT NOT NULL,                -- 댓글 내용
+    author_name VARCHAR(255) NOT NULL,    -- 작성자명
+    author_id INT NOT NULL,               -- 작성자 ID
+    author_type VARCHAR(50) NOT NULL,     -- 작성자 타입 (PAID/PONG2)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_deleted BOOLEAN DEFAULT FALSE,     -- soft delete
+    FOREIGN KEY (post_id) REFERENCES board_posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_id) REFERENCES BoardComments(id) ON DELETE CASCADE,
+    INDEX idx_post_id (post_id),
+    INDEX idx_parent_id (parent_id),
+    INDEX idx_author_id (author_id),
+    INDEX idx_created_at (created_at)
+);
+
+-- 좋아요/반응 테이블 (PAID/PONG2 공유) ✅
+CREATE TABLE BoardReactions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    post_id INT NOT NULL,                 -- 게시글 ID
+    user_id INT NOT NULL,                 -- 사용자 ID
+    user_type VARCHAR(50) NOT NULL,       -- 사용자 타입 (PAID/PONG2)
+    reaction_type VARCHAR(20) NOT NULL,   -- 반응 타입 (like/laugh/heart)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_reaction (post_id, user_id, user_type, reaction_type),
     FOREIGN KEY (post_id) REFERENCES board_posts(id) ON DELETE CASCADE
 );
 ```
 
 ### 기본 카테고리 데이터 (업데이트됨)
 ```sql
+-- 현재 데이터베이스 상태
 INSERT INTO board_categories (id, name, slug, description, order_index) VALUES
-(1, '업데이트 노트', 'notice', '서비스 업데이트 및 개선사항을 안내합니다', 1),
-(2, '교육정보', 'education', '교육 관련 정보를 공유합니다', 2),  
-(3, '자유게시판', 'free', '자유로운 의견을 나눌 수 있는 공간입니다', 3);
+(1, '공지사항', 'notice', '중요한 공지사항을 게시합니다', 1),
+(2, '교육정보', 'education', '교육 관련 정보를 공유합니다', 2),
+(3, '자유게시판', 'free', '자유로운 의견을 나눌 수 있는 공간입니다', 3),
+(101, '여우의 다락방', 'agit', '창작물과 작품을 공유하는 갤러리 공간', 10);
 ```
 
 ---
@@ -111,17 +167,30 @@ INSERT INTO board_categories (id, name, slug, description, order_index) VALUES
 /board/:category/:id/edit     → 글 수정
 ```
 
-### API 엔드포인트
+### API 엔드포인트 (educodingnplay & pong2 공용)
 ```
+# 게시글 API
 GET  /api/board/posts              → 게시글 목록 (메인용)
 GET  /api/board/posts?category=    → 카테고리별 게시글 목록
 POST /api/board/posts              → 게시글 작성
 PUT  /api/board/posts/:id          → 게시글 수정
 DELETE /api/board/posts/:id        → 게시글 삭제
 GET  /api/board/search             → 게시글 검색
+GET  /api/board/posts/:id/navigation → 이전글/다음글 정보
+
+# 첨부파일 API
 GET  /api/board/download/:id       → 첨부파일 다운로드
 DELETE /api/board/attachment/:id   → 첨부파일 삭제
-GET  /api/board/posts/:id/navigation → 이전글/다음글 정보
+
+# 댓글 API ✅
+GET  /api/board/posts/:postId/comments     → 댓글 목록 조회 (계층 구조)
+POST /api/board/posts/:postId/comments     → 댓글 작성
+PUT  /api/board/comments/:commentId        → 댓글 수정
+DELETE /api/board/comments/:commentId      → 댓글 삭제 (soft delete)
+
+# 좋아요/반응 API ✅
+POST /api/board/posts/:postId/react        → 반응 토글 (추가/제거)
+GET  /api/board/posts/:postId/reactions    → 게시글 반응 조회
 ```
 
 ---
@@ -310,8 +379,9 @@ function checkWritePermission(userRole, category) {
 - [x] **스타일 통일**: 모든 액션 버튼 회색 테마
 
 ### 🚧 확장 가능 기능 (선택)
-- [ ] **S3 파일 업로드**: 실제 파일 업로드/다운로드
-- [ ] **댓글 시스템**: 댓글 CRUD 기능 완성
+- [x] **S3 파일 업로드**: 실제 파일 업로드/다운로드 ✅ 완료
+- [x] **댓글 시스템**: 댓글 CRUD 기능 완성 ✅ 진행중 (2025-01-07)
+- [x] **좋아요/반응 시스템**: 3가지 반응 타입 지원 ✅ 진행중 (2025-01-07)
 - [ ] **이전/다음글**: 네비게이션 기능
 - [ ] **검색 최적화**: 전문 검색 기능
 - [ ] **관리자 통계**: 대시보드
@@ -358,6 +428,39 @@ function checkWritePermission(userRole, category) {
 
 ---
 
-**📅 최종 완성일**: 2025년 6월 9일  
-**🎯 완성도**: 100% (핵심 기능 완료)  
-**🔧 상태**: 프로덕션 준비 완료
+**📅 최초 완성일**: 2025년 6월 9일
+**📅 댓글/좋아요 추가**: 2025년 1월 7일 (진행중)
+**🎯 완성도**: 100% (핵심 기능 완료) + 댓글/반응 시스템 추가중
+**🔧 상태**: 프로덕션 운영중 + 기능 확장중
+
+---
+
+## 📊 댓글/좋아요 기능 구현 현황 (2025-01-07)
+
+### 데이터베이스 상태
+- ✅ `BoardComments` 테이블 존재 (댓글 0개)
+- ✅ `BoardReactions` 테이블 존재 (반응 3개 - pong2 테스트 데이터)
+- ❌ `board_posts`에 캐시 컬럼 없음 (추가 필요)
+  - comment_count, like_count, reaction_like, reaction_laugh, reaction_heart
+
+### 구현 필요 항목
+1. **데이터베이스**
+   - board_posts 캐시 컬럼 5개 추가
+   - BoardComments 인덱스 3개 추가 (parent_id, author_id, created_at)
+   - 트리거 4개 생성 (댓글/좋아요 자동 집계)
+
+2. **Backend API** (educodingnplay & pong2 공용)
+   - 댓글 API 4개 (조회/작성/수정/삭제)
+   - 좋아요 API 2개 (토글/조회)
+   - 기존 게시글 API 수정 (캐시 컬럼 포함)
+
+3. **Frontend** (educodingnplay only - pong2는 이미 구현됨)
+   - view.ejs: 댓글 시스템 UI + JavaScript
+   - view.ejs: 좋아요 버튼 UI + JavaScript
+   - list.ejs/board_index.ejs: 댓글수/좋아요수 표시
+
+### pong2 호환성
+- pong2는 이미 댓글/좋아요 기능 완성 (프론트엔드)
+- API는 educodingnplay 서버 사용 (동일 DB, 동일 테이블)
+- author_type/user_type으로 PAID/PONG2 구분
+- 자유게시판(id=3)은 양쪽 프로젝트 공용
