@@ -21,9 +21,10 @@ const s3Client = new S3Client({
  */
 async function listTempFiles() {
     try {
+        // 🔥 S3 경로 수정: board/ 제거
         const tempPrefixes = [
-            'board/images/temp/',
-            'board/attachments/temp/'
+            'images/temp/',
+            'attachments/temp/'
         ];
         
         let allTempFiles = [];

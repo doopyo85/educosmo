@@ -181,13 +181,13 @@ async function cleanupTemporaryFiles() {
         // 24시간 전 시간
         const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000);
         
-        // 🔥 S3에서 임시 폴더의 파일들 조회 및 삭제 (기존 s3Client 사용)
-        
+        // 🔥 S3에서 임시 폴더의 파일들 조회 및 삭제 (S3 경로 수정: board/ 제거)
+
         // 이미지 임시 폴더 정리
-        await cleanupS3TempFolder(s3Client, 'board/images/temp/', cutoffTime);
-        
+        await cleanupS3TempFolder(s3Client, 'images/temp/', cutoffTime);
+
         // 첨부파일 임시 폴더 정리
-        await cleanupS3TempFolder(s3Client, 'board/attachments/temp/', cutoffTime);
+        await cleanupS3TempFolder(s3Client, 'attachments/temp/', cutoffTime);
         
         console.log(`S3 임시 파일 정리 완룼: ${cutoffTime.toISOString()} 이전 파일들 삭제`);
         

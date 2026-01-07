@@ -11,16 +11,9 @@ const s3Config = {
     region: process.env.AWS_REGION || 'ap-northeast-2'
 };
 
-// 개발 환경에서만 환경 변수 사용 (프로덕션에서는 IAM Role 사용)
-if (process.env.NODE_ENV === 'development' && process.env.AWS_ACCESS_KEY_ID) {
-    console.warn('⚠️  [FileUpload] 개발 환경: 환경 변수로 AWS 자격 증명 사용');
-    s3Config.credentials = {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    };
-} else {
-    console.log('🔐 [FileUpload] 프로덕션 환경: IAM Role로 AWS 자격 증명 사용');
-}
+// 🔥 수정: IAM Role을 우선 사용하도록 변경
+// credentials를 명시하지 않으면 AWS SDK가 자동으로 IAM Role을 감지
+console.log('🔐 [FileUpload] IAM Role로 AWS 자격 증명 사용 (credentials 생략)');
 
 const s3Client = new S3Client(s3Config);
 
@@ -33,12 +26,12 @@ console.log('사용할 버킷:', BUCKET_NAME);
 console.log('AWS_REGION:', process.env.AWS_REGION || 'ap-northeast-2');
 console.log('인증 방식:', s3Config.credentials ? '환경변수' : 'IAM Role');
 
-// 파일 타입별 설정
+// 🔥 파일 타입별 설정 (S3 경로 수정: board/ 제거)
 const FILE_CONFIGS = {
     image: {
         allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
         maxSize: 10 * 1024 * 1024, // 10MB
-        folder: 'board/images'
+        folder: 'images'  // 🔥 board/ 제거
     },
     document: {
         allowedTypes: [
@@ -54,17 +47,17 @@ const FILE_CONFIGS = {
             'application/x-hwp' // 🔥 HWP 또 다른 MIME 타입
         ],
         maxSize: 50 * 1024 * 1024, // 50MB
-        folder: 'board/attachments'
+        folder: 'attachments'  // 🔥 board/ 제거
     },
     archive: {
         allowedTypes: ['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed'],
         maxSize: 100 * 1024 * 1024, // 100MB
-        folder: 'board/attachments'
+        folder: 'attachments'  // 🔥 board/ 제거
     },
     text: {
         allowedTypes: ['text/plain', 'text/javascript', 'text/html', 'text/css', 'text/python'],
         maxSize: 1 * 1024 * 1024, // 1MB
-        folder: 'board/attachments'
+        folder: 'attachments'  // 🔥 board/ 제거
     }
 };
 

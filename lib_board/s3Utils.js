@@ -10,16 +10,9 @@ const s3Config = {
     region: process.env.AWS_REGION || 'ap-northeast-2'
 };
 
-// 개발 환경에서만 환경 변수 사용 (프로덕션에서는 IAM Role 사용)
-if (process.env.NODE_ENV === 'development' && process.env.AWS_ACCESS_KEY_ID) {
-    console.warn('⚠️  [S3Utils] 개발 환경: 환경 변수로 AWS 자격 증명 사용');
-    s3Config.credentials = {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    };
-} else {
-    console.log('🔐 [S3Utils] 프로덕션 환경: IAM Role로 AWS 자격 증명 사용');
-}
+// 🔥 수정: IAM Role을 우선 사용하도록 변경
+// credentials를 명시하지 않으면 AWS SDK가 자동으로 IAM Role을 감지
+console.log('🔐 [S3Utils] IAM Role로 AWS 자격 증명 사용 (credentials 생략)');
 
 const s3Client = new S3Client(s3Config);
 
@@ -258,34 +251,34 @@ async function generateDownloadUrl(key, filename, expiresIn = 900) {
 }
 
 /**
- * 이미지 키 생성
+ * 이미지 키 생성 (🔥 S3 경로 수정: board/ 제거)
  */
 function generateImageKey(extension, isTemp = false) {
     const uuid = uuidv4();
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
-    
+
     if (isTemp) {
-        return `board/images/temp/${uuid}${extension}`;
+        return `images/temp/${uuid}${extension}`;  // 🔥 board/ 제거
     } else {
-        return `board/images/${year}/${month}/${uuid}${extension}`;
+        return `images/${year}/${month}/${uuid}${extension}`;  // 🔥 board/ 제거
     }
 }
 
 /**
- * 첨부파일 키 생성
+ * 첨부파일 키 생성 (🔥 S3 경로 수정: board/ 제거)
  */
 function generateAttachmentKey(extension, isTemp = false) {
     const uuid = uuidv4();
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
-    
+
     if (isTemp) {
-        return `board/attachments/temp/${uuid}${extension}`;
+        return `attachments/temp/${uuid}${extension}`;  // 🔥 board/ 제거
     } else {
-        return `board/attachments/${year}/${month}/${uuid}${extension}`;
+        return `attachments/${year}/${month}/${uuid}${extension}`;  // 🔥 board/ 제거
     }
 }
 
@@ -358,10 +351,10 @@ async function processContentImages(content) {
     let updatedContent = content;
     
     try {
-        // S3 temp 이미지 URL 패턴 찾기
-        // 예: https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/board/images/temp/uuid.png
+        // 🔥 S3 temp 이미지 URL 패턴 찾기 (board/ 제거)
+        // 예: https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/images/temp/uuid.png
         const tempImagePattern = new RegExp(
-            `https://${BUCKET_NAME}\\.s3\\.[^/]+\\.amazonaws\\.com/(board/images/temp/[^"'\\s]+)`,
+            `https://${BUCKET_NAME}\\.s3\\.[^/]+\\.amazonaws\\.com/(images/temp/[^"'\\s]+)`,
             'gi'
         );
         

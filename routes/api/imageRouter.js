@@ -191,14 +191,14 @@ router.get('/:key/meta', authenticateUser, async (req, res) => {
         // S3 키 디코딩
         const decodedKey = decodeURIComponent(key);
         
-        // 이미지 키 형식 검증
-        if (!decodedKey.startsWith('board/images/')) {
+        // 🔥 이미지 키 형식 검증 (S3 경로 수정: board/ 제거)
+        if (!decodedKey.startsWith('images/')) {
             return res.status(400).json({
                 success: false,
                 error: '올바르지 않은 이미지 키입니다.'
             });
         }
-        
+
         // 기본 메타데이터 반환 (실제로는 S3에서 가져와야 함)
         const metadata = {
             key: decodedKey,
@@ -233,15 +233,15 @@ router.delete('/:key', authenticateUser, async (req, res) => {
         const userRole = req.session.role;
         
         const decodedKey = decodeURIComponent(key);
-        
-        // 이미지 키 형식 검증
-        if (!decodedKey.startsWith('board/images/')) {
+
+        // 🔥 이미지 키 형식 검증 (S3 경로 수정: board/ 제거)
+        if (!decodedKey.startsWith('images/')) {
             return res.status(400).json({
                 success: false,
                 error: '올바르지 않은 이미지 키입니다.'
             });
         }
-        
+
         // 임시 이미지만 삭제 가능 (정식 이미지는 게시글과 함께 관리)
         if (!decodedKey.includes('/temp/')) {
             return res.status(403).json({
