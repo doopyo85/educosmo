@@ -850,14 +850,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Tab Switching
+    // Tab Switching (Event Delegation)
+    msgModal.addEventListener('click', (e) => {
+        const btn = e.target.closest('.msg-tab-btn');
+        if (btn) {
+            switchMsgTab(btn.dataset.tab);
+        }
+    });
+
+    // Initialize Active State
     const msgTabBtns = msgModal.querySelectorAll('.msg-tab-btn');
     const msgPanes = msgModal.querySelectorAll('.msg-pane');
-
-    msgTabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            switchMsgTab(btn.dataset.tab);
-        });
-    });
 
     function switchMsgTab(tabName) {
         msgTabBtns.forEach(b => {

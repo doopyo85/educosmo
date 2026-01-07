@@ -333,6 +333,7 @@ router.get('/:category/:id(\\d+)', async (req, res) => {
             userID: req.session.userID,
             role: req.session.role,
             is_logined: req.session.is_logined,
+            user: req.session.user || { id: null, name: null, userID: req.session.userID },
             // 🔥 헬퍼 함수들을 템플릿에서 사용할 수 있도록 전달
             formatFileSize: formatFileSize,
             getFileTypeClass: getFileTypeClass,
