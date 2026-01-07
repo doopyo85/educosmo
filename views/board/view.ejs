@@ -920,16 +920,18 @@
                                 <span class="text-muted small">${formatTimeAgo(comment.created_at)}</span>
                             </div>
                             <div class="comment-content">
-                                ${isDeleted ? '<span class="text-muted fst-italic">삭제된 댓글입니다</span>' : escapeHtml(comment.content)}
+                                ${isDeleted ? '<span class="text-muted fst-italic">회원님이 댓글을 삭제하였습니다.</span>' : escapeHtml(comment.content)}
                             </div>
                         </div>
-                        ${!isDeleted ? `
+                        ${!isDeleted && isMyComment ? `
                         <div class="btn-group btn-group-sm">
-                            ${depth < 1 ? `<button class="btn btn-outline-secondary btn-sm" onclick="toggleReplyForm(${comment.id})">답글</button>` : ''}
-                            ${isMyComment ? `
-                                <button class="btn btn-outline-secondary btn-sm" onclick="editComment(${comment.id}, '${escapeHtml(comment.content).replace(/'/g, "\\'")}')">수정</button>
-                                <button class="btn btn-outline-danger btn-sm" onclick="deleteComment(${comment.id})">삭제</button>
-                            ` : ''}
+                            <button class="btn btn-outline-secondary btn-sm" onclick="editComment(${comment.id}, '${escapeHtml(comment.content).replace(/'/g, "\\'")}')">수정</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteComment(${comment.id})">삭제</button>
+                        </div>
+                        ` : ''}
+                        ${!isDeleted && !isMyComment && depth < 1 ? `
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="toggleReplyForm(${comment.id})">답글</button>
                         </div>
                         ` : ''}
                     </div>

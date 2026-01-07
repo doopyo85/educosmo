@@ -1343,13 +1343,19 @@ class ProjectCardManager {
                     const missionTitle = e.target.getAttribute('data-mission-title') || 'Scratch Project';
                     const userId = e.target.getAttribute('data-user-id') || this.userID || 'guest';
 
-                    window.extensionBridge.openEditor({
+                    const result = window.extensionBridge.openEditor({
                         platform: 'scratch',
                         missionId: missionId,
                         userId: userId,
                         missionTitle: missionTitle,
                         openUrl: openUrl
                     });
+
+                    // 🔥 Extension이 설치되지 않아 팝업이 뜨더라도, 강제로 페이지 이동 (유저 요청)
+                    if (!result) {
+                        console.log('⚠️ Extension 미설치/미준비 - 강제 이동:', openUrl);
+                        window.open(openUrl, '_blank');
+                    }
                 } else {
                     // Extension이 없는 경우 - 단순히 URL로 이동
                     console.log('📂 Extension 없음 - Scratch.mit.edu로 이동');
@@ -1379,13 +1385,19 @@ class ProjectCardManager {
                     const missionTitle = e.target.getAttribute('data-mission-title') || 'Entry Project';
                     const userId = e.target.getAttribute('data-user-id') || this.userID || 'guest';
 
-                    window.extensionBridge.openEditor({
+                    const result = window.extensionBridge.openEditor({
                         platform: 'entry',
                         missionId: missionId,
                         userId: userId,
                         missionTitle: missionTitle,
                         openUrl: openUrl
                     });
+
+                    // 🔥 Extension이 설치되지 않아 팝업이 뜨더라도, 강제로 페이지 이동 (유저 요청)
+                    if (!result) {
+                        console.log('⚠️ Extension 미설치/미준비 - 강제 이동:', openUrl);
+                        window.open(openUrl, '_blank');
+                    }
                 } else {
                     // Extension이 없는 경우 - 단순히 URL로 이동
                     console.log('📂 Extension 없음 - playentry.org로 이동');
