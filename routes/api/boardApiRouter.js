@@ -779,7 +779,7 @@ router.post('/posts/:postId/comments', async (req, res) => {
         const { content, parent_id } = req.body;
 
         // 로그인 확인
-        if (!req.session?.user) {
+        if (!req.session?.userID) {
             return res.status(401).json({
                 success: false,
                 error: '로그인이 필요합니다.'
@@ -831,8 +831,23 @@ router.post('/posts/:postId/comments', async (req, res) => {
         }
 
         // 사용자 정보
-        const userId = req.session.user.id;
-        const userName = req.session.user.name || req.session.user.userID;
+        const userID = req.session.userID;
+        const userName = req.session.name || req.session.userID;
+
+        // Users 테이블에서 id 조회
+        const userRows = await db.queryDatabase(
+            'SELECT id FROM Users WHERE userID = ?',
+            [userID]
+        );
+
+        if (userRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
+        const userId = userRows[0].id;
         const authorType = 'PAID'; // educodingnplay는 항상 PAID
 
         // 댓글 삽입
@@ -871,7 +886,7 @@ router.put('/comments/:commentId', async (req, res) => {
         const { content } = req.body;
 
         // 로그인 확인
-        if (!req.session?.user) {
+        if (!req.session?.userID) {
             return res.status(401).json({
                 success: false,
                 error: '로그인이 필요합니다.'
@@ -906,8 +921,23 @@ router.put('/comments/:commentId', async (req, res) => {
         }
 
         const comment = comments[0];
-        const userId = req.session.user.id;
-        const userRole = req.session.user.role;
+        const userID = req.session.userID;
+        const userRole = req.session.role;
+
+        // Users 테이블에서 id 조회
+        const userRows = await db.queryDatabase(
+            'SELECT id FROM Users WHERE userID = ?',
+            [userID]
+        );
+
+        if (userRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
+        const userId = userRows[0].id;
 
         // 권한 확인 (본인 또는 관리자)
         if (comment.author_id !== userId && !['admin', 'manager'].includes(userRole)) {
@@ -950,7 +980,7 @@ router.delete('/comments/:commentId', async (req, res) => {
         const commentId = parseInt(req.params.commentId);
 
         // 로그인 확인
-        if (!req.session?.user) {
+        if (!req.session?.userID) {
             return res.status(401).json({
                 success: false,
                 error: '로그인이 필요합니다.'
@@ -978,8 +1008,23 @@ router.delete('/comments/:commentId', async (req, res) => {
         }
 
         const comment = comments[0];
-        const userId = req.session.user.id;
-        const userRole = req.session.user.role;
+        const userID = req.session.userID;
+        const userRole = req.session.role;
+
+        // Users 테이블에서 id 조회
+        const userRows = await db.queryDatabase(
+            'SELECT id FROM Users WHERE userID = ?',
+            [userID]
+        );
+
+        if (userRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
+        const userId = userRows[0].id;
 
         // 권한 확인 (본인 또는 관리자)
         if (comment.author_id !== userId && !['admin', 'manager'].includes(userRole)) {
@@ -1020,7 +1065,7 @@ router.post('/posts/:postId/react', async (req, res) => {
         const { reaction_type } = req.body;
 
         // 로그인 확인
-        if (!req.session?.user) {
+        if (!req.session?.userID) {
             return res.status(401).json({
                 success: false,
                 error: '로그인이 필요합니다.'
@@ -1043,8 +1088,23 @@ router.post('/posts/:postId/react', async (req, res) => {
             });
         }
 
-        const userId = req.session.user.id;
+        const userID = req.session.userID;
         const userType = 'PAID'; // educodingnplay는 항상 PAID
+
+        // Users 테이블에서 id 조회
+        const userRows = await db.queryDatabase(
+            'SELECT id FROM Users WHERE userID = ?',
+            [userID]
+        );
+
+        if (userRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
+        const userId = userRows[0].id;
 
         // 기존 반응 확인
         const existingReactions = await db.queryDatabase(`
@@ -1101,8 +1161,19 @@ router.get('/posts/:postId/reactions', async (req, res) => {
             });
         }
 
-        const userId = req.session?.user?.id || null;
         const userType = 'PAID';
+        let userId = null;
+
+        // 로그인한 경우에만 userId 조회
+        if (req.session?.userID) {
+            const userRows = await db.queryDatabase(
+                'SELECT id FROM Users WHERE userID = ?',
+                [req.session.userID]
+            );
+            if (userRows.length > 0) {
+                userId = userRows[0].id;
+            }
+        }
 
         const reactionData = await getReactionData(postId, userId, userType);
 
