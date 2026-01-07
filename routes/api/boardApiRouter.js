@@ -140,51 +140,63 @@ router.get('/posts', async (req, res) => {
         };
         
         if (!category || !categoryMap[category]) {
-            // 전체 게시글 조회 (첨부파일 정보 포함)
+            // 전체 게시글 조회 (첨부파일, 댓글, 좋아요 정보 포함)
             const posts = await db.queryDatabase(`
-                SELECT 
-                    id, title, author, views, is_pinned, is_notice, created_at, 
+                SELECT
+                    id, title, author, views, is_pinned, is_notice, created_at,
                     category_id, attachment_count, has_images,
+                    comment_count, like_count, reaction_like, reaction_laugh, reaction_heart,
                     CASE WHEN created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END as is_new
-                FROM board_posts 
+                FROM board_posts
                 ORDER BY is_pinned DESC, is_notice DESC, created_at DESC
                 LIMIT 20
             `);
-            
+
             const formattedPosts = posts.map(post => ({
                 ...post,
                 created_at: formatDate(post.created_at),
                 category_name: categoryNameMap[post.category_id] || 'unknown',
                 category_slug: categoryNameMap[post.category_id] || 'unknown',
-                attachment_count: post.attachment_count || 0
+                attachment_count: post.attachment_count || 0,
+                comment_count: post.comment_count || 0,
+                like_count: post.like_count || 0,
+                reaction_like: post.reaction_like || 0,
+                reaction_laugh: post.reaction_laugh || 0,
+                reaction_heart: post.reaction_heart || 0
             }));
-            
+
             return res.json({
                 success: true,
                 posts: formattedPosts,
                 pagination: { current: 1, total: 1, limit: 20, count: posts.length }
             });
         }
-        
+
         // 특정 카테고리 조회
         const categoryId = categoryMap[category];
         const posts = await db.queryDatabase(`
-            SELECT 
+            SELECT
                 id, title, author, views, is_pinned, is_notice, created_at,
                 category_id, attachment_count, has_images,
+                comment_count, like_count, reaction_like, reaction_laugh, reaction_heart,
                 CASE WHEN created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END as is_new
-            FROM board_posts 
+            FROM board_posts
             WHERE category_id = ?
             ORDER BY is_pinned DESC, is_notice DESC, created_at DESC
             LIMIT 20
         `, [categoryId]);
-        
+
         const formattedPosts = posts.map(post => ({
             ...post,
             created_at: formatDate(post.created_at),
             category_name: category,
             category_slug: category,
-            attachment_count: post.attachment_count || 0
+            attachment_count: post.attachment_count || 0,
+            comment_count: post.comment_count || 0,
+            like_count: post.like_count || 0,
+            reaction_like: post.reaction_like || 0,
+            reaction_laugh: post.reaction_laugh || 0,
+            reaction_heart: post.reaction_heart || 0
         }));
         
         res.json({
@@ -657,48 +669,500 @@ router.delete('/posts/:id', authenticateUser, async (req, res) => {
 router.get('/posts/:id/navigation', async (req, res) => {
     try {
         const postId = parseInt(req.params.id);
-        
+
         if (isNaN(postId)) {
             return res.status(400).json({ error: '올바르지 않은 게시글 ID입니다.' });
         }
-        
+
         // 현재 게시글 정보 조회
         const currentPosts = await db.queryDatabase(
             'SELECT id, category_id FROM board_posts WHERE id = ?',
             [postId]
         );
-        
+
         if (currentPosts.length === 0) {
             return res.status(404).json({ error: '게시글을 찾을 수 없습니다.' });
         }
-        
+
         const categoryId = currentPosts[0].category_id;
-        
+
         // 이전글 조회 (같은 카테고리, 더 큰 ID)
         const prevPosts = await db.queryDatabase(`
-            SELECT id, title FROM board_posts 
-            WHERE category_id = ? AND id > ? 
+            SELECT id, title FROM board_posts
+            WHERE category_id = ? AND id > ?
             ORDER BY id ASC LIMIT 1
         `, [categoryId, postId]);
-        
+
         // 다음글 조회 (같은 카테고리, 더 작은 ID)
         const nextPosts = await db.queryDatabase(`
-            SELECT id, title FROM board_posts 
-            WHERE category_id = ? AND id < ? 
+            SELECT id, title FROM board_posts
+            WHERE category_id = ? AND id < ?
             ORDER BY id DESC LIMIT 1
         `, [categoryId, postId]);
-        
+
         res.json({
             prev: prevPosts.length > 0 ? prevPosts[0] : null,
             next: nextPosts.length > 0 ? nextPosts[0] : null
         });
-        
+
     } catch (error) {
         console.error('네비게이션 조회 오류:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: '네비게이션 정보를 불러오는 중 오류가 발생했습니다.'
         });
     }
 });
+
+// ============================================
+// 댓글 API (PAID/PONG2 공용)
+// ============================================
+
+// 🔥 댓글 목록 조회 (계층 구조)
+router.get('/posts/:postId/comments', async (req, res) => {
+    try {
+        const postId = parseInt(req.params.postId);
+
+        if (isNaN(postId)) {
+            return res.status(400).json({ error: '올바르지 않은 게시글 ID입니다.' });
+        }
+
+        // 모든 댓글 조회 (삭제되지 않은 것만)
+        const comments = await db.queryDatabase(`
+            SELECT
+                id, post_id, parent_id, content, author_name, author_id,
+                author_type, created_at, is_deleted
+            FROM BoardComments
+            WHERE post_id = ?
+            ORDER BY created_at ASC
+        `, [postId]);
+
+        // 계층 구조로 변환
+        const commentMap = {};
+        const rootComments = [];
+
+        comments.forEach(comment => {
+            comment.children = [];
+            commentMap[comment.id] = comment;
+        });
+
+        comments.forEach(comment => {
+            if (comment.parent_id) {
+                // 대댓글
+                if (commentMap[comment.parent_id]) {
+                    commentMap[comment.parent_id].children.push(comment);
+                }
+            } else {
+                // 루트 댓글
+                rootComments.push(comment);
+            }
+        });
+
+        res.json({
+            success: true,
+            comments: rootComments,
+            total: comments.length
+        });
+
+    } catch (error) {
+        console.error('댓글 목록 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: '댓글을 불러오는 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 🔥 댓글 작성
+router.post('/posts/:postId/comments', async (req, res) => {
+    try {
+        const postId = parseInt(req.params.postId);
+        const { content, parent_id } = req.body;
+
+        // 로그인 확인
+        if (!req.session?.user) {
+            return res.status(401).json({
+                success: false,
+                error: '로그인이 필요합니다.'
+            });
+        }
+
+        if (isNaN(postId)) {
+            return res.status(400).json({
+                success: false,
+                error: '올바르지 않은 게시글 ID입니다.'
+            });
+        }
+
+        if (!content || content.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: '댓글 내용을 입력해주세요.'
+            });
+        }
+
+        if (content.length > 500) {
+            return res.status(400).json({
+                success: false,
+                error: '댓글은 500자 이내로 작성해주세요.'
+            });
+        }
+
+        // depth 검증 (대댓글인 경우)
+        if (parent_id) {
+            const parentComments = await db.queryDatabase(
+                'SELECT parent_id FROM BoardComments WHERE id = ?',
+                [parent_id]
+            );
+
+            if (parentComments.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    error: '부모 댓글을 찾을 수 없습니다.'
+                });
+            }
+
+            // 이미 대댓글이면 3단계 불가
+            if (parentComments[0].parent_id !== null) {
+                return res.status(400).json({
+                    success: false,
+                    error: '대댓글은 2단계까지만 가능합니다.'
+                });
+            }
+        }
+
+        // 사용자 정보
+        const userId = req.session.user.id;
+        const userName = req.session.user.name || req.session.user.userID;
+        const authorType = 'PAID'; // educodingnplay는 항상 PAID
+
+        // 댓글 삽입
+        const result = await db.queryDatabase(`
+            INSERT INTO BoardComments
+            (post_id, parent_id, content, author_name, author_id, author_type)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `, [postId, parent_id || null, content.trim(), userName, userId, authorType]);
+
+        // 삽입된 댓글 조회
+        const newComment = await db.queryDatabase(
+            'SELECT * FROM BoardComments WHERE id = ?',
+            [result.insertId]
+        );
+
+        res.json({
+            success: true,
+            message: '댓글이 작성되었습니다.',
+            comment: newComment[0]
+        });
+
+    } catch (error) {
+        console.error('댓글 작성 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: '댓글 작성 중 오류가 발생했습니다.',
+            details: error.message
+        });
+    }
+});
+
+// 🔥 댓글 수정
+router.put('/comments/:commentId', async (req, res) => {
+    try {
+        const commentId = parseInt(req.params.commentId);
+        const { content } = req.body;
+
+        // 로그인 확인
+        if (!req.session?.user) {
+            return res.status(401).json({
+                success: false,
+                error: '로그인이 필요합니다.'
+            });
+        }
+
+        if (isNaN(commentId)) {
+            return res.status(400).json({
+                success: false,
+                error: '올바르지 않은 댓글 ID입니다.'
+            });
+        }
+
+        if (!content || content.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: '댓글 내용을 입력해주세요.'
+            });
+        }
+
+        // 댓글 조회 (권한 확인용)
+        const comments = await db.queryDatabase(
+            'SELECT author_id, is_deleted FROM BoardComments WHERE id = ?',
+            [commentId]
+        );
+
+        if (comments.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: '댓글을 찾을 수 없습니다.'
+            });
+        }
+
+        const comment = comments[0];
+        const userId = req.session.user.id;
+        const userRole = req.session.user.role;
+
+        // 권한 확인 (본인 또는 관리자)
+        if (comment.author_id !== userId && !['admin', 'manager'].includes(userRole)) {
+            return res.status(403).json({
+                success: false,
+                error: '댓글을 수정할 권한이 없습니다.'
+            });
+        }
+
+        if (comment.is_deleted) {
+            return res.status(400).json({
+                success: false,
+                error: '삭제된 댓글은 수정할 수 없습니다.'
+            });
+        }
+
+        // 댓글 수정
+        await db.queryDatabase(
+            'UPDATE BoardComments SET content = ? WHERE id = ?',
+            [content.trim(), commentId]
+        );
+
+        res.json({
+            success: true,
+            message: '댓글이 수정되었습니다.'
+        });
+
+    } catch (error) {
+        console.error('댓글 수정 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: '댓글 수정 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 🔥 댓글 삭제 (soft delete)
+router.delete('/comments/:commentId', async (req, res) => {
+    try {
+        const commentId = parseInt(req.params.commentId);
+
+        // 로그인 확인
+        if (!req.session?.user) {
+            return res.status(401).json({
+                success: false,
+                error: '로그인이 필요합니다.'
+            });
+        }
+
+        if (isNaN(commentId)) {
+            return res.status(400).json({
+                success: false,
+                error: '올바르지 않은 댓글 ID입니다.'
+            });
+        }
+
+        // 댓글 조회 (권한 확인용)
+        const comments = await db.queryDatabase(
+            'SELECT author_id, is_deleted FROM BoardComments WHERE id = ?',
+            [commentId]
+        );
+
+        if (comments.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: '댓글을 찾을 수 없습니다.'
+            });
+        }
+
+        const comment = comments[0];
+        const userId = req.session.user.id;
+        const userRole = req.session.user.role;
+
+        // 권한 확인 (본인 또는 관리자)
+        if (comment.author_id !== userId && !['admin', 'manager'].includes(userRole)) {
+            return res.status(403).json({
+                success: false,
+                error: '댓글을 삭제할 권한이 없습니다.'
+            });
+        }
+
+        // Soft delete
+        await db.queryDatabase(
+            'UPDATE BoardComments SET is_deleted = 1 WHERE id = ?',
+            [commentId]
+        );
+
+        res.json({
+            success: true,
+            message: '댓글이 삭제되었습니다.'
+        });
+
+    } catch (error) {
+        console.error('댓글 삭제 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: '댓글 삭제 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// ============================================
+// 좋아요/반응 API (PAID/PONG2 공용)
+// ============================================
+
+// 🔥 반응 토글 (추가/제거)
+router.post('/posts/:postId/react', async (req, res) => {
+    try {
+        const postId = parseInt(req.params.postId);
+        const { reaction_type } = req.body;
+
+        // 로그인 확인
+        if (!req.session?.user) {
+            return res.status(401).json({
+                success: false,
+                error: '로그인이 필요합니다.'
+            });
+        }
+
+        if (isNaN(postId)) {
+            return res.status(400).json({
+                success: false,
+                error: '올바르지 않은 게시글 ID입니다.'
+            });
+        }
+
+        // 반응 타입 검증
+        const validReactions = ['like', 'laugh', 'heart'];
+        if (!validReactions.includes(reaction_type)) {
+            return res.status(400).json({
+                success: false,
+                error: '올바르지 않은 반응 타입입니다.'
+            });
+        }
+
+        const userId = req.session.user.id;
+        const userType = 'PAID'; // educodingnplay는 항상 PAID
+
+        // 기존 반응 확인
+        const existingReactions = await db.queryDatabase(`
+            SELECT id FROM BoardReactions
+            WHERE post_id = ? AND user_id = ? AND user_type = ? AND reaction_type = ?
+        `, [postId, userId, userType, reaction_type]);
+
+        let action = '';
+
+        if (existingReactions.length > 0) {
+            // 반응 제거 (토글 off)
+            await db.queryDatabase(
+                'DELETE FROM BoardReactions WHERE id = ?',
+                [existingReactions[0].id]
+            );
+            action = 'removed';
+        } else {
+            // 반응 추가 (토글 on)
+            await db.queryDatabase(`
+                INSERT INTO BoardReactions (post_id, user_id, user_type, reaction_type)
+                VALUES (?, ?, ?, ?)
+            `, [postId, userId, userType, reaction_type]);
+            action = 'added';
+        }
+
+        // 업데이트된 반응 정보 조회
+        const reactionData = await getReactionData(postId, userId, userType);
+
+        res.json({
+            success: true,
+            action: action,
+            message: action === 'added' ? '반응을 추가했습니다.' : '반응을 취소했습니다.',
+            ...reactionData
+        });
+
+    } catch (error) {
+        console.error('반응 토글 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: '반응 처리 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 🔥 게시글 반응 조회
+router.get('/posts/:postId/reactions', async (req, res) => {
+    try {
+        const postId = parseInt(req.params.postId);
+
+        if (isNaN(postId)) {
+            return res.status(400).json({
+                success: false,
+                error: '올바르지 않은 게시글 ID입니다.'
+            });
+        }
+
+        const userId = req.session?.user?.id || null;
+        const userType = 'PAID';
+
+        const reactionData = await getReactionData(postId, userId, userType);
+
+        res.json({
+            success: true,
+            ...reactionData
+        });
+
+    } catch (error) {
+        console.error('반응 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            error: '반응 정보를 불러오는 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 헬퍼 함수: 반응 데이터 조회
+async function getReactionData(postId, userId, userType) {
+    // 전체 반응 수 조회
+    const reactionCounts = await db.queryDatabase(`
+        SELECT reaction_type, COUNT(*) as count
+        FROM BoardReactions
+        WHERE post_id = ?
+        GROUP BY reaction_type
+    `, [postId]);
+
+    const reactions = {
+        like: 0,
+        laugh: 0,
+        heart: 0
+    };
+
+    reactionCounts.forEach(row => {
+        reactions[row.reaction_type] = row.count;
+    });
+
+    // 내 반응 상태 조회 (로그인한 경우만)
+    let myReactions = {
+        like: false,
+        laugh: false,
+        heart: false
+    };
+
+    if (userId) {
+        const myReactionRows = await db.queryDatabase(`
+            SELECT reaction_type
+            FROM BoardReactions
+            WHERE post_id = ? AND user_id = ? AND user_type = ?
+        `, [postId, userId, userType]);
+
+        myReactionRows.forEach(row => {
+            myReactions[row.reaction_type] = true;
+        });
+    }
+
+    return {
+        reactions,
+        myReactions
+    };
+}
 
 module.exports = router;

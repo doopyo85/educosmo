@@ -634,6 +634,30 @@
                     <%- post.content.replace(/\n/g, '<br>' ) %>
                 </div>
 
+                <!-- 🔥 좋아요/반응 섹션 -->
+                <div class="reactions-section" style="padding: 20px 30px; border-top: 1px solid #f0f0f0;">
+                    <div class="d-flex gap-2 align-items-center">
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 reaction-btn"
+                                data-reaction="like"
+                                onclick="toggleReaction('<%= post.id %>', 'like')">
+                            <span style="font-size: 1.2em;">👍</span>
+                            <span class="ms-1 fw-bold" id="like-count">0</span>
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 reaction-btn"
+                                data-reaction="laugh"
+                                onclick="toggleReaction('<%= post.id %>', 'laugh')">
+                            <span style="font-size: 1.2em;">😄</span>
+                            <span class="ms-1 fw-bold" id="laugh-count">0</span>
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 reaction-btn"
+                                data-reaction="heart"
+                                onclick="toggleReaction('<%= post.id %>', 'heart')">
+                            <span style="font-size: 1.2em;">❤️</span>
+                            <span class="ms-1 fw-bold" id="heart-count">0</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 🔥 첨부파일 섹션 -->
                 <% if (attachments && attachments.length> 0) { %>
                     <div class="attachments-section">
@@ -715,14 +739,17 @@
                             </div>
                         </div>
 
-                        <!-- 댓글 섹션 -->
+                        <!-- 🔥 댓글 섹션 (완전 구현) -->
                         <div class="comments-section">
-                            <div class="comments-header">
-                                <i class="bi bi-chat-dots"></i> 댓글
+                            <div class="comments-header mb-3">
+                                <h6 class="fw-bold mb-0">
+                                    <i class="bi bi-chat-dots"></i>
+                                    댓글 <span id="comment-count-display">0</span>개
+                                </h6>
                             </div>
 
                             <!-- 댓글 목록 -->
-                            <div class="comments-list">
+                            <div id="comments-list" class="mb-4">
                                 <div class="text-center text-muted py-4">
                                     첫 번째 댓글을 작성해보세요!
                                 </div>
@@ -731,25 +758,21 @@
                             <!-- 댓글 작성 폼 -->
                             <% if (is_logined) { %>
                                 <div class="comment-form">
-                                    <form id="commentForm">
-                                        <div class="comment-input-container">
-                                            <textarea class="comment-textarea" id="commentContent" rows="3"
-                                                placeholder="댓글을 입력하세요..." maxlength="500"></textarea>
-                                        </div>
-                                        <div class="comment-submit-container">
-                                            <button type="submit" class="comment-submit-btn">
-                                                <i class="bi bi-send"></i> 댓글 등록
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                                <% } else { %>
-                                    <div class="comment-form">
-                                        <div class="text-center text-muted py-3">
-                                            댓글을 작성하려면 <a href="/auth/login">로그인</a>이 필요합니다.
-                                        </div>
+                                    <textarea class="form-control mb-2" id="root-comment-input"
+                                              placeholder="댓글을 입력하세요..." maxlength="500" rows="3"></textarea>
+                                    <div class="text-end">
+                                        <button class="btn btn-primary btn-sm" onclick="submitComment()">
+                                            <i class="bi bi-send"></i> 댓글 등록
+                                        </button>
                                     </div>
-                                    <% } %>
+                                </div>
+                            <% } else { %>
+                                <div class="comment-form">
+                                    <div class="text-center text-muted py-3">
+                                        댓글을 작성하려면 <a href="/auth/login">로그인</a>이 필요합니다.
+                                    </div>
+                                </div>
+                            <% } %>
                         </div>
 
                         <!-- 🔥 하단 액션 버튼 영역 제거됨 (헤더로 이동) -->
@@ -837,19 +860,262 @@
                 }
             }
 
-            // 댓글 작성
-            document.getElementById('commentForm')?.addEventListener('submit', function (e) {
-                e.preventDefault();
+            // ============================================
+            // 댓글 기능
+            // ============================================
+            const postId = <%= post.id %>;
+            const currentUserId = <%= is_logined ? user.id : 'null' %>;
 
-                const content = document.getElementById('commentContent').value.trim();
+            // 페이지 로드 시 댓글 및 반응 로드
+            document.addEventListener('DOMContentLoaded', function() {
+                loadComments();
+                loadReactions();
+            });
+
+            // 댓글 목록 로드
+            async function loadComments() {
+                try {
+                    const res = await fetch(`/api/board/posts/${postId}/comments`);
+                    const data = await res.json();
+                    if (data.success) {
+                        renderComments(data.comments);
+                        document.getElementById('comment-count-display').textContent = data.total;
+                    }
+                } catch (error) {
+                    console.error('댓글 로드 실패:', error);
+                }
+            }
+
+            // 댓글 렌더링 (재귀)
+            function renderComments(comments, container = null, depth = 0) {
+                const target = container || document.getElementById('comments-list');
+                target.innerHTML = '';
+
+                if (comments.length === 0 && depth === 0) {
+                    target.innerHTML = '<div class="text-center text-muted py-4">첫 번째 댓글을 작성해보세요!</div>';
+                    return;
+                }
+
+                comments.forEach(comment => {
+                    const commentEl = createCommentElement(comment, depth);
+                    target.appendChild(commentEl);
+
+                    // 대댓글 재귀 렌더링
+                    if (comment.children && comment.children.length > 0) {
+                        const childContainer = document.createElement('div');
+                        childContainer.className = 'ms-4 border-start border-2 ps-3 mt-2';
+                        renderComments(comment.children, childContainer, depth + 1);
+                        target.appendChild(childContainer);
+                    }
+                });
+            }
+
+            // 댓글 Element 생성
+            function createCommentElement(comment, depth) {
+                const div = document.createElement('div');
+                div.className = 'comment-item mb-3 p-3 border rounded';
+
+                const isDeleted = comment.is_deleted === 1;
+                const isMyComment = currentUserId === comment.author_id;
+
+                div.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="fw-bold">${comment.author_name}</span>
+                                <span class="text-muted small">${formatTimeAgo(comment.created_at)}</span>
+                            </div>
+                            <div class="comment-content">
+                                ${isDeleted ? '<span class="text-muted fst-italic">삭제된 댓글입니다</span>' : escapeHtml(comment.content)}
+                            </div>
+                        </div>
+                        ${!isDeleted ? `
+                        <div class="btn-group btn-group-sm">
+                            ${depth < 1 ? `<button class="btn btn-outline-secondary btn-sm" onclick="toggleReplyForm(${comment.id})">답글</button>` : ''}
+                            ${isMyComment ? `
+                                <button class="btn btn-outline-secondary btn-sm" onclick="editComment(${comment.id}, '${escapeHtml(comment.content).replace(/'/g, "\\'")}')">수정</button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="deleteComment(${comment.id})">삭제</button>
+                            ` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                    ${depth < 1 && !isDeleted ? `
+                    <div id="reply-form-${comment.id}" class="reply-form mt-2" style="display:none;">
+                        <textarea class="form-control mb-2" id="reply-input-${comment.id}" placeholder="답글 입력..." maxlength="500" rows="2"></textarea>
+                        <div class="text-end">
+                            <button class="btn btn-secondary btn-sm me-1" onclick="toggleReplyForm(${comment.id})">취소</button>
+                            <button class="btn btn-primary btn-sm" onclick="submitComment(${comment.id})">답글 등록</button>
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+
+                return div;
+            }
+
+            // 댓글 작성
+            async function submitComment(parentId = null) {
+                const inputId = parentId ? `reply-input-${parentId}` : 'root-comment-input';
+                const content = document.getElementById(inputId).value.trim();
+
                 if (!content) {
                     alert('댓글 내용을 입력해주세요.');
                     return;
                 }
 
-                // TODO: 댓글 작성 API 구현
-                alert('댓글 기능은 준비 중입니다.');
-            });
+                try {
+                    const res = await fetch(`/api/board/posts/${postId}/comments`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content, parent_id: parentId })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        document.getElementById(inputId).value = '';
+                        if (parentId) toggleReplyForm(parentId);
+                        loadComments();
+                    } else {
+                        alert(data.error || '댓글 작성에 실패했습니다.');
+                    }
+                } catch (error) {
+                    alert('댓글 작성 중 오류가 발생했습니다.');
+                }
+            }
+
+            // 댓글 수정
+            async function editComment(commentId, currentContent) {
+                const newContent = prompt('댓글 수정:', currentContent);
+                if (!newContent || newContent.trim() === '') return;
+
+                try {
+                    const res = await fetch(`/api/board/comments/${commentId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: newContent.trim() })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        loadComments();
+                    } else {
+                        alert(data.error || '댓글 수정에 실패했습니다.');
+                    }
+                } catch (error) {
+                    alert('댓글 수정 중 오류가 발생했습니다.');
+                }
+            }
+
+            // 댓글 삭제
+            async function deleteComment(commentId) {
+                if (!confirm('댓글을 삭제하시겠습니까?')) return;
+
+                try {
+                    const res = await fetch(`/api/board/comments/${commentId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        loadComments();
+                    } else {
+                        alert(data.error || '댓글 삭제에 실패했습니다.');
+                    }
+                } catch (error) {
+                    alert('댓글 삭제 중 오류가 발생했습니다.');
+                }
+            }
+
+            // 답글 폼 토글
+            function toggleReplyForm(commentId) {
+                const form = document.getElementById(`reply-form-${commentId}`);
+                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            }
+
+            // ============================================
+            // 좋아요/반응 기능
+            // ============================================
+
+            // 반응 로드
+            async function loadReactions() {
+                try {
+                    const res = await fetch(`/api/board/posts/${postId}/reactions`);
+                    const data = await res.json();
+                    if (data.success) {
+                        updateReactionUI(data);
+                    }
+                } catch (error) {
+                    console.error('반응 로드 실패:', error);
+                }
+            }
+
+            // 반응 토글
+            async function toggleReaction(postId, reactionType) {
+                <% if (!is_logined) { %>
+                    alert('로그인이 필요합니다.');
+                    return;
+                <% } %>
+
+                try {
+                    const res = await fetch(`/api/board/posts/${postId}/react`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reaction_type: reactionType })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        updateReactionUI(data);
+                    } else {
+                        alert(data.error || '반응 처리에 실패했습니다.');
+                    }
+                } catch (error) {
+                    alert('반응 처리 중 오류가 발생했습니다.');
+                }
+            }
+
+            // 반응 UI 업데이트
+            function updateReactionUI(data) {
+                document.getElementById('like-count').textContent = data.reactions.like;
+                document.getElementById('laugh-count').textContent = data.reactions.laugh;
+                document.getElementById('heart-count').textContent = data.reactions.heart;
+
+                // 내 반응 상태 표시
+                document.querySelectorAll('.reaction-btn').forEach(btn => {
+                    const type = btn.dataset.reaction;
+                    if (data.myReactions[type]) {
+                        btn.classList.remove('btn-outline-secondary');
+                        btn.classList.add('btn-primary');
+                    } else {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('btn-outline-secondary');
+                    }
+                });
+            }
+
+            // ============================================
+            // 헬퍼 함수
+            // ============================================
+
+            // 시간 포맷
+            function formatTimeAgo(dateString) {
+                const now = new Date();
+                const date = new Date(dateString);
+                const diff = Math.floor((now - date) / 1000);
+
+                if (diff < 60) return '방금 전';
+                if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+                if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+                if (diff < 604800) return `${Math.floor(diff / 86400)}일 전`;
+                return date.toLocaleDateString('ko-KR');
+            }
+
+            // HTML 이스케이프
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
 
             // 키보드 단축키
             document.addEventListener('keydown', function (e) {
