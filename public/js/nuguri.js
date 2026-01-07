@@ -459,9 +459,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="user-status">온라인</div>
                 </div>
                 ${!isMe && ['teacher', 'admin', 'manager'].includes(currentUser.role) ?
-                        `<button class="monitor-btn" onclick="startMonitoring('${user.id}')" title="모니터링" style="margin-left: auto; background: none; border: none; cursor: pointer; color: #fff;">
-                        <i class="bi bi-eye"></i>
-                    </button>`
+                        `<div style="display: flex; align-items: center; margin-left: auto; gap: 5px;">
+                            <button class="monitor-btn" onclick="startMonitoring('${user.id}')" title="모니터링" style="background: none; border: none; cursor: pointer; color: #000;">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                            <button class="msg-btn" onclick="openMessageModal('${user.id}', '${escapeHtml(user.name)}')" title="메시지 보내기" style="background: none; border: none; cursor: pointer; color: #000;">
+                                <i class="bi bi-chat-text-fill"></i>
+                            </button>
+                        </div>`
                         : ''}
             `;
 
@@ -642,6 +647,280 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     } // This closes the initSocketEvents function, assuming it was defined just before the comments.
+
+    // --- Message Modal Logic ---
+    let messageTargetId = null;
+    let messageTargetName = null;
+
+    // Create Message Modal
+    const msgModal = document.createElement('div');
+    msgModal.id = 'teacherMsgModal';
+    msgModal.style.cssText = `
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 500px;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        z-index: 10001;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        flex-direction: column;
+        overflow: hidden;
+        color: #333;
+    `;
+    msgModal.innerHTML = `
+        <div style="padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+            <span id="msgModalTitle" style="font-weight: bold;">메시지 보내기</span>
+            <button id="closeMsgBtn" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+        </div>
+        <div style="display: flex; border-bottom: 1px solid #eee;">
+            <button class="msg-tab-btn active" data-tab="text" style="flex: 1; padding: 10px; border: none; background: none; cursor: pointer;">텍스트</button>
+            <button class="msg-tab-btn" data-tab="draw" style="flex: 1; padding: 10px; border: none; background: none; cursor: pointer;">그리기</button>
+            <button class="msg-tab-btn" data-tab="screen" style="flex: 1; padding: 10px; border: none; background: none; cursor: pointer;">화면 캡처</button>
+        </div>
+        <div style="padding: 15px; flex: 1;">
+            <!-- Text Tab -->
+            <div id="msg-pane-text" class="msg-pane active">
+                <textarea id="teacherMsgInput" placeholder="50자 이내로 입력하세요..." maxlength="50" style="width: 100%; height: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: none;"></textarea>
+                <div style="text-align: right; font-size: 12px; color: #666; margin-top: 5px;">
+                    <span id="charCount">0</span>/50
+                </div>
+            </div>
+            
+            <!-- Draw Tab -->
+            <div id="msg-pane-draw" class="msg-pane" style="display: none; text-align: center;">
+                <canvas id="drawCanvas" width="450" height="300" style="border: 1px solid #ddd; cursor: crosshair; background: #fff;"></canvas>
+                <div style="margin-top: 10px; display: flex; justify-content: center; gap: 10px;">
+                    <button id="clearCanvasBtn" style="padding: 5px 10px; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; font-size: 12px;">지우기</button>
+                    <input type="color" id="penColor" value="#000000">
+                    <input type="range" id="penSize" min="1" max="10" value="2" style="width: 80px;">
+                </div>
+            </div>
+
+            <!-- Screen Capture Tab -->
+            <div id="msg-pane-screen" class="msg-pane" style="display: none; text-align: center;">
+                <div id="previewContainer" style="width: 100%; height: 250px; background: #eee; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; border: 1px solid #ddd;">
+                    <span style="color: #999;">캡처된 화면이 여기에 표시됩니다.</span>
+                    <img id="screenPreview" style="max-width: 100%; max-height: 100%; display: none;">
+                </div>
+                <button id="captureBtn" style="padding: 8px 15px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    <i class="bi bi-camera"></i> 화면 캡처하기
+                </button>
+            </div>
+        </div>
+        <div style="padding: 10px 15px; border-top: 1px solid #eee; text-align: right;">
+            <button id="sendDirectMsgBtn" style="padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">전송</button>
+        </div>
+    `;
+    document.body.appendChild(msgModal);
+
+    // Expose openMessageModal globally
+    window.openMessageModal = (targetId, targetName) => {
+        messageTargetId = targetId;
+        messageTargetName = targetName;
+        document.getElementById('msgModalTitle').textContent = `${targetName}에게 메시지 보내기`;
+        msgModal.style.display = 'flex';
+
+        // Reset Inputs
+        document.getElementById('teacherMsgInput').value = '';
+        document.getElementById('charCount').innerText = '0';
+        clearCanvas();
+        document.getElementById('screenPreview').src = '';
+        document.getElementById('screenPreview').style.display = 'none';
+
+        // Default to Text Tab
+        switchMsgTab('text');
+    };
+
+    // Close Button
+    document.getElementById('closeMsgBtn').addEventListener('click', () => {
+        msgModal.style.display = 'none';
+    });
+
+    // Tab Switching
+    const msgTabBtns = msgModal.querySelectorAll('.msg-tab-btn');
+    const msgPanes = msgModal.querySelectorAll('.msg-pane');
+
+    msgTabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchMsgTab(btn.dataset.tab);
+        });
+    });
+
+    function switchMsgTab(tabName) {
+        msgTabBtns.forEach(b => {
+            if (b.dataset.tab === tabName) b.classList.add('active'); // Wait, need style for active class
+            else b.classList.remove('active');
+            // Manual style toggle for simplicity
+            b.style.borderBottom = b.dataset.tab === tabName ? '2px solid #007bff' : 'none';
+            b.style.color = b.dataset.tab === tabName ? '#007bff' : '#333';
+        });
+
+        msgPanes.forEach(p => {
+            p.style.display = p.id === `msg-pane-${tabName}` ? 'block' : 'none';
+        });
+    }
+
+    // Text Input Counter
+    const textInput = document.getElementById('teacherMsgInput');
+    textInput.addEventListener('input', () => {
+        document.getElementById('charCount').textContent = textInput.value.length;
+    });
+
+    // Canvas Logic
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    let painting = false;
+
+    function startPosition(e) {
+        painting = true;
+        draw(e);
+    }
+    function finishedPosition() {
+        painting = false;
+        ctx.beginPath();
+    }
+    function draw(e) {
+        if (!painting) return;
+        const rect = canvas.getBoundingClientRect();
+        ctx.lineWidth = document.getElementById('penSize').value;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = document.getElementById('penColor').value; // Color
+
+        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.addEventListener('mouseup', finishedPosition);
+    canvas.addEventListener('mousemove', draw);
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    document.getElementById('clearCanvasBtn').addEventListener('click', clearCanvas);
+
+
+    // Screen Capture Logic
+    const captureBtn = document.getElementById('captureBtn');
+    const previewImg = document.getElementById('screenPreview');
+
+    captureBtn.addEventListener('click', async () => {
+        try {
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: { cursor: "always" },
+                audio: false
+            });
+            const track = stream.getVideoTracks()[0];
+            const imageCapture = new ImageCapture(track);
+            const bitmap = await imageCapture.grabFrame();
+
+            // Draw to a temp canvas to convert to Blob/DataURL
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = bitmap.width;
+            tempCanvas.height = bitmap.height;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(bitmap, 0, 0);
+
+            // Stop stream immediately after capture
+            track.stop();
+
+            // Set Preview
+            const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.7); // Compress slightly
+            previewImg.src = dataUrl;
+            previewImg.style.display = 'block';
+
+        } catch (err) {
+            console.error("Error capturing screen:", err);
+            alert("화면 캡처에 실패했습니다.");
+        }
+    });
+
+    // Send Button Logic
+    document.getElementById('sendDirectMsgBtn').addEventListener('click', () => {
+        if (!socket || !messageTargetId) return;
+
+        // Determine active tab
+        let activeTab = 'text';
+        msgTabBtns.forEach(b => {
+            if (b.style.borderBottom.includes('solid')) activeTab = b.dataset.tab;
+        });
+
+        let payload = {
+            targetUserId: messageTargetId,
+            senderName: currentUser.name || currentUser.id,
+            type: activeTab,
+            content: ''
+        };
+
+        if (activeTab === 'text') {
+            const text = textInput.value.trim();
+            if (!text) { alert('내용을 입력해주세요.'); return; }
+            payload.content = text;
+        } else if (activeTab === 'draw') {
+            payload.content = canvas.toDataURL('image/png');
+        } else if (activeTab === 'screen') {
+            if (!previewImg.src || previewImg.style.display === 'none') {
+                alert('화면을 먼저 캡처해주세요.');
+                return;
+            }
+            payload.content = previewImg.src;
+        }
+
+        // Emit
+        socket.emit('send_direct_message', payload);
+        alert('전송되었습니다.');
+        msgModal.style.display = 'none';
+    });
+
+    // --- Recieve Direct Message ---
+    socket.on('direct_message', (data) => {
+        // data: { senderName, type, content, time }
+
+        // Append to chat list but with distinct style
+        const chatList = document.getElementById('nuguriChatList');
+
+        // If chat is closed, open it or show badge? 
+        // Force open or notification? Let's treat like normal message first but ensure it routes to chat.
+        // Wait, 'direct_message' logic in socketHandler needs to exist.
+
+        // We reuse appendMessage but create a special "teacher-msg" type or style.
+        // Actually, let's create a custom bubble for this.
+
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble others teacher-direct-msg';
+        bubble.style.border = '2px solid #ff9f1c'; // Highlight
+        bubble.style.backgroundColor = '#fff8e1';
+
+        let contentHtml = '';
+        if (data.type === 'text') {
+            contentHtml = `<div class="message-text" style="font-weight:bold; color:#d35400;">[선생님 메시지]</div>
+                           <div class="message-text">${escapeHtml(data.content)}</div>`;
+        } else {
+            contentHtml = `<div class="message-text" style="font-weight:bold; color:#d35400;">[선생님 ${data.type === 'draw' ? '그림' : '화면'}]</div>
+                            <img src="${data.content}" style="max-width: 100%; border-radius: 4px; border: 1px solid #ccc; margin-top: 5px;" onclick="window.open(this.src)">`;
+        }
+
+        bubble.innerHTML = `
+            <div style="font-weight:bold; font-size:12px; margin-bottom:2px;">${escapeHtml(data.senderName)}</div>
+            ${contentHtml}
+            <span class="chat-meta">${data.time}</span>
+        `;
+
+        chatList.appendChild(bubble);
+        scrollToBottom(chatList);
+
+        if (!isOpen) {
+            unreadCount++;
+            updateBadge();
+        }
+    });
+
 
     // --- Updated Utility ---
     function escapeHtml(text) {

@@ -278,6 +278,39 @@ const initSocket = (server) => {
             });
         });
 
+        // 4. 💌 Direct Message Relay (Teacher -> Student)
+        socket.on('send_direct_message', (data) => {
+            // Validate: Sender must be a teacher/admin
+            if (!socket.userData || !['teacher', 'admin', 'manager'].includes(socket.userData.role)) {
+                socket.emit('error', '권한이 없습니다.');
+                return;
+            }
+
+            // data: { targetUserId, type, content, senderName } (SenderName redundant as we have socket data)
+            const targetUserId = data.targetUserId;
+
+            // Find Target Socket
+            let targetSocketId = null;
+            for (const [id, skt] of io.of("/").sockets) {
+                if (skt.userData && skt.userData.id === targetUserId) {
+                    targetSocketId = id;
+                    break;
+                }
+            }
+
+            if (targetSocketId) {
+                // Send to Target
+                io.to(targetSocketId).emit('direct_message', {
+                    senderName: socket.userData.name || '선생님',
+                    type: data.type,
+                    content: data.content,
+                    time: new Date().toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: true })
+                });
+            } else {
+                socket.emit('error', '해당 사용자를 찾을 수 없거나 오프라인입니다.');
+            }
+        });
+
         // Helper: Broadcast User List
         const broadcastUserList = () => {
             const usersMap = new Map();
