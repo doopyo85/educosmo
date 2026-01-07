@@ -438,13 +438,16 @@ document.addEventListener('DOMContentLoaded', () => {
             userListEl.innerHTML = '';
 
             // 1. Separate Me, My Center, Others
-            const myCenter = currentUser.center || 'Unknown'; // Ensure currentUser has center.
+            const myCenterID = currentUser.centerID || currentUser.center; // Use ID if possible
 
             // Helper to get sort priority
             const getPriority = (u) => {
                 if (u.id === currentUser.id) return 0; // Me
-                if (u.centerName === myCenter || u.center === myCenter) return 1;   // My Center (check both props just in case)
-                return 2;                              // Others
+                // Check ID match or Name match (fallback)
+                if (u.centerID && u.centerID === myCenterID) return 1;
+                if (u.centerName && u.centerName === currentUser.centerName) return 1;
+                if (u.center === myCenterID) return 1;
+                return 2; // Others
             };
 
             // Sort by Priority then Name
@@ -454,6 +457,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pa !== pb) return pa - pb;
                 return a.name.localeCompare(b.name);
             });
+
+            // 🔥 Update Tab Count
+            const userTabBtn = document.querySelector('[data-tab="users"]');
+            if (userTabBtn) {
+                userTabBtn.childNodes.forEach(node => {
+                    if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('접속자')) {
+                        // Keep text, just update badge if exists, or text
+                    }
+                });
+                // Reset text content to include count safely
+                userTabBtn.innerHTML = `👥 접속자 (${users.length})`;
+            }
 
             let currentGroup = -1;
 
