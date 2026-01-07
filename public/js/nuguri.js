@@ -341,15 +341,24 @@ document.addEventListener('DOMContentLoaded', () => {
         let monitoringChangeHandler = null;
 
         // Simple Throttle Function
+        // Monitor Queue Logic (Throttle with Trailing Edge)
         function throttle(func, limit) {
-            let inThrottle;
+            let lastFunc;
+            let lastRan;
             return function () {
-                const args = arguments;
                 const context = this;
-                if (!inThrottle) {
+                const args = arguments;
+                if (!lastRan) {
                     func.apply(context, args);
-                    inThrottle = true;
-                    setTimeout(() => inThrottle = false, limit);
+                    lastRan = Date.now();
+                } else {
+                    clearTimeout(lastFunc);
+                    lastFunc = setTimeout(function () {
+                        if ((Date.now() - lastRan) >= limit) {
+                            func.apply(context, args);
+                            lastRan = Date.now();
+                        }
+                    }, limit - (Date.now() - lastRan));
                 }
             }
         }
@@ -882,15 +891,18 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('direct_message', (data) => {
         // data: { senderName, type, content, time }
 
-        // Append to chat list but with distinct style
-        const chatList = document.getElementById('nuguriChatList');
+        // Show Floating Bubble
+        showFloatingBubble(data);
 
-        // If chat is closed, open it or show badge? 
-        // Force open or notification? Let's treat like normal message first but ensure it routes to chat.
-        // Wait, 'direct_message' logic in socketHandler needs to exist.
-
+        // Also append to chat list just in case they open it
         // We reuse appendMessage but create a special "teacher-msg" type or style.
-        // Actually, let's create a custom bubble for this.
+        const chatList = document.getElementById('nuguriChatList');
+        // ... (reuse existing append logic if needed, or just skip if bubble is enough)
+        // User asked to NOT show in chat window? "너구리톡 대화창에 띄우지 말고" -> "Do not pop up the chat window" or "Do not put in chat list"?
+        // Usually "Do not pop up the chat window" means don't open the widget.
+        // "너구리톡 대화창에 띄우지 말고... 말풍선으로 뜨도록" 
+        // I'll interpret this as: Don't rely on the chat list UI for notification. 
+        // I will still log it in the chat list so history is preserved, but won't force open the widget.
 
         const bubble = document.createElement('div');
         bubble.className = 'chat-bubble others teacher-direct-msg';
@@ -915,11 +927,82 @@ document.addEventListener('DOMContentLoaded', () => {
         chatList.appendChild(bubble);
         scrollToBottom(chatList);
 
-        if (!isOpen) {
-            unreadCount++;
-            updateBadge();
-        }
+        // Do NOT increment unread badge or open if closed, relying on Floating Bubble.
     });
+
+    function showFloatingBubble(data) {
+        const bubble = document.createElement('div');
+        bubble.className = 'nuguri-floating-bubble';
+        bubble.style.cssText = `
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            max-width: 350px;
+            background: #fff;
+            border: 2px solid #ff9f1c;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 100000;
+            padding: 15px;
+            font-family: 'Noto Sans KR', sans-serif;
+            animation: slideIn 0.3s ease-out;
+            cursor: pointer;
+            overflow: hidden;
+        `;
+
+        // Add animation style if not exists
+        if (!document.getElementById('bubbleAnimStyle')) {
+            const style = document.createElement('style');
+            style.id = 'bubbleAnimStyle';
+            style.innerHTML = `
+                @keyframes slideIn {
+                    from { transform: translateY(20px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        let contentHtml = '';
+        if (data.type === 'text') {
+            contentHtml = `<div style="font-size: 16px; font-weight: bold; color: #333;">${escapeHtml(data.content)}</div>`;
+        } else {
+            contentHtml = `<img src="${data.content}" style="max-width: 100%; border-radius: 8px; border: 1px solid #eee;">`;
+        }
+
+        bubble.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: bold; color: #d35400; font-size: 14px;"> 선생님 메시지 (${data.type === 'text' ? '텍스트' : data.type === 'draw' ? '그림' : '화면'})</span>
+                <span style="font-size: 18px; color: #999;" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            </div>
+            ${contentHtml}
+        `;
+
+        // Clicking body opens chat? Or just dismisses? User said "without opening".
+        // Let's just let it stay. 
+        // Auto remove? User didn't specify, but floating bubbles usually disappear. 
+        // "말풍선으로 뜨도록 해줘" -> Like a persistent notification?
+        // Let's make it auto-remove after 10s or click to dismiss.
+
+        document.body.appendChild(bubble);
+
+        // Sound effect (Optional)
+        // const audio = new Audio('/resource/sound/notification.mp3');
+        // audio.play().catch(e => {});
+
+        // Auto remove after 10s (if text) or 15s (if image)
+        const timeout = data.type === 'text' ? 10000 : 20000;
+        setTimeout(() => {
+            if (bubble.parentElement) {
+                bubble.style.animation = 'fadeOut 0.5s ease-out';
+                setTimeout(() => bubble.remove(), 480);
+            }
+        }, timeout);
+    }
 
 
     // --- Updated Utility ---
