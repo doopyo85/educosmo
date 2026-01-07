@@ -864,13 +864,7 @@
             // 댓글 기능
             // ============================================
             const postId = <%= post.id %>;
-            const currentUserId = <%= is_logined ? user.id : 'null' %>;
-
-            // 페이지 로드 시 댓글 및 반응 로드
-            document.addEventListener('DOMContentLoaded', function() {
-                loadComments();
-                loadReactions();
-            });
+            const currentUserId = <%= is_logined && user && user.id ? user.id : 'null' %>;
 
             // 댓글 목록 로드
             async function loadComments() {
@@ -1283,6 +1277,8 @@
             document.addEventListener('DOMContentLoaded', function () {
                 loadNavigation();
                 loadDownloadCounts(); // 다운로드 카운트 로드
+                loadComments(); // 댓글 로드
+                loadReactions(); // 반응 로드
             });
 
             // 다운로드 카운트 로드
