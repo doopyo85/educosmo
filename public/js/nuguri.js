@@ -337,19 +337,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // 👁️ Monitoring Events
+        // 👁️ Monitoring Events
+        let monitoringChangeHandler = null;
+
+        // Simple Throttle Function
+        function throttle(func, limit) {
+            let inThrottle;
+            return function () {
+                const args = arguments;
+                const context = this;
+                if (!inThrottle) {
+                    func.apply(context, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            }
+        }
+
         // For Student: Recieve Monitor Request
         socket.on('cmd_monitor_start', (data) => {
             console.log('👁️ Monitoring Started by:', data.monitorName);
             amBeingMonitored = true;
 
-            // Show toast or indicator (Optional)
             // Hook into Editor
             if (window.ideEditor) {
-                // Remove existing listener to avoid duplicates
-                window.ideEditor.session.removeAllListeners('change');
+                // FIXED: Do NOT remove all listeners, as it breaks the IDE itself
+                // window.ideEditor.session.removeAllListeners('change');
 
-                // Add listener
-                window.ideEditor.session.on('change', () => {
+                // If a handler already exists, remove it first to avoid duplicates
+                if (monitoringChangeHandler) {
+                    window.ideEditor.session.off('change', monitoringChangeHandler);
+                }
+
+                // Define the handler with throttling (300ms)
+                monitoringChangeHandler = throttle(() => {
                     if (!amBeingMonitored) return;
                     const code = window.ideEditor.getValue();
                     const cursor = window.ideEditor.getCursorPosition();
@@ -359,9 +380,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         code: code,
                         cursor: cursor
                     });
-                });
+                }, 300);
 
-                // Send initial state
+                // Add listener
+                window.ideEditor.session.on('change', monitoringChangeHandler);
+
+                // Send initial state immediately
                 socket.emit('monitor_data', {
                     targetSocketId: data.monitorId,
                     code: window.ideEditor.getValue(),
@@ -373,6 +397,12 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.on('cmd_monitor_stop', () => {
             console.log('👁️ Monitoring Stopped');
             amBeingMonitored = false;
+
+            // Clean up listener
+            if (window.ideEditor && monitoringChangeHandler) {
+                window.ideEditor.session.off('change', monitoringChangeHandler);
+                monitoringChangeHandler = null;
+            }
         });
 
         // For Teacher: Recieve Data
