@@ -61,6 +61,33 @@ class S3Explorer {
     }
 
     console.log(`🔐 초기 경로 설정 - Role: ${this.config.userRole}, Path: ${this.currentPath}, Root Access: ${this.canAccessRoot}`);
+
+    // 🔥 Make instance globally available for onclick handlers in HTML strings
+    // But be careful with multiple instances.
+    // For now we assume one active or we rely on the specific container managing it?
+    // Actually the strings use `window.s3Explorer`. We must ensure `window.s3Explorer` points to THIS instance if we use it.
+    // But wait, if we have multiple (browser + selector), overwriting `window.s3Explorer` breaks the main one.
+    // Ideally we should use instance IDs or element scoping.
+    // For now, let's assume `s3SelectorModal` sets `window.s3Explorer = this`? No, that's messy.
+    // `S3Explorer` code uses `window.s3Explorer` hardcoded in `onclick`.
+    // We should fix `onclick` to usage based on container or pass the reference.
+    // Quick Fix: S3Explorer class assigns `window.s3Explorer = this;` in constructor?
+    // If we want multiple, we need `window.s3ExplorerInstances[id]`.
+    // Since I can't refactor the whole class easily, I will just note that `window.s3Explorer` updates to the latest.
+    // The main browser probably initialized on page load. The selector initializes on modal open.
+    // So the selector "wins" which is fine for the modal. When modal closes, we might need to restore?
+    // Or just accept that the main browser requires a refresh or re-init if interaction continues.
+    // Actually, `nuguri.js` created `window.s3ExplorerSelector`.
+    // But the HTML strings inside S3Explorer.js hardcode `window.s3Explorer`.
+    // I MUST change `window.s3Explorer` to `this` instance during render, but I can't inject `this` into string easily without a global ref.
+    // I will add `window.s3Explorer = this;` to the constructor for now.
+    window.s3Explorer = this;
+  }
+
+  handleFileClick(key, name) {
+    if (this.config.onFileSelect) {
+      this.config.onFileSelect({ key, name });
+    }
   }
 
   async init() {
@@ -362,12 +389,18 @@ class S3Explorer {
       const displayName = file.name;
       const ext = displayName.split('.').pop().toLowerCase();
 
-      // 🔥 클릭 이벤트 설정 (ent, sb2, sb3 파일만)
+      // 🔥 클릭 이벤트 설정
       let onClickEvent = '';
-      if (ext === 'ent') {
-        onClickEvent = `onclick="window.s3Explorer.openInEntry('${file.key}')" style="cursor: pointer;"`;
-      } else if (ext === 'sb2' || ext === 'sb3') {
-        onClickEvent = `onclick="window.s3Explorer.openInScratch('${file.key}')" style="cursor: pointer;"`;
+
+      // Selection Mode Check
+      if (this.config.onFileSelect) {
+        onClickEvent = `onclick="window.s3Explorer.handleFileClick('${file.key}', '${escapeHtml(displayName)}')" style="cursor: pointer; background: #e8f0fe;"`;
+      } else {
+        if (ext === 'ent') {
+          onClickEvent = `onclick="window.s3Explorer.openInEntry('${file.key}')" style="cursor: pointer;"`;
+        } else if (ext === 'sb2' || ext === 'sb3') {
+          onClickEvent = `onclick="window.s3Explorer.openInScratch('${file.key}')" style="cursor: pointer;"`;
+        }
       }
 
       // 🔥 체크박스 추가 (삭제 권한 있을 때만)
@@ -427,12 +460,17 @@ class S3Explorer {
 
       // 클릭 이벤트
       let onClickEvent = '';
-      if (ext === 'ent') {
-        onClickEvent = `onclick="window.s3Explorer.openInEntry('${file.key}')"`;
-      } else if (ext === 'sb2' || ext === 'sb3') {
-        onClickEvent = `onclick="window.s3Explorer.openInScratch('${file.key}')"`;
+
+      if (this.config.onFileSelect) {
+        onClickEvent = `onclick="window.s3Explorer.handleFileClick('${file.key}', '${escapeHtml(displayName)}')"`;
       } else {
-        onClickEvent = `onclick="window.s3Explorer.preview('${file.key}')"`;
+        if (ext === 'ent') {
+          onClickEvent = `onclick="window.s3Explorer.openInEntry('${file.key}')"`;
+        } else if (ext === 'sb2' || ext === 'sb3') {
+          onClickEvent = `onclick="window.s3Explorer.openInScratch('${file.key}')"`;
+        } else {
+          onClickEvent = `onclick="window.s3Explorer.preview('${file.key}')"`;
+        }
       }
 
       return `

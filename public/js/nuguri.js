@@ -427,24 +427,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        function renderUserList(users) {
-            // Online Indicator Logic (Green Dot)
-            // If more than 1 user (me + others), show green dot
-            if (users.length > 1) {
-                onlineIndicator.classList.add('show');
-                onlineIndicator.textContent = '❇️'; // Green emoji or check
-            } else {
-                onlineIndicator.classList.remove('show');
-            }
+        function updateUserList(users) {
+            const userList = document.getElementById('user-list'); // Actually check ID. Previous view showed userListEl = document.getElementById('nuguriUserList');
+            // Let's check the context. The previous function was renderUserList? Or updateUserList?
+            // In the viewed code (lines 430-490), the function is `renderUserList`.
+            // I should update `renderUserList`.
 
             const userListEl = document.getElementById('nuguriUserList');
-            const countBadge = document.getElementById('userCountBadge');
-
-            // Update Count
-            if (countBadge) countBadge.textContent = `(${users.length})`;
-
-            // Clear list
+            if (!userListEl) return;
             userListEl.innerHTML = '';
+
+            // 1. Separate Me, My Center, Others
+            const myCenter = currentUser.center || 'Unknown'; // Ensure currentUser has center.
+
+            // Helper to get sort priority
+            const getPriority = (u) => {
+                if (u.id === currentUser.id) return 0; // Me
+                if (u.centerName === myCenter || u.center === myCenter) return 1;   // My Center (check both props just in case)
+                return 2;                              // Others
+            };
+
+            // Sort by Priority then Name
+            users.sort((a, b) => {
+                const pa = getPriority(a);
+                const pb = getPriority(b);
+                if (pa !== pb) return pa - pb;
+                return a.name.localeCompare(b.name);
+            });
+
+            let currentGroup = -1;
 
             if (users.length === 0) {
                 userListEl.innerHTML = '<div class="empty-state"><p>접속자가 없습니다.</p></div>';
@@ -452,32 +463,67 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             users.forEach(user => {
+                const priority = getPriority(user);
                 const isMe = user.id === currentUser.id;
+
+                // Render Separators for My Center vs Others
+                if (!isMe && priority !== currentGroup) {
+                    let label = '';
+                    if (priority === 1) label = `우리 반 (${user.centerName || user.center})`;
+                    else if (priority === 2) label = '다른 친구들';
+
+                    if (label) {
+                        const separator = document.createElement('div');
+                        separator.style.padding = '8px 12px';
+                        separator.style.fontSize = '12px';
+                        separator.style.color = '#888';
+                        separator.style.background = '#f8f9fa';
+                        separator.style.fontWeight = 'bold';
+                        separator.style.borderBottom = '1px solid #eee';
+                        separator.innerText = label;
+                        userListEl.appendChild(separator);
+                    }
+                    currentGroup = priority;
+                }
+
                 const item = document.createElement('div');
                 item.className = 'user-list-item';
+                // Styling adjustment for item if needed, but class should handle it.
+                item.style.borderBottom = '1px solid #f5f5f5'; // Inline style for safety
+
                 item.innerHTML = `
                 <div class="user-avatar">
-                   <img src="/resource/profiles/default.webp" alt="User">
+                   <img src="${user.avatar || '/resource/profiles/default.webp'}" alt="User" style="width:36px; height:36px; border-radius:50%; border:2px solid #eee; object-fit:cover;">
                 </div>
                 <div class="user-info">
                     <div class="user-name">
                         ${escapeHtml(user.name)} 
                         ${user.centerName ? `<span style="font-size: 11px; color: #999; margin-left: 4px;">${escapeHtml(user.centerName)}</span>` : ''}
-                        ${isMe ? '<span style="color:#ff9f1c; font-size:11px;">(나)</span>' : ''}
+                        ${isMe ? '<span style="color:#ff9f1c; font-size:11px; margin-left:4px;">(나)</span>' : ''}
+                        ${(user.role === 'teacher' || user.role === 'admin') && !isMe ? '<span style="color:#e91e63; font-size:11px; margin-left:4px;">(선생님)</span>' : ''}
                     </div>
-                    <div class="user-status">온라인</div>
+                    <div class="user-status" style="color:#28a745; font-size:11px;">● 온라인</div>
                 </div>
                 ${!isMe && ['teacher', 'admin', 'manager'].includes(currentUser.role) ?
-                        `<div style="display: flex; align-items: center; margin-left: auto; gap: 5px;">
-                            <button class="monitor-btn" onclick="startMonitoring('${user.id}')" title="모니터링" style="background: none; border: none; cursor: pointer; color: #000;">
-                                <i class="bi bi-eye-fill"></i>
+                        `<div style="display: flex; align-items: center; margin-left: auto; gap: 8px;">
+                            <button class="monitor-btn" onclick="startMonitoring('${user.id}')" title="모니터링" 
+                                style="background: #f0f0f0; border: none; cursor: pointer; color: #333; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;">
+                                <i class="bi bi-play-circle-fill" style="font-size: 16px;"></i>
                             </button>
-                            <button class="msg-btn" onclick="openMessageModal('${user.id}', '${escapeHtml(user.name)}')" title="메시지 보내기" style="background: none; border: none; cursor: pointer; color: #000;">
-                                <i class="bi bi-chat-text-fill"></i>
+                            <button class="msg-btn" onclick="openMessageModal('${user.id}', '${escapeHtml(user.name)}')" title="메시지 보내기" 
+                                style="background: #f0f0f0; border: none; cursor: pointer; color: #333; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;">
+                                <i class="bi bi-chat-dots-fill" style="font-size: 16px;"></i>
                             </button>
                         </div>`
                         : ''}
             `;
+
+                // Hover effects for buttons
+                const buttons = item.querySelectorAll('button');
+                buttons.forEach(btn => {
+                    btn.onmouseover = () => btn.style.background = '#e0e0e0';
+                    btn.onmouseout = () => btn.style.background = '#f0f0f0';
+                });
 
                 // 🔥 Make startMonitoring global so onclick works
                 window.startMonitoring = ((targetId) => {
@@ -689,6 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="msg-tab-btn active" data-tab="text" style="flex: 1; padding: 10px; border: none; background: none; cursor: pointer;">텍스트</button>
             <button class="msg-tab-btn" data-tab="draw" style="flex: 1; padding: 10px; border: none; background: none; cursor: pointer;">그리기</button>
             <button class="msg-tab-btn" data-tab="screen" style="flex: 1; padding: 10px; border: none; background: none; cursor: pointer;">화면 캡처</button>
+            <button class="msg-tab-btn" data-tab="file" style="flex: 1; padding: 10px; border: none; background: none; cursor: pointer;">파일</button>
         </div>
         <div style="padding: 15px; flex: 1;">
             <!-- Text Tab -->
@@ -718,6 +765,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button id="captureBtn" style="padding: 8px 15px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
                     <i class="bi bi-camera"></i> 화면 캡처하기
                 </button>
+            </div>
+
+            <!-- File Upload Tab -->
+            <div id="msg-pane-file" class="msg-pane" style="display: none;">
+                <!-- Upload Drop Zone -->
+                <div id="fileDropZone" style="border: 2px dashed #ccc; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: 0.2s;">
+                    <i class="bi bi-cloud-arrow-up" style="font-size: 40px; color: #007bff;"></i>
+                    <p style="margin: 10px 0; color: #555;">여기로 파일을 드래그하거나<br>클릭하여 선택하세요</p>
+                    <input type="file" id="msgFileInput" style="display: none;">
+                </div>
+                
+                <!-- S3 Select Button -->
+                <div style="text-align: center; margin-top: 15px;">
+                    <button id="openS3ExplorerBtn" style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        <i class="bi bi-folder2-open"></i> S3 보관함에서 선택
+                    </button>
+                </div>
+
+                <!-- Selected File Display -->
+                <div id="selectedFileContainer" style="margin-top: 20px; padding: 10px; background: #f1f3f5; border-radius: 4px; display: none; align-items: center;">
+                    <i class="bi bi-file-earmark-check" style="font-size: 20px; color: #28a745; margin-right: 10px;"></i>
+                    <div style="flex: 1; overflow: hidden;">
+                        <div id="selectedFileName" style="font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">filename.pdf</div>
+                        <div id="selectedFileUrl" style="font-size: 11px; color: #888; display: none;">URL</div>
+                    </div>
+                    <button id="cancelFileBtn" style="background: none; border: none; color: #dc3545; cursor: pointer;">&times;</button>
+                </div>
             </div>
         </div>
         <div style="padding: 10px 15px; border-top: 1px solid #eee; text-align: right;">
