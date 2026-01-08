@@ -266,7 +266,7 @@ class ProjectCardManager {
                     category: category,
                     ctElement: ctElement,
                     tools: tools,
-                    img: imgUrl,
+                    img: '',  // 🔥 수정: 초기값은 빈 문자열, "문제" 타입에서만 설정
                     // CPS용 (기본/확장1/확장2)
                     basic: '',
                     basicWebUrl: '',  // D열: scratch.mit.edu URL
@@ -299,13 +299,25 @@ class ProjectCardManager {
                     projects[category][projectKey].ext2 = s3Url;
                     break;
                 case '문제':  // 🔥 COS 문제 이미지 URL
-                    projects[category][projectKey].img = imgUrl; // imgURL 컬럼 사용
+                    projects[category][projectKey].img = imgUrl; // H열: imgURL 컬럼 사용
+                    console.log('🔍 Scratch COS 문제 이미지:', {
+                        name: name,
+                        imgUrl: imgUrl
+                    });
                     break;
                 case '정답':
                     projects[category][projectKey].answer = s3Url;
+                    console.log('🔍 Scratch COS 정답:', {
+                        name: name,
+                        s3Url: s3Url
+                    });
                     break;
                 case '풀이':
                     projects[category][projectKey].solution = s3Url;
+                    console.log('🔍 Scratch COS 풀이:', {
+                        name: name,
+                        s3Url: s3Url
+                    });
                     break;
                 case 'ppt':
                     projects[category][projectKey].ppt = webUrl; // PPT는 보통 웹 링크
@@ -313,6 +325,7 @@ class ProjectCardManager {
             }
         });
 
+        console.log('✅ Scratch Projects 그룹핑 완료:', projects);
         return projects;
     }
 
@@ -325,12 +338,6 @@ class ProjectCardManager {
         data.forEach(row => {
             // 구글 시트 데이터 구조: [카테고리, 콘텐츠명, 기능, entURL(Web), C.T요소, 활용교구, S3entURL(File)]
             const [category, name, type, entURL = '', ctElement = '', tools = '', s3entURL = ''] = row;
-
-            // 이미지 URL은 별도로 없으므로 빈값 혹은 다른 로직 필요 시 수정
-            // 현재 구조상 '문제' 타입일 때 imgUrl이 어디에 있는지 확인 필요하나, 
-            // 유저 요청에 따라 우선 tools, s3entURL 매핑 수정
-            let imgUrl = '';
-            if (type === '문제') imgUrl = s3entURL; // 만약 문제 이미지가 S3URL 자리에 있다면
 
             if (!category || !name) return;
 
@@ -345,7 +352,7 @@ class ProjectCardManager {
                     name: projectKey,
                     category: category,
                     ctElement: ctElement,
-                    img: imgUrl,
+                    img: '',  // 🔥 수정: 초기값은 빈 문자열, "문제" 타입에서만 설정
                     // CPE용 (기본/완성/확장)
                     basic: '',
                     basicPlayEntry: '',  // playentry.org URL
@@ -383,14 +390,26 @@ class ProjectCardManager {
                     projects[category][projectKey].extensionPlayEntry = entURL;
                     projects[category][projectKey].extension = s3entURL;
                     break;
-                case '문제':  // 🔥 COS 문제 이미지 URL
-                    projects[category][projectKey].img = imgUrl;
+                case '문제':  // 🔥 COS 문제 이미지 URL (G열 = s3entURL에 이미지 URL)
+                    projects[category][projectKey].img = s3entURL;
+                    console.log('🔍 Entry COS 문제 이미지:', {
+                        name: name,
+                        imgUrl: s3entURL
+                    });
                     break;
                 case '정답':
                     projects[category][projectKey].answer = s3entURL;
+                    console.log('🔍 Entry COS 정답:', {
+                        name: name,
+                        s3entURL: s3entURL
+                    });
                     break;
                 case '풀이':
                     projects[category][projectKey].solution = s3entURL;
+                    console.log('🔍 Entry COS 풀이:', {
+                        name: name,
+                        s3entURL: s3entURL
+                    });
                     break;
                 case 'ppt':
                     projects[category][projectKey].ppt = s3entURL;
@@ -398,6 +417,7 @@ class ProjectCardManager {
             }
         });
 
+        console.log('✅ Entry Projects 그룹핑 완료:', projects);
         return projects;
     }
 
