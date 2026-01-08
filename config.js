@@ -35,7 +35,7 @@ const SESSION = {
 // JWT 설정
 const JWT = {
   SECRET: process.env.JWT_SECRET || 'your_jwt_secret',
-  EXPIRES_IN: process.env.JWT_EXPIRES_IN || '1h',
+  EXPIRES_IN: process.env.JWT_EXPIRES_IN || '3h',  // 3시간으로 변경
 };
 
 // 외부 API 엔드포인트

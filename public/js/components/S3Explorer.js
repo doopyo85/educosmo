@@ -1302,8 +1302,8 @@ class S3Explorer {
     try {
       console.log('🎨 Entry에서 열기:', key);
 
-      // 🔥 S3 직접 URL 생성
-      const s3Url = `https://educodingnplaycontents.s3.amazonaws.com/${key}`;
+      // 🔥 S3 직접 URL 생성 (ap-northeast-2 리전 명시)
+      const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${key}`;
 
       // 🔥 Entry 페이지 URL 생성 (s3Url 파라미터 사용)
       const userID = this.config.userID || 'guest';
@@ -1328,8 +1328,8 @@ class S3Explorer {
     try {
       console.log('🐱 Scratch에서 열기:', key);
 
-      // 🔥 S3 직접 URL 생성
-      const s3Url = `https://educodingnplaycontents.s3.amazonaws.com/${key}`;
+      // 🔥 S3 직접 URL 생성 (ap-northeast-2 리전 명시)
+      const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${key}`;
 
       // 🔥 Scratch 페이지 URL 생성 (project_file 파라미터 사용)
       const scratchUrl = `/scratch/?project_file=${encodeURIComponent(s3Url)}`;
