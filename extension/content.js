@@ -99,12 +99,37 @@
             <span class="cnp-island-title" id="cnp-mission-title">과제 없음</span>
           </div>
           <div class="cnp-island-divider"></div>
+          <button class="cnp-problem-toggle-btn hidden" id="cnp-problem-toggle-btn">
+            <span class="cnp-problem-toggle-icon">◀</span>
+            <span>문제</span>
+          </button>
           <button class="cnp-island-btn" id="cnp-submit-btn">
             <span class="cnp-island-btn-icon">↑</span>
             <span class="cnp-island-btn-text">제출</span>
           </button>
         </div>
       </div>
+
+      <!-- 문제 이미지 사이드바 -->
+      <div id="cnp-problem-sidebar">
+        <div class="cnp-sidebar-header">
+          <div class="cnp-sidebar-title">
+            <span>📝</span>
+            <span id="cnp-sidebar-problem-title">문제</span>
+          </div>
+          <button class="cnp-sidebar-close" id="cnp-sidebar-close">&times;</button>
+        </div>
+        <div class="cnp-sidebar-content" id="cnp-sidebar-content">
+          <div class="cnp-no-problem">
+            <div class="cnp-no-problem-icon">📋</div>
+            <p>문제 이미지가 없습니다</p>
+            <p style="font-size: 12px; color: #aaa;">COS 자격증 과제에서만 표시됩니다</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 사이드바 오버레이 (모바일용) -->
+      <div id="cnp-sidebar-overlay"></div>
 
       <!-- 파일 업로드 모달 -->
       <div class="cnp-modal" id="cnp-upload-modal" style="display: none;">
@@ -185,7 +210,37 @@
     const fileNameSpan = document.getElementById('cnp-file-name');
     const completeCloseBtn = document.getElementById('cnp-complete-close-btn');
 
+    // 🔥 NEW: 문제 사이드바 요소
+    const problemToggleBtn = document.getElementById('cnp-problem-toggle-btn');
+    const problemSidebar = document.getElementById('cnp-problem-sidebar');
+    const sidebarOverlay = document.getElementById('cnp-sidebar-overlay');
+    const sidebarClose = document.getElementById('cnp-sidebar-close');
+
     let selectedFile = null;
+
+    // 🔥 NEW: 문제 사이드바 토글
+    problemToggleBtn.addEventListener('click', () => {
+      const isActive = problemSidebar.classList.toggle('active');
+      problemToggleBtn.classList.toggle('active', isActive);
+      sidebarOverlay.classList.toggle('active', isActive);
+      console.log('[CNP] 문제 사이드바 토글:', isActive ? '열림' : '닫힘');
+    });
+
+    // 🔥 NEW: 사이드바 닫기 버튼
+    sidebarClose.addEventListener('click', () => {
+      problemSidebar.classList.remove('active');
+      problemToggleBtn.classList.remove('active');
+      sidebarOverlay.classList.remove('active');
+      console.log('[CNP] 문제 사이드바 닫기');
+    });
+
+    // 🔥 NEW: 오버레이 클릭 시 사이드바 닫기
+    sidebarOverlay.addEventListener('click', () => {
+      problemSidebar.classList.remove('active');
+      problemToggleBtn.classList.remove('active');
+      sidebarOverlay.classList.remove('active');
+      console.log('[CNP] 오버레이 클릭 - 사이드바 닫기');
+    });
 
     // 제출 버튼 클릭
     submitBtn.addEventListener('click', async () => {
@@ -286,6 +341,7 @@
 
       const island = document.getElementById('cnp-island');
       const missionTitle = document.getElementById('cnp-mission-title');
+      const problemToggleBtn = document.getElementById('cnp-problem-toggle-btn');
 
       if (response?.data) {
         // 과제 정보가 있을 때
@@ -297,16 +353,73 @@
           missionTitle: response.data.missionTitle,
           missionId: response.data.missionId,
           platform: response.data.platform,
-          displayTitle: title
+          displayTitle: title,
+          problemImageUrl: response.data.problemImageUrl
         });
+
+        // 🔥 NEW: 문제 이미지 URL이 있으면 사이드바 표시
+        if (response.data.problemImageUrl) {
+          updateProblemSidebar(response.data);
+          problemToggleBtn.classList.remove('hidden');
+          console.log('[CNP] 문제 이미지 버튼 표시:', response.data.problemImageUrl);
+        } else {
+          problemToggleBtn.classList.add('hidden');
+          console.log('[CNP] 문제 이미지 없음 - 버튼 숨김');
+        }
       } else {
         // 과제 정보가 없을 때
         missionTitle.textContent = '과제 없음';
         island.classList.remove('has-mission');
+        problemToggleBtn.classList.add('hidden');
 
         console.log('[CNP] 과제 정보 없음');
       }
     });
+  }
+
+  // ============================================
+  // 🔥 NEW: 문제 사이드바 업데이트
+  // ============================================
+  function updateProblemSidebar(missionData) {
+    const sidebarContent = document.getElementById('cnp-sidebar-content');
+    const sidebarTitle = document.getElementById('cnp-sidebar-problem-title');
+
+    if (missionData.problemImageUrl) {
+      // 문제 제목 설정
+      const problemTitle = missionData.missionTitle || '문제';
+      sidebarTitle.textContent = problemTitle;
+
+      // 문제 이미지와 정보 표시
+      sidebarContent.innerHTML = `
+        <div class="cnp-problem-image-container">
+          <img src="${missionData.problemImageUrl}"
+               alt="문제 이미지"
+               class="cnp-problem-image"
+               onerror="this.parentElement.innerHTML='<p style=\\'text-align:center;color:#999;\\'>이미지를 불러올 수 없습니다</p>';" />
+        </div>
+        <div class="cnp-problem-info">
+          <p><strong>과제명:</strong> ${missionData.missionTitle || '없음'}</p>
+          <p><strong>플랫폼:</strong> ${missionData.platform === 'entry' ? 'Entry' : 'Scratch'}</p>
+          ${missionData.grade ? `<p><strong>급수:</strong> COS ${missionData.grade}급</p>` : ''}
+          ${missionData.sample ? `<p><strong>샘플:</strong> ${missionData.sample}회</p>` : ''}
+          ${missionData.problem ? `<p><strong>문제:</strong> ${missionData.problem}번</p>` : ''}
+        </div>
+      `;
+
+      console.log('[CNP] 문제 사이드바 업데이트 완료:', {
+        imageUrl: missionData.problemImageUrl,
+        title: problemTitle
+      });
+    } else {
+      // 문제 이미지가 없을 때 기본 메시지
+      sidebarContent.innerHTML = `
+        <div class="cnp-no-problem">
+          <div class="cnp-no-problem-icon">📋</div>
+          <p>문제 이미지가 없습니다</p>
+          <p style="font-size: 12px; color: #aaa;">COS 자격증 과제에서만 표시됩니다</p>
+        </div>
+      `;
+    }
   }
 
   // ============================================

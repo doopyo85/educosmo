@@ -1309,19 +1309,58 @@ class ProjectCardManager {
                 const projectUrl = btn.getAttribute('data-url');
                 const imgUrl = btn.getAttribute('data-img');
 
-                // COS 에디터로 이동 (전체 문제 데이터 포함)
-                const params = new URLSearchParams({
-                    platform: this.config.projectType,
-                    grade: grade,
-                    sample: sample,
-                    problem: problem,
-                    buttonType: buttonType,
-                    problems: problems,
-                    projectUrl: projectUrl,
-                    imgUrl: imgUrl
+                console.log('🎯 COS 문제 버튼 클릭:', {
+                    grade, sample, problem, buttonType, imgUrl
                 });
 
-                window.open(`/cos-editor?${params.toString()}`, '_blank');
+                // 🔥 Extension이 있으면 공식 사이트로 이동 (문제 이미지 사이드바 사용)
+                if (window.extensionBridge) {
+                    const missionId = `cos-${grade}-${sample}-${problem}`;
+                    const missionTitle = `COS ${grade}급 샘플${sample}-${problem}번`;
+                    const userId = this.userID || 'guest';
+
+                    // 플랫폼별 공식 URL 생성
+                    const openUrl = this.config.projectType === 'entry'
+                        ? `https://playentry.org/ws/new?type=normal&mode=block&lang=ko`
+                        : `https://scratch.mit.edu/projects/editor`;
+
+                    console.log('✅ Extension 감지 - 공식 에디터로 이동 (문제 이미지 사이드바 포함)');
+
+                    const result = window.extensionBridge.openEditor({
+                        platform: this.config.projectType,
+                        missionId: missionId,
+                        userId: userId,
+                        missionTitle: missionTitle,
+                        openUrl: openUrl,
+                        problemImageUrl: imgUrl,  // 🔥 문제 이미지 URL 전달
+                        grade: grade,             // 🔥 COS 급수
+                        sample: sample,           // 🔥 샘플 번호
+                        problem: problem          // 🔥 문제 번호
+                    });
+
+                    if (result) {
+                        // Extension이 성공적으로 처리한 경우
+                        console.log('✅ Extension으로 공식 에디터 열기 성공');
+                    } else {
+                        // Extension이 없거나 실패한 경우 - 내부 에디터로 폴백
+                        console.warn('⚠️ Extension 처리 실패 - 내부 에디터로 이동');
+                        const params = new URLSearchParams({
+                            platform: this.config.projectType,
+                            grade, sample, problem, buttonType, problems,
+                            projectUrl, imgUrl
+                        });
+                        window.open(`/cos-editor?${params.toString()}`, '_blank');
+                    }
+                } else {
+                    // Extension이 없는 경우 - 기존대로 내부 에디터 사용
+                    console.log('📂 Extension 없음 - 내부 COS 에디터로 이동');
+                    const params = new URLSearchParams({
+                        platform: this.config.projectType,
+                        grade, sample, problem, buttonType, problems,
+                        projectUrl, imgUrl
+                    });
+                    window.open(`/cos-editor?${params.toString()}`, '_blank');
+                }
 
                 // 학습 기록
                 try {
@@ -1362,13 +1401,15 @@ class ProjectCardManager {
                     const missionId = e.target.getAttribute('data-mission-id') || 'scratch-basic';
                     const missionTitle = e.target.getAttribute('data-mission-title') || 'Scratch Project';
                     const userId = e.target.getAttribute('data-user-id') || this.userID || 'guest';
+                    const problemImageUrl = e.target.getAttribute('data-problem-image') || null;
 
                     const result = window.extensionBridge.openEditor({
                         platform: 'scratch',
                         missionId: missionId,
                         userId: userId,
                         missionTitle: missionTitle,
-                        openUrl: openUrl
+                        openUrl: openUrl,
+                        problemImageUrl: problemImageUrl  // 🔥 문제 이미지 URL 추가
                     });
 
                     // 🔥 Extension이 설치되지 않아 팝업이 뜨더라도, 강제로 페이지 이동 (유저 요청)
@@ -1404,13 +1445,15 @@ class ProjectCardManager {
                     const missionId = e.target.getAttribute('data-mission-id') || 'entry-basic';
                     const missionTitle = e.target.getAttribute('data-mission-title') || 'Entry Project';
                     const userId = e.target.getAttribute('data-user-id') || this.userID || 'guest';
+                    const problemImageUrl = e.target.getAttribute('data-problem-image') || null;
 
                     const result = window.extensionBridge.openEditor({
                         platform: 'entry',
                         missionId: missionId,
                         userId: userId,
                         missionTitle: missionTitle,
-                        openUrl: openUrl
+                        openUrl: openUrl,
+                        problemImageUrl: problemImageUrl  // 🔥 문제 이미지 URL 추가
                     });
 
                     // 🔥 Extension이 설치되지 않아 팝업이 뜨더라도, 강제로 페이지 이동 (유저 요청)
