@@ -36,8 +36,8 @@ educodingnplay 플랫폼에서 학생, 교사, 관리자가 AWS S3에 저장된 
 ┌─────────────────────────────────────────────────────┐
 │                   Client Layer                      │
 │  ┌──────────────────────────────────────────────┐   │
-│  │  Header Component (내 파일 아이콘)            │   │
-│  │  └─ 역할별 자동 경로 분기                    │   │
+│  │  Header Component (Global Navigation)        │   │
+│  │  └─ "내 파일" 클릭 -> 페이지 이동 (/s3/my-files) │   │
 │  └──────────────────────────────────────────────┘   │
 │  ┌──────────────────────────────────────────────┐   │
 │  │  S3Explorer Component (JavaScript Class)     │   │
@@ -89,7 +89,7 @@ educodingnplay 플랫폼에서 학생, 교사, 관리자가 AWS S3에 저장된 
 ```
 1. 사용자 클릭 "내 파일" 아이콘
    ↓
-2. header.ejs → openMyFiles() 함수 실행
+2. header.ejs → /s3/my-files (또는 역할별 URL)로 이동
    ↓
 3. 역할별 경로 자동 선택
    • admin → /s3/browser
@@ -98,7 +98,7 @@ educodingnplay 플랫폼에서 학생, 교사, 관리자가 AWS S3에 저장된 
    ↓
 4. s3Router.js → 역할 검증 및 설정
    ↓
-5. s3-browser.ejs 렌더링 (모달 iframe)
+5. s3-browser.ejs 렌더링 (Full Page with Header)
    ↓
 6. S3Explorer.js 초기화
    • scope, enableDelete 자동 설정
@@ -454,6 +454,8 @@ https://app.codingnplay.co.kr/scratch/
 ### 5.1 레이아웃 구조
 ```
 ┌──────────────────────────────────────────────────────────┐
+│  Global Header (Logo, Menu, Profile...)                  │
+├──────────────────────────────────────────────────────────┤
 │ 📂 Root > users > student1 > entry > draft   [🔄 새로고침] │
 ├──────────────────────────────────────────────────────────┤
 │                                                          │
@@ -789,15 +791,15 @@ module.exports = router;
 ✅ 역할별 자동 경로 분기
 
 핵심 코드:
-html<!-- 내 파일 아이콘 (전체 사용자) -->
+<!-- 내 파일 아이콘 (전체 사용자) -->
 <div class="board-notification-wrapper">
-    <button class="board-icon-btn" onclick="openMyFiles()" title="내 파일 관리">
+    <a href="/s3/my-files" class="board-icon-btn" title="내 파일 관리">
         <i class="bi bi-folder-fill"></i>
-    </button>
+    </a>
     <div class="board-tooltip">내 파일</div>
 </div>
 
-<!-- 내 파일 모달 (전체화면 iframe) -->
+<!-- 기존 모달 관련 코드 제거됨 -->
 <div class="modal fade" id="myFilesModal" tabindex="-1">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">

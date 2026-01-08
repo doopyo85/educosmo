@@ -251,9 +251,22 @@
 }
 
 @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-    40% {transform: translateY(-20px);}
-    60% {transform: translateY(-10px);}
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-20px);
+    }
+
+    60% {
+        transform: translateY(-10px);
+    }
 }
 
 .bounce-animate {
@@ -526,4 +539,106 @@
 .chat-bubble.secret .message-text::before {
     content: '🔒 ';
     font-size: 12px;
+}
+
+/* =========================================
+   Mobile Optimization (max-width: 768px)
+   ========================================= */
+@media screen and (max-width: 768px) {
+
+    /* Adjust Widget Container Position */
+    #nuguri-widget-container {
+        bottom: 20px;
+        right: 20px;
+        z-index: 2147483647;
+        /* Keep high z-index */
+    }
+
+    /* Adjust Icon Size */
+    .nuguri-icon {
+        width: 60px;
+        /* Slightly smaller on mobile */
+        height: 60px;
+    }
+
+    /* Modal - Full Screen Simulation */
+    .nuguri-modal {
+        position: fixed;
+        /* Fixed relative to viewport */
+        bottom: 0 !important;
+        right: 0 !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        background: rgba(255, 255, 255, 0.98);
+        /* Less transparent for readablity */
+        flex-direction: column;
+        transform-origin: bottom right;
+        /* Animate from icon */
+        /* Animation usually handled by base class, ensure transition is smooth */
+    }
+
+    /* Ensure close button is easily tappable */
+    .nuguri-header {
+        height: 48px;
+        /* Standard mobile header height */
+        padding: 0 12px;
+        padding-top: env(safe-area-inset-top);
+        /* Notch support */
+    }
+
+    .nuguri-title {
+        font-size: 16px;
+    }
+
+    .nuguri-close {
+        font-size: 24px;
+        padding: 8px;
+        /* Larger touch target */
+    }
+
+    /* Adjust Tabs */
+    .nuguri-tabs {
+        padding: 0 8px;
+        height: 40px;
+    }
+
+    .nuguri-tab-btn {
+        font-size: 13px;
+        padding: 10px 4px;
+        /* Taller touch target */
+    }
+
+    /* Content Area */
+    .nuguri-content {
+        padding-bottom: env(safe-area-inset-bottom);
+        /* iOS Home Indicator */
+    }
+
+    /* Input Area - Stick to bottom */
+    .nuguri-input-area {
+        padding: 10px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        background: white;
+    }
+
+    /* Make input easier to tap */
+    .nuguri-input {
+        font-size: 16px;
+        /* Prevent iOS zoom on focus */
+        padding: 10px 16px;
+    }
+
+    /* Hide the floating icon when modal is open to avoid distraction/obscuring */
+    .nuguri-modal.open~.nuguri-icon {
+        display: none;
+        /* Note: If we hide it, we lose the transition origin anchor visually, 
+           but it's cleaner. Alternatively opacity: 0 with pointer-events: none */
+        opacity: 0;
+        pointer-events: none;
+    }
 }

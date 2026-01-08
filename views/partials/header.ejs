@@ -84,11 +84,14 @@
 
                                             <!-- 🔥 내 파일 아이콘 (전체 사용자) -->
                                             <div class="board-notification-wrapper">
-                                                <button class="board-icon-btn" onclick="openMyFiles()" title="내 파일 관리"
-                                                    aria-label="내 파일 관리 열기">
-                                                    <i class="bi bi-folder-fill" aria-hidden="true"></i>
-                                                </button>
-                                                <div class="board-tooltip">내 파일</div>
+                                                <% let s3Link='/s3/browser' ; if (role==='teacher' || role==='manager' )
+                                                    { s3Link='/s3/student-files' ; } else if (role==='student' ) {
+                                                    s3Link='/s3/my-files' ; } %>
+                                                    <a class="board-icon-btn d-flex align-items-center justify-content-center text-dark text-decoration-none"
+                                                        href="<%= s3Link %>" title="내 파일 관리" aria-label="내 파일 관리로 이동">
+                                                        <i class="bi bi-folder-fill" aria-hidden="true"></i>
+                                                    </a>
+                                                    <div class="board-tooltip">내 파일</div>
                                             </div>
 
                                             <!-- 🔥 포트폴리오 (학생 전용) -->
@@ -345,17 +348,7 @@
     </div>
 </div>
 
-<!-- 🔥 내 파일 모달 (전체화면) -->
-<div class="modal fade" id="myFilesModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen">
-        <div class="modal-content">
-            <div class="modal-body p-0">
-                <iframe id="myFilesFrame" src="" style="width: 100%; height: 100%; border: none;" frameborder="0">
-                </iframe>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- 스크립트 부분 -->
 <script defer src="/header.js"></script>
@@ -370,34 +363,7 @@
                 /**
                  * 내 파일 모달 열기 (역할별 자동 경로 선택)
                  */
-                function openMyFiles() {
-                    const userRole = '<%= role %>';
-                    const modal = new bootstrap.Modal(document.getElementById('myFilesModal'));
-                    const iframe = document.getElementById('myFilesFrame');
 
-                    // 🔥 역할별 경로 자동 선택
-                    let s3Path;
-
-                    if (userRole === 'admin') {
-                        s3Path = '/s3/browser';  // Admin은 전체 탐색
-                    } else if (userRole === 'teacher' || userRole === 'manager') {
-                        s3Path = '/s3/student-files';  // Teacher는 학생 파일
-                    } else if (userRole === 'student') {
-                        s3Path = '/s3/my-files';  // Student는 본인 파일만
-                    } else {
-                        s3Path = '/s3/browser';  // 기본값
-                    }
-
-                    console.log('📂 S3 경로:', s3Path, '(역할:', userRole, ')');
-                    iframe.src = s3Path;
-
-                    modal.show();
-                }
-
-                // 모달이 닫힐 때 iframe src 초기화 (메모리 절약)
-                document.getElementById('myFilesModal').addEventListener('hidden.bs.modal', function () {
-                    document.getElementById('myFilesFrame').src = '';
-                });
 
                 /**
                  * 내 정보 수정 모달 열기
