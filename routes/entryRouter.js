@@ -480,7 +480,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 
         // 8. 🎨 자동 갤러리 등록 (submitted만)
         let galleryResult = null;
-        if (actualSaveType === 'submitted' && result.submissionId) {
+        if (actualSaveType === 'submitted' && result.projectSubmissionId) {
             const galleryManager = require('../lib_storage/galleryManager');
             galleryResult = await galleryManager.autoRegisterToGallery({
                 userId,
@@ -490,7 +490,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
                 s3Url,
                 thumbnailUrl,
                 analysis,
-                projectSubmissionId: result.submissionId
+                projectSubmissionId: result.projectSubmissionId
             });
 
             if (galleryResult.isNew) {
@@ -500,7 +500,7 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 
         res.json({
             success: true,
-            projectId: result.submissionId || result.projectId,
+            projectId: result.projectSubmissionId || result.projectId,
             fileId: result.userFileId || null,
             userFileId: result.userFileId || null,
             fileName: fileName,

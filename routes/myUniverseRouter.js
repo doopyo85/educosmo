@@ -640,6 +640,50 @@ router.get('/student/:id', async (req, res) => {
 });
 
 // ============================================
+// Teacher View: Student Gallery
+// ============================================
+router.get('/student/:id/gallery', async (req, res) => {
+    try {
+        const studentId = req.params.id;
+        const teacherRole = req.session.role;
+        const teacherCenterId = req.session.centerID;
+
+        // Teacher/Admin check
+        if (!['teacher', 'manager', 'admin'].includes(teacherRole)) {
+            return res.status(403).send('권한이 없습니다.');
+        }
+
+        const [student] = await db.queryDatabase(
+            'SELECT * FROM Users WHERE id = ? AND role = "student"',
+            [studentId]
+        );
+
+        if (!student) {
+            return res.status(404).send('학생을 찾을 수 없습니다.');
+        }
+
+        // Center check
+        if (teacherRole !== 'admin' && student.centerID !== teacherCenterId) {
+            return res.status(403).send('다른 센터 학생입니다.');
+        }
+
+        res.render('my-universe/index', {
+            activeTab: 'gallery',
+            student,
+            readOnly: true,
+            userID: req.session.userID,
+            userRole: req.session.role,
+            is_logined: req.session.is_logined,
+            centerID: req.session.centerID
+        });
+
+    } catch (error) {
+        console.error('Student Gallery Error:', error);
+        res.status(500).send('Error loading student gallery');
+    }
+});
+
+// ============================================
 // Teacher View: Student Observatory
 // ============================================
 router.get('/student/:id/observatory', async (req, res) => {

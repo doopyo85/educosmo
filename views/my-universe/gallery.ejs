@@ -351,6 +351,10 @@
     let allGalleryProjects = [];
     let currentFilter = '';
 
+    // 학생 뷰인지 확인 (교사가 학생 갤러리를 보는 경우)
+    const isStudentView = <%= locals.student && locals.student.userID && locals.student.userID !== locals.userID ? 'true' : 'false' %>;
+    const studentUserID = isStudentView ? '<%= locals.student.userID %>' : null;
+
     // 페이지 로드 시 프로젝트 로드
     document.addEventListener('DOMContentLoaded', () => {
         loadGalleryProjects();
@@ -370,7 +374,12 @@
 
     async function loadGalleryProjects() {
         try {
-            const response = await fetch('/api/gallery/my?limit=100');
+            // 학생 뷰인 경우 해당 학생의 갤러리, 아니면 본인 갤러리
+            const apiUrl = isStudentView
+                ? `/api/gallery/projects?userId=${studentUserID}&limit=100`
+                : '/api/gallery/my?limit=100';
+
+            const response = await fetch(apiUrl);
             const result = await response.json();
 
             if (result.success && result.data.length > 0) {
