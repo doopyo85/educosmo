@@ -478,6 +478,26 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
             });
         }
 
+        // 8. 🎨 자동 갤러리 등록 (submitted만)
+        let galleryResult = null;
+        if (actualSaveType === 'submitted' && result.submissionId) {
+            const galleryManager = require('../lib_storage/galleryManager');
+            galleryResult = await galleryManager.autoRegisterToGallery({
+                userId,
+                userID,
+                platform: 'entry',
+                projectName: projectName || 'Untitled',
+                s3Url,
+                thumbnailUrl,
+                analysis,
+                projectSubmissionId: result.submissionId
+            });
+
+            if (galleryResult.isNew) {
+                console.log('✨ [Entry] 갤러리 자동 등록 완료: Gallery#', galleryResult.galleryProjectId);
+            }
+        }
+
         res.json({
             success: true,
             projectId: result.submissionId || result.projectId,
@@ -489,6 +509,8 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
             fileSize: fileSize,
             fileSizeKb: Math.ceil(fileSize / 1024),
             thumbnailUrl: thumbnailUrl,
+            galleryProjectId: galleryResult ? galleryResult.galleryProjectId : null,
+            autoRegisteredToGallery: galleryResult ? galleryResult.isNew : false,
             message: isUpdate ? '프로젝트가 업데이트되었습니다.' : '프로젝트가 저장되었습니다.'
         });
 

@@ -102,68 +102,139 @@
             font-size: 0.9rem;
         }
 
-        /* 프로젝트 테이블 */
-        .projects-table {
+        /* 프로젝트 카드 그리드 */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .project-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
         }
 
-        .projects-table table {
-            margin: 0;
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
         }
 
-        .projects-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #495057;
-            border-bottom: 2px solid #e9ecef;
-            padding: 1rem;
-        }
-
-        .projects-table td {
-            padding: 1rem;
-            vertical-align: middle;
-        }
-
-        .project-row {
-            transition: background 0.2s;
-        }
-
-        .project-row:hover {
-            background: #f8f9fa;
-        }
-
-        .project-thumb {
-            width: 80px;
-            height: 60px;
-            border-radius: 8px;
+        .project-card-thumb {
+            width: 100%;
+            height: 200px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
+            font-size: 3rem;
+            position: relative;
         }
 
-        .project-thumb img {
+        .project-card-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .project-title-cell {
-            font-weight: 500;
+        .project-card-thumb .play-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        .project-title-cell a {
+        .project-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-overlay i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        .project-card-body {
+            padding: 1.25rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .project-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
             color: #333;
-            text-decoration: none;
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-height: 1.4;
         }
 
-        .project-title-cell a:hover {
-            color: #667eea;
+        .project-card-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            flex: 1;
+        }
+
+        .project-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 0.75rem;
+            border-top: 1px solid #f0f0f0;
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .project-card-stats {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .project-card-stats span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .project-card-footer {
+            padding: 0 1.25rem 1.25rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .project-card-footer .btn {
+            flex: 1;
+            padding: 0.5rem;
+            font-size: 0.85rem;
         }
 
         .platform-badge {
@@ -233,14 +304,14 @@
             padding: 3rem;
         }
 
-        /* 반응형 테이블 */
+        /* 반응형 */
         @media (max-width: 768px) {
-            .projects-table {
-                overflow-x: auto;
+            .projects-grid {
+                grid-template-columns: 1fr;
             }
 
-            .projects-table table {
-                min-width: 600px;
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -304,24 +375,8 @@
                             <div class="spinner-border text-primary"></div>
                         </div>
 
-                        <!-- 프로젝트 테이블 -->
-                        <div class="projects-table" id="projectsTable" style="display: none;">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 100px;">썸네일</th>
-                                        <th>제목</th>
-                                        <th style="width: 90px;">플랫폼</th>
-                                        <th style="width: 80px;">공개범위</th>
-                                        <th style="width: 80px;">조회</th>
-                                        <th style="width: 80px;">좋아요</th>
-                                        <th style="width: 100px;">등록일</th>
-                                        <th style="width: 120px;">관리</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="projectsBody"></tbody>
-                            </table>
-                        </div>
+                        <!-- 프로젝트 카드 그리드 -->
+                        <div class="projects-grid" id="projectsGrid" style="display: none;"></div>
 
                         <!-- 빈 상태 -->
                         <div class="empty-state" id="emptyState" style="display: none;">
@@ -419,11 +474,11 @@
 
                         async function loadMyProjects() {
                             const loading = document.getElementById('loading');
-                            const table = document.getElementById('projectsTable');
+                            const grid = document.getElementById('projectsGrid');
                             const empty = document.getElementById('emptyState');
 
                             loading.style.display = 'flex';
-                            table.style.display = 'none';
+                            grid.style.display = 'none';
                             empty.style.display = 'none';
 
                             try {
@@ -434,7 +489,7 @@
                                     allProjects = result.data;
                                     updateStats();
                                     renderProjects();
-                                    table.style.display = 'block';
+                                    grid.style.display = 'grid';
                                 } else {
                                     empty.style.display = 'block';
                                 }
@@ -460,7 +515,7 @@
                         }
 
                         function renderProjects() {
-                            const tbody = document.getElementById('projectsBody');
+                            const grid = document.getElementById('projectsGrid');
                             let filtered = allProjects;
 
                             if (currentFilter) {
@@ -468,41 +523,49 @@
                             }
 
                             if (filtered.length === 0) {
-                                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">해당 플랫폼의 작품이 없습니다.</td></tr>`;
+                                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #999;">해당 플랫폼의 작품이 없습니다.</div>`;
                                 return;
                             }
 
-                            tbody.innerHTML = filtered.map(p => {
+                            grid.innerHTML = filtered.map(p => {
                                 const thumbContent = p.thumbnail_url
-                                    ? `<img src="${p.thumbnail_url}" alt="${p.title}">`
+                                    ? `<img src="${p.thumbnail_url}" alt="${escapeHtml(p.title)}">`
                                     : `<i class="bi bi-${getPlatformIcon(p.platform)}"></i>`;
 
+                                const description = p.description || '설명이 없습니다.';
+
                                 return `
-                    <tr class="project-row">
-                        <td>
-                            <div class="project-thumb">${thumbContent}</div>
-                        </td>
-                        <td class="project-title-cell">
-                            <a href="/gallery/project/${p.id}">${escapeHtml(p.title)}</a>
-                        </td>
-                        <td>
-                            <span class="platform-badge ${p.platform}">${getPlatformName(p.platform)}</span>
-                        </td>
-                        <td>
-                            <span class="visibility-badge ${p.visibility}">${getVisibilityName(p.visibility)}</span>
-                        </td>
-                        <td>${formatNumber(p.view_count)}</td>
-                        <td>${formatNumber(p.like_count)}</td>
-                        <td>${formatDate(p.created_at)}</td>
-                        <td class="action-btns">
+                    <div class="project-card" onclick="window.location.href='/gallery/project/${p.id}'">
+                        <div class="project-card-thumb">
+                            ${thumbContent}
+                            <div class="play-overlay">
+                                <i class="bi bi-play-circle-fill"></i>
+                            </div>
+                        </div>
+                        <div class="project-card-body">
+                            <div class="project-card-header">
+                                <h3 class="project-card-title">${escapeHtml(p.title)}</h3>
+                                <span class="platform-badge ${p.platform}">${getPlatformName(p.platform)}</span>
+                            </div>
+                            <p class="project-card-description">${escapeHtml(description)}</p>
+                            <div class="project-card-meta">
+                                <div class="project-card-stats">
+                                    <span><i class="bi bi-eye"></i> ${formatNumber(p.view_count)}</span>
+                                    <span><i class="bi bi-heart-fill text-danger"></i> ${formatNumber(p.like_count)}</span>
+                                    <span><i class="bi bi-play-circle"></i> ${formatNumber(p.play_count)}</span>
+                                </div>
+                                <span class="visibility-badge ${p.visibility}">${getVisibilityName(p.visibility)}</span>
+                            </div>
+                        </div>
+                        <div class="project-card-footer" onclick="event.stopPropagation()">
                             <button class="btn btn-sm btn-outline-primary" onclick="openEdit(${p.id})">
-                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-pencil"></i> 수정
                             </button>
                             <button class="btn btn-sm btn-outline-danger" onclick="openDelete(${p.id})">
-                                <i class="bi bi-trash"></i>
+                                <i class="bi bi-trash"></i> 삭제
                             </button>
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
                 `;
                             }).join('');
                         }

@@ -1,0 +1,486 @@
+<style>
+    .gallery-container {
+        padding: 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .gallery-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .gallery-header h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+        color: #1d1d1f;
+    }
+
+    /* 통계 카드 */
+    .gallery-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        color: white;
+    }
+
+    .stat-card .value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-card .label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    /* 필터 탭 */
+    .gallery-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .gallery-tab {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: none;
+        color: #666;
+        font-weight: 500;
+        cursor: pointer;
+        position: relative;
+        transition: color 0.2s;
+    }
+
+    .gallery-tab:hover {
+        color: #667eea;
+    }
+
+    .gallery-tab.active {
+        color: #667eea;
+    }
+
+    .gallery-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 3px 3px 0 0;
+    }
+
+    /* 프로젝트 카드 그리드 */
+    .gallery-projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .gallery-project-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .gallery-project-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .gallery-project-thumb {
+        width: 100%;
+        height: 180px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .gallery-project-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .gallery-project-thumb .play-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .gallery-project-card:hover .play-overlay {
+        opacity: 1;
+    }
+
+    .play-overlay i {
+        font-size: 3rem;
+        color: white;
+    }
+
+    .gallery-project-info {
+        padding: 1rem;
+    }
+
+    .gallery-project-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .gallery-project-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: #999;
+    }
+
+    .gallery-project-stats {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .gallery-project-stats span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .platform-badge {
+        padding: 3px 8px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: white;
+    }
+
+    .platform-badge.entry {
+        background: #00c4b4;
+    }
+
+    .platform-badge.scratch {
+        background: #ff9a00;
+    }
+
+    .platform-badge.python {
+        background: #306998;
+    }
+
+    /* 빈 상태 */
+    .gallery-empty {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+    }
+
+    .gallery-empty i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* 플레이어 모달 */
+    .player-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .player-modal.active {
+        display: flex;
+    }
+
+    .player-modal-content {
+        background: white;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 1200px;
+        max-height: 90vh;
+        overflow: auto;
+        position: relative;
+    }
+
+    .player-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .player-modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .player-modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+        padding: 0.5rem;
+    }
+
+    .player-modal-body {
+        padding: 0;
+    }
+
+    .player-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 75%;
+        background: #1a1a2e;
+    }
+
+    .player-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+</style>
+
+<div class="gallery-container">
+    <div class="gallery-header">
+        <h2><i class="bi bi-grid-fill"></i> 내 갤러리</h2>
+        <a href="/gallery/share" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> 작품 공유
+        </a>
+    </div>
+
+    <!-- 통계 -->
+    <div class="gallery-stats">
+        <div class="stat-card">
+            <div class="value" id="totalProjects">0</div>
+            <div class="label">공유한 작품</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="totalViews">0</div>
+            <div class="label">총 조회수</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="totalLikes">0</div>
+            <div class="label">총 좋아요</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="totalPlays">0</div>
+            <div class="label">총 실행수</div>
+        </div>
+    </div>
+
+    <!-- 탭 -->
+    <div class="gallery-tabs">
+        <button class="gallery-tab active" data-filter="">전체</button>
+        <button class="gallery-tab" data-filter="entry">엔트리</button>
+        <button class="gallery-tab" data-filter="scratch">스크래치</button>
+        <button class="gallery-tab" data-filter="python">파이썬</button>
+    </div>
+
+    <!-- 프로젝트 그리드 -->
+    <div class="gallery-projects-grid" id="galleryProjectsGrid"></div>
+
+    <!-- 빈 상태 -->
+    <div class="gallery-empty" id="galleryEmpty" style="display: none;">
+        <i class="bi bi-folder2-open"></i>
+        <h4>아직 공유한 작품이 없어요</h4>
+        <p>첫 번째 작품을 갤러리에 공유해보세요!</p>
+    </div>
+</div>
+
+<!-- 플레이어 모달 -->
+<div class="player-modal" id="playerModal">
+    <div class="player-modal-content">
+        <div class="player-modal-header">
+            <h3 class="player-modal-title" id="playerTitle">프로젝트 재생</h3>
+            <button class="player-modal-close" onclick="closePlayer()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="player-modal-body">
+            <div class="player-wrapper">
+                <iframe id="playerIframe" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allGalleryProjects = [];
+    let currentFilter = '';
+
+    // 페이지 로드 시 프로젝트 로드
+    document.addEventListener('DOMContentLoaded', () => {
+        loadGalleryProjects();
+        setupGalleryTabs();
+    });
+
+    function setupGalleryTabs() {
+        document.querySelectorAll('.gallery-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.gallery-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentFilter = tab.dataset.filter;
+                renderGalleryProjects();
+            });
+        });
+    }
+
+    async function loadGalleryProjects() {
+        try {
+            const response = await fetch('/api/gallery/my?limit=100');
+            const result = await response.json();
+
+            if (result.success && result.data.length > 0) {
+                allGalleryProjects = result.data;
+                updateGalleryStats();
+                renderGalleryProjects();
+            } else {
+                document.getElementById('galleryEmpty').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('갤러리 로드 오류:', error);
+            document.getElementById('galleryEmpty').style.display = 'block';
+        }
+    }
+
+    function updateGalleryStats() {
+        document.getElementById('totalProjects').textContent = allGalleryProjects.length;
+        document.getElementById('totalViews').textContent = formatNumber(
+            allGalleryProjects.reduce((sum, p) => sum + (p.view_count || 0), 0)
+        );
+        document.getElementById('totalLikes').textContent = formatNumber(
+            allGalleryProjects.reduce((sum, p) => sum + (p.like_count || 0), 0)
+        );
+        document.getElementById('totalPlays').textContent = formatNumber(
+            allGalleryProjects.reduce((sum, p) => sum + (p.play_count || 0), 0)
+        );
+    }
+
+    function renderGalleryProjects() {
+        const grid = document.getElementById('galleryProjectsGrid');
+        let filtered = allGalleryProjects;
+
+        if (currentFilter) {
+            filtered = allGalleryProjects.filter(p => p.platform === currentFilter);
+        }
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '';
+            document.getElementById('galleryEmpty').style.display = 'block';
+            return;
+        }
+
+        document.getElementById('galleryEmpty').style.display = 'none';
+
+        grid.innerHTML = filtered.map(p => {
+            const thumbContent = p.thumbnail_url
+                ? `<img src="${p.thumbnail_url}" alt="${escapeHtml(p.title)}">`
+                : `<i class="bi bi-${getPlatformIcon(p.platform)}"></i>`;
+
+            return `
+                <div class="gallery-project-card" onclick="playProject(${p.id}, '${escapeHtml(p.title)}', '${p.embed_url}')">
+                    <div class="gallery-project-thumb">
+                        ${thumbContent}
+                        <div class="play-overlay">
+                            <i class="bi bi-play-circle-fill"></i>
+                        </div>
+                    </div>
+                    <div class="gallery-project-info">
+                        <div class="gallery-project-title">${escapeHtml(p.title)}</div>
+                        <div class="gallery-project-meta">
+                            <div class="gallery-project-stats">
+                                <span><i class="bi bi-eye"></i> ${formatNumber(p.view_count)}</span>
+                                <span><i class="bi bi-heart-fill text-danger"></i> ${formatNumber(p.like_count)}</span>
+                            </div>
+                            <span class="platform-badge ${p.platform}">${getPlatformName(p.platform)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function playProject(id, title, embedUrl) {
+        document.getElementById('playerTitle').textContent = title;
+        document.getElementById('playerIframe').src = embedUrl;
+        document.getElementById('playerModal').classList.add('active');
+
+        // 플레이 횟수 기록
+        fetch(`/api/gallery/projects/${id}/play`, { method: 'POST' }).catch(console.error);
+    }
+
+    function closePlayer() {
+        document.getElementById('playerModal').classList.remove('active');
+        document.getElementById('playerIframe').src = '';
+    }
+
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('playerModal').addEventListener('click', (e) => {
+        if (e.target.id === 'playerModal') {
+            closePlayer();
+        }
+    });
+
+    function getPlatformIcon(platform) {
+        const icons = { entry: 'box-fill', scratch: 'puzzle-fill', python: 'code-slash' };
+        return icons[platform] || 'file-code';
+    }
+
+    function getPlatformName(platform) {
+        const names = { entry: '엔트리', scratch: '스크래치', python: '파이썬' };
+        return names[platform] || platform;
+    }
+
+    function formatNumber(num) {
+        return (num || 0).toLocaleString();
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+</script>

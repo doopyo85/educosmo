@@ -114,7 +114,7 @@
     <% let baseUrl='/my-universe' ; let isStudentView=false; /* Check if we are viewing another student's universe */ if
         (locals.student && locals.student.id && locals.student.userID !==locals.userID) {
         baseUrl='/my-universe/student/' + locals.student.id; isStudentView=true; } const currentTab=locals.activeTab
-        || '' ; const galleryUrl=isStudentView ? ('/gallery?userId=' + locals.student.userID) : ' /gallery/my'; const
+        || '' ; const galleryUrl=isStudentView ? ('/gallery?userId=' + locals.student.userID) : (baseUrl + '/gallery'); const
         observatoryUrl=baseUrl + '/observatory' ; const timelineUrl=isStudentView ? baseUrl : (baseUrl + '/timeline' );
         %>
 

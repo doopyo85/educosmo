@@ -215,6 +215,34 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
             console.log(`✅ 병렬 저장 완료: PS#${result.projectSubmissionId}, UF#${result.userFileId}`);
         }
 
+        // 🎨 자동 갤러리 등록 (submitted만)
+        let galleryResult = null;
+        if (actualSaveType === 'submitted' && result.projectSubmissionId) {
+            const galleryManager = require('../lib_storage/galleryManager');
+
+            // Scratch 분석 데이터 추출
+            const analysis = {
+                blocks_count: projectData.blocks_count || 0,
+                sprites_count: projectData.sprites_count || 0,
+                complexity: projectData.complexity || 'simple'
+            };
+
+            galleryResult = await galleryManager.autoRegisterToGallery({
+                userId,
+                userID,
+                platform: 'scratch',
+                projectName,
+                s3Url,
+                thumbnailUrl,
+                analysis,
+                projectSubmissionId: result.projectSubmissionId
+            });
+
+            if (galleryResult.isNew) {
+                console.log('✨ [Scratch] 갤러리 자동 등록 완료: Gallery#', galleryResult.galleryProjectId);
+            }
+        }
+
         res.json({
             success: true,
             projectId: result.projectSubmissionId,
@@ -223,6 +251,8 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
             fileName: fileName,
             s3Url: s3Url,
             thumbnailUrl: thumbnailUrl,
+            galleryProjectId: galleryResult ? galleryResult.galleryProjectId : null,
+            autoRegisteredToGallery: galleryResult ? galleryResult.isNew : false,
             message: isUpdate ? '프로젝트가 업데이트되었습니다.' : '프로젝트가 저장되었습니다.'
         });
 

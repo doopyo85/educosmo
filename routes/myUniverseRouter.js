@@ -492,6 +492,24 @@ router.get('/timeline', async (req, res) => {
 });
 
 // ============================================
+// Gallery Tab
+// ============================================
+router.get('/gallery', (req, res) => {
+    // Basic auth check
+    if (!req.session.is_logined) {
+        return res.redirect('/auth/login');
+    }
+
+    res.render('my-universe/index', {
+        activeTab: 'gallery',
+        userID: req.session.userID,
+        userRole: req.session.role,
+        is_logined: req.session.is_logined,
+        centerID: req.session.centerID
+    });
+});
+
+// ============================================
 // Observatory Tab
 // ============================================
 router.get('/observatory', (req, res) => {

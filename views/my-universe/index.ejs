@@ -50,13 +50,15 @@
                 <div class="board-main-content">
                     <% if (activeTab==='timeline' ) { %>
                         <%- include('./timeline') %>
-                            <% } else if (activeTab==='observatory' ) { %>
-                                <%- include('./observatory') %>
-                                    <% } else if (activeTab==='problems' ) { %>
-                                        <%- include('./problems') %>
-                                            <% } else { %>
-                                                <div class="alert alert-info">준비 중인 기능입니다.</div>
-                                                <% } %>
+                            <% } else if (activeTab==='gallery' ) { %>
+                                <%- include('./gallery') %>
+                                    <% } else if (activeTab==='observatory' ) { %>
+                                        <%- include('./observatory') %>
+                                            <% } else if (activeTab==='problems' ) { %>
+                                                <%- include('./problems') %>
+                                                    <% } else { %>
+                                                        <div class="alert alert-info">준비 중인 기능입니다.</div>
+                                                        <% } %>
                 </div>
         </div>
 

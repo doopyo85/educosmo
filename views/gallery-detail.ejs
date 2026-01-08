@@ -36,17 +36,24 @@
             color: #667eea;
         }
         
-        /* 메인 레이아웃 */
+        /* 메인 레이아웃 - 블로그 스타일 */
         .project-layout {
             display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 1.5rem;
+            grid-template-columns: minmax(0, 800px);
+            justify-content: center;
+            gap: 2rem;
         }
-        
+
         @media (max-width: 992px) {
             .project-layout {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* 블로그 스타일 컨테이너 */
+        .blog-style-container {
+            max-width: 800px;
+            margin: 0 auto;
         }
         
         /* 플레이어 영역 */
@@ -101,23 +108,24 @@
             border-radius: 20px;
         }
         
-        /* 프로젝트 정보 */
+        /* 프로젝트 정보 - 블로그 스타일 */
         .project-info-section {
-            padding: 1.5rem;
+            padding: 2rem;
         }
-        
+
         .project-title-row {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
-        
+
         .project-title {
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: 700;
-            color: #333;
+            color: #1d1d1f;
             margin: 0;
+            line-height: 1.3;
         }
         
         .platform-badge {
@@ -147,9 +155,11 @@
         }
         
         .project-description {
-            color: #555;
-            line-height: 1.7;
-            margin-bottom: 1rem;
+            color: #424245;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+            white-space: pre-wrap;
         }
         
         .project-tags {
@@ -166,25 +176,32 @@
             font-size: 0.85rem;
         }
         
-        /* 사이드바 */
-        .sidebar {
+        /* 작성자 & 액션 - 블로그 스타일 인라인 */
+        .author-action-section {
             display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 2rem;
         }
-        
-        .sidebar-card {
-            background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+
+        .author-inline {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
-        
-        .sidebar-card h5 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #333;
+
+        .action-inline {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .action-inline .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
         }
         
         /* 작성자 정보 */
@@ -378,88 +395,77 @@
             <a href="/gallery" class="btn btn-primary mt-3">갤러리로 돌아가기</a>
         </div>
         
-        <!-- 메인 레이아웃 -->
-        <div class="project-layout" id="projectLayout" style="display: none;">
-            <!-- 왼쪽: 플레이어 -->
-            <div class="player-section">
-                <div class="player-wrapper">
-                    <div class="player-loading" id="playerLoading">
-                        <div class="spinner-border" role="status"></div>
-                        <p>프로젝트를 실행하는 중...</p>
-                    </div>
-                    <iframe id="projectPlayer" allowfullscreen></iframe>
-                </div>
-                
-                <div class="player-controls">
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="restartProject()">
-                            <i class="bi bi-arrow-clockwise"></i> 다시 시작
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleFullscreen()">
-                            <i class="bi bi-arrows-fullscreen"></i> 전체화면
-                        </button>
-                    </div>
-                    <span class="text-muted" id="playCount">
-                        <i class="bi bi-play-circle"></i> <span>0</span>회 실행
-                    </span>
-                </div>
-                
-                <!-- 프로젝트 정보 -->
+        <!-- 메인 레이아웃 - 블로그 스타일 -->
+        <div class="project-layout blog-style-container" id="projectLayout" style="display: none;">
+            <div>
+                <!-- 제목 & 메타 정보 -->
                 <div class="project-info-section">
                     <div class="project-title-row">
-                        <h1 class="project-title" id="projectTitle">프로젝트 제목</h1>
-                        <span class="platform-badge" id="platformBadge">플랫폼</span>
-                    </div>
-                    
-                    <div class="project-stats-row">
-                        <span><i class="bi bi-eye"></i> <span id="viewCount">0</span> 조회</span>
-                        <span><i class="bi bi-heart-fill text-danger"></i> <span id="likeCount">0</span> 좋아요</span>
-                        <span><i class="bi bi-calendar3"></i> <span id="createdAt">-</span></span>
-                    </div>
-                    
-                    <p class="project-description" id="projectDescription">설명이 없습니다.</p>
-                    
-                    <div class="project-tags" id="projectTags"></div>
-                </div>
-            </div>
-            
-            <!-- 오른쪽: 사이드바 -->
-            <div class="sidebar">
-                <!-- 작성자 정보 -->
-                <div class="sidebar-card">
-                    <h5><i class="bi bi-person-fill"></i> 만든 사람</h5>
-                    <div class="author-card">
-                        <div class="author-avatar" id="authorAvatar">?</div>
-                        <div class="author-info">
-                            <h6 id="authorName">-</h6>
-                            <p id="authorId">@-</p>
-                            <a href="#" id="authorLink">작품 더 보기 →</a>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <h1 class="project-title" id="projectTitle">프로젝트 제목</h1>
+                            <span class="platform-badge" id="platformBadge">플랫폼</span>
+                        </div>
+                        <div class="project-stats-row">
+                            <span><i class="bi bi-eye"></i> <span id="viewCount">0</span> 조회</span>
+                            <span><i class="bi bi-heart-fill text-danger"></i> <span id="likeCount">0</span> 좋아요</span>
+                            <span><i class="bi bi-play-circle"></i> <span id="playCountTop">0</span> 실행</span>
+                            <span><i class="bi bi-calendar3"></i> <span id="createdAt">-</span></span>
                         </div>
                     </div>
-                </div>
-                
-                <!-- 액션 버튼 -->
-                <div class="sidebar-card">
-                    <div class="action-buttons">
-                        <button class="btn btn-like" id="likeBtn" onclick="toggleLike()">
-                            <i class="bi bi-heart"></i> 좋아요
-                        </button>
-                        <button class="btn btn-share" onclick="shareProject()">
-                            <i class="bi bi-share"></i> 공유하기
-                        </button>
-                        <% if (is_logined) { %>
-                        <button class="btn btn-outline-secondary" id="editBtn" style="display: none;" onclick="editProject()">
-                            <i class="bi bi-pencil"></i> 수정하기
-                        </button>
-                        <% } %>
+
+                    <!-- 작성자 & 액션 버튼 -->
+                    <div class="author-action-section">
+                        <div class="author-inline">
+                            <div class="author-avatar" id="authorAvatar">?</div>
+                            <div class="author-info">
+                                <h6 id="authorName" style="margin: 0; font-size: 1rem; font-weight: 600;">-</h6>
+                                <p id="authorId" style="margin: 0; font-size: 0.85rem; color: #666;">@-</p>
+                            </div>
+                        </div>
+                        <div class="action-inline">
+                            <button class="btn btn-outline-danger" id="likeBtn" onclick="toggleLike()">
+                                <i class="bi bi-heart"></i> <span id="likeBtnText">좋아요</span>
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="shareProject()">
+                                <i class="bi bi-share"></i> 공유
+                            </button>
+                            <% if (is_logined) { %>
+                            <button class="btn btn-outline-secondary" id="editBtn" style="display: none;" onclick="editProject()">
+                                <i class="bi bi-pencil"></i> 수정
+                            </button>
+                            <% } %>
+                        </div>
                     </div>
+
+                    <!-- 프로젝트 설명 -->
+                    <p class="project-description" id="projectDescription">설명이 없습니다.</p>
+
+                    <!-- 태그 -->
+                    <div class="project-tags" id="projectTags" style="margin-bottom: 2rem;"></div>
                 </div>
-                
-                <!-- 관련 작품 -->
-                <div class="sidebar-card">
-                    <h5><i class="bi bi-collection"></i> 관련 작품</h5>
-                    <div class="related-projects" id="relatedProjects">
-                        <p class="text-muted text-center">불러오는 중...</p>
+
+                <!-- 플레이어 -->
+                <div class="player-section">
+                    <div class="player-wrapper">
+                        <div class="player-loading" id="playerLoading">
+                            <div class="spinner-border" role="status"></div>
+                            <p>프로젝트를 실행하는 중...</p>
+                        </div>
+                        <iframe id="projectPlayer" allowfullscreen></iframe>
+                    </div>
+
+                    <div class="player-controls">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="restartProject()">
+                                <i class="bi bi-arrow-clockwise"></i> 다시 시작
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleFullscreen()">
+                                <i class="bi bi-arrows-fullscreen"></i> 전체화면
+                            </button>
+                        </div>
+                        <span class="text-muted" id="playCount">
+                            <i class="bi bi-play-circle"></i> <span>0</span>회 실행
+                        </span>
                     </div>
                 </div>
             </div>
@@ -552,6 +558,7 @@
             document.getElementById('viewCount').textContent = formatNumber(p.view_count);
             document.getElementById('likeCount').textContent = formatNumber(p.like_count);
             document.getElementById('playCount').querySelector('span').textContent = formatNumber(p.play_count);
+            document.getElementById('playCountTop').textContent = formatNumber(p.play_count);
             document.getElementById('createdAt').textContent = formatDate(p.created_at);
             
             // 설명
@@ -665,12 +672,15 @@
         // 좋아요 버튼 업데이트
         function updateLikeButton() {
             const btn = document.getElementById('likeBtn');
+            const btnText = document.getElementById('likeBtnText');
             if (isLiked) {
-                btn.classList.add('liked');
-                btn.innerHTML = '<i class="bi bi-heart-fill"></i> 좋아요 취소';
+                btn.classList.remove('btn-outline-danger');
+                btn.classList.add('btn-danger');
+                btn.innerHTML = '<i class="bi bi-heart-fill"></i> <span id="likeBtnText">좋아요 취소</span>';
             } else {
-                btn.classList.remove('liked');
-                btn.innerHTML = '<i class="bi bi-heart"></i> 좋아요';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-outline-danger');
+                btn.innerHTML = '<i class="bi bi-heart"></i> <span id="likeBtnText">좋아요</span>';
             }
         }
         
