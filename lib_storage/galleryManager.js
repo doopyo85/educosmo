@@ -47,18 +47,21 @@ async function autoRegisterToGallery({
         // Generate embed URL
         const embedUrl = generateEmbedUrl(platform, s3Url);
 
-        // Prepare metadata
+        // Prepare metadata (support both camelCase and snake_case)
+        const blocksCount = analysis.blocks_count || analysis.blocksCount || 0;
+        const spritesCount = analysis.sprites_count || analysis.spritesCount || 0;
+
         const metadata = {
-            blocks_count: analysis.blocks_count || 0,
-            sprites_count: analysis.sprites_count || 0,
+            blocks_count: blocksCount,
+            sprites_count: spritesCount,
             complexity: analysis.complexity || 'simple',
             ...analysis
         };
 
         // Default description based on analysis
         let description = `${platform === 'entry' ? '엔트리' : platform === 'scratch' ? '스크래치' : '파이썬'}로 만든 작품입니다.`;
-        if (metadata.blocks_count > 0) {
-            description += ` (블록 수: ${metadata.blocks_count}개)`;
+        if (blocksCount > 0) {
+            description += ` (블록 수: ${blocksCount}개)`;
         }
 
         // Insert into gallery_projects

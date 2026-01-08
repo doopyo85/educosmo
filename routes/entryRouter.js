@@ -480,7 +480,23 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
 
         // 8. 🎨 자동 갤러리 등록 (submitted만)
         let galleryResult = null;
+        console.log(`🔍 [Entry] 갤러리 자동 등록 체크:`, {
+            actualSaveType,
+            hasProjectSubmissionId: !!result.projectSubmissionId,
+            projectSubmissionId: result.projectSubmissionId
+        });
+
         if (actualSaveType === 'submitted' && result.projectSubmissionId) {
+            console.log(`📤 [Entry] 갤러리 자동 등록 시작:`, {
+                userId,
+                userID,
+                platform: 'entry',
+                projectName,
+                s3Url,
+                thumbnailUrl,
+                analysis
+            });
+
             const galleryManager = require('../lib_storage/galleryManager');
             galleryResult = await galleryManager.autoRegisterToGallery({
                 userId,
@@ -493,9 +509,15 @@ router.post('/api/save-project', authenticateUser, async (req, res) => {
                 projectSubmissionId: result.projectSubmissionId
             });
 
+            console.log(`🎨 [Entry] 갤러리 자동 등록 결과:`, galleryResult);
+
             if (galleryResult.isNew) {
                 console.log('✨ [Entry] 갤러리 자동 등록 완료: Gallery#', galleryResult.galleryProjectId);
+            } else {
+                console.log('ℹ️ [Entry] 갤러리 등록 스킵:', galleryResult.error || '이미 등록됨');
             }
+        } else {
+            console.log('⏭️ [Entry] 갤러리 자동 등록 조건 미충족');
         }
 
         res.json({
