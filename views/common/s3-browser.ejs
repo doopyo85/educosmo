@@ -120,12 +120,6 @@
                     enableUpload: enableUpload,  // 🔥 역할별 업로드 권한
                     enableDelete: <%= enableDelete %>,
                     enablePreview: true,
-                    onFolderOpen: function (path) {
-                        console.log('📂 폴더 열림:', path);
-                    },
-                    onFileSelect: function (file) {
-                        console.log('📄 파일 선택:', file);
-                    },
                     onError: function (error) {
                         console.error('❌ 오류 발생:', error);
                         showModalNotification('오류가 발생했습니다: ' + error.message, 'danger');
