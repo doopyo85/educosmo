@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>센터 가입 - 코딩앤플레이</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo img {
+            width: 80px;
+            height: auto;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            background: #f0f0f0;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #999;
+            position: relative;
+        }
+
+        .step.active {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .step.completed {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        input[type="tel"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+        }
+
+        .input-group button {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .input-group button:hover {
+            background: #5568d3;
+        }
+
+        .input-group button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .verification-status {
+            font-size: 12px;
+            margin-top: 5px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .verification-status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .verification-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="/resource/logo.png" alt="코딩앤플레이 로고">
+        </div>
+
+        <h2>센터 가입</h2>
+        <p class="subtitle">새로운 센터를 등록하고 학생들을 관리하세요</p>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step" id="step1">1. 기본 정보</div>
+            <div class="step" id="step2">2. 본인 인증</div>
+            <div class="step" id="step3">3. 완료</div>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Step 1: Basic Info -->
+        <form id="step1Form" class="step-form">
+            <div class="form-group">
+                <label>아이디 <span class="required">*</span></label>
+                <div class="input-group">
+                    <input type="text" name="userID" id="userID" placeholder="4~20자 영문, 숫자" required>
+                    <button type="button" id="checkUserIDBtn">중복확인</button>
+                </div>
+                <span id="userIDStatus" class="help-text"></span>
+            </div>
+
+            <div class="form-group">
+                <label>비밀번호 <span class="required">*</span></label>
+                <input type="password" name="password" id="password" placeholder="8자 이상" required>
+            </div>
+
+            <div class="form-group">
+                <label>비밀번호 확인 <span class="required">*</span></label>
+                <input type="password" name="passwordConfirm" id="passwordConfirm" placeholder="비밀번호 재입력" required>
+                <span id="passwordStatus" class="help-text"></span>
+            </div>
+
+            <div class="form-group">
+                <label>이름 <span class="required">*</span></label>
+                <input type="text" name="name" id="name" placeholder="홍길동" required>
+            </div>
+
+            <div class="form-group">
+                <label>이메일 <span class="required">*</span></label>
+                <input type="email" name="email" id="email" placeholder="example@domain.com" required>
+                <p class="help-text">비밀번호 찾기 및 알림 수신에 사용됩니다</p>
+            </div>
+
+            <div class="form-group">
+                <label>센터명 <span class="required">*</span></label>
+                <input type="text" name="centerName" id="centerName" placeholder="○○ 코딩학원" required>
+                <p class="help-text">등록하실 센터/학원/기관의 이름을 입력하세요</p>
+            </div>
+
+            <div class="form-group">
+                <label>역할 <span class="required">*</span></label>
+                <select name="role" id="role" required>
+                    <option value="manager">센터장</option>
+                    <option value="teacher">강사</option>
+                    <option value="kinder">유치원</option>
+                    <option value="school">학교(기관)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-primary" id="step1NextBtn">다음 단계</button>
+        </form>
+
+        <!-- Step 2: Phone Verification -->
+        <form id="step2Form" class="step-form hidden">
+            <div class="form-group">
+                <label>휴대폰 번호 <span class="required">*</span></label>
+                <div class="input-group">
+                    <input type="tel" name="phone" id="phone" placeholder="010-1234-5678" required>
+                    <button type="button" id="sendSMSBtn">인증번호 전송</button>
+                </div>
+                <p class="help-text">'-' 없이 숫자만 입력하세요</p>
+            </div>
+
+            <div class="form-group hidden" id="verificationCodeGroup">
+                <label>인증번호 <span class="required">*</span></label>
+                <div class="input-group">
+                    <input type="text" name="verificationCode" id="verificationCode" placeholder="6자리 숫자" maxlength="6">
+                    <button type="button" id="verifyCodeBtn">인증 확인</button>
+                </div>
+                <span id="verificationStatus" class="help-text"></span>
+            </div>
+
+            <button type="button" class="btn-primary" id="step2BackBtn" style="background: #999; margin-bottom: 10px;">이전 단계</button>
+            <button type="submit" class="btn-primary" id="step2NextBtn" disabled>가입 완료</button>
+        </form>
+
+        <!-- Step 3: Complete -->
+        <div id="step3Form" class="step-form hidden">
+            <div class="alert alert-success">
+                <strong>🎉 가입 완료!</strong><br>
+                센터 등록이 완료되었습니다. 지금 바로 로그인하여 학생들을 관리해보세요!
+            </div>
+            <button type="button" class="btn-primary" onclick="window.location.href='/auth/login'">로그인하기</button>
+        </div>
+
+        <div class="back-link">
+            <a href="/auth/login">← 로그인 페이지로 돌아가기</a>
+        </div>
+    </div>
+
+    <script src="/js/auth/register-center.js"></script>
+</body>
+</html>

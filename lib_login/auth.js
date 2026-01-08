@@ -447,4 +447,151 @@ router.post('/register', async (req, res) => {
     }
 });
 
+// ========================================
+// 센터 가입 관련 라우트
+// ========================================
+
+const verificationService = require('../lib_auth/verificationService');
+const { sendCenterWelcomeEmail } = require('../lib_auth/emailService');
+
+// 센터 가입 페이지 렌더링
+router.get('/register-center', (req, res) => {
+    res.render('auth/register-center');
+});
+
+// 아이디 중복 확인 API
+router.post('/api/check-userid', async (req, res) => {
+    try {
+        const { userID } = req.body;
+
+        if (!userID || userID.trim() === '') {
+            return res.json({ available: false, message: '아이디를 입력하세요' });
+        }
+
+        const existingUser = await queryDatabase('SELECT id FROM Users WHERE userID = ?', [userID]);
+
+        res.json({ available: existingUser.length === 0 });
+    } catch (error) {
+        console.error('Check userID error:', error);
+        res.status(500).json({ available: false, message: '확인 중 오류가 발생했습니다' });
+    }
+});
+
+// SMS 인증 코드 발송 API
+router.post('/api/send-sms-verification', async (req, res) => {
+    try {
+        const { phone, purpose } = req.body;
+
+        const result = await verificationService.sendPhoneVerification(phone, purpose || 'register');
+        res.json(result);
+    } catch (error) {
+        console.error('Send SMS verification error:', error);
+        res.status(500).json({ success: false, message: '인증 코드 발송 중 오류가 발생했습니다' });
+    }
+});
+
+// 이메일 인증 코드 발송 API
+router.post('/api/send-email-verification', async (req, res) => {
+    try {
+        const { email, purpose } = req.body;
+
+        const result = await verificationService.sendEmailVerification(email, purpose || 'register');
+        res.json(result);
+    } catch (error) {
+        console.error('Send email verification error:', error);
+        res.status(500).json({ success: false, message: '인증 코드 발송 중 오류가 발생했습니다' });
+    }
+});
+
+// 인증 코드 확인 API
+router.post('/api/verify-code', async (req, res) => {
+    try {
+        const { contact, contactType, code, purpose } = req.body;
+
+        const result = await verificationService.verifyCode(contact, contactType, code, purpose);
+        res.json(result);
+    } catch (error) {
+        console.error('Verify code error:', error);
+        res.status(500).json({ success: false, message: '인증 확인 중 오류가 발생했습니다' });
+    }
+});
+
+// 센터 가입 처리
+router.post('/register-center', async (req, res) => {
+    try {
+        const { userID, password, name, email, centerName, role, phone } = req.body;
+
+        // 필수 필드 검증
+        if (!userID || !password || !name || !email || !centerName || !role || !phone) {
+            return res.status(400).json({ success: false, message: '모든 필수 항목을 입력해주세요' });
+        }
+
+        // 휴대폰 인증 확인
+        const phoneVerified = await verificationService.isVerified(phone, 'phone', 'register');
+        if (!phoneVerified) {
+            return res.status(400).json({ success: false, message: '휴대폰 인증이 완료되지 않았습니다' });
+        }
+
+        // 아이디 중복 체크
+        const existingUser = await queryDatabase('SELECT id FROM Users WHERE userID = ?', [userID]);
+        if (existingUser.length > 0) {
+            return res.status(400).json({ success: false, message: '이미 사용 중인 아이디입니다' });
+        }
+
+        // 이메일 중복 체크
+        const existingEmail = await queryDatabase('SELECT id FROM Users WHERE email = ?', [email]);
+        if (existingEmail.length > 0) {
+            return res.status(400).json({ success: false, message: '이미 사용 중인 이메일입니다' });
+        }
+
+        // 역할 검증
+        const allowedRoles = ['manager', 'teacher', 'kinder', 'school'];
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({ success: false, message: '유효하지 않은 역할입니다' });
+        }
+
+        // 1. 새 센터 생성 (Centers 테이블에 추가)
+        const centerResult = await queryDatabase(`
+            INSERT INTO Centers (center_name, contact_name, contact_phone, contact_email, status)
+            VALUES (?, ?, ?, ?, 'ACTIVE')
+        `, [centerName, name, phone, email]);
+
+        const newCenterID = centerResult.insertId;
+
+        // 2. 사용자 생성
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await queryDatabase(`
+            INSERT INTO Users (userID, password, email, name, phone, role, centerID)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [userID, hashedPassword, email, name, phone, role, newCenterID]);
+
+        // 3. CenterStorageUsage 초기화
+        await queryDatabase(`
+            INSERT INTO CenterStorageUsage (center_id, plan_type, storage_limit, total_usage, object_count)
+            VALUES (?, 'free', 10737418240, 0, 0)
+        `, [newCenterID]);
+
+        // 4. 가입 환영 이메일 발송
+        try {
+            await sendCenterWelcomeEmail(email, centerName, userID);
+        } catch (emailError) {
+            console.error('Welcome email send error:', emailError);
+            // 이메일 실패해도 가입은 성공 처리
+        }
+
+        // 5. Google Sheets에 센터 추가 (선택 사항 - 수동으로 관리할 수도 있음)
+        console.log(`새 센터 등록 완료: [${newCenterID}] ${centerName}`);
+
+        res.json({
+            success: true,
+            message: '센터 가입이 완료되었습니다',
+            centerID: newCenterID
+        });
+
+    } catch (error) {
+        console.error('Center registration error:', error);
+        res.status(500).json({ success: false, message: '가입 처리 중 오류가 발생했습니다' });
+    }
+});
+
 module.exports = router;

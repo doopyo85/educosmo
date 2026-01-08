@@ -1,5 +1,6 @@
 const db = require('../lib_login/db');
 const { sendVerificationEmail } = require('./emailService');
+const smsService = require('./smsService');
 
 /**
  * 6자리 랜덤 인증 코드 생성
@@ -67,25 +68,37 @@ async function sendEmailVerification(email, purpose = 'register') {
 }
 
 /**
- * SMS 인증 코드 발송 (추후 SMS API 연동)
+ * SMS 인증 코드 발송 (NCP SMS 연동)
  * @param {string} phone - 수신자 전화번호
- * @param {string} purpose - 'phone_verify' 등
- * @returns {Promise<{success: boolean, message: string}>}
+ * @param {string} purpose - 'phone_verify', 'register', 'reset_password'
+ * @returns {Promise<{success: boolean, message: string, code?: string}>}
  */
 async function sendPhoneVerification(phone, purpose = 'phone_verify') {
   try {
-    const code = await createVerificationCode(phone, 'phone', purpose);
+    // 전화번호 형식 검증 및 정규화
+    const normalizedPhone = smsService.formatPhoneNumber(phone);
+    if (!normalizedPhone) {
+      return {
+        success: false,
+        message: '유효하지 않은 전화번호 형식입니다.'
+      };
+    }
 
-    // TODO: SMS API 연동 (CoolSMS, NCP, Aligo 등)
-    // 현재는 코드만 생성하고 콘솔에 출력
-    console.log(`📱 SMS 인증 코드 (${phone}): ${code}`);
+    // 인증 코드 생성 및 DB 저장
+    const code = await createVerificationCode(normalizedPhone, 'phone', purpose);
 
-    // SMS API 연동 전까지는 성공으로 처리
-    return {
-      success: true,
-      message: '인증 코드가 발송되었습니다. (10분간 유효)',
-      code: code  // 개발 중에만 반환 (프로덕션에서는 제거)
-    };
+    // NCP SMS 발송
+    const result = await smsService.sendVerificationSMS(normalizedPhone, code, purpose);
+
+    // 개발 모드에서만 코드 반환
+    if (process.env.NODE_ENV !== 'production' && result.success) {
+      return {
+        ...result,
+        code: code  // 개발 중에만 반환
+      };
+    }
+
+    return result;
   } catch (error) {
     console.error('Phone verification error:', error);
     return {
