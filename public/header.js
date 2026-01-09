@@ -1,5 +1,12 @@
 // header.js
 document.addEventListener("DOMContentLoaded", function () {
+    // 중복 초기화 방지
+    if (window.headerInitialized) {
+        console.warn('Header already initialized, skipping duplicate initialization');
+        return;
+    }
+    window.headerInitialized = true;
+
     // 현재 사용자 정보 가져오기
     const currentUserID = document.getElementById('currentUserID')?.value || '게스트';
     const currentUserRole = document.getElementById('currentUserRole')?.value || 'guest';

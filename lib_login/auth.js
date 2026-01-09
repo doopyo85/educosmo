@@ -274,7 +274,7 @@ router.get('/register', async (req, res) => {
         const html = template.HTML(title, `
             <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">회원정보를 입력하세요</h2>
             <form id="registerForm">
-                <input class="login" type="text" name="userID" placeholder="아이디" required>
+                <input class="login" type="text" name="userID" id="userID" placeholder="아이디 (공백 불가)" required pattern="\\S+" title="아이디에 공백을 포함할 수 없습니다">
                 <input class="login" type="password" name="password" placeholder="비밀번호" required>
                 <input class="login" type="email" name="email" placeholder="이메일">
                 <input class="login" type="text" name="name" placeholder="이름" required>
@@ -346,9 +346,19 @@ router.get('/register', async (req, res) => {
                 </div>
             </div>
             <script>
+                // 아이디 입력란 실시간 검증
+                document.getElementById('userID').addEventListener('input', function(event) {
+                    const userID = event.target.value;
+                    if (/\s/.test(userID)) {
+                        event.target.setCustomValidity('아이디에 공백을 포함할 수 없습니다.');
+                    } else {
+                        event.target.setCustomValidity('');
+                    }
+                });
+
                 document.getElementById('registerForm').addEventListener('submit', function(event) {
                     event.preventDefault();
-                    
+
                     if (!document.getElementById('privacyAgreement').checked) {
                         alert('개인정보 취급방침에 동의해야 합니다.');
                         return;
@@ -356,6 +366,12 @@ router.get('/register', async (req, res) => {
 
                     const formData = new FormData(this);
                     const data = Object.fromEntries(formData.entries());
+
+                    // 최종 공백 검증
+                    if (/\s/.test(data.userID)) {
+                        alert('아이디에 공백을 포함할 수 없습니다.');
+                        return;
+                    }
 
                     fetch('/auth/register', {
                         method: 'POST',
@@ -410,6 +426,16 @@ router.get('/register', async (req, res) => {
 router.post('/register', async (req, res) => {
     try {
         const { userID, password, email, name, phone, birthdate, role, centerID } = req.body;
+
+        // userID 유효성 검사 (공백 체크)
+        if (!userID || userID.trim() === '') {
+            return res.status(400).json({ error: '아이디를 입력해주세요.' });
+        }
+
+        // userID에 공백 포함 여부 검사
+        if (/\s/.test(userID)) {
+            return res.status(400).json({ error: '아이디에 공백을 포함할 수 없습니다.' });
+        }
 
         // userID 중복 체크 추가
         const checkDuplicateQuery = 'SELECT id FROM Users WHERE userID = ?';
@@ -468,6 +494,11 @@ router.post('/api/check-userid', async (req, res) => {
             return res.json({ available: false, message: '아이디를 입력하세요' });
         }
 
+        // userID에 공백 포함 여부 검사
+        if (/\s/.test(userID)) {
+            return res.json({ available: false, message: '아이디에 공백을 포함할 수 없습니다' });
+        }
+
         const existingUser = await queryDatabase('SELECT id FROM Users WHERE userID = ?', [userID]);
 
         res.json({ available: existingUser.length === 0 });
@@ -524,6 +555,11 @@ router.post('/register-center', async (req, res) => {
         // 필수 필드 검증
         if (!userID || !password || !name || !email || !centerName || !role || !phone) {
             return res.status(400).json({ success: false, message: '모든 필수 항목을 입력해주세요' });
+        }
+
+        // userID에 공백 포함 여부 검사
+        if (/\s/.test(userID)) {
+            return res.status(400).json({ success: false, message: '아이디에 공백을 포함할 수 없습니다' });
         }
 
         // 휴대폰 인증 확인

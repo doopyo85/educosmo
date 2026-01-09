@@ -57,6 +57,12 @@ document.getElementById('checkUserIDBtn').addEventListener('click', async functi
         return;
     }
 
+    if (/\s/.test(userID)) {
+        statusEl.textContent = '아이디에 공백을 포함할 수 없습니다';
+        statusEl.className = 'verification-status error';
+        return;
+    }
+
     if (userID.length < 4 || userID.length > 20) {
         statusEl.textContent = '아이디는 4~20자여야 합니다';
         statusEl.className = 'verification-status error';
@@ -88,10 +94,17 @@ document.getElementById('checkUserIDBtn').addEventListener('click', async functi
     }
 });
 
-// 아이디 입력 시 중복 확인 상태 초기화
+// 아이디 입력 시 중복 확인 상태 초기화 및 공백 검증
 document.getElementById('userID').addEventListener('input', function() {
     userIDChecked = false;
-    document.getElementById('userIDStatus').textContent = '';
+    const statusEl = document.getElementById('userIDStatus');
+
+    if (/\s/.test(this.value)) {
+        statusEl.textContent = '아이디에 공백을 포함할 수 없습니다';
+        statusEl.className = 'verification-status error';
+    } else {
+        statusEl.textContent = '';
+    }
 });
 
 // 비밀번호 확인

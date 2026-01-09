@@ -20,9 +20,10 @@ document.addEventListener("DOMContentLoaded", function() {
             console.error('Required elements not found');
         }
 
+        loadMenuData(); // 서버에서 메뉴 데이터 로드
         window.menuLoaded = true;
     }
-    setupEventListeners(); // 여기에 추가
+    setupEventListeners(); // 이벤트 리스너 설정 (한 번만 실행)
 });
 
 // 데이터 로딩을 기다리는 함수
@@ -42,10 +43,6 @@ function waitForDataLoading() {
         checkData();
     });
 }
-document.addEventListener("DOMContentLoaded", function() {
-    loadMenuData(); // 서버에서 메뉴 데이터 로드
-    setupEventListeners(); // 이벤트 리스너 설정
-});
 
 // 서버에서 메뉴 데이터 가져오기
 async function loadMenuData() {
@@ -382,12 +379,21 @@ window.addEventListener('load', function() {
     }
 });
 
-// 이벤트 리스너 설정 함수
+// 이벤트 리스너 설정 함수 (이벤트 위임 방식으로 변경하여 중복 방지)
 function setupEventListeners() {
-    // 상위 메뉴 클릭 시 아이콘 변경
-    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(toggle => {
-        toggle.addEventListener('click', function() {
-            updateToggleIcon(this);
-        });
+    // 이미 이벤트 리스너가 설정되어 있는지 확인
+    if (document.body.dataset.eventListenersSetup) {
+        return; // 이미 설정되어 있으면 종료
+    }
+
+    // 상위 메뉴 클릭 시 아이콘 변경 (이벤트 위임 방식)
+    document.body.addEventListener('click', function(e) {
+        const toggle = e.target.closest('[data-bs-toggle="collapse"]');
+        if (toggle) {
+            updateToggleIcon(toggle);
+        }
     });
+
+    // 설정 완료 표시
+    document.body.dataset.eventListenersSetup = 'true';
 }
