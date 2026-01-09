@@ -340,7 +340,7 @@ router.post('/run-python', authenticateUser, (req, res) => {
       cwd: path.join(__dirname, '..')
     };
 
-    exec(`python3 ${fileName}`, execOptions, (error, stdout, stderr) => {
+    exec(`python3 "${fileName}"`, execOptions, (error, stdout, stderr) => {
       console.log('Python 실행 완료');
 
       // 🔥 중요: 임시 파일 삭제 (성공/실패 관계없이)

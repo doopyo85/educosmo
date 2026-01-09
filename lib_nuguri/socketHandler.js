@@ -280,35 +280,44 @@ const initSocket = (server) => {
 
         // 4. 💌 Direct Message Relay (Teacher -> Student)
         socket.on('send_direct_message', (data) => {
-            // Validate: Sender must be a teacher/admin
-            if (!socket.userData || !['teacher', 'admin', 'manager'].includes(socket.userData.role)) {
-                socket.emit('error', '권한이 없습니다.');
-                return;
-            }
-
-            // data: { targetUserId, type, content, senderName } (SenderName redundant as we have socket data)
+            // data: { targetUserId, type, content, senderName }
             const targetUserId = data.targetUserId;
 
             // Find Target Socket
             let targetSocketId = null;
+            let targetSocket = null; // We need the socket object to check role
+
             for (const [id, skt] of io.of("/").sockets) {
                 if (skt.userData && skt.userData.id === targetUserId) {
                     targetSocketId = id;
+                    targetSocket = skt;
                     break;
                 }
             }
 
-            if (targetSocketId) {
-                // Send to Target
-                io.to(targetSocketId).emit('direct_message', {
-                    senderName: socket.userData.name || '선생님',
-                    type: data.type,
-                    content: data.content,
-                    time: new Date().toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: true })
-                });
-            } else {
+            if (!targetSocketId || !targetSocket) {
                 socket.emit('error', '해당 사용자를 찾을 수 없거나 오프라인입니다.');
+                return;
             }
+
+            // Validate Permissions
+            // 1. Sender is Teacher/Admin (Can send to anyone)
+            // 2. Sender is Student AND Recipient is Teacher/Admin (Can send to teachers)
+            const isSenderAuthorized = socket.userData && ['teacher', 'admin', 'manager'].includes(socket.userData.role);
+            const isRecipientTeacher = targetSocket.userData && ['teacher', 'admin', 'manager'].includes(targetSocket.userData.role);
+
+            if (!isSenderAuthorized && !isRecipientTeacher) {
+                socket.emit('error', '권한이 없습니다.');
+                return;
+            }
+
+            // Send to Target
+            io.to(targetSocketId).emit('direct_message', {
+                senderName: socket.userData.name || '학생', // Default to '학생' if name missing (though expected)
+                type: data.type,
+                content: data.content,
+                time: new Date().toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: true })
+            });
         });
 
         // Helper: Broadcast User List

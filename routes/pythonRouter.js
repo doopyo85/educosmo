@@ -456,7 +456,7 @@ function executeNormalPython(code, req, res) {
             cwd: path.join(__dirname, '..')
         };
 
-        exec(`python3 ${fileName}`, execOptions, (error, stdout, stderr) => {
+        exec(`python3 "${fileName}"`, execOptions, (error, stdout, stderr) => {
             console.log('✅ 일반 Python 실행 완료');
 
             // 임시 파일 삭제

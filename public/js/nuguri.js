@@ -530,16 +530,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="user-status" style="color:#28a745; font-size:11px;">● 온라인</div>
                 </div>
-                ${!isMe && ['teacher', 'admin', 'manager'].includes(currentUser.role) ?
+                ${!isMe ?
                         `<div style="display: flex; align-items: center; margin-left: auto; gap: 8px;">
-                            <button class="monitor-btn" onclick="startMonitoring('${user.id}')" title="모니터링" 
-                                style="background: #f0f0f0; border: none; cursor: pointer; color: #333; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;">
-                                <i class="bi bi-play-circle-fill" style="font-size: 16px;"></i>
-                            </button>
-                            <button class="msg-btn" onclick="openMessageModal('${user.id}', '${escapeHtml(user.name)}')" title="메시지 보내기" 
-                                style="background: #f0f0f0; border: none; cursor: pointer; color: #333; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;">
-                                <i class="bi bi-chat-dots-fill" style="font-size: 16px;"></i>
-                            </button>
+                            ${['teacher', 'admin', 'manager'].includes(currentUser.role) ?
+                            `<button class="monitor-btn" onclick="startMonitoring('${user.id}')" title="모니터링" 
+                                    style="background: #f0f0f0; border: none; cursor: pointer; color: #333; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;">
+                                    <i class="bi bi-play-circle-fill" style="font-size: 16px;"></i>
+                                </button>`
+                            : ''}
+                            
+                            ${(['teacher', 'admin', 'manager'].includes(currentUser.role) || ['teacher', 'admin', 'manager'].includes(user.role)) ?
+                            `<button class="msg-btn" onclick="openMessageModal('${user.id}', '${escapeHtml(user.name)}')" title="메시지 보내기" 
+                                    style="background: #f0f0f0; border: none; cursor: pointer; color: #333; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;">
+                                    <i class="bi bi-chat-dots-fill" style="font-size: 16px;"></i>
+                                </button>`
+                            : ''}
                         </div>`
                         : ''}
             `;
@@ -1209,10 +1214,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let contentHtml = '';
         if (data.type === 'text') {
-            contentHtml = `<div class="message-text" style="font-weight:bold; color:#d35400;">[선생님 메시지]</div>
+            contentHtml = `<div class="message-text" style="font-weight:bold; color:#d35400;">[${escapeHtml(data.senderName)} 님의 메시지]</div>
                            <div class="message-text">${escapeHtml(data.content)}</div>`;
         } else {
-            contentHtml = `<div class="message-text" style="font-weight:bold; color:#d35400;">[선생님 ${data.type === 'draw' ? '그림' : '화면'}]</div>
+            contentHtml = `<div class="message-text" style="font-weight:bold; color:#d35400;">[${escapeHtml(data.senderName)} 님의 ${data.type === 'draw' ? '그림' : '화면'}]</div>
                             <img src="${data.content}" style="max-width: 100%; border-radius: 4px; border: 1px solid #ccc; margin-top: 5px;" onclick="window.open(this.src)">`;
         }
 
@@ -1274,7 +1279,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         bubble.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-weight: bold; color: #d35400; font-size: 14px;"> 선생님 메시지 (${data.type === 'text' ? '텍스트' : data.type === 'draw' ? '그림' : '화면'})</span>
+                <span style="font-weight: bold; color: #d35400; font-size: 14px;"> ${escapeHtml(data.senderName)} 님의 메시지 (${data.type === 'text' ? '텍스트' : data.type === 'draw' ? '그림' : '화면'})</span>
                 <span style="font-size: 18px; color: #999;" onclick="this.parentElement.parentElement.remove()">&times;</span>
             </div>
             ${contentHtml}

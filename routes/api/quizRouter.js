@@ -530,7 +530,7 @@ async function validateCodingAnswer(code, testCasesStr) {
       const { input, output } = testCase;
 
       // Python 코드 실행 (입력값 제공)
-      const command = `python3 ${tempFile}`;
+      const command = `python3 "${tempFile}"`;
 
       const { stdout, stderr } = await execWithInput(command, input);
 

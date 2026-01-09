@@ -222,7 +222,7 @@ router.post('/run-python', (req, res) => {
 
     // 코드 실행 (타임아웃 설정)
     const timeout = 10000; // 10초 타임아웃
-    const child = exec(`python3 ${tempPath}`, { timeout }, (error, stdout, stderr) => {
+    const child = exec(`python3 "${tempPath}"`, { timeout }, (error, stdout, stderr) => {
       // 임시 파일 정리
       fs.unlinkSync(tempPath);
 
