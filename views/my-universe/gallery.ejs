@@ -352,8 +352,8 @@
     let currentFilter = '';
 
     // 학생 뷰인지 확인 (교사가 학생 갤러리를 보는 경우)
-    const isStudentView = <%= locals.student && locals.student.userID && locals.student.userID !== locals.userID ? 'true' : 'false' %>;
-    const studentUserID = isStudentView ? '<%= locals.student.userID %>' : null;
+    const isStudentView = <%= (locals.student && locals.student.userID && locals.userID && locals.student.userID !== locals.userID) ? 'true' : 'false' %>;
+    const studentUserID = isStudentView ? '<%= locals.student ? locals.student.userID : "" %>' : null;
 
     // 페이지 로드 시 프로젝트 로드
     document.addEventListener('DOMContentLoaded', () => {
