@@ -75,12 +75,13 @@ async function autoRegisterToGallery({
                 thumbnail_url,
                 embed_url,
                 visibility,
+                is_active,
                 tags,
                 metadata,
                 project_submission_id,
                 created_at,
                 updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         `;
 
         const insertParams = [
@@ -92,6 +93,7 @@ async function autoRegisterToGallery({
             thumbnailUrl,
             embedUrl,
             'private', // Default to private, user can change later
+            1, // is_active = 1 (active)
             JSON.stringify([]), // Empty tags initially
             JSON.stringify(metadata),
             projectSubmissionId

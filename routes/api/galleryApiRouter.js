@@ -593,6 +593,14 @@ router.delete('/projects/:id', requireAuth, async (req, res) => {
 router.get('/my', requireAuth, async (req, res) => {
     try {
         const userDbId = await getUserDbId(req.session.userID);
+
+        if (!userDbId) {
+            return res.status(404).json({
+                success: false,
+                error: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
         const { platform, page = 1, limit = 20 } = req.query;
 
         let whereConditions = ['gp.user_id = ?', 'gp.is_active = 1'];
@@ -610,7 +618,7 @@ router.get('/my', requireAuth, async (req, res) => {
         const offset = (finalPage - 1) * finalLimit;
 
         const projects = await db.queryDatabase(
-            `SELECT 
+            `SELECT
                 gp.*,
                 u.userID,
                 u.name as userName
