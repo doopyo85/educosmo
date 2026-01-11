@@ -59,7 +59,6 @@ module.exports = {
         SERVICE_TYPE: 'appinventor'
       },
       kill_timeout: 10000
-    },
     }
   ]
 };

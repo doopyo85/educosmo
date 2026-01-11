@@ -1,5 +1,5 @@
 {
-  "name": "educodingnplay",
+  "name": "educosmo",
   "version": "1.0.0",
   "description": "Educational coding platform - Main server (without EntryJS)",
   "main": "server.js",
