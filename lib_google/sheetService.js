@@ -28,7 +28,22 @@ async function getSheetData(range) {
             return [];
         }
 
-        return response.data.values || [];
+        const rows = response.data.values || [];
+
+        // 🔥 S3 URL 자동 변환 로직 (Hardcoded AWS -> Configured Asset URL)
+        // 구글 시트에 "amazonaws.com" 주소가 박혀 있어도, 설정된 ASSET_URL로 실시간 교체하여 반환함
+        config.S3.ASSET_URL = config.S3.ASSET_URL.replace(/\/$/, ''); // Trailing slash 제거 안전장치
+
+        const legacyS3Url = 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com';
+
+        return rows.map(row => {
+            return row.map(cell => {
+                if (typeof cell === 'string' && cell.includes(legacyS3Url)) {
+                    return cell.split(legacyS3Url).join(config.S3.ASSET_URL);
+                }
+                return cell;
+            });
+        });
     } catch (error) {
         console.error(`스프레드시트 데이터 로드 오류 (${range}):`, error.message);
         throw error;

@@ -232,14 +232,14 @@ app.use((req, res, next) => {
   if (connectSrcIndex !== -1) {
     cspParts[connectSrcIndex] += " ws: wss: https://playentry.org https://entry-cdn.pstatic.net https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com";
   } else {
-    cspParts.push("connect-src 'self' ws: wss: https://playentry.org https://entry-cdn.pstatic.net https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com");
+    cspParts.push(`connect-src 'self' ws: wss: https://playentry.org https://entry-cdn.pstatic.net ${config.S3.ASSET_URL}`);
   }
 
   let imgSrcIndex = cspParts.findIndex(part => part.startsWith('img-src'));
   if (imgSrcIndex !== -1) {
     cspParts[imgSrcIndex] += " data: blob: https://entry-cdn.pstatic.net https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com";
   } else {
-    cspParts.push("img-src 'self' data: blob: https: https://entry-cdn.pstatic.net https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com");
+    cspParts.push(`img-src 'self' data: blob: https: https://entry-cdn.pstatic.net ${config.S3.ASSET_URL}`);
   }
 
   let fontSrcIndex = cspParts.findIndex(part => part.startsWith('font-src'));
@@ -462,17 +462,17 @@ module.exports = { getSheetData };
 
 // Entry-tool 에셋 프록시
 app.use('/uploads', (req, res) => {
-  const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads${req.path}`;
+  const s3Url = `${config.S3.ASSET_URL}/ent/uploads${req.path}`;
   res.redirect(301, s3Url);
 });
 
 app.use('/resource/uploads', (req, res) => {
-  const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads${req.path}`;
+  const s3Url = `${config.S3.ASSET_URL}/ent/uploads${req.path}`;
   res.redirect(301, s3Url);
 });
 
 app.use('/api/assets', (req, res) => {
-  const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/api/assets${req.path}`;
+  const s3Url = `${config.S3.ASSET_URL}/ent/api/assets${req.path}`;
   res.redirect(301, s3Url);
 });
 
@@ -1043,7 +1043,7 @@ app.get('/api/generate-metadata-direct', async (req, res) => {
       version: "2.0",
       lastUpdated: new Date().toISOString().split('T')[0],
       totalAssets: 0,
-      baseUrl: "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads",
+      baseUrl: `${config.S3.ASSET_URL}/ent/uploads`,
       categories: [
         { id: "entrybot_friends", name: "엔트리봇", visible: true },
         { id: "animal", name: "동물", visible: true },
@@ -1092,7 +1092,7 @@ app.get('/api/generate-metadata-direct', async (req, res) => {
                 imageType: ext.substring(1),
                 dimension: { width: 80, height: 80 },
                 scale: 100,
-                fileurl: `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/${filename}`
+                fileurl: `${config.S3.ASSET_URL}/ent/uploads/images/${filename}`
               }],
               sounds: []
             };

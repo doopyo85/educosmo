@@ -49,6 +49,7 @@ const API_ENDPOINTS = {
 const S3 = {
   REGION: process.env.AWS_REGION || 'ap-northeast-2',
   BUCKET_NAME: process.env.BUCKET_NAME || 'educodingnplaycontents',
+  ASSET_URL: process.env.S3_ASSET_URL || 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com'
 };
 
 // Google API 설정
