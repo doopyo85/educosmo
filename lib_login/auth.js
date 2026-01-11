@@ -231,16 +231,16 @@ router.post('/login_process', async (req, res) => {
             if (ssoRedirect) {
                 // SSO 리다이렉트 세션 정리
                 delete req.session.ssoRedirect;
-                
+
                 // 토큰을 URL 파라미터로 전달
                 const redirectWithToken = `${ssoRedirect}${ssoRedirect.includes('?') ? '&' : '?'}token=${token}`;
                 console.log('[SSO] Redirecting to:', redirectWithToken);
-                
-                return res.json({ 
-                    success: true, 
-                    redirect: redirectWithToken, 
+
+                return res.json({
+                    success: true,
+                    redirect: redirectWithToken,
                     token: token,
-                    sso: true 
+                    sso: true
                 });
             }
 
@@ -461,8 +461,12 @@ router.post('/register', async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 빈 문자열인 경우 null로 변환 (DATE 타입 오류 방지)
+        const finalBirthdate = (birthdate && birthdate.trim() !== '') ? birthdate : null;
+
         const query = `INSERT INTO Users (userID, password, email, name, phone, birthdate, role, centerID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-        const values = [userID, hashedPassword, email, name, phone, birthdate, role, centerID];
+        const values = [userID, hashedPassword, email, name, phone, finalBirthdate, role, centerID];
 
         await queryDatabase(query, values);
 

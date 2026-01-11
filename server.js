@@ -191,14 +191,8 @@ store.setMaxListeners(20);
 // CORS 설정
 app.use(cors({
   origin: function (origin, callback) {
-    // 허용된 Origin 목록
-    const allowedOrigins = [
-      'https://app.codingnplay.co.kr',
-      'https://cosmoedu.co.kr',
-      'http://localhost:3000',
-      'https://localhost:3000',
-      'https://pong2.app'
-    ];
+    // 허용된 Origin 목록 (config.js에서 가져옴)
+    const allowedOrigins = config.CORS.ALLOWED_ORIGINS;
 
     // Chrome Extension Origin 허용 (chrome-extension://)
     if (!origin || allowedOrigins.includes(origin) || origin.startsWith('chrome-extension://') || origin.startsWith('moz-extension://')) {
@@ -327,7 +321,7 @@ app.use(session({
     secure: false,
     httpOnly: true,
     sameSite: 'lax',
-    domain: '.codingnplay.co.kr',
+    // domain: '.codingnplay.co.kr', // IP 접속 문제로 제거 (브라우저 자동 처리)
     maxAge: 10800000  // 3시간
   }
 }));

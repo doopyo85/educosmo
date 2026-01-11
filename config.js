@@ -24,10 +24,11 @@ const SESSION = {
     // 🔥 두 도메인 모두 지원하는 동적 도메인 함수 (오류 방지)
     getDomain: (req) => {
       const host = req.get('host') || req.hostname || '';
-      if (typeof host === 'string' && host.includes('cosmoedu.co.kr')) {
-        return '.cosmoedu.co.kr';
+      if (typeof host === 'string') {
+        if (host.includes('cosmoedu.co.kr')) return '.cosmoedu.co.kr';
+        if (host.includes('codingnplay.co.kr')) return '.codingnplay.co.kr';
       }
-      return '.codingnplay.co.kr';
+      return undefined; // IP 접속이나 localhost 등은 자동 처리
     },
   },
 };
@@ -79,6 +80,10 @@ const CORS = {
     // 🔥 Pong2 App
     'https://pong2.app',
     'https://www.pong2.app',
+
+    // 🔥 Server IP (Direct Access)
+    'http://101.79.11.188',
+    'http://101.79.11.188:3000',
 
     undefined  // 같은 origin 요청 허용
   ],
