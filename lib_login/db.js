@@ -182,11 +182,11 @@ async function addPaymentRecord(userID, centerID, productName, amount, expiryDat
         if (isConnected) {
             console.log('Database initialization completed successfully');
         } else {
-            console.error('Database initialization failed');
+            console.error('Database initialization failed - Server will continue but DB features may fail');
         }
     } catch (error) {
-        console.error('Failed to initialize database (continuing without DB):', error.message);
-        // process.exit(1); // 심각한 에러시 프로세스 종료 -> Disabled for no-DB mode
+        console.error('Failed to initialize database (Non-fatal, continuing):', error);
+        // process.exit(1); // ❌ Server should NOT die just because DB is down in this specific context (migration/recovery)
     }
 })();
 
