@@ -26,11 +26,11 @@ const { logUserActivity, logMenuAccess, logLearningActivity } = require('./lib_l
 
 // 🔥 Initialize Gallery DB Tables
 const initGalleryDB = require('./tools/init_gallery_db');
-initGalleryDB().catch(console.error);
+// initGalleryDB().catch(console.error);
 
 // 🔥 Initialize Observatory DB Schema
 const initSchema = require('./lib_login/schemaInit');
-initSchema().catch(console.error);
+// initSchema().catch(console.error);
 
 const app = express();
 const SERVICE_TYPE = process.env.SERVICE_TYPE || 'main';
@@ -190,7 +190,7 @@ store.setMaxListeners(20);
 
 // CORS 설정
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     // 허용된 Origin 목록
     const allowedOrigins = [
       'https://app.codingnplay.co.kr',

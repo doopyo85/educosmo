@@ -70,13 +70,13 @@ async function queryDatabase(query, params = []) {
 
         return results;
     } catch (error) {
-        console.error('Database query error:', {
+        console.error('Database query error (continuing without DB):', {
             query,
-            params,
-            error: error.message,
-            timestamp: new Date().toISOString()
+            // params, // Hide params for cleaner logs if needed
+            error: error.message
         });
-        throw error;
+        // throw error; // Don't throw, just return empty to keep server alive
+        return [];
     }
 }
 
@@ -185,8 +185,8 @@ async function addPaymentRecord(userID, centerID, productName, amount, expiryDat
             console.error('Database initialization failed');
         }
     } catch (error) {
-        console.error('Failed to initialize database:', error);
-        process.exit(1); // 심각한 에러시 프로세스 종료
+        console.error('Failed to initialize database (continuing without DB):', error.message);
+        // process.exit(1); // 심각한 에러시 프로세스 종료 -> Disabled for no-DB mode
     }
 })();
 
