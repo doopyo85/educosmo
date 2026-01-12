@@ -34,7 +34,7 @@ async function getSheetData(range) {
         // 구글 시트에 "amazonaws.com" 주소가 박혀 있어도, 설정된 ASSET_URL로 실시간 교체하여 반환함
         config.S3.ASSET_URL = config.S3.ASSET_URL.replace(/\/$/, ''); // Trailing slash 제거 안전장치
 
-        const legacyS3Url = 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com';
+        const legacyS3Url = 'https://kr.object.ncloudstorage.com/educodingnplaycontents';
 
         return rows.map(row => {
             return row.map(cell => {

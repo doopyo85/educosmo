@@ -10,8 +10,8 @@ class EntryAssetManager {
     constructor(metadataPath = null) {
         this.metadataPath = metadataPath || path.join(__dirname, '..', 'metadata.json');
         this.metadata = null;
-        this.baseUrl = 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads';
-        
+        this.baseUrl = 'https://kr.object.ncloudstorage.com/educodingnplaycontents/ent/uploads';
+
         this.loadMetadata();
     }
     

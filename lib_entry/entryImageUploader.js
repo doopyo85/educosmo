@@ -58,8 +58,8 @@ class EntryImageUploader {
             const contentType = file.mimetype || this.getContentType(ext);
             await this.s3Manager.uploadProject(s3Key, file.buffer, contentType);
             
-            // 5. S3 URL 생성
-            const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${s3Key}`;
+            // 5. 네이버 클라우드 Object Storage URL 생성
+            const s3Url = `https://kr.object.ncloudstorage.com/educodingnplaycontents/${s3Key}`;
             
             // 6. Entry 접근 경로 생성
             const entryUrl = this.generateEntryImagePath(safeFileName, userID, sessionID);
@@ -134,8 +134,8 @@ class EntryImageUploader {
             const contentType = `image/${imageType}`;
             await this.s3Manager.uploadProject(s3Key, buffer, contentType);
             
-            // 7. S3 URL 생성
-            const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${s3Key}`;
+            // 7. 네이버 클라우드 Object Storage URL 생성
+            const s3Url = `https://kr.object.ncloudstorage.com/educodingnplaycontents/${s3Key}`;
             
             // 8. Entry 접근 경로 생성
             const entryUrl = this.generateEntryImagePath(safeFileName, userID, sessionID);
