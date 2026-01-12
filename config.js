@@ -50,8 +50,9 @@ const S3 = {
   REGION: process.env.AWS_REGION || 'ap-northeast-2',
   BUCKET_NAME: process.env.BUCKET_NAME || 'educodingnplaycontents',
   // 🔥 NCP Global Edge URL (CORS 자동 지원)
-  ASSET_URL: process.env.S3_ASSET_URL || 'https://onag54aw13447.edge.naverncp.com/educodingnplaycontents',
-  // 프록시 URL (CORS 문제 해결용 - 대안, 현재 Edge 사용으로 불필요)
+  // Edge 원본 경로: /educodingnplaycontents 설정되어 있음
+  ASSET_URL: process.env.S3_ASSET_URL || 'https://onag54aw13447.edge.naverncp.com',
+  // 프록시 URL (백업용)
   PROXY_URL: '/proxy/content'
 };
 
