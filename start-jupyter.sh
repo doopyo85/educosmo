@@ -39,6 +39,9 @@ if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
         -o use_path_request_style \
         -o dbglevel=info \
         -o nonempty
+
+    # Wait for mount to complete
+    sleep 2
 else
     echo "⚠️  No AWS credentials provided, attempting IAM role..."
     s3fs "$BUCKET_NAME" "$MOUNT_POINT" \
