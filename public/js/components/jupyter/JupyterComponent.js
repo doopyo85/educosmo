@@ -43,23 +43,26 @@ class JupyterComponent extends Component {
        // 1. HTML에서 전역 변수로 설정된 사용자 ID 확인
        const userIDFromHTML = document.getElementById('currentUserID')?.value;
        if (userIDFromHTML && userIDFromHTML !== '게스트') {
+           console.log('✅ User ID from HTML:', userIDFromHTML);
            return userIDFromHTML;
        }
-       
+
        // 2. 전역 변수로 설정된 사용자 ID 확인
        if (window.currentUserID && window.currentUserID !== '게스트') {
+           console.log('✅ User ID from window:', window.currentUserID);
            return window.currentUserID;
        }
-       
+
        // 3. 세션 또는 옆에서 사용자 이름 추출 시도
        const userNameElement = document.getElementById('userName');
        if (userNameElement && userNameElement.textContent.trim() !== '게스트') {
+           console.log('✅ User ID from userName element:', userNameElement.textContent.trim());
            return userNameElement.textContent.trim();
        }
-       
-       // 4. 기본값: 게스트 + 랜덤 ID
-       const randomId = Math.random().toString(36).substr(2, 8);
-       return `guest_${randomId}`;
+
+       // 🔥 4. DB 복원 전 임시: testuser 사용
+       console.log('⚠️  No user session found, using testuser (DB migration in progress)');
+       return 'testuser';
    }
    
    async init(data = null) {

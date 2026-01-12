@@ -1,5 +1,6 @@
 #!/bin/bash
-set -e
+# 🔥 에러 발생 시에도 계속 진행 (S3 마운트는 선택사항)
+set +e
 
 # Configuration
 MOUNT_POINT="/app/jupyter_notebooks"
@@ -7,13 +8,20 @@ BUCKET_NAME="${S3_BUCKET_NAME:-educodingnplaycontents}"
 AWS_REGION="${AWS_REGION:-kr}"
 S3_ENDPOINT_URL="${S3_ENDPOINT_URL:-https://kr.object.ncloudstorage.com}"
 
+echo "🔧 Configuration:"
+echo "  MOUNT_POINT=$MOUNT_POINT"
+echo "  BUCKET_NAME=$BUCKET_NAME"
+echo "  AWS_REGION=$AWS_REGION"
+echo "  S3_ENDPOINT_URL=$S3_ENDPOINT_URL"
+
 # Ensure mount point exists
 mkdir -p "$MOUNT_POINT"
+echo "✅ Mount point directory created/verified"
 
 # Unmount if already mounted (for restarting containers)
-if mountpoint -q "$MOUNT_POINT"; then
+if mountpoint -q "$MOUNT_POINT" 2>/dev/null; then
     echo "🔄 Unmounting existing S3 mount..."
-    umount "$MOUNT_POINT" || true
+    umount "$MOUNT_POINT" 2>/dev/null || true
 fi
 
 echo "🚀 Mounting S3 Bucket: $BUCKET_NAME to $MOUNT_POINT"
