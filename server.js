@@ -498,6 +498,9 @@ app.use('/api/board', require('./routes/api/boardApiRouter'));
 app.use('/api', require('./routes/api/observatoryRouter')); // 🔥 Observatory API
 // app.use('/api/pong2', require('./routes/api/pong2Router')); // 🔥 Moved to apiRouter.js
 
+// 🔥 콘텐츠 프록시 라우터 (CORS 우회용)
+app.use('/proxy/content', require('./routes/api/contentProxyRouter'));
+
 // 🔥 스크래치 API 라우터 (8601 스크래치 GUI 계정 연동용)
 if (isMain || SERVICE_TYPE === 'scratch') {
   app.use('/api/scratch', require('./routes/api/scratchRouter'));
