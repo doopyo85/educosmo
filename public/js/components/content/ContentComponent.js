@@ -503,16 +503,16 @@ class ContentComponent extends Component {
       // pptUrl이 .md 파일인 경우, 해당 파일명을 그대로 사용
       if (currentMenuData.pptUrl && currentMenuData.pptUrl.endsWith('.md')) {
         const mdFileName = currentMenuData.pptUrl.split('/').pop();  //
-        problemUrl = `https://kr.object.ncloudstorage.com/educodingnplaycontents/DataAnalysis/${mdFileName}`;
+        problemUrl = `${window.CONFIG.S3_ASSET_URL}/DataAnalysis/${mdFileName}`;
         console.log('ContentComponent: MD 파일 URL 사용:', problemUrl);
       } else {
         // 기본 HTML 파일 사용
-        problemUrl = `https://kr.object.ncloudstorage.com/educodingnplaycontents/${problemFileName}`;
+        problemUrl = `${window.CONFIG.S3_ASSET_URL}/${problemFileName}`;
         console.log('ContentComponent: HTML 파일 URL 사용:', problemUrl);
       }
     } else {
       // 기본 로직: problemFileName 사용
-      problemUrl = `https://kr.object.ncloudstorage.com/educodingnplaycontents/${problemFileName}`;
+      problemUrl = `${window.CONFIG.S3_ASSET_URL}/${problemFileName}`;
       console.log('ContentComponent: 기본 파일 URL:', problemUrl);
     }
 

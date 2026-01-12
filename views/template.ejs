@@ -93,6 +93,12 @@
                         <script src="/js/components/ide/PythonAutoCompleter.js"></script>
 
                         <script>
+                            // 🔥 설정 객체 (S3/Object Storage URL)
+                            window.CONFIG = {
+                                S3_ASSET_URL: '<%= typeof S3_ASSET_URL !== "undefined" ? S3_ASSET_URL : "https://kr.object.ncloudstorage.com/educodingnplaycontents" %>'
+                            };
+                            console.log('CONFIG 설정:', window.CONFIG);
+
                             // 디버깅 정보 출력
                             console.log('서버에서 전달된 페이지 타입:', '<%= typeof pageType !== "undefined" ? pageType : "undefined" %>');
 

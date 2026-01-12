@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateUser, checkPageAccess } = require('../lib_login/authMiddleware');
+const { S3 } = require('../config');
 
 // 템플릿 페이지 라우트 - template.ejs 사용
 router.get('/',
@@ -15,7 +16,8 @@ router.get('/',
       is_logined: req.session.is_logined,
       centerID: req.session.centerID,
       pageType: 'template',
-      pageTitle: '템플릿 테스트 페이지'
+      pageTitle: '템플릿 테스트 페이지',
+      S3_ASSET_URL: S3.ASSET_URL
     });
   }
 );
@@ -98,7 +100,8 @@ router.get('/component',
       is_logined: req.session.is_logined,
       centerID: req.session.centerID,
       pageType: 'component',
-      pageTitle: '컴포넌트 시스템 테스트'
+      pageTitle: '컴포넌트 시스템 테스트',
+      S3_ASSET_URL: S3.ASSET_URL
     });
   }
 );
@@ -113,7 +116,8 @@ router.get('/python-style',
       is_logined: req.session.is_logined,
       centerID: req.session.centerID,
       pageType: 'python',
-      pageTitle: 'Python 스타일 테스트'
+      pageTitle: 'Python 스타일 테스트',
+      S3_ASSET_URL: S3.ASSET_URL
     });
   }
 );
@@ -128,7 +132,8 @@ router.get('/cert-style',
       is_logined: req.session.is_logined,
       centerID: req.session.centerID,
       pageType: 'certification',
-      pageTitle: '자격증 스타일 테스트'
+      pageTitle: '자격증 스타일 테스트',
+      S3_ASSET_URL: S3.ASSET_URL
     });
   }
 );
@@ -143,7 +148,8 @@ router.get('/aimath-style',
       is_logined: req.session.is_logined,
       centerID: req.session.centerID,
       pageType: 'aiMath',
-      pageTitle: 'AI Math 스타일 테스트'
+      pageTitle: 'AI Math 스타일 테스트',
+      S3_ASSET_URL: S3.ASSET_URL
     });
   }
 );
@@ -159,7 +165,8 @@ router.get('/dataanalysis-style',
       is_logined: req.session.is_logined,
       centerID: req.session.centerID,
       pageType: 'dataAnalysis',
-      pageTitle: '데이터분석 스타일 테스트'
+      pageTitle: '데이터분석 스타일 테스트',
+      S3_ASSET_URL: S3.ASSET_URL
     });
   }
 );
