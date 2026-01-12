@@ -44,14 +44,15 @@ function groupByVolume(rows) {
             };
         }
 
-        // Images start from Index 9 (Column J) -> 9 to 16
-        const images = row.slice(9, 16).filter(img => img && img.trim().startsWith('http'));
+        // J열(인덱스 9)이 URL, K열부터 이미지
+        // Images start from Index 10 (Column K) -> 10 to 16
+        const images = row.slice(10, 17).filter(img => img && img.trim().startsWith('http'));
 
         groups[groupName].sessions.push({
-            name: row[2], // Title
-            topic: row[3], // Topic
-            videoUrl: row[7], // Video (Col H)
-            thumbnail: row[8], // Thumb (Col I)
+            name: row[2], // Title (C열)
+            topic: row[3], // Topic (D열)
+            videoUrl: row[9], // URL (J열, 인덱스 9)
+            thumbnail: row[8], // Thumb (I열, 인덱스 8)
             images: images
         });
     });
@@ -70,8 +71,9 @@ router.get('/', async (req, res) => {
             allLessonData // Single Consolidated Sheet
         ] = await Promise.all([
             // Tab 1: Board Data (Old) - Uses Default SPREADSHEET_ID
-            getSheetData('교사게시판', 'A1:D14', process.env.SPREADSHEET_ID),
-            getSheetData('교사게시판', 'E1:H14', process.env.SPREADSHEET_ID),
+            // K열(다운로드)를 포함하기 위해 A1:K14로 확장
+            getSheetData('교사게시판', 'A1:K14', process.env.SPREADSHEET_ID),
+            getSheetData('교사게시판', 'E1:K14', process.env.SPREADSHEET_ID),
 
             // Tab 2: All Lessons from Single Sheet
             getSheetData('[교육영상]', 'A:P', eduSpreadsheetId)
@@ -118,14 +120,14 @@ router.get('/', async (req, res) => {
             type: row[0] || '',
             content: row[1] || '',
             links: row[2] ? row[2].split('\n') : [],
-            url: row[3] || ''
+            url: row[10] || row[3] || '' // K열(인덱스 10) 우선, 없으면 D열
         }));
 
         const preschoolAIItems = preschoolAIData.slice(2).map(row => ({
             type: row[0] || '',
             content: row[1] || '',
             links: row[2] ? row[2].split('\n') : [],
-            url: row[3] || ''
+            url: row[6] || row[3] || '' // K열(E1 시작이므로 인덱스 6) 우선, 없으면 H열
         }));
 
         // 렌더링

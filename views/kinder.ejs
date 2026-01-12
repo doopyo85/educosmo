@@ -315,25 +315,26 @@
                 <div class="tab-pane fade show active" id="panel-lessons" role="tabpanel">
 
                     <!-- Sub Level Tabs -->
-                    <% if (lessonTabs && lessonTabs.length> 0) { %>
-                        <% lessonTabs.forEach((tab, index)=> { %>
+                    <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4" id="levelTabs" role="tablist">
+                    <% if (lessonTabs && lessonTabs.length > 0) { %>
+                        <% lessonTabs.forEach((tab, index) => { %>
                             <li class="nav-item">
                                 <button class="nav-link <%= index === 0 ? 'active' : '' %>" id="<%= tab.id %>-tab"
                                     data-bs-toggle="pill" data-bs-target="#<%= tab.id %>" type="button" role="tab">
                                     <% if (tab.title.toLowerCase().includes('ai')) { %>
                                         <i class="bi bi-robot me-1"></i>
-                                        <% } %>
-                                            <%= tab.title %>
+                                    <% } %>
+                                    <%= tab.title %>
                                 </button>
                             </li>
-                            <% }); %>
-                                <% } else { %>
-                                    <!-- Fallback or Empty State -->
-                                    <li class="nav-item">
-                                        <span class="nav-link disabled">No Categories Found</span>
-                                    </li>
-                                    <% } %>
-                                        </ul>
+                        <% }); %>
+                    <% } else { %>
+                        <!-- Fallback or Empty State -->
+                        <li class="nav-item">
+                            <span class="nav-link disabled">No Categories Found</span>
+                        </li>
+                    <% } %>
+                    </ul>
 
                                         <!-- Lesson Content -->
                                         <div class="tab-content" id="levelTabContent">
