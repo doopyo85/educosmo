@@ -74,27 +74,43 @@ router.get('/', async (req, res) => {
             getSheetData('교사게시판', 'E1:H14', process.env.SPREADSHEET_ID),
 
             // Tab 2: All Lessons from Single Sheet
-            getSheetData('교육영상', 'A:P', eduSpreadsheetId)
+            getSheetData('[교육영상]', 'A:P', eduSpreadsheetId)
         ]);
 
         // Helper to filter by Category column (Index 0)
-        // Note: New Sheet Structure: [Category, Group, Title, Topic, ..., Video(H), Thumb(I), Images(J...)]
-        // Original indices shifted by +1 because 'Category' is at 0.
-        // Old Video was G (6), now H (7).
-        // Old Thumb was H (7), now I (8).
         const filterByCategory = (rows, categoryKeyword) => {
             return rows.filter(row => row[0] && row[0].includes(categoryKeyword));
         };
 
-        const level1Data = filterByCategory(allLessonData, '프리-LV1(5세)');
-        const level2Data = filterByCategory(allLessonData, '프리-LV2(6세)');
-        const level3Data = filterByCategory(allLessonData, '프리-LV3(7세)');
+        // 🔥 Dynamic Category Extraction
+        // Extract unique categories from Column A (Index 0)
+        // We trim whitespace and ignore empty values.
+        const allCategories = [...new Set(allLessonData.map(row => row[0] ? row[0].trim() : '').filter(c => c !== ''))];
 
-        const aiLevel1Data = filterByCategory(allLessonData, '프리AI-LV1(5세)');
-        const aiLevel2Data = filterByCategory(allLessonData, '프리AI-LV2(6세)');
-        const aiLevel3Data = filterByCategory(allLessonData, '프리AI-LV3(7세)');
+        // You might want to sort them. 
+        // If specific order is needed, we might need a mapping or manual sort logic.
+        // For now, sorting alphabetically or native sheet order (by appearance) is best.
+        // Native sheet order approach:
+        const categoriesInOrder = [];
+        const seen = new Set();
+        allLessonData.forEach(row => {
+            const c = row[0] ? row[0].trim() : '';
+            if (c && !seen.has(c)) {
+                seen.add(c);
+                categoriesInOrder.push(c);
+            }
+        });
 
-        // Process Board Data
+        // Create Tabs structure
+        const lessonTabs = categoriesInOrder.map((cat, index) => {
+            return {
+                id: `dynamic-tab-${index}`, // Unique ID for tab
+                title: cat,
+                groups: groupByVolume(filterByCategory(allLessonData, cat))
+            };
+        });
+
+        // Process Board Data (unchanged)
         const preschoolTitle = preschoolData[0] ? preschoolData[0][0] : '프리스쿨';
         const preschoolAITitle = preschoolAIData[0] ? preschoolAIData[0][0] : '프리스쿨 AI';
 
@@ -112,36 +128,17 @@ router.get('/', async (req, res) => {
             url: row[3] || ''
         }));
 
-        // Process Lesson Data
-        const level1Groups = groupByVolume(level1Data);
-        const level2Groups = groupByVolume(level2Data);
-        const level3Groups = groupByVolume(level3Data);
-
-        const aiLevel1Groups = groupByVolume(aiLevel1Data);
-        const aiLevel2Groups = groupByVolume(aiLevel2Data);
-        const aiLevel3Groups = groupByVolume(aiLevel3Data);
-
         // 렌더링
         res.render('kinder', {
             // Board Tab Data
             preschoolTitle, preschoolAITitle,
             preschoolItems, preschoolAIItems,
 
-            // Lesson Tab Data
-            level1Groups,
-            level2Groups,
-            level3Groups,
-            aiLevel1Groups,
-            aiLevel2Groups,
-            aiLevel3Groups,
+            // Dynamic Tabs Data
+            lessonTabs,
 
-            // Dynamic Tab Titles
-            level1Title: 'Level 1 (5세)',
-            level2Title: 'Level 2 (6세)',
-            level3Title: 'Level 3 (7세)',
-            aiLevel1Title: 'Pre-AI 1 (5세)',
-            aiLevel2Title: 'Pre-AI 2 (6세)',
-            aiLevel3Title: 'Pre-AI 3 (7세)',
+            // Legacy support (pass empty or dummy if view still checks them before full refactor)
+            // Ideally we remove them from view entirely.
 
             pageTitle: '프리스쿨 교육자료'
         });

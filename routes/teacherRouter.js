@@ -113,27 +113,41 @@ router.get('/', requireTeacher, async (req, res) => {
         // Group Data
         // Teacher Request: "Show ALL data from Teacher sheet"
         // We will put everything into "Level 1" slot and hide others via empty arrays or logic
-        const allGroups = groupByVolume(teacherSheetData);
+        // Group Data
+        // Extract unique categories from Column A (Index 0)
+        const allCategories = [...new Set(teacherSheetData.map(row => row[0] ? row[0].trim() : '').filter(c => c !== ''))];
+
+        // Native sheet order approach:
+        const categoriesInOrder = [];
+        const seen = new Set();
+        teacherSheetData.forEach(row => {
+            const c = row[0] ? row[0].trim() : '';
+            if (c && !seen.has(c)) {
+                seen.add(c);
+                categoriesInOrder.push(c);
+            }
+        });
+
+        // Helper filter (same as kinderRouter)
+        const filterByCategory = (rows, categoryKeyword) => {
+            return rows.filter(row => row[0] && row[0].includes(categoryKeyword));
+        };
+
+        // Create Tabs structure
+        const lessonTabs = categoriesInOrder.map((cat, index) => {
+            return {
+                id: `dynamic-tab-${index}`,
+                title: cat,
+                groups: groupByVolume(filterByCategory(teacherSheetData, cat))
+            };
+        });
 
         res.render('kinder', {
             // Main Tab Titles
             pageTitle: '교사 교육자료',
 
-            // Lesson Tab Data (Only Level 1 used for ALL data)
-            level1Groups: allGroups,
-            level2Groups: [],
-            level3Groups: [],
-            aiLevel1Groups: [],
-            aiLevel2Groups: [],
-            aiLevel3Groups: [],
-
-            // Dynamic Tab Titles
-            level1Title: '전체 자료',
-            level2Title: ' ', // Empty title to hide or show blank
-            level3Title: ' ',
-            aiLevel1Title: ' ',
-            aiLevel2Title: ' ',
-            aiLevel3Title: ' ',
+            // Dynamic Tabs Data
+            lessonTabs,
 
             // Board Tab Data (Empty for now)
             preschoolTitle: '',
