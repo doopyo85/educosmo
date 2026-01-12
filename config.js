@@ -136,8 +136,6 @@ const CSP = {
     "'self'",
     "data:",
     "blob:",
-    "https://educodingnplaycontents.s3.amazonaws.com",
-    "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com",
     "https://kr.object.ncloudstorage.com", // 🔥 NCP Object Storage 추가
     "https://www.google.com",
     "https://code.org",
@@ -156,8 +154,6 @@ const CSP = {
     "'self'",
     "https://apis.google.com",
     "https://content-sheets.googleapis.com",
-    "https://educodingnplaycontents.s3.amazonaws.com",
-    "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com",
     "https://kr.object.ncloudstorage.com", // 🔥 NCP Object Storage 추가
     "https://www.google.com",
     "https://cdn.jsdelivr.net",
@@ -182,8 +178,6 @@ const CSP = {
     "https://docs.google.com",
     "https://sheets.googleapis.com",
     "https://content-sheets.googleapis.com",
-    "https://educodingnplaycontents.s3.amazonaws.com",
-    "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com",
     "https://kr.object.ncloudstorage.com", // 🔥 NCP Object Storage 추가
     // codingnplay 도메인들
     "https://app.codingnplay.co.kr:8080",
