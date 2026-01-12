@@ -3,7 +3,14 @@
     "allow": [
       "Bash(curl:*)",
       "Bash(pm2 restart:*)",
-      "Bash(docker-compose up:*)"
+      "Bash(docker-compose up:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker exec:*)",
+      "Bash(cat:*)",
+      "Bash(if [ -f .env ])",
+      "Bash(then grep -E \"\\(AWS|S3|NCP|BUCKET|ENDPOINT\\)\" .env)",
+      "Bash(else echo \"No .env file\")",
+      "Bash(fi)"
     ]
   }
 }

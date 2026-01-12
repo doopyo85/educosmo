@@ -5,6 +5,7 @@ set -e
 MOUNT_POINT="/app/jupyter_notebooks"
 BUCKET_NAME="${S3_BUCKET_NAME:-educodingnplaycontents}"
 AWS_REGION="${AWS_REGION:-kr}"
+S3_ENDPOINT_URL="${S3_ENDPOINT_URL:-https://kr.object.ncloudstorage.com}"
 
 # Ensure mount point exists
 mkdir -p "$MOUNT_POINT"

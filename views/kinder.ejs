@@ -4,281 +4,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>교사게시판</title>
+    <title>
+        <%= pageTitle %>
+    </title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/styles.css">
-    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        /* Custom Styles for Master-Detail Layout */
+        .master-detail-container {
+            display: flex;
+            height: calc(100vh - 160px);
+            /* Adjust based on header/footer */
+            min-height: 600px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Sidebar (Master) */
+        .sidebar {
+            width: 320px;
+            background: #f8f9fa;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #e7f1ff;
+            color: #0c63e4;
+        }
+
+        .accordion-button {
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+        }
+
+        .session-item {
+            display: block;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: #495057;
+            border-bottom: 1px solid #f1f3f5;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .session-item:hover {
+            background-color: #f1f3f5;
+            color: #212529;
+        }
+
+        .session-item.active {
+            background-color: #e7f1ff;
+            color: #0c63e4;
+            border-left: 4px solid #0c63e4;
+            font-weight: 600;
+        }
+
+        /* Main Content (Detail) */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #fff;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #000;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .carousel-item img {
+            max-height: 600px;
+            object-fit: contain;
+            width: 100%;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #adb5bd;
+        }
+
+        /* Tabs Styling */
+        .nav-pills .nav-link {
+            border-radius: 20px;
+            padding: 10px 25px;
+            font-weight: 600;
+            margin: 0 5px;
+            color: #6c757d;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #1d1d1f;
+            /* Apple Style Dark */
+            color: #fff;
+        }
+
+        /* Badge */
+        .session-topic {
+            font-size: 0.85rem;
+            color: #868e96;
+            margin-top: 4px;
+        }
+    </style>
 </head>
 
 <body>
     <%- include('partials/header') %>
 
-        <div class="container mt-5">
-            <h1 class="text-center">교사게시판</h1>
-            <p class="text-center">교사들이 필요한 자료를 모아놓았습니다.</p>
+        <div class="container-fluid mt-4 mb-5" style="max-width: 1600px;">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold">
+                    <%= pageTitle %>
+                </h2>
+                <p class="text-muted">연령별 교육 자료와 영상을 확인하세요.</p>
+            </div>
 
-            <!-- 동적으로 탭 생성 -->
-            <ul class="nav nav-pills justify-content-center mb-4" id="categoryTabs" role="tablist">
+            <!-- Level Tabs -->
+            <ul class="nav nav-pills justify-content-center mb-4" id="levelTabs" role="tablist">
                 <li class="nav-item">
-                    <button class="nav-link active" id="tab-preschool" data-bs-toggle="tab" data-bs-target="#preschool"
-                        type="button" role="tab" aria-selected="true">
-                        <%= preschoolTitle %>
+                    <button class="nav-link active" id="tab-lv1" data-bs-toggle="pill" data-bs-target="#content-lv1"
+                        type="button" role="tab">
+                        Level 1 (5세)
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" id="tab-preschoolAI" data-bs-toggle="tab" data-bs-target="#preschoolAI"
-                        type="button" role="tab" aria-selected="false">
-                        <%= preschoolAITitle %>
+                    <button class="nav-link" id="tab-lv2" data-bs-toggle="pill" data-bs-target="#content-lv2"
+                        type="button" role="tab">
+                        Level 2 (6세)
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="tab-lv3" data-bs-toggle="pill" data-bs-target="#content-lv3"
+                        type="button" role="tab">
+                        Level 3 (7세)
                     </button>
                 </li>
             </ul>
 
-            <!-- 탭 콘텐츠 -->
-            <div class="tab-content mt-3">
-                <style>
-                    /* 🔥 Apple-Style List Design (Board-like) */
-                    .apple-list-container {
-                        max-width: 1000px;
-                        margin: 0 auto 40px auto;
-                        background: #ffffff;
-                        border-radius: 20px;
-                        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-                        overflow: hidden;
-                        border: 1px solid rgba(0, 0, 0, 0.04);
-                    }
+            <!-- Tab Contents -->
+            <div class="tab-content" id="levelTabContent">
 
-                    .apple-list-header {
-                        display: flex;
-                        background-color: #fafafa;
-                        border-bottom: 1px solid #efeef1;
-                        padding: 18px 20px;
-                        font-weight: 600;
-                        color: #86868b;
-                        font-size: 13px;
-                    }
-
-                    .apple-list-row {
-                        display: flex;
-                        align-items: center;
-                        padding: 20px 20px;
-                        border-bottom: 1px solid #efeef1;
-                        transition: background-color 0.2s;
-                        text-decoration: none;
-                        color: inherit;
-                    }
-
-                    .apple-list-row:last-child {
-                        border-bottom: none;
-                    }
-
-                    .apple-list-row:hover {
-                        background-color: #fbfbfd;
-                    }
-
-                    /* Column Widths & Alignment */
-                    .col-category {
-                        width: 15%;
-                        text-align: center;
-                        flex-shrink: 0;
-                    }
-
-                    .col-title {
-                        width: 65%;
-                        text-align: center;
-                        /* 🔥 Requested Center Alignment */
-                        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                        font-size: 15px;
-                        font-weight: 600;
-                        color: #1d1d1f;
-                        padding: 0 15px;
-                    }
-
-                    .col-action {
-                        width: 20%;
-                        text-align: center;
-                        flex-shrink: 0;
-                    }
-
-                    /* Badges */
-                    .apple-badge {
-                        display: inline-block;
-                        padding: 6px 14px;
-                        border-radius: 20px;
-                        font-size: 12px;
-                        font-weight: 600;
-                        letter-spacing: -0.01em;
-                    }
-
-                    .badge-primary {
-                        background: #eef2ff;
-                        color: #4338ca;
-                    }
-
-                    .badge-success {
-                        background: #f0fdf4;
-                        color: #15803d;
-                    }
-
-                    /* Buttons */
-                    .btn-apple-outline {
-                        border: 1px solid #e5e5e5;
-                        background: white;
-                        color: #1d1d1f;
-                        padding: 6px 16px;
-                        border-radius: 18px;
-                        font-size: 13px;
-                        font-weight: 500;
-                        transition: all 0.2s;
-                        text-decoration: none;
-                        display: inline-flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 6px;
-                    }
-
-                    .btn-apple-outline:hover {
-                        border-color: #0071e3;
-                        color: #0071e3;
-                        background: #f5faff;
-                        transform: translateY(-1px);
-                    }
-
-                    /* Mobile Responsive (Stacking) */
-                    @media (max-width: 768px) {
-                        .apple-list-header {
-                            display: none;
-                        }
-
-                        /* Hide header on mobile */
-
-                        .apple-list-row {
-                            flex-direction: column;
-                            gap: 12px;
-                            padding: 20px;
-                            text-align: center;
-                        }
-
-                        .col-category,
-                        .col-title,
-                        .col-action {
-                            width: 100%;
-                            text-align: center;
-                        }
-
-                        .col-title {
-                            font-size: 16px;
-                            margin: 5px 0;
-                        }
-                    }
-
-                    .nav-pills .nav-link {
-                        border-radius: 20px;
-                        padding: 10px 25px;
-                        font-weight: 600;
-                        margin: 0 5px;
-                        color: #86868b;
-                    }
-
-                    .nav-pills .nav-link.active {
-                        background-color: #1d1d1f;
-                        color: white;
-                    }
-                </style>
-
-                <div class="tab-content mt-4">
-                    <!-- Preschool Tab -->
-                    <div id="preschool" class="tab-pane fade show active">
-                        <div class="apple-list-container">
-                            <!-- Header -->
-                            <div class="apple-list-header">
-                                <div class="col-category">분류</div>
-                                <div class="col-title">자료명</div>
-                                <div class="col-action">다운로드</div>
-                            </div>
-                            <!-- Rows -->
-                            <% preschoolItems.forEach(item=> { %>
-                                <div class="apple-list-row">
-                                    <div class="col-category">
-                                        <span class="apple-badge badge-primary">
-                                            <%= item.type %>
-                                        </span>
-                                    </div>
-                                    <div class="col-title">
-                                        <%= item.content %>
-                                    </div>
-                                    <div class="col-action">
-                                        <div class="d-flex justify-content-center gap-2 flex-wrap">
-                                            <% item.links.forEach(linkText=> { %>
-                                                <% if (linkText.trim()) { %>
-                                                    <a href="<%= item.url %>" target="_blank" class="btn-apple-outline">
-                                                        <i class="bi bi-cloud-download"></i>
-                                                        <span class="d-none d-sm-inline">
-                                                            <%= linkText %>
-                                                        </span>
-                                                    </a>
-                                                    <% } %>
+                <!-- Helper Mixin for Recursive Content (Using EJS function) -->
+                <% function renderMasterDetail(levelId, groups) { %>
+                    <div class="tab-pane fade <%= levelId === 'content-lv1' ? 'show active' : '' %>" id="<%= levelId %>"
+                        role="tabpanel">
+                        <div class="master-detail-container">
+                            <!-- Sidebar: List -->
+                            <div class="sidebar">
+                                <div class="accordion accordion-flush" id="accordion-<%= levelId %>">
+                                    <% groups.forEach((group, index)=> { %>
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="heading-<%= levelId %>-<%= index %>">
+                                                <button class="accordion-button <%= index !== 0 ? 'collapsed' : '' %>"
+                                                    type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#collapse-<%= levelId %>-<%= index %>">
+                                                    <%= group.title %>
+                                                </button>
+                                            </h2>
+                                            <div id="collapse-<%= levelId %>-<%= index %>"
+                                                class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>"
+                                                data-bs-parent="#accordion-<%= levelId %>">
+                                                <div class="accordion-body p-0">
+                                                    <% group.sessions.forEach((session, sIndex)=> { %>
+                                                        <a href="#" class="session-item" data-level="<%= levelId %>"
+                                                            data-title="<%= session.name %>"
+                                                            data-topic="<%= session.topic %>"
+                                                            data-video="<%= session.videoUrl %>"
+                                                            data-images='<%= JSON.stringify(session.images) %>'
+                                                            onclick="loadContent(this)">
+                                                            <div>
+                                                                <%= session.name %>
+                                                            </div>
+                                                            <div class="session-topic">
+                                                                <%= session.topic %>
+                                                            </div>
+                                                        </a>
                                                         <% }); %>
-                                                            <% if (item.links.length===0) { %>
-                                                                <span class="text-muted"
-                                                                    style="font-size: 13px;">준비중</span>
-                                                                <% } %>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                        <% }); %>
                                 </div>
-                                <% }); %>
+                            </div>
+
+                            <!-- Main: Content Viewer -->
+                            <div class="main-content" id="viewer-<%= levelId %>">
+                                <div class="empty-state">
+                                    <i class="bi bi-arrow-left-circle" style="font-size: 3rem;"></i>
+                                    <p class="mt-3">왼쪽 목록에서 학습 차시를 선택해주세요.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    <% } %>
 
-                    <!-- Preschool AI Tab -->
-                    <div id="preschoolAI" class="tab-pane fade">
-                        <div class="apple-list-container">
-                            <!-- Header -->
-                            <div class="apple-list-header">
-                                <div class="col-category">분류</div>
-                                <div class="col-title">자료명</div>
-                                <div class="col-action">다운로드</div>
-                            </div>
-                            <!-- Rows -->
-                            <% preschoolAIItems.forEach(item=> { %>
-                                <div class="apple-list-row">
-                                    <div class="col-category">
-                                        <span class="apple-badge badge-success">
-                                            <%= item.type %>
-                                        </span>
-                                    </div>
-                                    <div class="col-title">
-                                        <%= item.content %>
-                                    </div>
-                                    <div class="col-action">
-                                        <div class="d-flex justify-content-center gap-2 flex-wrap">
-                                            <% item.links.forEach(linkText=> { %>
-                                                <% if (linkText.trim()) { %>
-                                                    <a href="<%= item.url %>" target="_blank" class="btn-apple-outline">
-                                                        <i class="bi bi-robot"></i>
-                                                        <span class="d-none d-sm-inline">
-                                                            <%= linkText %>
-                                                        </span>
-                                                    </a>
-                                                    <% } %>
-                                                        <% }); %>
-                                                            <% if (item.links.length===0) { %>
-                                                                <span class="text-muted"
-                                                                    style="font-size: 13px;">준비중</span>
-                                                                <% } %>
-                                        </div>
-                                    </div>
-                                </div>
-                                <% }); %>
-                        </div>
-                    </div>
-                </div>
+                        <!-- Render Tabs -->
+                        <%= renderMasterDetail('content-lv1', level1Groups) %>
+                            <%= renderMasterDetail('content-lv2', level2Groups) %>
+                                <%= renderMasterDetail('content-lv3', level3Groups) %>
+
             </div>
-        </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            function loadContent(element) {
+                const levelId = element.dataset.level;
+                const title = element.dataset.title;
+                const topic = element.dataset.topic;
+                const videoUrl = element.dataset.video;
+                const images = JSON.parse(element.dataset.images || '[]');
+
+                // Active Class Toggle
+                document.querySelectorAll(`#${levelId} .session-item`).forEach(el => el.classList.remove('active'));
+                element.classList.add('active');
+
+                // Video Embed Logic
+                let videoHtml = '';
+                if (videoUrl) {
+                    let embedUrl = videoUrl;
+                    if (videoUrl.includes('youtu.be/')) {
+                        embedUrl = videoUrl.replace('youtu.be/', 'www.youtube.com/embed/');
+                    } else if (videoUrl.includes('watch?v=')) {
+                        embedUrl = videoUrl.replace('watch?v=', 'embed/');
+                    }
+                    videoHtml = `
+                    <div class="video-container">
+                        <iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                `;
+                } else {
+                    videoHtml = `<div class="alert alert-secondary text-center">등록된 영상이 없습니다.</div>`;
+                }
+
+                // Carousel Logic
+                let carouselHtml = '';
+                if (images.length > 0) {
+                    const indicators = images.map((_, i) =>
+                        `<button type="button" data-bs-target="#carousel-${levelId}" data-bs-slide-to="${i}" class="${i === 0 ? 'active' : ''}" aria-current="${i === 0}"></button>`
+                    ).join('');
+
+                    const items = images.map((img, i) => `
+                    <div class="carousel-item ${i === 0 ? 'active' : ''}">
+                        <img src="${img}" class="d-block w-100" alt="Guide Image ${i + 1}">
+                    </div>
+                `).join('');
+
+                    carouselHtml = `
+                    <h5 class="mt-4 mb-3 border-start border-4 border-primary ps-2">교사 지도서</h5>
+                    <div id="carousel-${levelId}" class="carousel slide bg-light rounded" data-bs-ride="carousel">
+                        <div class="carousel-indicators">
+                            ${indicators}
+                        </div>
+                        <div class="carousel-inner">
+                            ${items}
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carousel-${levelId}" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon bg-dark rounded-circle" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carousel-${levelId}" data-bs-slide="next">
+                            <span class="carousel-control-next-icon bg-dark rounded-circle" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                `;
+                } else {
+                    carouselHtml = `<div class="alert alert-light text-center mt-3 text-muted border">등록된 지도서 이미지가 없습니다.</div>`;
+                }
+
+                // Render Content
+                const viewer = document.querySelector(`#viewer-${levelId}`);
+                viewer.innerHTML = `
+                <h3 class="mb-1">${title}</h3>
+                <p class="text-muted mb-4">${topic}</p>
+                ${videoHtml}
+                ${carouselHtml}
+            `;
+            }
+        </script>
 </body>
 
 </html>

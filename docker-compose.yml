@@ -24,9 +24,11 @@ services:
       - "8889:8888"
     environment:
       - JUPYTER_PORT=8888
-      - AWS_REGION=${AWS_REGION:-ap-northeast-2}
+      - AWS_REGION=${AWS_REGION:-kr}
       - S3_BUCKET_NAME=${S3_BUCKET_NAME:-educodingnplaycontents}
       - S3_ENDPOINT_URL=https://kr.object.ncloudstorage.com
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     networks:
       - edu-network
 

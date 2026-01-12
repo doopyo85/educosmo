@@ -1,0 +1,504 @@
+Sheet Names: ['교사게시판', '1.프리스쿨', '프리강사교육', '프리-LV1(5세)', '프리-LV2(6세)', '프리-LV3(7세)', '알버트사용법', '프리AI(LV2)', '프리AI(LV3)', '2.가맹센터', '주니어-LV1', '주니어-LV2', '센터교육', '특강1book', 'CPS', 'CPE', 'CPA(AI)', 'CTR-앱인벤터', 'CTR-파이썬', 'CTR-특강', 'App Metadata', '관련사이트', '문의하기', 'App Logins', 'App Comments']
+
+--- Sheet: 교사게시판 ---
+Columns: ['프리스쿨', 'Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', '프리스쿨 AI', 'Unnamed: 5', 'Unnamed: 6', 'Unnamed: 7']
+Data Types:
+프리스쿨          object
+Unnamed: 1    object
+Unnamed: 2    object
+Unnamed: 3    object
+프리스쿨 AI       object
+Unnamed: 5    object
+Unnamed: 6    object
+Unnamed: 7    object
+dtype: object
+Sample Data:
+   프리스쿨  Unnamed: 1                                 Unnamed: 2                Unnamed: 3 프리스쿨 AI      Unnamed: 5    Unnamed: 6                Unnamed: 7
+0    종류          내용                                     다운로드링크                       url      종류              내용        다운로드링크                       NaN
+1  프리스쿨        OT자료                                     [OT자료]  http://naver.me/578tYppA  프리스쿨AI        AI 연간계획안    [AI 연간계획안]  http://naver.me/G3hskGhS
+2  프리스쿨  BT 플레이어 어플  [BT어플 모음]\n[알버트 BT 앱 설치방법]\n[알버트AI용 스택카드]  http://naver.me/GWo1EEnR  프리스쿨AI        AI 월간계획안    [AI 월간계획안]  http://naver.me/GcWUyP1I
+3  프리스쿨  BT 플레이어 어플                            [알버트 BT 앱 설치방법]  http://naver.me/xOvQiYxB  프리스쿨AI         AI OT자료     [AI OT자료]  http://naver.me/FAQwbHJo
+4  프리스쿨  BT 플레이어 어플                              [알버트AI용 스택카드]  http://naver.me/F9pSVmep  프리스쿨AI  프리스쿨AI 교사용 지도서  [AI 교사용 지도서]  http://naver.me/GisWmvWg
+
+--- Sheet: 1.프리스쿨 ---
+Columns: ['구분', '사용자', 'IMG-1']
+Data Types:
+구분       object
+사용자      object
+IMG-1    object
+dtype: object
+Sample Data:
+            구분           사용자                                                                  IMG-1
+0  프리스쿨/프리스쿨AI  유치원/어린이집/센터용  http://codingnplay.co.kr/wp-content/uploads/2023/04/프리스쿨_카드-001-1.png
+
+--- Sheet: 프리강사교육 ---
+Columns: ['Group by', '차시명', '주제', '활동명', '강의자', '재생시간', 'URL', 'IMG-1']
+Data Types:
+Group by     object
+차시명         float64
+주제           object
+활동명         float64
+강의자         float64
+재생시간         object
+URL          object
+IMG-1        object
+dtype: object
+Sample Data:
+   Group by  차시명                          주제  활동명  강의자      재생시간                            URL                                                           IMG-1
+0    프리스쿨OT  NaN                  0. 프리스쿨 OT  NaN  NaN  00:10:52   https://youtu.be/2lzS1RRvlf4  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png
+1  상반기 강사교육  NaN          1. 4차산업혁명 시대와 코딩교육  NaN  NaN  00:10:51   https://youtu.be/uvycDHIgnz4  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png
+2  상반기 강사교육  NaN             2. 교재 및 프로그램 소개  NaN  NaN  00:06:04   https://youtu.be/T5WQxyGZTc0  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png
+3  상반기 강사교육  NaN                3. 알버트 기능 소개  NaN  NaN  00:05:07   https://youtu.be/4K_x5JluFqk  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png
+4  상반기 강사교육  NaN  4. 센서 기능 활용하기 + 산책을 해요 컨텐츠  NaN  NaN  00:02:20   https://youtu.be/9dfUBgBRD3Q  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png
+
+--- Sheet: 프리-LV1(5세) ---
+Columns: ['Group by', '차시명', '주제', '언플러그드활동', '재생시간', 'URL', 'Thumb', 'IMG-1', 'IMG-2', 'IMG-3', 'IMG-4', 'IMG-5', 'IMG-6', 'IMG-7']
+Data Types:
+Group by    object
+차시명         object
+주제          object
+언플러그드활동     object
+재생시간        object
+URL         object
+Thumb       object
+IMG-1       object
+IMG-2       object
+IMG-3       object
+IMG-4       object
+IMG-5       object
+IMG-6       object
+IMG-7       object
+dtype: object
+Sample Data:
+    Group by             차시명            주제           언플러그드활동      재생시간                           URL                                                      Thumb                                                                 IMG-1                                                                 IMG-2                                                                 IMG-3                                                                 IMG-4                                                                 IMG-5                                                                 IMG-6                                                                 IMG-7
+0  Level1 1호  Level 1 1호 2차시      우리 원의 환경        2.로봇친구 알버트       NaN                           NaN  https://cdn.imweb.me/thumbnail/20220509/476346a081e43.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_05.jpg                                                                   NaN                                                                   NaN
+1  Level1 1호  Level 1 1호 4차시       원에서의 하루      4.사랑의 길을 건너요       NaN                           NaN  https://cdn.imweb.me/thumbnail/20220509/476346a081e43.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_07.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_08.jpg                                                                   NaN                                                                   NaN                                                                   NaN                                                                   NaN
+2  Level1 1호  Level 1 1호 6차시     원에서 만난 친구        6.생일을 축하해요   0:00:35  https://youtu.be/Or1gf7-8fDQ  https://cdn.imweb.me/thumbnail/20220509/476346a081e43.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_09.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_10.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_11.jpg                                                                   NaN                                                                   NaN                                                                   NaN                                                                   NaN
+3  Level1 1호  Level 1 1호 8차시  함께 놀이하는 우리 원     8.알버트, 함께 가자!  00:01:39  https://youtu.be/xdRX-UHsOrQ  https://cdn.imweb.me/thumbnail/20220509/476346a081e43.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_12.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_13.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_14.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_15.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_16.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_17.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_01_TG_18.jpg
+4  Level1 2호  Level 1 2호 2차시      봄 날씨와 풍경  2.꽃이 되고 싶은 작은 씨앗  00:01:54  https://youtu.be/uxukweGlBFE  https://cdn.imweb.me/thumbnail/20220509/1b42d9f331cab.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_02_TG_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_02_TG_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_02_TG_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_02_TG_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_1_02_TG_05.jpg                                                                   NaN                                                                   NaN
+
+--- Sheet: 프리-LV2(6세) ---
+Columns: ['Group by', '차시명', '주제', '활동명', '강의자', '재생시간', 'URL', 'Thumb', 'IMG-1', 'IMG-2', 'IMG-3', 'IMG-4', 'IMG-5', 'IMG-6', 'IMG-7']
+Data Types:
+Group by     object
+차시명          object
+주제           object
+활동명          object
+강의자         float64
+재생시간         object
+URL          object
+Thumb        object
+IMG-1        object
+IMG-2        object
+IMG-3        object
+IMG-4        object
+IMG-5        object
+IMG-6        object
+IMG-7        object
+dtype: object
+Sample Data:
+    Group by             차시명          주제             활동명  강의자      재생시간                           URL                                                      Thumb                                                                 IMG-1                                                                 IMG-2                                                                 IMG-3                                                                 IMG-4                                                                 IMG-5                                                                 IMG-6                                                                 IMG-7
+0  Level2 1호  Level 2 1호 2차시    우리 원의 환경     2.알버트야,반가워!  NaN       NaN                           NaN  https://cdn.imweb.me/thumbnail/20220509/4d86aa1ef684f.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_05.jpg                                                                   NaN                                                                   NaN
+1  Level2 1호  Level 2 1호 4차시     원에서의 하루   4.즐거운 하루를 보내요  NaN   0:00:43  https://youtu.be/oRa0gw6WHgc  https://cdn.imweb.me/thumbnail/20220509/4d86aa1ef684f.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_07.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_08.jpg                                                                   NaN                                                                   NaN                                                                   NaN                                                                   NaN
+2  Level2 1호  Level 2 1호 6차시   원에서 만난 친구   6.서로의 마음을 알아요  NaN  00:00:39  https://youtu.be/Ta-xFNfC0Fk  https://cdn.imweb.me/thumbnail/20220509/4d86aa1ef684f.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_09.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_10.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_11.jpg                                                                   NaN                                                                   NaN                                                                   NaN                                                                   NaN
+3  Level2 1호  Level 2 1호 8차시  함께 만드는 유치원  8.알쏭달쏭 우리 원 퍼즐  NaN  00:01:27  https://youtu.be/44186ZRYTo0  https://cdn.imweb.me/thumbnail/20220509/4d86aa1ef684f.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_12.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_13.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_14.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_15.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_16.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_01_TG_17.jpg                                                                   NaN
+4  Level2 2호  Level 2 2호 2차시    봄 풍경 즐기기    2.조르륵 내리는 봄비  NaN  00:00:51  https://youtu.be/1q33SPratXk  https://cdn.imweb.me/thumbnail/20220509/627e3b0b7c3d3.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_02_TG_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_02_TG_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_02_TG_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_02_TG_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_02_TG_05.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_02_TG_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_2_02_TG_07.jpg
+
+--- Sheet: 프리-LV3(7세) ---
+Columns: ['Group by', '차시명', '주제', '활동명', '강의자', '재생시간', 'URL', 'Thumb', 'IMG-1', 'IMG-2', 'IMG-3', 'IMG-4', 'IMG-5', 'IMG-6', 'IMG-7']
+Data Types:
+Group by     object
+차시명          object
+주제           object
+활동명          object
+강의자         float64
+재생시간         object
+URL          object
+Thumb        object
+IMG-1        object
+IMG-2        object
+IMG-3        object
+IMG-4        object
+IMG-5        object
+IMG-6        object
+IMG-7        object
+dtype: object
+Sample Data:
+    Group by             차시명           주제               활동명  강의자      재생시간                           URL                                                      Thumb                                                                 IMG-1                                                                 IMG-2                                                                 IMG-3                                                                 IMG-4                                                                 IMG-5                                                                 IMG-6                                                                 IMG-7
+0  Level3 1호  Level 3 1호 2차시     우리 원의 환경        2.로봇친구 알버트  NaN       NaN                           NaN  https://cdn.imweb.me/thumbnail/20220509/965b44b4b1226.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_05.jpg                                                                   NaN                                                                   NaN
+1  Level3 1호  Level 3 1호 4차시      원에서의 하루  4.친구와 함께하면 더 좋아요  NaN   0:00:46  https://youtu.be/1GkEiNIUbBg  https://cdn.imweb.me/thumbnail/20220509/965b44b4b1226.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_07.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_08.jpg                                                                   NaN                                                                   NaN                                                                   NaN                                                                   NaN
+2  Level3 1호  Level 3 1호 6차시    원에서 만난 친구       6.우리의 멋진 이름  NaN  00:01:13  https://youtu.be/OvK3dLzGWmE  https://cdn.imweb.me/thumbnail/20220509/965b44b4b1226.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_09.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_10.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_11.jpg                                                                   NaN                                                                   NaN                                                                   NaN                                                                   NaN
+3  Level3 1호  Level 3 1호 8차시  함께 만드는 우리 원          8.점점 변해요  NaN  00:00:38  https://youtu.be/lvoUx64FPmA  https://cdn.imweb.me/thumbnail/20220509/965b44b4b1226.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_12.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_13.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_14.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_15.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_16.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_17.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_01_TG_18.jpg
+4  Level3 2호  Level 3 2호 2차시        봄의 모습         2.알버트의 우산  NaN  00:00:31  https://youtu.be/OnMl6v6M01o  https://cdn.imweb.me/thumbnail/20220509/e4f36f6916d83.png  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_02_TG_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_02_TG_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_02_TG_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_02_TG_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/p_3_02_TG_05.jpg                                                                   NaN                                                                   NaN
+
+--- Sheet: 알버트사용법 ---
+Columns: ['Group by', '차시명', '주제', '활동명', '강의자', '재생시간', 'URL', 'IMG-1']
+Data Types:
+Group by     object
+차시명         float64
+주제           object
+활동명          object
+강의자         float64
+재생시간         object
+URL          object
+IMG-1        object
+dtype: object
+Sample Data:
+     Group by  차시명                주제            활동명  강의자      재생시간                            URL                                                                IMG-1
+0  프리스쿨 AI OT  NaN     0. 프리스쿨 AI OT      프리스쿨AI 소개  NaN  00:13:35   https://youtu.be/cUIktntToVM  http://codingnplay.co.kr/wp-content/uploads/2023/04/preschoolAI.png
+1     알버트 사용법  NaN     1. 알버트충전/전원켜기     알버트충전/전원켜기  NaN       NaN   https://youtu.be/2V0q2vRYQ2Q     http://codingnplay.co.kr/wp-content/uploads/2023/04/albertAI.jpg
+2     알버트 사용법  NaN      2. 알버트AI 앱모드   알버트 앱모드 알아보기  NaN       NaN   https://youtu.be/Z4u686UWag0     http://codingnplay.co.kr/wp-content/uploads/2023/04/albertAI.jpg
+3     알버트 사용법  NaN    3. 알버트 센서/따라오기   알버트 센서와 따라오기  NaN       NaN   https://youtu.be/3YqLeoFcmgg     http://codingnplay.co.kr/wp-content/uploads/2023/04/albertAI.jpg
+4     알버트 사용법  NaN  4. 알버트 컨트롤러 연결하기  알버트 컨트롤러 연결하기  NaN       NaN   https://youtu.be/XeFqjWgDdh0     http://codingnplay.co.kr/wp-content/uploads/2023/04/albertAI.jpg
+
+--- Sheet: 프리AI(LV2) ---
+Columns: ['Group by', '차시명', '주제', '활동명', '강의자', '재생시간', 'URL', 'IMG-1']
+Data Types:
+Group by     object
+차시명          object
+주제           object
+활동명          object
+강의자          object
+재생시간        float64
+URL          object
+IMG-1        object
+dtype: object
+Sample Data:
+    Group by            차시명           주제                                 활동명      강의자  재생시간                           URL                                                      IMG-1
+0  Level2 1호  Level2 1호 1주차    원에서 만난 친구    1.사람을 인식하는 인공지능 얼굴 패턴을 인식하는 인공지능  박상빈 과장님   NaN  https://youtu.be/l2914kGpBEY  https://cdn.imweb.me/thumbnail/20220425/67a797932b8f1.png
+1  Level2 1호  Level2 1호 2주차     즐거운 우리 원  2.사람의 얼굴 특징을 찾는 인공지능 얼굴을 구분하는 인공지능  박상빈 과장님   NaN  https://youtu.be/eBYtd1yBNow  https://cdn.imweb.me/thumbnail/20220425/67a797932b8f1.png
+2  Level2 1호  Level2 1호 3주차     우리 반의 하루       3.사람과 인사하는 인공지능 소리를 표현하는 인공지능  박상빈 과장님   NaN  https://youtu.be/wPhMJDW8dv0  https://cdn.imweb.me/thumbnail/20220425/67a797932b8f1.png
+3  Level2 1호  Level2 1호 4주차  함께 만드는 우리 원     4.말하는 방법을 배우는 인공지능 함께 놀이하는 인공지능  박상빈 과장님   NaN  https://youtu.be/sTT1-grFe6c  https://cdn.imweb.me/thumbnail/20220425/67a797932b8f1.png
+4  Level2 2호  Level2 2호 1주차        봄의 모습  1.봄의 모습을 인식하는 인공지능 봄의 모습을 배우는 인공지능  박상빈 과장님   NaN  https://youtu.be/2dqNX9aMtvU  https://cdn.imweb.me/thumbnail/20220503/be1390e121916.jpg
+
+--- Sheet: 프리AI(LV3) ---
+Columns: ['Group by', '차시명', '주제', '활동명', '강의자', '재생시간', 'URL', 'IMG-1']
+Data Types:
+Group by     object
+차시명          object
+주제           object
+활동명          object
+강의자         float64
+재생시간        float64
+URL          object
+IMG-1        object
+dtype: object
+Sample Data:
+    Group by            차시명           주제                   활동명  강의자  재생시간                           URL                                                      IMG-1
+0  Level3 1호  Level3 1호 1주차   새로운 친구들이에요            1.알버트야 안녕!  NaN   NaN  https://youtu.be/4mBqFeb2qXI  https://cdn.imweb.me/thumbnail/20230327/18ff47c880b6d.png
+1  Level3 1호  Level3 1호 2주차  우리 반의 하루 일과  2.우리 반 하루 일과를 찾아 떠나요  NaN   NaN  https://youtu.be/9juMxPSfwwI  https://cdn.imweb.me/thumbnail/20230327/18ff47c880b6d.png
+2  Level3 1호  Level3 1호 3주차  우리 반 물건이에요.       3.우리 반 물건을 찾아라!  NaN   NaN  https://youtu.be/vp5hY_xVpC4  https://cdn.imweb.me/thumbnail/20230327/18ff47c880b6d.png
+3  Level3 1호  Level3 1호 4주차     우리 원 놀이터     4.내가 제일 좋아하는 놀이기구  NaN   NaN  https://youtu.be/NYxNRvoAQ1Q  https://cdn.imweb.me/thumbnail/20230327/18ff47c880b6d.png
+4  Level3 2호  Level3 2호 1주차       봄 날씨에요        1.황사를 피할 수 있어요  NaN   NaN  https://youtu.be/xVBTjqQYIWU  https://cdn.imweb.me/thumbnail/20230327/833f5d6971dca.png
+
+--- Sheet: 2.가맹센터 ---
+Columns: ['구분', '사용자', 'IMG-1']
+Data Types:
+구분       object
+사용자      object
+IMG-1    object
+dtype: object
+Sample Data:
+         구분            사용자                                                              IMG-1
+0  가맹센터(학원)  초등/중등/고등(학원용)  http://codingnplay.co.kr/wp-content/uploads/2023/04/센터_카드-001.png
+
+--- Sheet: 주니어-LV1 ---
+Columns: ['Group by', '차시명', '주제', '활동명', '강의자', '재생시간', 'C.T요소', 'Thumb', 'IMG-1', 'IMG-2', 'IMG-3', 'IMG-4', 'IMG-5', 'IMG-6', 'IMG-7', 'IMG-8', 'IMG-9', 'IMG-10', 'IMG-11', 'IMG-12', 'IMG-13', 'IMG-14']
+Data Types:
+Group by     object
+차시명          object
+주제           object
+활동명          object
+강의자         float64
+재생시간        float64
+C.T요소        object
+Thumb        object
+IMG-1        object
+IMG-2        object
+IMG-3        object
+IMG-4        object
+IMG-5        object
+IMG-6        object
+IMG-7        object
+IMG-8        object
+IMG-9        object
+IMG-10       object
+IMG-11       object
+IMG-12       object
+IMG-13       object
+IMG-14      float64
+dtype: object
+Sample Data:
+    Group by            차시명       주제         활동명  강의자  재생시간         C.T요소                                                                           Thumb                                                                           IMG-1                                                                     IMG-2                                                                     IMG-3                                                                     IMG-4                                                                     IMG-5                                                                     IMG-6                                                                     IMG-7                                                                     IMG-8                                                                     IMG-9                                                                    IMG-10                                                                    IMG-11                                                                    IMG-12                                                                    IMG-13  IMG-14
+0     Level1          연간계획안      NaN         NaN  NaN   NaN           NaN  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_curriculum_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_curriculum_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_05.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_07.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_08.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_09.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_10.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_11.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL1_list_12.jpg     NaN
+1  Level1 1호  Level1 1호 1주차  동식물과 자연  이 보물 못봤어요?  NaN   NaN         자료 수집                       https://cdn.imweb.me/thumbnail/20220509/f636266645d66.png        http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week1_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week1_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week1_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week1_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week1_05.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week1_06.jpg                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN     NaN
+2  Level1 1호  Level1 1호 2주차  동식물과 자연  이 보물 못봤어요?  NaN   NaN         순차 나열                       https://cdn.imweb.me/thumbnail/20220509/f636266645d66.png        http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week2_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week2_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week2_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week2_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week2_05.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week2_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week2_07.jpg                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN     NaN
+3  Level1 1호  Level1 1호 3주차  동식물과 자연  이 보물 못봤어요?  NaN   NaN      측정\n(기초)                       https://cdn.imweb.me/thumbnail/20220509/f636266645d66.png        http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week3_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week3_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week3_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week3_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week3_05.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week3_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week3_07.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week3_08.jpg                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN     NaN
+4  Level1 1호  Level1 1호 4주차  동식물과 자연  이 보물 못봤어요?  NaN   NaN  신호 보내기\n(기초)                       https://cdn.imweb.me/thumbnail/20220509/f636266645d66.png        http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week4_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week4_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week4_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week4_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week4_05.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week4_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J1-1_TG_week4_07.jpg                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN     NaN
+
+--- Sheet: 주니어-LV2 ---
+Columns: ['Group by', '차시명', '주제', '활동명', '강의자', '재생시간', 'C.T요소', 'Thumb', 'IMG-1', 'IMG-2', 'IMG-3', 'IMG-4', 'IMG-5', 'IMG-6', 'IMG-7', 'IMG-8', 'IMG-9', 'IMG-10', 'IMG-11', 'IMG-12', 'IMG-13', 'IMG-14']
+Data Types:
+Group by     object
+차시명          object
+주제          float64
+활동명          object
+강의자         float64
+재생시간        float64
+C.T요소        object
+Thumb        object
+IMG-1        object
+IMG-2        object
+IMG-3        object
+IMG-4        object
+IMG-5        object
+IMG-6        object
+IMG-7        object
+IMG-8        object
+IMG-9        object
+IMG-10       object
+IMG-11       object
+IMG-12       object
+IMG-13       object
+IMG-14      float64
+dtype: object
+Sample Data:
+       Group by            차시명  주제          활동명  강의자  재생시간    C.T요소                                                                           Thumb                                                                           IMG-1                                                                     IMG-2                                                                     IMG-3                                                                     IMG-4                                                                     IMG-5                                                                     IMG-6                                                                     IMG-7                                                                     IMG-8                                                                     IMG-9                                                                    IMG-10                                                                    IMG-11                                                                    IMG-12                                                                    IMG-13  IMG-14
+0  Level2_연간계획안            NaN NaN        연간계획안  NaN   NaN      NaN  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_curriculum_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_curriculum_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_05.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_07.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_08.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_09.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_10.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_11.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J_LEVEL2_list_12.jpg     NaN
+1     Level2 1호  Level2 1호 1주차 NaN  코딩별에서 온 알버트  NaN   NaN     알고리즘                       https://cdn.imweb.me/thumbnail/20220509/dfe0efa7410ed.png        http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week1_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week1_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week1_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week1_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week1_05.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week1_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week1_07.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week1_08.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week1_09.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week1_10.jpg                                                                       NaN                                                                       NaN                                                                       NaN     NaN
+2     Level2 1호  Level2 1호 2주차 NaN  코딩별에서 온 알버트  NaN   NaN    자료 수집                       https://cdn.imweb.me/thumbnail/20220509/dfe0efa7410ed.png        http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week2_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week2_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week2_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week2_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week2_05.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week2_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week2_07.jpg                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN     NaN
+3     Level2 1호  Level2 1호 3주차 NaN  코딩별에서 온 알버트  NaN   NaN    자료 분석                       https://cdn.imweb.me/thumbnail/20220509/dfe0efa7410ed.png        http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week3_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week3_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week3_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week3_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week3_05.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week3_06.jpg                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN     NaN
+4     Level2 1호  Level2 1호 4주차 NaN  코딩별에서 온 알버트  NaN   NaN  순차/ 반복문                       https://cdn.imweb.me/thumbnail/20220509/dfe0efa7410ed.png        http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week4_01.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week4_02.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week4_03.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week4_04.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week4_05.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week4_06.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week4_07.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week4_08.jpg  http://codingnplay.co.kr/wp-content/uploads/2023/04/J2-1_TG_week4_09.jpg                                                                       NaN                                                                       NaN                                                                       NaN                                                                       NaN     NaN
+
+--- Sheet: 센터교육 ---
+Columns: ['Group by', '차시명', '주제', '강의자', '재생시간', 'URL', 'IMG-1', 'Download']
+Data Types:
+Group by    object
+차시명         object
+주제          object
+강의자         object
+재생시간        object
+URL         object
+IMG-1       object
+Download    object
+dtype: object
+Sample Data:
+       Group by  차시명                                         주제     강의자      재생시간                           URL                                                           IMG-1                  Download
+0         홍보용영상  NaN                   인공지능 교육, 우리 아이들부터 대상입니다.     NaN       NaN  https://youtu.be/NVYhuC-2vdw  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png                       NaN
+1         홍보용영상  NaN                                프리스쿨AI 소개영상     NaN       NaN  https://youtu.be/23lneVLOUAc  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png                       NaN
+2         설명회영상  NaN  2023 학부모 설명회(zoom)_초4~중등/2022개정교육과정과 코딩교육  전두표 팀장       NaN  https://youtu.be/ORnpx-_8fgw  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png  http://naver.me/5fPBsiUt
+3  홍보상담교육(2023)   1강                             온라인마케팅- 블로그만들기  전두표 팀장  00:54:36  https://youtu.be/NZIOQAVOeA0  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png  http://naver.me/5wANjqup
+4  홍보상담교육(2023)   2강                    온라인마케팅- 설명회 구글폼 만들기(예정)  전두표 팀장       NaN                           NaN                                                             NaN                       NaN
+
+--- Sheet: 특강1book ---
+Columns: ['Group by', '차시명', '주제', '강의자', '재생시간', 'URL', 'IMG-1', 'Download']
+Data Types:
+Group by     object
+차시명          object
+주제           object
+강의자          object
+재생시간        float64
+URL          object
+IMG-1        object
+Download     object
+dtype: object
+Sample Data:
+  Group by 차시명                                주제     강의자  재생시간                           URL                                                           IMG-1                  Download
+0  ChatGPT  1강  [특강] ChatGPT (1차시: ChatGPT소개/체험)  전두표 팀장   NaN  https://youtu.be/pMBdL2ovqXg  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png  http://naver.me/IgNytemM
+1  ChatGPT  2강    [특강] ChatGPT (2차시: 머신러닝/생성형ai)  전두표 팀장   NaN  https://youtu.be/xKypYMvesIA  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png                       NaN
+2  ChatGPT  3강      [특강] ChatGPT (3-4차시: 프로젝트소개)  전두표 팀장   NaN  https://youtu.be/wafp7T3ayeQ  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png                       NaN
+3  ChatGPT  4강   [특강] ChatGPT (3-4차시: A.TRPG만들기)  전두표 팀장   NaN  https://youtu.be/GYNJ_VA32sA  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png                       NaN
+4  ChatGPT  5강     [특강] ChatGPT (3-4차시: B.영상만들기)  전두표 팀장   NaN  https://youtu.be/6a-eIGFOq3o  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png                       NaN
+
+--- Sheet: CPS ---
+Columns: ['Group by', '차시명', '주제', 'C.T요소', '강의자', '재생시간', 'URL', 'IMG-1']
+Data Types:
+Group by    object
+차시명         object
+주제          object
+C.T요소       object
+강의자         object
+재생시간        object
+URL         object
+IMG-1       object
+dtype: object
+Sample Data:
+  Group by         차시명                    주제           C.T요소     강의자      재생시간                           URL                                                      IMG-1
+0   CPS 1호  CPS 1호 1차시        1-1. 동네 산책 길잡이      스프라이트 움직이기  전두표 팀장   0:51:10  https://youtu.be/yNG79vZa6LQ  https://cdn.imweb.me/thumbnail/20220509/969c63f65b33c.jpg
+1   CPS 1호  CPS 1호 2차시        1-2. 미래의 애니메이터  배경과 스프라이트 표현하기  황대성 팀장  00:45:53  https://youtu.be/2HwnNZDf70Q  https://cdn.imweb.me/thumbnail/20220509/969c63f65b33c.jpg
+2   CPS 1호  CPS 1호 3차시   1-3. 내 소중한 보물을 숨겨 줘      애니메이션 표현하기  황대성 팀장  00:55:56  https://youtu.be/BTJw1JIFMPU  https://cdn.imweb.me/thumbnail/20220509/969c63f65b33c.jpg
+3   CPS 1호  CPS 1호 4차시  1-4. 백발 발레리나의 마지막 무대          소리재생하기  황대성 팀장  00:51:30  https://youtu.be/8N_tIuw1kG8  https://cdn.imweb.me/thumbnail/20220509/969c63f65b33c.jpg
+4   CPS 2호  CPS 2호 1차시        2-1. 무사히 착륙하라!         반복 실행하기  황대성 팀장  00:58:27  https://youtu.be/w-bcrSBJSaY  https://cdn.imweb.me/thumbnail/20220504/aa67ee1515026.jpg
+
+--- Sheet: CPE ---
+Columns: ['Group by', '차시명', '주제', 'C.T요소', '강의자', '재생시간', 'URL', 'IMG-1']
+Data Types:
+Group by    object
+차시명         object
+주제          object
+C.T요소       object
+강의자         object
+재생시간        object
+URL         object
+IMG-1       object
+dtype: object
+Sample Data:
+  Group by         차시명            주제     C.T요소  강의자      재생시간                           URL                                                                 IMG-1
+0   CPE 소개          OT     교재구성 소개영상       NaN  황대성  00:13:50  https://youtu.be/eVN08vWyh0Y  https://cdn.imweb.me/upload/S202203311fcad71c4e314/441d5c3f5c14e.jpg
+1   CPE 1호  CPE 1호 1차시  토끼와 거북이의 재대결  오브젝트, 좌표  황대성  00:36:45  https://youtu.be/ERlp92CObDU  https://cdn.imweb.me/upload/S202203311fcad71c4e314/441d5c3f5c14e.jpg
+2   CPE 1호  CPE 1호 2차시       은혜갚은 개미      횟수반복  황대성  00:28:51  https://youtu.be/GqemRngKgR0  https://cdn.imweb.me/upload/S202203311fcad71c4e314/441d5c3f5c14e.jpg
+3   CPE 1호  CPE 1호 3차시        비겁한 박쥐      계속반복  황대성  00:21:04  https://youtu.be/jtxNV56lDo8  https://cdn.imweb.me/upload/S202203311fcad71c4e314/441d5c3f5c14e.jpg
+4   CPE 1호  CPE 1호 4차시       까마귀와 물병   이벤트, 장면  황대성  00:32:52  https://youtu.be/pugpz1cPKps  https://cdn.imweb.me/upload/S202203311fcad71c4e314/441d5c3f5c14e.jpg
+
+--- Sheet: CPA(AI) ---
+Columns: ['Group by', '차시명', '주제', 'C.T요소', '강의자', '재생시간', 'URL', 'img']
+Data Types:
+Group by    object
+차시명         object
+주제          object
+C.T요소       object
+강의자         object
+재생시간        object
+URL         object
+img         object
+dtype: object
+Sample Data:
+  Group by                     차시명                                주제      C.T요소    강의자      재생시간                           URL                                                        img
+0   CPA 1호              CPA 1호 1차시              1-1. 음성으로 드론을 조정한다고?       음성인식  황대성팀장  00:57:53  https://youtu.be/2_quHwvl4Go  https://cdn.imweb.me/thumbnail/20220710/cabfecbe3febe.png
+1   CPA 1호              CPA 1호 2차시         1-2. 나를 대신해서 책을 읽어주는 오디오북       읽어주기  황대성팀장  00:35:26  https://youtu.be/MXXcM7qp8n8  https://cdn.imweb.me/thumbnail/20220710/cabfecbe3febe.png
+2   CPA 1호  CPA 1호 3차시\nCPA 1호 4차시  1-3.번역을 도와줘! \n1-4. 인공지능 코디 스타일봇  번역\n비디오감지  황대성팀장  01:31:18  https://youtu.be/-boNkbgULPg  https://cdn.imweb.me/thumbnail/20220710/cabfecbe3febe.png
+3   CPA 2호              CPA 2호 1차시         2-1. 나 혼자 게임한다(AI와 가위바위보)      이미지분류  황대성팀장  00:38:00  https://youtu.be/GrR6lmBXA8w  https://cdn.imweb.me/thumbnail/20220729/5764551f9137d.jpg
+4   CPA 2호              CPA 2호 2차시                   2-2. 나만의 인공지능DJ       음성분류  황대성팀장  00:28:50  https://youtu.be/5uS6tYkxR7o  https://cdn.imweb.me/thumbnail/20220729/5764551f9137d.jpg
+
+--- Sheet: CTR-앱인벤터 ---
+Columns: ['Group by', '차시명', '주제', 'C.T요소', '강의자', '재생시간', 'URL', 'IMG-1', 'URL(2021)', '재생시간.1']
+Data Types:
+Group by              object
+차시명                   object
+주제                    object
+C.T요소                 object
+강의자                   object
+재생시간                  object
+URL                   object
+IMG-1                 object
+URL(2021)             object
+재생시간.1       timedelta64[ns]
+dtype: object
+Sample Data:
+  Group by               차시명          주제     C.T요소     강의자      재생시간                           URL                                                      IMG-1                     URL(2021)          재생시간.1
+0   CTR 1호      1-1. 버튼을 눌러봐  동물카드 어플만들기  이벤트/레이아웃  전두표 팀장   0:32:15  https://youtu.be/rZVT5ZIPM1U  https://cdn.imweb.me/thumbnail/20220509/066b523ceba62.png  https://youtu.be/rZVT5ZIPM1U             NaT
+1   CTR 1호     1-2. 화면마다 다르게  동물카드 어플만들기    변수/리스트  전두표 팀장  01:14:30  https://youtu.be/aavM4e6XogE  https://cdn.imweb.me/thumbnail/20220509/066b523ceba62.png  https://youtu.be/PBeQPv9-gsA             NaT
+2   CTR 1호     1-3. 종류별로 묶어봐  동물카드 어플만들기     멀티스크린  전두표 팀장  01:39:58  https://youtu.be/BRvpWZVNzrI  https://cdn.imweb.me/thumbnail/20220509/066b523ceba62.png  https://youtu.be/BxByCRn2Bw0 0 days 00:52:47
+3   CTR 1호  1-4. 외국어로 바꾸자(1)  동물카드 어플만들기    번역기/함수  전두표 팀장   0:42:13  https://youtu.be/q2WpQdVOiXw  https://cdn.imweb.me/thumbnail/20220509/066b523ceba62.png  https://youtu.be/q2WpQdVOiXw             NaT
+4   CTR 1호  1-4. 외국어로 바꾸자(2)  동물카드 어플만들기    번역기/함수  전두표 팀장  01:40:17  https://youtu.be/a9ktMmhZU98  https://cdn.imweb.me/thumbnail/20220509/066b523ceba62.png  https://youtu.be/a9ktMmhZU98             NaT
+
+--- Sheet: CTR-파이썬 ---
+Columns: ['Group by', '차시명', '주제', 'C.T요소', '강의자', '재생시간', 'URL', 'IMG-1']
+Data Types:
+Group by     object
+차시명          object
+주제           object
+C.T요소        object
+강의자          object
+재생시간        float64
+URL          object
+IMG-1        object
+dtype: object
+Sample Data:
+  Group by         차시명                     주제         C.T요소     강의자  재생시간                           URL                                                           IMG-1
+0   CTR시리즈      오리엔테이션    CTR시리즈 소개& 라인업 개발계획           NaN  전두표 팀장   NaN  https://youtu.be/2dcqfv05RhM  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png
+1   CTR시리즈      오리엔테이션       CTR시리즈_지도서 확인하는법           NaN  전두표 팀장   NaN  https://youtu.be/O2nphc_FtTU  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png
+2   파이썬 1호  CTR파이썬 1-1  1-1. 프로그래밍 기초/ 개발환경세팅  변수/ 표준입출력 함수  전두표 팀장   NaN  https://youtu.be/Bd9DJlOxiXU       https://cdn.imweb.me/thumbnail/20221125/816e7f523ea18.jpg
+3   파이썬 1호  CTR파이썬 1-2   1-2. 기본자료형- 숫자형, 문자열      숫자형/ 문자열  전두표 팀장   NaN  https://youtu.be/gVyRB90ff-c       https://cdn.imweb.me/thumbnail/20221125/816e7f523ea18.jpg
+4   파이썬 1호  CTR파이썬 1-3    1-3. 기본자료형- 리스트, 튜플       리스트/ 튜플  전두표 팀장   NaN  https://youtu.be/TACxx-GPevs       https://cdn.imweb.me/thumbnail/20221125/816e7f523ea18.jpg
+
+--- Sheet: CTR-특강 ---
+Columns: ['Group by', '차시명', '주제', 'C.T요소', '강의자', '재생시간', 'URL', 'IMG-1']
+Data Types:
+Group by    object
+차시명         object
+주제          object
+C.T요소       object
+강의자         object
+재생시간        object
+URL         object
+IMG-1       object
+dtype: object
+Sample Data:
+    Group by  차시명                 주제    C.T요소      강의자                          재생시간                                                             URL                                                      IMG-1
+0  ZEP(메타버스)   1강  [특강] ZEP(메타버스 특강)      NaN  김경원 지사장                           NaN                                    https://youtu.be/9tcXzOwGPGY  https://cdn.imweb.me/thumbnail/20221125/816e7f523ea18.jpg
+1        NaN  NaN       [특강] ChatGPT      NaN      NaN                           NaN                                    https://youtu.be/pMBdL2ovqXg                                                        NaN
+2       메타버스   1강  [특강] ZEP(메타버스 특강)  김경원 지사장      NaN  https://youtu.be/9tcXzOwGPGY  http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png                                                        NaN
+
+--- Sheet: App Metadata ---
+Columns: ['Last Automatic Refresh Initiated', 'Last Manual Refresh Requested']
+Data Types:
+Last Automatic Refresh Initiated           float64
+Last Manual Refresh Requested       datetime64[ns]
+dtype: object
+Sample Data:
+   Last Automatic Refresh Initiated Last Manual Refresh Requested
+0                               NaN       2023-11-09 07:24:54.383
+
+--- Sheet: 관련사이트 ---
+Columns: ['구분', '사이트명', '소개', 'URL', 'IMG-1']
+Data Types:
+구분       object
+사이트명     object
+소개       object
+URL      object
+IMG-1    object
+dtype: object
+Sample Data:
+      구분                           사이트명                            소개                                                                        URL                                                                                                       IMG-1
+0    사이트                        교재주문사이트                    코딩앤플레이 교재몰                                          https://shopcodingnplay.imweb.me/                                              http://codingnplay.co.kr/wp-content/uploads/2022/07/logo-1.png
+1    사이트                         학원운영자료                      네이버 마이박스                                                   http://naver.me/5YwLMZzj  https://play-lh.googleusercontent.com/p0ulJGD5X1diMXgTG9oauWbriH0nnM5-Rs215MtfwXbbQO8xvkKedZ1ToUx6yvDXGzLj
+2    사이트  ID: cnp0102@codingnplay.co.kr          PW: 00000000  (0여덟개)                                              https://www.miricanvas.com/ko                                                  https://resource.miricanvas.com/image/bi/miricanvas_sq.png
+3  소통/설문                     줌 회의실 입장하기                  온라인교육/워크숍/미팅  https://us02web.zoom.us/j/3566471255?pwd=U3hGeFJ4dVZnYlRVNThTcHVKbUxTUT09                              http://codingnplay.co.kr/wp-content/uploads/2023/04/free-icon-zoom-5969328.png
+4   신청하기                   코딩교육지도사 교육신청  온라인신청후 > 010-5416-2984로 승인요청                                 https://codingnplay.ezcampus.me/course/120                                                 http://codingnplay.co.kr/wp-content/uploads/2023/01/001.jpg
+
+--- Sheet: 문의하기 ---
+Columns: ['구분', '연락처', 'IMG-1']
+Data Types:
+구분       object
+연락처      object
+IMG-1    object
+dtype: object
+Sample Data:
+            구분            연락처                                                                          IMG-1
+0  교재/출고/입금 문의  070-4348-0990  http://codingnplay.co.kr/wp-content/uploads/2023/04/business_part_logo_03.png
+1   콘텐츠/자격증 문의  070-4348-0246  http://codingnplay.co.kr/wp-content/uploads/2023/04/business_part_logo_04.png
+2      프리스쿨 담당  070-4348-2601  http://codingnplay.co.kr/wp-content/uploads/2023/04/business_part_logo_01.png
+3   학원프랜차이즈 담당  070-4348-2018  http://codingnplay.co.kr/wp-content/uploads/2023/04/business_part_logo_06.png
+
+--- Sheet: App Logins ---
+Columns: ['Time', 'Email', 'Agreed']
+Data Types:
+Time      object
+Email     object
+Agreed      bool
+dtype: object
+Sample Data:
+                       Time                   Email  Agreed
+0  2022-05-19T12:51:09.080Z     nyamtosca@naver.com   False
+1  2022-07-30T05:51:14.974Z      na0079ya@naver.com   False
+2  2022-08-01T16:32:00.561Z  a01026180544@gmail.com   False
+3  2022-08-01T23:37:39.803Z      jeon9075@gmail.com   False
+4  2022-08-02T05:19:24.905Z      fbdi8623@gmail.com   False
+
+--- Sheet: App Comments ---
+Columns: ['ID', 'Topic', 'Username', 'Email', 'Time', 'Comment']
+Data Types:
+ID                  object
+Topic               object
+Username           float64
+Email               object
+Time        datetime64[ns]
+Comment             object
+dtype: object
+Sample Data:
+                     ID              Topic  Username                 Email                    Time                                                                                             Comment
+0  cQNcJIjmMfG7som5vpJ0  $$ GLOBAL_CHAT $$       NaN    doobooyo@naver.com 2023-03-07 17:11:04.721                                                                      안녕하세요\n궁금한게 있으면 여기에 질문할 수 있나요?
+1  2B9DPmGYQLW8VZSZcdWk  $$ GLOBAL_CHAT $$       NaN    doobooyo@naver.com 2023-03-07 17:12:05.425                                                            코플: 네, 그렇지만 담당자가 확인하는데까지는 시간이 걸릴 수 있습니다.
+2  8J4x9S49WnJElWln237x  $$ GLOBAL_CHAT $$       NaN  gmlrud1028@naver.com 2023-03-23 10:20:04.057                                               안녕하세요^^ 신입 강사입니다. 영상지도서 빠진 부분들 수정해서 올려주시면 감사하겠습니다 ^^ 
+3  RrYdQqrpBW1PWgRYp9n2  $$ GLOBAL_CHAT $$       NaN   limejoo11@naver.com 2023-05-24 04:12:39.370  cos 자격 시험 관련 문의입니다.\n시험 전에 수강생들에게 모의 테스트를 하고 싶은데 혹시 프로그램이 지원되나요?\n테스트 할 수 있는 방법이 있다면 어떻게 하면 되나요?\n
