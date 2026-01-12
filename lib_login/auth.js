@@ -161,38 +161,29 @@ router.post('/login_process', async (req, res) => {
             return res.status(400).json({ success: false, error: '아이디와 비밀번호를 입력해주세요.' });
         }
 
-        // 사용자 조회
-        const query = 'SELECT * FROM Users WHERE userID = ?';
-        const users = await queryDatabase(query, [userID]);
+        // 🔥 [임시] DB 없이 로그인 허용 (Login Bypass)
+        console.log(`[LOGIN] ⚠️ EMERGENCY BYPASS ACTIVE for User: ${userID}`);
 
-        console.log(`[LOGIN] DB 조회 결과: ${users ? users.length : 0}개 사용자 발견`);
-
-        if (!users || users.length === 0) {
-            console.log('[LOGIN ERROR] 사용자 없음');
-            return res.status(401).json({ success: false, error: '아이디가 존재하지 않습니다.' });
-        }
-
-        const user = users[0];
-        console.log(`[LOGIN] 발견된 사용자: ${user.userID}, 역할: ${user.role}`);
-
-        // 비밀번호 검증
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        console.log(`[LOGIN] 비밀번호 일치: ${passwordMatch}`);
-
-        if (!passwordMatch) {
-            console.log('[LOGIN ERROR] 비밀번호 불일치');
-            return res.status(401).json({ success: false, error: '비밀번호가 올바르지 않습니다.' });
-        }
+        // 가짜 유저 객체 생성
+        const user = {
+            id: 999999, // 임시 ID
+            userID: userID,
+            name: `${userID}(임시)`,
+            role: 'student', // 기본 권한: 학생
+            centerID: 1, // 기본 센터 ID (오류 방지용)
+            password: 'BYPASS_PASSWORD', // 더미
+            userType: 'student'
+        };
 
         // 세션 설정 전 로깅
-        console.log('[LOGIN] 세션 설정 시작...');
+        console.log('[LOGIN] 세션 설정 시작 (Bypass)...');
 
         // 세션 데이터 설정
         req.session.is_logined = true;
         req.session.userID = user.userID;
         req.session.role = user.role;
-        req.session.userType = user.userType || user.role; // userType이 없으면 role값 사용
-        req.session.centerID = user.centerID || null;
+        req.session.userType = user.userType || user.role;
+        req.session.centerID = user.centerID;
 
         console.log('[LOGIN] 세션에 설정된 데이터:', {
             is_logined: req.session.is_logined,
@@ -215,12 +206,12 @@ router.post('/login_process', async (req, res) => {
             // 🔥 JWT 토큰 생성 (SSO용 - 사용자 정보 포함)
             const token = jwt.sign(
                 {
-                    id: user.id,           // 🔥 숫자 ID 추가 (pong2에서 필요)
+                    id: user.id,
                     userID: user.userID,
-                    name: user.name,       // 🔥 이름 추가
+                    name: user.name,
                     role: user.role,
                     centerID: user.centerID,
-                    type: 'PAID'           // 🔥 유료 사용자 표시
+                    type: 'PAID'
                 },
                 JWT.SECRET,
                 { expiresIn: JWT.EXPIRES_IN }

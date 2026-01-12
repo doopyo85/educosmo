@@ -42,14 +42,14 @@ const JWT = {
 // 외부 API 엔드포인트
 const API_ENDPOINTS = {
   GOOGLE_SHEETS: 'https://sheets.googleapis.com',
-  S3_BUCKET: 'https://educodingnplaycontents.s3.amazonaws.com',
+  S3_BUCKET: 'https://kr.object.ncloudstorage.com/educodingnplaycontents',
 };
 
 // S3 설정
 const S3 = {
   REGION: process.env.AWS_REGION || 'ap-northeast-2',
   BUCKET_NAME: process.env.BUCKET_NAME || 'educodingnplaycontents',
-  ASSET_URL: process.env.S3_ASSET_URL || 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com'
+  ASSET_URL: process.env.S3_ASSET_URL || 'https://kr.object.ncloudstorage.com/educodingnplaycontents'
 };
 
 // Google API 설정
@@ -138,6 +138,7 @@ const CSP = {
     "blob:",
     "https://educodingnplaycontents.s3.amazonaws.com",
     "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com",
+    "https://kr.object.ncloudstorage.com", // 🔥 NCP Object Storage 추가
     "https://www.google.com",
     "https://code.org",
     "https://blockly.games",
@@ -157,6 +158,7 @@ const CSP = {
     "https://content-sheets.googleapis.com",
     "https://educodingnplaycontents.s3.amazonaws.com",
     "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com",
+    "https://kr.object.ncloudstorage.com", // 🔥 NCP Object Storage 추가
     "https://www.google.com",
     "https://cdn.jsdelivr.net",
     "https://cdnjs.cloudflare.com",
@@ -182,6 +184,7 @@ const CSP = {
     "https://content-sheets.googleapis.com",
     "https://educodingnplaycontents.s3.amazonaws.com",
     "https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com",
+    "https://kr.object.ncloudstorage.com", // 🔥 NCP Object Storage 추가
     // codingnplay 도메인들
     "https://app.codingnplay.co.kr:8080",
     "https://app.codingnplay.co.kr:8888",
