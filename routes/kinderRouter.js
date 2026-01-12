@@ -8,12 +8,17 @@ const router = express.Router();
 
 // 🔥 시트 데이터 가져오기 (시트명, ID 포함)
 async function getSheetData(sheetName, range, spreadsheetId) {
-    const sheets = google.sheets({ version: 'v4', auth: process.env.GOOGLE_API_KEY });
-    const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: spreadsheetId || process.env.SPREADSHEET_ID,
-        range: `${sheetName}!${range}`,
-    });
-    return response.data.values || [];
+    try {
+        const sheets = google.sheets({ version: 'v4', auth: process.env.GOOGLE_API_KEY });
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: spreadsheetId || process.env.SPREADSHEET_ID,
+            range: `${sheetName}!${range}`,
+        });
+        return response.data.values || [];
+    } catch (error) {
+        console.warn(`Warning: Failed to fetch data for sheet '${sheetName}'. Returning empty array.`, error.message);
+        return [];
+    }
 }
 
 // 🔥 데이터 그룹화 헬퍼 함수
@@ -60,16 +65,24 @@ router.get('/', async (req, res) => {
             preschoolAIData,
             level1Data,
             level2Data,
-            level3Data
+            level3Data,
+            aiLevel1Data,
+            aiLevel2Data,
+            aiLevel3Data
         ] = await Promise.all([
             // Tab 1: Board Data (Old) - Uses Default SPREADSHEET_ID
             getSheetData('교사게시판', 'A1:D14', process.env.SPREADSHEET_ID),
             getSheetData('교사게시판', 'E1:H14', process.env.SPREADSHEET_ID),
 
-            // Tab 2: Lesson Data (New) - Uses EDU SPREADSHEET_ID
+            // Tab 2: Lesson Data (Regular) - Uses EDU SPREADSHEET_ID
             getSheetData('프리-LV1(5세)', 'A:N', eduSpreadsheetId),
             getSheetData('프리-LV2(6세)', 'A:O', eduSpreadsheetId),
-            getSheetData('프리-LV3(7세)', 'A:O', eduSpreadsheetId)
+            getSheetData('프리-LV3(7세)', 'A:O', eduSpreadsheetId),
+
+            // Tab 2: Lesson Data (AI) - Uses EDU SPREADSHEET_ID (Assumed Sheet Names)
+            getSheetData('프리AI-LV1(5세)', 'A:O', eduSpreadsheetId),
+            getSheetData('프리AI-LV2(6세)', 'A:O', eduSpreadsheetId),
+            getSheetData('프리AI-LV3(7세)', 'A:O', eduSpreadsheetId)
         ]);
 
         // Process Board Data
@@ -95,6 +108,10 @@ router.get('/', async (req, res) => {
         const level2Groups = groupByVolume(level2Data);
         const level3Groups = groupByVolume(level3Data);
 
+        const aiLevel1Groups = groupByVolume(aiLevel1Data);
+        const aiLevel2Groups = groupByVolume(aiLevel2Data);
+        const aiLevel3Groups = groupByVolume(aiLevel3Data);
+
         // 렌더링
         res.render('kinder', {
             // Board Tab Data
@@ -105,6 +122,9 @@ router.get('/', async (req, res) => {
             level1Groups,
             level2Groups,
             level3Groups,
+            aiLevel1Groups,
+            aiLevel2Groups,
+            aiLevel3Groups,
 
             pageTitle: '프리스쿨 교육자료'
         });

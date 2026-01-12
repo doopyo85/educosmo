@@ -334,6 +334,25 @@
                                 Level 3 (7세)
                             </button>
                         </li>
+                        <!-- Pre-AI Tabs -->
+                        <li class="nav-item ms-3 border-start ps-3">
+                            <button class="nav-link" id="tab-ai-lv1" data-bs-toggle="pill"
+                                data-bs-target="#content-ai-lv1" type="button" role="tab">
+                                <i class="bi bi-robot me-1"></i>Pre-AI 1 (5세)
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="tab-ai-lv2" data-bs-toggle="pill"
+                                data-bs-target="#content-ai-lv2" type="button" role="tab">
+                                <i class="bi bi-robot me-1"></i>Pre-AI 2 (6세)
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="tab-ai-lv3" data-bs-toggle="pill"
+                                data-bs-target="#content-ai-lv3" type="button" role="tab">
+                                <i class="bi bi-robot me-1"></i>Pre-AI 3 (7세)
+                            </button>
+                        </li>
                     </ul>
 
                     <!-- Lesson Content -->
@@ -403,179 +422,187 @@
                                 <%= renderCardGrid('content-lv1', level1Groups) %>
                                     <%= renderCardGrid('content-lv2', level2Groups) %>
                                         <%= renderCardGrid('content-lv3', level3Groups) %>
+
+                                            <!-- Pre-AI Grids -->
+                                            <%= renderCardGrid('content-ai-lv1', aiLevel1Groups) %>
+                                                <%= renderCardGrid('content-ai-lv2', aiLevel2Groups) %>
+                                                    <%= renderCardGrid('content-ai-lv3', aiLevel3Groups) %>
                     </div>
-                </div>
 
-                <!-- Panel 2: Board (List View) -->
-                <div class="tab-pane fade" id="panel-board" role="tabpanel">
-                    <div class="container" style="max-width: 1000px;">
-                        <!-- Board Sub Tabs -->
-                        <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4">
-                            <li class="nav-item">
-                                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#board-preschool">
-                                    <%= preschoolTitle %>
-                                </button>
-                            </li>
-                            <li class="nav-item">
-                                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#board-ai">
-                                    <%= preschoolAITitle %>
-                                </button>
-                            </li>
-                        </ul>
+                    <!-- Panel 2: Board (List View) -->
+                    <div class="tab-pane fade" id="panel-board" role="tabpanel">
+                        <div class="container" style="max-width: 1000px;">
+                            <!-- Board Sub Tabs -->
+                            <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4">
+                                <li class="nav-item">
+                                    <button class="nav-link active" data-bs-toggle="pill"
+                                        data-bs-target="#board-preschool">
+                                        <%= preschoolTitle %>
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#board-ai">
+                                        <%= preschoolAITitle %>
+                                    </button>
+                                </li>
+                            </ul>
 
-                        <div class="tab-content">
-                            <!-- Preschool List -->
-                            <div class="tab-pane fade show active" id="board-preschool">
-                                <div class="apple-list-container">
-                                    <div class="apple-list-header">
-                                        <div class="col-category">분류</div>
-                                        <div class="col-title">자료명</div>
-                                        <div class="col-action">다운로드</div>
-                                    </div>
-                                    <% preschoolItems.forEach(item=> { %>
-                                        <div class="apple-list-row">
-                                            <div class="col-category"><span class="apple-badge badge-primary">
-                                                    <%= item.type %>
-                                                </span></div>
-                                            <div class="col-title">
-                                                <%= item.content %>
-                                            </div>
-                                            <div class="col-action">
-                                                <div class="d-flex justify-content-center gap-2 flex-wrap">
-                                                    <% item.links.forEach(linkText=> {
-                                                        if(linkText.trim()) { %>
-                                                        <a href="<%= item.url %>" target="_blank"
-                                                            class="btn-apple-outline">
-                                                            <i class="bi bi-cloud-download"></i> <span
-                                                                class="d-none d-sm-inline">
-                                                                <%= linkText %>
-                                                            </span>
-                                                        </a>
-                                                        <% }}); %>
-                                                            <% if (item.links.length===0) { %><span class="text-muted"
-                                                                    style="font-size: 13px;">준비중</span>
-                                                                <% } %>
+                            <div class="tab-content">
+                                <!-- Preschool List -->
+                                <div class="tab-pane fade show active" id="board-preschool">
+                                    <div class="apple-list-container">
+                                        <div class="apple-list-header">
+                                            <div class="col-category">분류</div>
+                                            <div class="col-title">자료명</div>
+                                            <div class="col-action">다운로드</div>
+                                        </div>
+                                        <% preschoolItems.forEach(item=> { %>
+                                            <div class="apple-list-row">
+                                                <div class="col-category"><span class="apple-badge badge-primary">
+                                                        <%= item.type %>
+                                                    </span></div>
+                                                <div class="col-title">
+                                                    <%= item.content %>
+                                                </div>
+                                                <div class="col-action">
+                                                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                                        <% item.links.forEach(linkText=> {
+                                                            if(linkText.trim()) { %>
+                                                            <a href="<%= item.url %>" target="_blank"
+                                                                class="btn-apple-outline">
+                                                                <i class="bi bi-cloud-download"></i> <span
+                                                                    class="d-none d-sm-inline">
+                                                                    <%= linkText %>
+                                                                </span>
+                                                            </a>
+                                                            <% }}); %>
+                                                                <% if (item.links.length===0) { %><span
+                                                                        class="text-muted"
+                                                                        style="font-size: 13px;">준비중</span>
+                                                                    <% } %>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <% }); %>
+                                            <% }); %>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Preschool AI List -->
-                            <div class="tab-pane fade" id="board-ai">
-                                <div class="apple-list-container">
-                                    <div class="apple-list-header">
-                                        <div class="col-category">분류</div>
-                                        <div class="col-title">자료명</div>
-                                        <div class="col-action">다운로드</div>
-                                    </div>
-                                    <% preschoolAIItems.forEach(item=> { %>
-                                        <div class="apple-list-row">
-                                            <div class="col-category"><span class="apple-badge badge-success">
-                                                    <%= item.type %>
-                                                </span></div>
-                                            <div class="col-title">
-                                                <%= item.content %>
-                                            </div>
-                                            <div class="col-action">
-                                                <div class="d-flex justify-content-center gap-2 flex-wrap">
-                                                    <% item.links.forEach(linkText=> {
-                                                        if(linkText.trim()) { %>
-                                                        <a href="<%= item.url %>" target="_blank"
-                                                            class="btn-apple-outline">
-                                                            <i class="bi bi-robot"></i> <span
-                                                                class="d-none d-sm-inline">
-                                                                <%= linkText %>
-                                                            </span>
-                                                        </a>
-                                                        <% }}); %>
-                                                            <% if (item.links.length===0) { %><span class="text-muted"
-                                                                    style="font-size: 13px;">준비중</span>
-                                                                <% } %>
+                                <!-- Preschool AI List -->
+                                <div class="tab-pane fade" id="board-ai">
+                                    <div class="apple-list-container">
+                                        <div class="apple-list-header">
+                                            <div class="col-category">분류</div>
+                                            <div class="col-title">자료명</div>
+                                            <div class="col-action">다운로드</div>
+                                        </div>
+                                        <% preschoolAIItems.forEach(item=> { %>
+                                            <div class="apple-list-row">
+                                                <div class="col-category"><span class="apple-badge badge-success">
+                                                        <%= item.type %>
+                                                    </span></div>
+                                                <div class="col-title">
+                                                    <%= item.content %>
+                                                </div>
+                                                <div class="col-action">
+                                                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                                        <% item.links.forEach(linkText=> {
+                                                            if(linkText.trim()) { %>
+                                                            <a href="<%= item.url %>" target="_blank"
+                                                                class="btn-apple-outline">
+                                                                <i class="bi bi-robot"></i> <span
+                                                                    class="d-none d-sm-inline">
+                                                                    <%= linkText %>
+                                                                </span>
+                                                            </a>
+                                                            <% }}); %>
+                                                                <% if (item.links.length===0) { %><span
+                                                                        class="text-muted"
+                                                                        style="font-size: 13px;">준비중</span>
+                                                                    <% } %>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <% }); %>
+                                            <% }); %>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
-
             </div>
-        </div>
 
-        <!-- Viewer Modal -->
-        <div class="modal fade" id="viewerModal" tabindex="-1" aria-labelledby="viewerModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <div>
-                            <h5 class="modal-title fw-bold" id="viewerModalLabel">수업 보기</h5>
-                            <p class="text-muted small mb-0" id="viewerModalTopic">주제 설명</p>
+            <!-- Viewer Modal -->
+            <div class="modal fade" id="viewerModal" tabindex="-1" aria-labelledby="viewerModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div>
+                                <h5 class="modal-title fw-bold" id="viewerModalLabel">수업 보기</h5>
+                                <p class="text-muted small mb-0" id="viewerModalTopic">주제 설명</p>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Video Container -->
-                        <div id="modalVideoContainer"></div>
+                        <div class="modal-body">
+                            <!-- Video Container -->
+                            <div id="modalVideoContainer"></div>
 
-                        <!-- Carousel Container -->
-                        <div id="modalCarouselContainer"></div>
+                            <!-- Carousel Container -->
+                            <div id="modalCarouselContainer"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            // Modal Instance
-            let viewerModal;
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                // Modal Instance
+                let viewerModal;
 
-            document.addEventListener('DOMContentLoaded', () => {
-                viewerModal = new bootstrap.Modal(document.getElementById('viewerModal'));
-            });
+                document.addEventListener('DOMContentLoaded', () => {
+                    viewerModal = new bootstrap.Modal(document.getElementById('viewerModal'));
+                });
 
-            function openLessonModal(element) {
-                const title = element.dataset.title;
-                const topic = element.dataset.topic;
-                const videoUrl = element.dataset.video;
-                const images = JSON.parse(element.dataset.images || '[]');
+                function openLessonModal(element) {
+                    const title = element.dataset.title;
+                    const topic = element.dataset.topic;
+                    const videoUrl = element.dataset.video;
+                    const images = JSON.parse(element.dataset.images || '[]');
 
-                // Update Header
-                document.getElementById('viewerModalLabel').textContent = title;
-                document.getElementById('viewerModalTopic').textContent = topic;
+                    // Update Header
+                    document.getElementById('viewerModalLabel').textContent = title;
+                    document.getElementById('viewerModalTopic').textContent = topic;
 
-                // Update Video
-                const videoContainer = document.getElementById('modalVideoContainer');
-                if (videoUrl) {
-                    let embedUrl = videoUrl;
-                    if (videoUrl.includes('youtu.be/')) embedUrl = videoUrl.replace('youtu.be/', 'www.youtube.com/embed/');
-                    else if (videoUrl.includes('watch?v=')) embedUrl = videoUrl.replace('watch?v=', 'embed/');
+                    // Update Video
+                    const videoContainer = document.getElementById('modalVideoContainer');
+                    if (videoUrl) {
+                        let embedUrl = videoUrl;
+                        if (videoUrl.includes('youtu.be/')) embedUrl = videoUrl.replace('youtu.be/', 'www.youtube.com/embed/');
+                        else if (videoUrl.includes('watch?v=')) embedUrl = videoUrl.replace('watch?v=', 'embed/');
 
-                    videoContainer.innerHTML = `
+                        videoContainer.innerHTML = `
                     <div class="video-wrapper">
                         <iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>`;
-                } else {
-                    videoContainer.innerHTML = '';
-                }
+                    } else {
+                        videoContainer.innerHTML = '';
+                    }
 
-                // Update Carousel
-                const carouselContainer = document.getElementById('modalCarouselContainer');
-                if (images.length > 0) {
-                    const indicators = images.map((_, i) =>
-                        `<button type="button" data-bs-target="#carouselGuide" data-bs-slide-to="${i}" class="${i === 0 ? 'active' : ''}" aria-current="${i === 0}"></button>`
-                    ).join('');
+                    // Update Carousel
+                    const carouselContainer = document.getElementById('modalCarouselContainer');
+                    if (images.length > 0) {
+                        const indicators = images.map((_, i) =>
+                            `<button type="button" data-bs-target="#carouselGuide" data-bs-slide-to="${i}" class="${i === 0 ? 'active' : ''}" aria-current="${i === 0}"></button>`
+                        ).join('');
 
-                    const items = images.map((img, i) => `
+                        const items = images.map((img, i) => `
                     <div class="carousel-item ${i === 0 ? 'active' : ''}">
                         <img src="${img}" class="d-block w-100" alt="Guide Image ${i + 1}">
                     </div>
                 `).join('');
 
-                    carouselContainer.innerHTML = `
+                        carouselContainer.innerHTML = `
                     <h5 class="fw-bold mb-3 border-start border-4 border-primary ps-2">교사 지도서</h5>
                     <div id="carouselGuide" class="carousel slide bg-light rounded" data-bs-ride="carousel">
                         <div class="carousel-indicators">
@@ -594,13 +621,13 @@
                         </button>
                     </div>
                 `;
-                } else {
-                    carouselContainer.innerHTML = videoUrl ? '' : '<div class="alert alert-secondary text-center">등록된 콘텐츠가 없습니다.</div>';
-                }
+                    } else {
+                        carouselContainer.innerHTML = videoUrl ? '' : '<div class="alert alert-secondary text-center">등록된 콘텐츠가 없습니다.</div>';
+                    }
 
-                viewerModal.show();
-            }
-        </script>
+                    viewerModal.show();
+                }
+            </script>
 </body>
 
 </html>

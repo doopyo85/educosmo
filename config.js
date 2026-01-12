@@ -153,7 +153,13 @@ const CSP = {
     "https://api.playentry.org",
     "https://www.playentry.org",
     "https://nstatic.playentry.org",
-    "https://aiblock.playentry.org"
+    "https://aiblock.playentry.org",
+    // 🔥 YouTube & Google Drive Images
+    "https://img.youtube.com",
+    "https://i.ytimg.com",
+    "https://drive.google.com",
+    "https://lh3.googleusercontent.com",
+    "https://docs.google.com"
   ],
   CONNECT_SRC: [
     "'self'",
@@ -207,7 +213,10 @@ const CSP = {
     "http://localhost:8888",
     "http://localhost:8889",
     "https://playentry.org",
-    "https://pyscript.net"
+    "https://pyscript.net",
+    // 🔥 YouTube Embed
+    "https://www.youtube.com",
+    "https://youtube.com"
   ],
   WORKER_SRC: ["'self'", "blob:"],
   OBJECT_SRC: ["'none'"],
