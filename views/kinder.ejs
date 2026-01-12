@@ -15,8 +15,8 @@
         /* Custom Styles for Master-Detail Layout */
         .master-detail-container {
             display: flex;
-            height: calc(100vh - 160px);
-            /* Adjust based on header/footer */
+            height: calc(100vh - 220px);
+            /* Adjust based on header/footer + Main Tabs */
             min-height: 600px;
             border: 1px solid #e0e0e0;
             border-radius: 12px;
@@ -112,25 +112,153 @@
         }
 
         /* Tabs Styling */
-        .nav-pills .nav-link {
+        .main-nav-pills .nav-link {
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-weight: 700;
+            margin: 0 8px;
+            color: #495057;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            font-size: 1.1rem;
+        }
+
+        .main-nav-pills .nav-link.active {
+            background-color: #0d6efd;
+            color: #fff;
+            border-color: #0d6efd;
+            box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);
+        }
+
+        .sub-nav-pills .nav-link {
             border-radius: 20px;
-            padding: 10px 25px;
+            padding: 8px 20px;
             font-weight: 600;
             margin: 0 5px;
             color: #6c757d;
+            border: 1px solid transparent;
         }
 
-        .nav-pills .nav-link.active {
+        .sub-nav-pills .nav-link.active {
             background-color: #1d1d1f;
-            /* Apple Style Dark */
             color: #fff;
         }
 
-        /* Badge */
-        .session-topic {
-            font-size: 0.85rem;
-            color: #868e96;
-            margin-top: 4px;
+        /* Apple List Style (For Board) */
+        .apple-list-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .apple-list-header {
+            display: flex;
+            background-color: #fafafa;
+            border-bottom: 1px solid #efeef1;
+            padding: 18px 20px;
+            font-weight: 600;
+            color: #86868b;
+            font-size: 13px;
+        }
+
+        .apple-list-row {
+            display: flex;
+            align-items: center;
+            padding: 20px 20px;
+            border-bottom: 1px solid #efeef1;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .apple-list-row:last-child {
+            border-bottom: none;
+        }
+
+        .apple-list-row:hover {
+            background-color: #fbfbfd;
+        }
+
+        .col-category {
+            width: 15%;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .col-title {
+            width: 65%;
+            text-align: center;
+            font-weight: 600;
+            color: #1d1d1f;
+            padding: 0 15px;
+        }
+
+        .col-action {
+            width: 20%;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .apple-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-primary {
+            background: #eef2ff;
+            color: #4338ca;
+        }
+
+        .badge-success {
+            background: #f0fdf4;
+            color: #15803d;
+        }
+
+        .btn-apple-outline {
+            border: 1px solid #e5e5e5;
+            background: white;
+            color: #1d1d1f;
+            padding: 6px 16px;
+            border-radius: 18px;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-apple-outline:hover {
+            border-color: #0071e3;
+            color: #0071e3;
+            background: #f5faff;
+        }
+
+        @media (max-width: 768px) {
+            .apple-list-header {
+                display: none;
+            }
+
+            .apple-list-row {
+                flex-direction: column;
+                gap: 12px;
+                padding: 20px;
+                text-align: center;
+            }
+
+            .col-category,
+            .col-title,
+            .col-action {
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -139,74 +267,166 @@
     <%- include('partials/header') %>
 
         <div class="container-fluid mt-4 mb-5" style="max-width: 1600px;">
-            <div class="text-center mb-4">
+            <div class="text-center mb-5">
                 <h2 class="fw-bold">
                     <%= pageTitle %>
                 </h2>
-                <p class="text-muted">연령별 교육 자료와 영상을 확인하세요.</p>
+                <p class="text-muted">교사들을 위한 교육 자료 및 수업 교안</p>
             </div>
 
-            <!-- Level Tabs -->
-            <ul class="nav nav-pills justify-content-center mb-4" id="levelTabs" role="tablist">
+            <!-- 🔥 Main Navigation Tabs (Board vs Lesson) -->
+            <ul class="nav nav-pills main-nav-pills justify-content-center mb-5" id="mainTabs" role="tablist">
                 <li class="nav-item">
-                    <button class="nav-link active" id="tab-lv1" data-bs-toggle="pill" data-bs-target="#content-lv1"
-                        type="button" role="tab">
-                        Level 1 (5세)
+                    <button class="nav-link active" id="tab-lessons" data-bs-toggle="pill"
+                        data-bs-target="#panel-lessons" type="button" role="tab">
+                        <i class="bi bi-collection-play me-2"></i>수업 교안
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" id="tab-lv2" data-bs-toggle="pill" data-bs-target="#content-lv2"
+                    <button class="nav-link" id="tab-board" data-bs-toggle="pill" data-bs-target="#panel-board"
                         type="button" role="tab">
-                        Level 2 (6세)
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="tab-lv3" data-bs-toggle="pill" data-bs-target="#content-lv3"
-                        type="button" role="tab">
-                        Level 3 (7세)
+                        <i class="bi bi-file-earmark-text me-2"></i>교사 게시판
                     </button>
                 </li>
             </ul>
 
-            <!-- Tab Contents -->
-            <div class="tab-content" id="levelTabContent">
+            <div class="tab-content" id="mainTabContent">
 
-                <!-- Helper Mixin for Recursive Content (Using EJS function) -->
-                <% function renderMasterDetail(levelId, groups) { %>
-                    <div class="tab-pane fade <%= levelId === 'content-lv1' ? 'show active' : '' %>" id="<%= levelId %>"
-                        role="tabpanel">
-                        <div class="master-detail-container">
-                            <!-- Sidebar: List -->
-                            <div class="sidebar">
-                                <div class="accordion accordion-flush" id="accordion-<%= levelId %>">
-                                    <% groups.forEach((group, index)=> { %>
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header" id="heading-<%= levelId %>-<%= index %>">
-                                                <button class="accordion-button <%= index !== 0 ? 'collapsed' : '' %>"
-                                                    type="button" data-bs-toggle="collapse"
-                                                    data-bs-target="#collapse-<%= levelId %>-<%= index %>">
-                                                    <%= group.title %>
-                                                </button>
-                                            </h2>
-                                            <div id="collapse-<%= levelId %>-<%= index %>"
-                                                class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>"
-                                                data-bs-parent="#accordion-<%= levelId %>">
-                                                <div class="accordion-body p-0">
-                                                    <% group.sessions.forEach((session, sIndex)=> { %>
-                                                        <a href="#" class="session-item" data-level="<%= levelId %>"
-                                                            data-title="<%= session.name %>"
-                                                            data-topic="<%= session.topic %>"
-                                                            data-video="<%= session.videoUrl %>"
-                                                            data-images='<%= JSON.stringify(session.images) %>'
-                                                            onclick="loadContent(this)">
-                                                            <div>
-                                                                <%= session.name %>
-                                                            </div>
-                                                            <div class="session-topic">
-                                                                <%= session.topic %>
-                                                            </div>
+                <!-- Panel 1: Lessons (Master-Detail) -->
+                <div class="tab-pane fade show active" id="panel-lessons" role="tabpanel">
+
+                    <!-- Sub Level Tabs -->
+                    <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4" id="levelTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" id="tab-lv1" data-bs-toggle="pill"
+                                data-bs-target="#content-lv1" type="button" role="tab">
+                                Level 1 (5세)
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="tab-lv2" data-bs-toggle="pill" data-bs-target="#content-lv2"
+                                type="button" role="tab">
+                                Level 2 (6세)
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="tab-lv3" data-bs-toggle="pill" data-bs-target="#content-lv3"
+                                type="button" role="tab">
+                                Level 3 (7세)
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Lesson Content -->
+                    <div class="tab-content" id="levelTabContent">
+                        <% function renderMasterDetail(levelId, groups) { %>
+                            <div class="tab-pane fade <%= levelId === 'content-lv1' ? 'show active' : '' %>"
+                                id="<%= levelId %>" role="tabpanel">
+                                <div class="master-detail-container">
+                                    <div class="sidebar">
+                                        <div class="accordion accordion-flush" id="accordion-<%= levelId %>">
+                                            <% groups.forEach((group, index)=> { %>
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header"
+                                                        id="heading-<%= levelId %>-<%= index %>">
+                                                        <button
+                                                            class="accordion-button <%= index !== 0 ? 'collapsed' : '' %>"
+                                                            type="button" data-bs-toggle="collapse"
+                                                            data-bs-target="#collapse-<%= levelId %>-<%= index %>">
+                                                            <%= group.title %>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="collapse-<%= levelId %>-<%= index %>"
+                                                        class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>"
+                                                        data-bs-parent="#accordion-<%= levelId %>">
+                                                        <div class="accordion-body p-0">
+                                                            <% group.sessions.forEach((session, sIndex)=> { %>
+                                                                <a href="#" class="session-item"
+                                                                    data-level="<%= levelId %>"
+                                                                    data-title="<%= session.name %>"
+                                                                    data-topic="<%= session.topic %>"
+                                                                    data-video="<%= session.videoUrl %>"
+                                                                    data-images='<%= JSON.stringify(session.images) %>'
+                                                                    onclick="loadContent(this)">
+                                                                    <div>
+                                                                        <%= session.name %>
+                                                                    </div>
+                                                                    <div class="session-topic">
+                                                                        <%= session.topic %>
+                                                                    </div>
+                                                                </a>
+                                                                <% }); %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <% }); %>
+                                        </div>
+                                    </div>
+                                    <div class="main-content" id="viewer-<%= levelId %>">
+                                        <div class="empty-state">
+                                            <i class="bi bi-arrow-left-circle" style="font-size: 3rem;"></i>
+                                            <p class="mt-3">왼쪽 목록에서 학습 차시를 선택해주세요.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+
+                                <%= renderMasterDetail('content-lv1', level1Groups) %>
+                                    <%= renderMasterDetail('content-lv2', level2Groups) %>
+                                        <%= renderMasterDetail('content-lv3', level3Groups) %>
+                    </div>
+                </div>
+
+                <!-- Panel 2: Board (List View) -->
+                <div class="tab-pane fade" id="panel-board" role="tabpanel">
+                    <div class="container" style="max-width: 1000px;">
+                        <!-- Board Sub Tabs -->
+                        <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4">
+                            <li class="nav-item">
+                                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#board-preschool">
+                                    <%= preschoolTitle %>
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#board-ai">
+                                    <%= preschoolAITitle %>
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <!-- Preschool List -->
+                            <div class="tab-pane fade show active" id="board-preschool">
+                                <div class="apple-list-container">
+                                    <div class="apple-list-header">
+                                        <div class="col-category">분류</div>
+                                        <div class="col-title">자료명</div>
+                                        <div class="col-action">다운로드</div>
+                                    </div>
+                                    <% preschoolItems.forEach(item=> { %>
+                                        <div class="apple-list-row">
+                                            <div class="col-category"><span class="apple-badge badge-primary">
+                                                    <%= item.type %>
+                                                </span></div>
+                                            <div class="col-title">
+                                                <%= item.content %>
+                                            </div>
+                                            <div class="col-action">
+                                                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                                    <% item.links.forEach(linkText=> {
+                                                        if(linkText.trim()) { %>
+                                                        <a href="<%= item.url %>" target="_blank"
+                                                            class="btn-apple-outline">
+                                                            <i class="bi bi-cloud-download"></i> <span
+                                                                class="d-none d-sm-inline">
+                                                                <%= linkText %>
+                                                            </span>
                                                         </a>
-                                                        <% }); %>
+                                                        <% }}); %>
+                                                            <% if (item.links.length===0) { %><span class="text-muted"
+                                                                    style="font-size: 13px;">준비중</span>
+                                                                <% } %>
                                                 </div>
                                             </div>
                                         </div>
@@ -214,21 +434,46 @@
                                 </div>
                             </div>
 
-                            <!-- Main: Content Viewer -->
-                            <div class="main-content" id="viewer-<%= levelId %>">
-                                <div class="empty-state">
-                                    <i class="bi bi-arrow-left-circle" style="font-size: 3rem;"></i>
-                                    <p class="mt-3">왼쪽 목록에서 학습 차시를 선택해주세요.</p>
+                            <!-- Preschool AI List -->
+                            <div class="tab-pane fade" id="board-ai">
+                                <div class="apple-list-container">
+                                    <div class="apple-list-header">
+                                        <div class="col-category">분류</div>
+                                        <div class="col-title">자료명</div>
+                                        <div class="col-action">다운로드</div>
+                                    </div>
+                                    <% preschoolAIItems.forEach(item=> { %>
+                                        <div class="apple-list-row">
+                                            <div class="col-category"><span class="apple-badge badge-success">
+                                                    <%= item.type %>
+                                                </span></div>
+                                            <div class="col-title">
+                                                <%= item.content %>
+                                            </div>
+                                            <div class="col-action">
+                                                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                                    <% item.links.forEach(linkText=> {
+                                                        if(linkText.trim()) { %>
+                                                        <a href="<%= item.url %>" target="_blank"
+                                                            class="btn-apple-outline">
+                                                            <i class="bi bi-robot"></i> <span
+                                                                class="d-none d-sm-inline">
+                                                                <%= linkText %>
+                                                            </span>
+                                                        </a>
+                                                        <% }}); %>
+                                                            <% if (item.links.length===0) { %><span class="text-muted"
+                                                                    style="font-size: 13px;">준비중</span>
+                                                                <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <% }); %>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <% } %>
-
-                        <!-- Render Tabs -->
-                        <%= renderMasterDetail('content-lv1', level1Groups) %>
-                            <%= renderMasterDetail('content-lv2', level2Groups) %>
-                                <%= renderMasterDetail('content-lv3', level3Groups) %>
+                </div>
 
             </div>
         </div>
@@ -242,50 +487,30 @@
                 const videoUrl = element.dataset.video;
                 const images = JSON.parse(element.dataset.images || '[]');
 
-                // Active Class Toggle
                 document.querySelectorAll(`#${levelId} .session-item`).forEach(el => el.classList.remove('active'));
                 element.classList.add('active');
 
-                // Video Embed Logic
                 let videoHtml = '';
                 if (videoUrl) {
                     let embedUrl = videoUrl;
-                    if (videoUrl.includes('youtu.be/')) {
-                        embedUrl = videoUrl.replace('youtu.be/', 'www.youtube.com/embed/');
-                    } else if (videoUrl.includes('watch?v=')) {
-                        embedUrl = videoUrl.replace('watch?v=', 'embed/');
-                    }
-                    videoHtml = `
-                    <div class="video-container">
-                        <iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                    </div>
-                `;
+                    if (videoUrl.includes('youtu.be/')) embedUrl = videoUrl.replace('youtu.be/', 'www.youtube.com/embed/');
+                    else if (videoUrl.includes('watch?v=')) embedUrl = videoUrl.replace('watch?v=', 'embed/');
+
+                    videoHtml = `<div class="video-container"><iframe src="${embedUrl}" frameborder="0" allowfullscreen></iframe></div>`;
                 } else {
                     videoHtml = `<div class="alert alert-secondary text-center">등록된 영상이 없습니다.</div>`;
                 }
 
-                // Carousel Logic
                 let carouselHtml = '';
                 if (images.length > 0) {
-                    const indicators = images.map((_, i) =>
-                        `<button type="button" data-bs-target="#carousel-${levelId}" data-bs-slide-to="${i}" class="${i === 0 ? 'active' : ''}" aria-current="${i === 0}"></button>`
-                    ).join('');
-
-                    const items = images.map((img, i) => `
-                    <div class="carousel-item ${i === 0 ? 'active' : ''}">
-                        <img src="${img}" class="d-block w-100" alt="Guide Image ${i + 1}">
-                    </div>
-                `).join('');
+                    const indicators = images.map((_, i) => `<button type="button" data-bs-target="#carousel-${levelId}" data-bs-slide-to="${i}" class="${i === 0 ? 'active' : ''}" aria-current="${i === 0}"></button>`).join('');
+                    const items = images.map((img, i) => `<div class="carousel-item ${i === 0 ? 'active' : ''}"><img src="${img}" class="d-block w-100" alt="Guide ${i + 1}"></div>`).join('');
 
                     carouselHtml = `
                     <h5 class="mt-4 mb-3 border-start border-4 border-primary ps-2">교사 지도서</h5>
                     <div id="carousel-${levelId}" class="carousel slide bg-light rounded" data-bs-ride="carousel">
-                        <div class="carousel-indicators">
-                            ${indicators}
-                        </div>
-                        <div class="carousel-inner">
-                            ${items}
-                        </div>
+                        <div class="carousel-indicators">${indicators}</div>
+                        <div class="carousel-inner">${items}</div>
                         <button class="carousel-control-prev" type="button" data-bs-target="#carousel-${levelId}" data-bs-slide="prev">
                             <span class="carousel-control-prev-icon bg-dark rounded-circle" aria-hidden="true"></span>
                             <span class="visually-hidden">Previous</span>
@@ -300,14 +525,8 @@
                     carouselHtml = `<div class="alert alert-light text-center mt-3 text-muted border">등록된 지도서 이미지가 없습니다.</div>`;
                 }
 
-                // Render Content
                 const viewer = document.querySelector(`#viewer-${levelId}`);
-                viewer.innerHTML = `
-                <h3 class="mb-1">${title}</h3>
-                <p class="text-muted mb-4">${topic}</p>
-                ${videoHtml}
-                ${carouselHtml}
-            `;
+                viewer.innerHTML = `<h3 class="mb-1">${title}</h3><p class="text-muted mb-4">${topic}</p>${videoHtml}${carouselHtml}`;
             }
         </script>
 </body>

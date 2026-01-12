@@ -6,11 +6,11 @@ const { checkPageAccess } = require('../lib_login/authMiddleware');
 const router = express.Router();
 
 
-// 🔥 시트 데이터 가져오기 (시트명 포함)
-async function getSheetData(sheetName, range) {
+// 🔥 시트 데이터 가져오기 (시트명, ID 포함)
+async function getSheetData(sheetName, range, spreadsheetId) {
     const sheets = google.sheets({ version: 'v4', auth: process.env.GOOGLE_API_KEY });
     const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.SPREADSHEET_ID,
+        spreadsheetId: spreadsheetId || process.env.SPREADSHEET_ID,
         range: `${sheetName}!${range}`,
     });
     return response.data.values || [];
@@ -52,30 +52,60 @@ function groupByVolume(rows) {
 
 router.get('/', async (req, res) => {
     try {
-        // 🔥 레벨별 데이터 가져오기 (A1:N100 넉넉하게 잡음)
-        // TODO: 실제 데이터 양에 따라 범위 조정 필요
-        const [level1Data, level2Data, level3Data, preAIData] = await Promise.all([
-            getSheetData('프리-LV1(5세)', 'A:N'),
-            getSheetData('프리-LV2(6세)', 'A:O'), // LV2는 컬럼이 더 많을 수 있음 확인 필요
-            getSheetData('프리-LV3(7세)', 'A:O'),
-            getSheetData('프리AI(LV2)', 'A:H') // AI는 컬럼 적음
+        const eduSpreadsheetId = process.env.SPREADSHEET_ID_EDU || process.env.SPREADSHEET_ID;
+
+        // 🔥 병렬 데이터 호출
+        const [
+            preschoolData,
+            preschoolAIData,
+            level1Data,
+            level2Data,
+            level3Data
+        ] = await Promise.all([
+            // Tab 1: Board Data (Old) - Uses Default SPREADSHEET_ID
+            getSheetData('교사게시판', 'A1:D14', process.env.SPREADSHEET_ID),
+            getSheetData('교사게시판', 'E1:H14', process.env.SPREADSHEET_ID),
+
+            // Tab 2: Lesson Data (New) - Uses EDU SPREADSHEET_ID
+            getSheetData('프리-LV1(5세)', 'A:N', eduSpreadsheetId),
+            getSheetData('프리-LV2(6세)', 'A:O', eduSpreadsheetId),
+            getSheetData('프리-LV3(7세)', 'A:O', eduSpreadsheetId)
         ]);
 
+        // Process Board Data
+        const preschoolTitle = preschoolData[0] ? preschoolData[0][0] : '프리스쿨';
+        const preschoolAITitle = preschoolAIData[0] ? preschoolAIData[0][0] : '프리스쿨 AI';
+
+        const preschoolItems = preschoolData.slice(2).map(row => ({
+            type: row[0] || '',
+            content: row[1] || '',
+            links: row[2] ? row[2].split('\n') : [],
+            url: row[3] || ''
+        }));
+
+        const preschoolAIItems = preschoolAIData.slice(2).map(row => ({
+            type: row[0] || '',
+            content: row[1] || '',
+            links: row[2] ? row[2].split('\n') : [],
+            url: row[3] || ''
+        }));
+
+        // Process Lesson Data
         const level1Groups = groupByVolume(level1Data);
         const level2Groups = groupByVolume(level2Data);
         const level3Groups = groupByVolume(level3Data);
 
-        // Pre-AI 데이터 처리 (단순 리스트 형태일 수 있음, 일단 그룹화 시도)
-        // Pre-AI 컬럼 구조: Group by, 차시명, 주제, 활동명, 강의자, 재생시간, URL, IMG-1
-        const preAIGroups = [];
-        // Pre-AI 별도 로직 (필요시) - 일단 비슷하게 처리하되 이미지 인덱스 다름 (IMG-1이 인덱스 7)
-        // analyze result: IMG-1 is at index 7. So slice(7, 8) might work.
-
         // 렌더링
         res.render('kinder', {
+            // Board Tab Data
+            preschoolTitle, preschoolAITitle,
+            preschoolItems, preschoolAIItems,
+
+            // Lesson Tab Data
             level1Groups,
             level2Groups,
             level3Groups,
+
             pageTitle: '프리스쿨 교육자료'
         });
 
