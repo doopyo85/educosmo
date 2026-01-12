@@ -326,8 +326,8 @@ router.get('/preview-content', authenticateUser, async (req, res) => {
       return res.status(400).json({ error: '파일명이 제공되지 않았습니다.' });
     }
 
-    // S3 URL 생성 (실제 URL은 환경에 따라 다를 수 있음)
-    const contentUrl = `https://educodingnplaycontents.s3.amazonaws.com/${filename}`;
+    // 네이버 클라우드 Object Storage URL 생성
+    const contentUrl = `https://kr.object.ncloudstorage.com/educodingnplaycontents/${filename}`;
 
     res.json({
       success: true,

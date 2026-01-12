@@ -283,7 +283,7 @@ router.get('/api/load-project', authenticateUser, async (req, res) => {
         let targetS3Url = s3Url;
 
         if (!targetS3Url && file) {
-            targetS3Url = `https://educodingnplaycontents.s3.amazonaws.com/ent/${file}`;
+            targetS3Url = `https://kr.object.ncloudstorage.com/educodingnplaycontents/ent/${file}`;
         }
 
         if (!targetS3Url) {
@@ -858,7 +858,7 @@ router.post('/api/upload', authenticateUser, async (req, res) => {
     res.json({
         success: true,
         fileName: 'uploaded_project.ent',
-        fileUrl: `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/projects/${userID}/uploaded_project.ent`,
+        fileUrl: `https://kr.object.ncloudstorage.com/educodingnplaycontents/ent/projects/${userID}/uploaded_project.ent`,
         message: 'ENT 파일 업로드 (구현 예정)'
     });
 });

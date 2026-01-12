@@ -230,14 +230,14 @@ app.use((req, res, next) => {
 
   let connectSrcIndex = cspParts.findIndex(part => part.startsWith('connect-src'));
   if (connectSrcIndex !== -1) {
-    cspParts[connectSrcIndex] += " ws: wss: https://playentry.org https://entry-cdn.pstatic.net https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com";
+    cspParts[connectSrcIndex] += " ws: wss: https://playentry.org https://entry-cdn.pstatic.net https://kr.object.ncloudstorage.com";
   } else {
     cspParts.push(`connect-src 'self' ws: wss: https://playentry.org https://entry-cdn.pstatic.net ${config.S3.ASSET_URL}`);
   }
 
   let imgSrcIndex = cspParts.findIndex(part => part.startsWith('img-src'));
   if (imgSrcIndex !== -1) {
-    cspParts[imgSrcIndex] += " data: blob: https://entry-cdn.pstatic.net https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com";
+    cspParts[imgSrcIndex] += " data: blob: https://entry-cdn.pstatic.net https://kr.object.ncloudstorage.com";
   } else {
     cspParts.push(`img-src 'self' data: blob: https: https://entry-cdn.pstatic.net ${config.S3.ASSET_URL}`);
   }

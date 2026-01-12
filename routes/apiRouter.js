@@ -948,8 +948,8 @@ router.get('/get-answer-code', authenticateUser, async (req, res) => {
     const answerFilePath = problemRow[6]; // 예: 'python/cospro_1-1_p01.py'
     console.log('정답 파일 경로 (상대):', answerFilePath);
 
-    // 🔥 수정: S3 기본 URL과 조합하여 절대 URL 생성
-    const baseS3Url = 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/';
+    // 🔥 수정: 네이버 클라우드 Object Storage 기본 URL과 조합하여 절대 URL 생성
+    const baseS3Url = 'https://kr.object.ncloudstorage.com/educodingnplaycontents/';
     const fullAnswerUrl = baseS3Url + answerFilePath;
     console.log('정답 파일 URL (절대):', fullAnswerUrl);
 
@@ -1121,7 +1121,7 @@ router.get('/get-offline-assets', authenticateUser, (req, res) => {
       const originalMetadata = JSON.parse(fs.readFileSync(originalPath, 'utf8'));
       const convertedMetadata = {
         totalAssets: 5,
-        baseUrl: 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads',
+        baseUrl: 'https://kr.object.ncloudstorage.com/educodingnplaycontents/ent/uploads',
         entryAssetsIntegrated: true,
         sprites: [],
         sounds: [],
@@ -1132,8 +1132,8 @@ router.get('/get-offline-assets', authenticateUser, (req, res) => {
           background: { id: "background", name: "배경", value: "background", sub: { all: { id: "", name: "전체", value: "all" } } },
           other: { id: "other", name: "기타", value: "other", sub: { all: { id: "", name: "전체", value: "all" } } }
         },
-        imageBaseUrl: 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/images/',
-        soundBaseUrl: 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/sounds/'
+        imageBaseUrl: 'https://kr.object.ncloudstorage.com/educodingnplaycontents/ent/uploads/images/',
+        soundBaseUrl: 'https://kr.object.ncloudstorage.com/educodingnplaycontents/ent/uploads/sounds/'
       };
 
       // 몇 개 스프라이트 샘플 추가
@@ -1193,8 +1193,8 @@ router.get('/offline-asset/:type/:filename', authenticateUser, (req, res) => {
       return res.status(400).json({ error: '지원하지 않는 에셋 타입입니다.' });
     }
 
-    // S3 URL로 리다이렉트
-    const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/ent/uploads/${type}/${filename}`;
+    // 네이버 클라우드 Object Storage URL로 리다이렉트
+    const s3Url = `https://kr.object.ncloudstorage.com/educodingnplaycontents/ent/uploads/${type}/${filename}`;
     res.redirect(302, s3Url);
 
   } catch (error) {
@@ -1251,8 +1251,8 @@ router.get('/get-explanation-md', authenticateUser, async (req, res) => {
     const explanationFileName = problemRow[7].trim(); // H열에서 파일명 가져오기
     console.log('해설 파일명 (H열):', explanationFileName);
 
-    // S3 기본 URL과 조합하여 완전한 URL 생성
-    const baseS3Url = 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/';
+    // 네이버 클라우드 Object Storage 기본 URL과 조합하여 완전한 URL 생성
+    const baseS3Url = 'https://kr.object.ncloudstorage.com/educodingnplaycontents/';
     const explanationUrl = baseS3Url + explanationFileName;
     console.log('조합된 해설 파일 URL:', explanationUrl);
 
@@ -1398,8 +1398,8 @@ router.get('/get-example-code', authenticateUser, async (req, res) => {
       // 이미 완전한 URL인 경우
       fullExampleUrl = exampleFileUrl;
     } else {
-      // 상대 경로인 경우 S3 기본 URL과 조합
-      const baseS3Url = 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/';
+      // 상대 경로인 경우 네이버 클라우드 Object Storage 기본 URL과 조합
+      const baseS3Url = 'https://kr.object.ncloudstorage.com/educodingnplaycontents/';
       fullExampleUrl = baseS3Url + exampleFileUrl;
     }
 
@@ -1461,8 +1461,8 @@ router.get('/get-file-content', authenticateUser, async (req, res) => {
       // 이미 완전한 URL인 경우
       fullUrl = fileUrl;
     } else {
-      // 상대 경로인 경우 S3 기본 URL과 조합
-      const baseS3Url = 'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/';
+      // 상대 경로인 경우 네이버 클라우드 Object Storage 기본 URL과 조합
+      const baseS3Url = 'https://kr.object.ncloudstorage.com/educodingnplaycontents/';
       fullUrl = baseS3Url + fileUrl;
     }
 
