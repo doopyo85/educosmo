@@ -3,6 +3,41 @@ const express = require('express');
 const router = express.Router();
 const { authenticateUser } = require('../../lib_login/authMiddleware');
 const { getSheetData } = require('../../lib_google/sheetService');
+const config = require('../../config');
+
+// 🔥 AWS S3 URL을 NCP Object Storage URL로 변환하는 헬퍼 함수
+function transformS3UrlToNCP(url) {
+  if (!url || typeof url !== 'string') return url;
+
+  // AWS S3 패턴 감지 및 변환
+  // 예: https://educodingnplaycontents.s3.amazonaws.com/...
+  //  -> https://onag54aw13447.edge.naverncp.com/...
+  const awsS3Pattern = /https?:\/\/educodingnplaycontents\.s3\.amazonaws\.com\//gi;
+
+  if (awsS3Pattern.test(url)) {
+    const transformedUrl = url.replace(awsS3Pattern, config.S3.ASSET_URL + '/');
+    console.log(`🔄 URL 변환: ${url.substring(0, 50)}... -> ${transformedUrl.substring(0, 50)}...`);
+    return transformedUrl;
+  }
+
+  return url;
+}
+
+// 🔥 데이터 배열의 모든 URL을 NCP로 변환
+function transformDataUrls(data) {
+  if (!Array.isArray(data)) return data;
+
+  return data.map(row => {
+    if (!Array.isArray(row)) return row;
+
+    return row.map(cell => {
+      if (typeof cell === 'string' && (cell.includes('s3.amazonaws.com') || cell.includes('educodingnplaycontents'))) {
+        return transformS3UrlToNCP(cell);
+      }
+      return cell;
+    });
+  });
+}
 
 // 공통 Google 시트 데이터 API - 데이터 전처리 추가
 router.get('/computer', async (req, res) => {
@@ -67,7 +102,10 @@ router.get('/sb2', async (req, res) => {
   try {
     const data = await getSheetData('sb2!A2:H');
     console.log(`✅ SB2 Sheet Data Loaded: ${data ? data.length : 0} rows`);
-    res.json(data);
+
+    // 🔥 AWS S3 URL을 NCP로 변환
+    const transformedData = transformDataUrls(data);
+    res.json(transformedData);
   } catch (error) {
     console.error('sb2 시트 오류:', error);
     res.status(500).json({ error: 'sb2 시트 오류' });
@@ -78,7 +116,10 @@ router.get('/sb3', async (req, res) => {
   try {
     const data = await getSheetData('sb3!A2:H');
     console.log(`✅ SB3 Sheet Data Loaded: ${data ? data.length : 0} rows`);
-    res.json(data);
+
+    // 🔥 AWS S3 URL을 NCP로 변환
+    const transformedData = transformDataUrls(data);
+    res.json(transformedData);
   } catch (error) {
     console.error('sb3 시트 오류:', error);
     res.status(500).json({ error: 'sb3 시트 오류' });
@@ -89,7 +130,10 @@ router.get('/ent', async (req, res) => {
   try {
     const data = await getSheetData('ent!A2:G');
     console.log(`✅ ENT Sheet Data Loaded: ${data ? data.length : 0} rows`);
-    res.json(data);
+
+    // 🔥 AWS S3 URL을 NCP로 변환
+    const transformedData = transformDataUrls(data);
+    res.json(transformedData);
   } catch (error) {
     console.error('ent 시트 오류:', error);
     res.status(500).json({ error: 'ent 시트 오류' });
