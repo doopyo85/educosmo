@@ -141,6 +141,7 @@ const CSP = {
     "data:",
     "blob:",
     "https://kr.object.ncloudstorage.com", // 🔥 NCP Object Storage 추가
+    "https://onag54aw13447.edge.naverncp.com", // 🔥 NCP Global Edge 추가
     "https://www.google.com",
     "https://code.org",
     "https://blockly.games",
@@ -159,6 +160,7 @@ const CSP = {
     "https://apis.google.com",
     "https://content-sheets.googleapis.com",
     "https://kr.object.ncloudstorage.com", // 🔥 NCP Object Storage 추가
+    "https://onag54aw13447.edge.naverncp.com", // 🔥 NCP Global Edge 추가
     "https://www.google.com",
     "https://cdn.jsdelivr.net",
     "https://cdnjs.cloudflare.com",
@@ -183,6 +185,7 @@ const CSP = {
     "https://sheets.googleapis.com",
     "https://content-sheets.googleapis.com",
     "https://kr.object.ncloudstorage.com", // 🔥 NCP Object Storage 추가
+    "https://onag54aw13447.edge.naverncp.com", // 🔥 NCP Global Edge 추가
     // codingnplay 도메인들
     "https://app.codingnplay.co.kr:8080",
     "https://app.codingnplay.co.kr:8888",
