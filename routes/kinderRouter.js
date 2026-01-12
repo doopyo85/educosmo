@@ -39,15 +39,14 @@ function groupByVolume(rows) {
             };
         }
 
-        // 이미지 배열 생성 (IMG-1 ~ IMG-7: 인덱스 7~13)
-        // 빈 값이나 undefined 필터링
-        const images = row.slice(7, 14).filter(img => img && img.trim().startsWith('http'));
+        // 이미지 배열 생성 (IMG-1 ~ IMG-7: 인덱스 8~14 -> Column I ~ O)
+        const images = row.slice(8, 15).filter(img => img && img.trim().startsWith('http'));
 
         groups[groupName].sessions.push({
             name: row[1], // 차시명
             topic: row[2], // 주제
-            videoUrl: row[5], // URL (영상)
-            thumbnail: row[6], // Thumb
+            videoUrl: row[6], // URL (영상) - G열
+            thumbnail: row[7], // Thumb - H열
             images: images
         });
     });
