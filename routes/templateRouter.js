@@ -17,7 +17,7 @@ router.get('/',
       centerID: req.session.centerID,
       pageType: 'template',
       pageTitle: '템플릿 테스트 페이지',
-      S3_ASSET_URL: S3.PROXY_URL  // 🔥 프록시 URL 사용으로 CORS 우회
+      S3_ASSET_URL: S3.ASSET_URL  // 🔥 Edge URL 사용 (CORS 자동 지원)
     });
   }
 );
@@ -101,7 +101,7 @@ router.get('/component',
       centerID: req.session.centerID,
       pageType: 'component',
       pageTitle: '컴포넌트 시스템 테스트',
-      S3_ASSET_URL: S3.PROXY_URL
+      S3_ASSET_URL: S3.ASSET_URL  // 🔥 Edge URL 사용
     });
   }
 );
@@ -117,7 +117,7 @@ router.get('/python-style',
       centerID: req.session.centerID,
       pageType: 'python',
       pageTitle: 'Python 스타일 테스트',
-      S3_ASSET_URL: S3.PROXY_URL
+      S3_ASSET_URL: S3.ASSET_URL  // 🔥 Edge URL 사용
     });
   }
 );
@@ -133,7 +133,7 @@ router.get('/cert-style',
       centerID: req.session.centerID,
       pageType: 'certification',
       pageTitle: '자격증 스타일 테스트',
-      S3_ASSET_URL: S3.PROXY_URL
+      S3_ASSET_URL: S3.ASSET_URL  // 🔥 Edge URL 사용
     });
   }
 );
@@ -149,7 +149,7 @@ router.get('/aimath-style',
       centerID: req.session.centerID,
       pageType: 'aiMath',
       pageTitle: 'AI Math 스타일 테스트',
-      S3_ASSET_URL: S3.PROXY_URL
+      S3_ASSET_URL: S3.ASSET_URL  // 🔥 Edge URL 사용
     });
   }
 );
@@ -166,7 +166,7 @@ router.get('/dataanalysis-style',
       centerID: req.session.centerID,
       pageType: 'dataAnalysis',
       pageTitle: '데이터분석 스타일 테스트',
-      S3_ASSET_URL: S3.PROXY_URL
+      S3_ASSET_URL: S3.ASSET_URL  // 🔥 Edge URL 사용
     });
   }
 );

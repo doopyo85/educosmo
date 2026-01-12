@@ -49,9 +49,9 @@ const API_ENDPOINTS = {
 const S3 = {
   REGION: process.env.AWS_REGION || 'ap-northeast-2',
   BUCKET_NAME: process.env.BUCKET_NAME || 'educodingnplaycontents',
-  // 🔥 프록시를 통해 CORS 헤더와 함께 제공 (선택적으로 직접 URL 사용 가능)
-  ASSET_URL: process.env.S3_ASSET_URL || 'https://kr.object.ncloudstorage.com/educodingnplaycontents',
-  // 프록시 URL (CORS 문제 해결용)
+  // 🔥 NCP Global Edge URL (CORS 자동 지원)
+  ASSET_URL: process.env.S3_ASSET_URL || 'https://onag54aw13447.edge.naverncp.com/educodingnplaycontents',
+  // 프록시 URL (CORS 문제 해결용 - 대안, 현재 Edge 사용으로 불필요)
   PROXY_URL: '/proxy/content'
 };
 
