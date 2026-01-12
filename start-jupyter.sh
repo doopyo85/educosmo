@@ -36,7 +36,7 @@ s3fs "$BUCKET_NAME" "$MOUNT_POINT" \
     -o uid=$(id -u),gid=$(id -g) \
     -o mp_umask=002 \
     -o multireq_max=5 \
-    -o url="https://s3.$AWS_REGION.amazonaws.com" \
+    -o url="${S3_ENDPOINT_URL:-https://s3.$AWS_REGION.amazonaws.com}" \
     -o dbglevel=info \
     -o nonempty 
 
