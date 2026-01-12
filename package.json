@@ -48,7 +48,8 @@
     "socket.io": "^4.8.1",
     "tar": "^6.2.0",
     "uid": "^2.0.2",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

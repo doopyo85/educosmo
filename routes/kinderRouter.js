@@ -22,15 +22,20 @@ async function getSheetData(sheetName, range, spreadsheetId) {
 }
 
 // 🔥 데이터 그룹화 헬퍼 함수
+// Adjusted for Single Sheet with Category Column at Index 0
 function groupByVolume(rows) {
     const groups = {};
 
-    // 첫 번째 행(헤더) 제외하고 데이터 처리
-    rows.slice(1).forEach(row => {
-        // 데이터가 없는 행 건너뛰기
-        if (!row[0] || !row[1]) return;
+    // Rows are already filtered, so we can iterate directly.
+    // If the first row is a header, filtering might have kept or removed it. 
+    // Usually 'filterByCategory' removes the header unless it matches the keyword.
+    // We assume incoming rows are data rows.
 
-        const groupName = row[0]; // Group by (e.g., Level1 1호)
+    rows.forEach(row => {
+        // [0]Category, [1]Group, [2]Title, [3]Topic, ..., [7]Video, [8]Thumb, [9...]Images
+        if (!row[1] || !row[2]) return;
+
+        const groupName = row[1]; // Group (e.g., 1호)
 
         if (!groups[groupName]) {
             groups[groupName] = {
@@ -39,14 +44,14 @@ function groupByVolume(rows) {
             };
         }
 
-        // 이미지 배열 생성 (IMG-1 ~ IMG-7: 인덱스 8~14 -> Column I ~ O)
-        const images = row.slice(8, 15).filter(img => img && img.trim().startsWith('http'));
+        // Images start from Index 9 (Column J) -> 9 to 16
+        const images = row.slice(9, 16).filter(img => img && img.trim().startsWith('http'));
 
         groups[groupName].sessions.push({
-            name: row[1], // 차시명
-            topic: row[2], // 주제
-            videoUrl: row[6], // URL (영상) - G열
-            thumbnail: row[7], // Thumb - H열
+            name: row[2], // Title
+            topic: row[3], // Topic
+            videoUrl: row[7], // Video (Col H)
+            thumbnail: row[8], // Thumb (Col I)
             images: images
         });
     });
@@ -62,27 +67,32 @@ router.get('/', async (req, res) => {
         const [
             preschoolData,
             preschoolAIData,
-            level1Data,
-            level2Data,
-            level3Data,
-            aiLevel1Data,
-            aiLevel2Data,
-            aiLevel3Data
+            allLessonData // Single Consolidated Sheet
         ] = await Promise.all([
             // Tab 1: Board Data (Old) - Uses Default SPREADSHEET_ID
             getSheetData('교사게시판', 'A1:D14', process.env.SPREADSHEET_ID),
             getSheetData('교사게시판', 'E1:H14', process.env.SPREADSHEET_ID),
 
-            // Tab 2: Lesson Data (Regular) - Uses EDU SPREADSHEET_ID
-            getSheetData('프리-LV1(5세)', 'A:N', eduSpreadsheetId),
-            getSheetData('프리-LV2(6세)', 'A:O', eduSpreadsheetId),
-            getSheetData('프리-LV3(7세)', 'A:O', eduSpreadsheetId),
-
-            // Tab 2: Lesson Data (AI) - Uses EDU SPREADSHEET_ID (Assumed Sheet Names)
-            getSheetData('프리AI-LV1(5세)', 'A:O', eduSpreadsheetId),
-            getSheetData('프리AI-LV2(6세)', 'A:O', eduSpreadsheetId),
-            getSheetData('프리AI-LV3(7세)', 'A:O', eduSpreadsheetId)
+            // Tab 2: All Lessons from Single Sheet
+            getSheetData('교육영상', 'A:P', eduSpreadsheetId)
         ]);
+
+        // Helper to filter by Category column (Index 0)
+        // Note: New Sheet Structure: [Category, Group, Title, Topic, ..., Video(H), Thumb(I), Images(J...)]
+        // Original indices shifted by +1 because 'Category' is at 0.
+        // Old Video was G (6), now H (7).
+        // Old Thumb was H (7), now I (8).
+        const filterByCategory = (rows, categoryKeyword) => {
+            return rows.filter(row => row[0] && row[0].includes(categoryKeyword));
+        };
+
+        const level1Data = filterByCategory(allLessonData, '프리-LV1(5세)');
+        const level2Data = filterByCategory(allLessonData, '프리-LV2(6세)');
+        const level3Data = filterByCategory(allLessonData, '프리-LV3(7세)');
+
+        const aiLevel1Data = filterByCategory(allLessonData, '프리AI-LV1(5세)');
+        const aiLevel2Data = filterByCategory(allLessonData, '프리AI-LV2(6세)');
+        const aiLevel3Data = filterByCategory(allLessonData, '프리AI-LV3(7세)');
 
         // Process Board Data
         const preschoolTitle = preschoolData[0] ? preschoolData[0][0] : '프리스쿨';
