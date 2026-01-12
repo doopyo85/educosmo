@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Jupyter Notebook Service (Maintains image build)
   # Jupyter Notebook Service (Maintains image build)

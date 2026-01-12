@@ -25,24 +25,32 @@ echo "🔍 DEBUG: AWS_REGION=$AWS_REGION"
 # NCP Object Storage requires explicit credentials, not IAM role
 if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
     echo "✅ Using provided AWS credentials"
+
+    # 🔥 s3fs 설치 확인
+    if ! command -v s3fs &> /dev/null; then
+        echo "❌ s3fs가 설치되어 있지 않습니다. S3 마운트를 건너뜁니다."
+        echo "📓 로컬 파일시스템으로 계속 진행합니다..."
+    else
     # Create password file for s3fs
     echo "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY" > /root/.passwd-s3fs
     chmod 600 /root/.passwd-s3fs
 
-    s3fs "$BUCKET_NAME" "$MOUNT_POINT" \
-        -o passwd_file=/root/.passwd-s3fs \
-        -o allow_other \
-        -o use_cache=/tmp \
-        -o uid=$(id -u),gid=$(id -g) \
-        -o mp_umask=002 \
-        -o multireq_max=5 \
-        -o url="$S3_ENDPOINT_URL" \
-        -o use_path_request_style \
-        -o dbglevel=info \
-        -o nonempty
+        echo "🔄 s3fs 마운트 시작..."
+        s3fs "$BUCKET_NAME" "$MOUNT_POINT" \
+            -o passwd_file=/root/.passwd-s3fs \
+            -o allow_other \
+            -o use_cache=/tmp \
+            -o uid=$(id -u),gid=$(id -g) \
+            -o mp_umask=002 \
+            -o multireq_max=5 \
+            -o url="$S3_ENDPOINT_URL" \
+            -o use_path_request_style \
+            -o dbglevel=info \
+            -o nonempty
 
-    # Wait for mount to complete
-    sleep 2
+        # Wait for mount to complete
+        sleep 2
+    fi
 else
     echo "⚠️  No AWS credentials provided, attempting IAM role..."
     s3fs "$BUCKET_NAME" "$MOUNT_POINT" \
@@ -60,10 +68,18 @@ fi
 # Check if mount was successful
 if mountpoint -q "$MOUNT_POINT"; then
     echo "✅ S3 Mounted Successfully!"
+    ls -la "$MOUNT_POINT" | head -10
 else
     echo "❌ S3 Mount Failed!"
-    # We might want to exit here, or continue with local storage fallback
-    # exit 1 
+    echo "📁 Using local filesystem: $MOUNT_POINT"
+    # 로컬 디렉토리가 존재하는지 확인
+    if [ -d "$MOUNT_POINT" ]; then
+        echo "✅ Local directory exists"
+        ls -la "$MOUNT_POINT" | head -10
+    else
+        echo "⚠️  Creating local directory..."
+        mkdir -p "$MOUNT_POINT"
+    fi
 fi
 
 # Execute the passed command (Jupyter)
