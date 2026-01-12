@@ -29,7 +29,8 @@ class S3Explorer {
       onFolderOpen: config.onFolderOpen || null,
       onError: config.onError || null,
       userID: config.userID || '',  // 🔥 userID 추가
-      userRole: config.userRole || 'guest'  // 🔥 userRole 추가
+      userRole: config.userRole || 'guest',  // 🔥 userRole 추가
+      s3AssetUrl: config.s3AssetUrl || '' // 🔥 NCP Asset URL 추가
     };
 
     // 🔥 역할별 최이 경로 설정
@@ -1302,8 +1303,10 @@ class S3Explorer {
     try {
       console.log('🎨 Entry에서 열기:', key);
 
-      // 🔥 S3 직접 URL 생성 (ap-northeast-2 리전 명시)
-      const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${key}`;
+      // 🔥 S3 직접 URL 생성 (NCP Asset URL 사용)
+      const s3Url = this.config.s3AssetUrl
+        ? `${this.config.s3AssetUrl}/${key}`
+        : `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${key}`;
 
       // 🔥 Entry 페이지 URL 생성 (s3Url 파라미터 사용)
       const userID = this.config.userID || 'guest';
@@ -1328,8 +1331,10 @@ class S3Explorer {
     try {
       console.log('🐱 Scratch에서 열기:', key);
 
-      // 🔥 S3 직접 URL 생성 (ap-northeast-2 리전 명시)
-      const s3Url = `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${key}`;
+      // 🔥 S3 직접 URL 생성 (NCP Asset URL 사용)
+      const s3Url = this.config.s3AssetUrl
+        ? `${this.config.s3AssetUrl}/${key}`
+        : `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${key}`;
 
       // 🔥 Scratch 페이지 URL 생성 (project_file 파라미터 사용)
       const scratchUrl = `/scratch/?project_file=${encodeURIComponent(s3Url)}`;

@@ -3,24 +3,21 @@ const config = require('../config');
 
 class S3Manager {
     constructor() {
-        // 🔐 IAM Role 기반 인증
-        // EC2 인스턴스에 IAM Role이 있으면 자동으로 자격 증명을 가져옴
+        // 🔐 IAM Role 기반 인증 (NCP 호환)
         const s3Config = {
-            region: config.S3.REGION
-        };
-        console.log('🔍 S3Manager 생성 - NODE_ENV:', process.env.NODE_ENV);
-        console.log('🔍 AWS_ACCESS_KEY_ID 존재:', !!process.env.AWS_ACCESS_KEY_ID);
-        console.log('🔍 AWS_SECRET_ACCESS_KEY 존재:', !!process.env.AWS_SECRET_ACCESS_KEY);
-
-        // 개발 환경에서만 환경 변수 사용 (프로덕션에서는 IAM Role 사용)
-        if (process.env.NODE_ENV === 'development' && process.env.AWS_ACCESS_KEY_ID) {
-            console.warn('⚠️  개발 환경: 환경 변수로 AWS 자격 증명 사용');
-            s3Config.credentials = {
+            region: config.S3.REGION,
+            endpoint: 'https://kr.object.ncloudstorage.com', // 🔥 NCP Endpoint
+            credentials: {
                 accessKeyId: process.env.AWS_ACCESS_KEY_ID,
                 secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-            };
-        } else {
-            console.log('🔐 프로덕션 환경: IAM Role로 AWS 자격 증명 사용');
+            }
+        };
+        console.log('🔍 S3Manager 생성 - NODE_ENV:', process.env.NODE_ENV);
+        console.log('🔍 Endpoint:', s3Config.endpoint);
+
+        // 개발 환경/프로덕션 모두 명시적 자격 증명 사용 (NCP 권장)
+        if (!s3Config.credentials.accessKeyId || !s3Config.credentials.secretAccessKey) {
+             console.warn('⚠️  AWS_ACCESS_KEY_ID 또는 AWS_SECRET_ACCESS_KEY가 설정되지 않았습니다.');
         }
 
         this.s3Client = new S3Client(s3Config);
@@ -92,7 +89,7 @@ class S3Manager {
                         lastModified: item.LastModified,
                         type: 'file',
                         icon: this.getFileIcon(item.Key),  // 🔥 추가
-                        url: `https://${this.bucketName}.s3.${config.S3.REGION}.amazonaws.com/${item.Key}`
+                        url: `${config.S3.ASSET_URL}/${item.Key}` // 🔥 AWS URL -> NCP Asset URL
                     };
                 });
 
@@ -171,7 +168,7 @@ class S3Manager {
 
             await this.s3Client.send(command);
 
-            const s3Url = `https://${this.bucketName}.s3.${config.S3.REGION}.amazonaws.com/${s3Key}`;
+            const s3Url = `${config.S3.ASSET_URL}/${s3Key}`;
             console.log(`✅ S3 업로드 완료: ${s3Url}`);
 
             return s3Url;
@@ -388,7 +385,7 @@ class S3Manager {
 
             await this.s3Client.send(command);
 
-            const s3Url = `https://${this.bucketName}.s3.${config.S3.REGION}.amazonaws.com/${s3Key}`;
+            const s3Url = `${config.S3.ASSET_URL}/${s3Key}`;
 
             console.log(`✅ S3 사용자 프로젝트 업로드 완료: ${s3Key}`);
 

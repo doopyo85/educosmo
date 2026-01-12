@@ -83,7 +83,9 @@
                 const role = '<%= role %>';
                 const userID = '<%= userID %>';
                 const scope = '<%= scope %>';
+
                 const initialPath = '<%= typeof initialPath !== "undefined" ? initialPath : "" %>'; // 🔥 초기 경로
+                const s3AssetUrl = '<%= typeof s3AssetUrl !== "undefined" ? s3AssetUrl : "" %>'; // 🔥 NCP Asset URL
 
                 // 역할별 루트 경로 설정
                 let rootPath = '';
@@ -114,6 +116,7 @@
                     apiEndpoint: '/api/s3/browse',
                     scope: scope,
                     rootPath: rootPath,
+                    s3AssetUrl: s3AssetUrl, // 🔥 NCP Asset URL 전달
                     userID: userID,        // ✅ 반드시 전달
                     userRole: role,        // ✅ 역할 전달
                     allowedPlatforms: ['scratch', 'entry', 'gallery', 'portfolio'],
