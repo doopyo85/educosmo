@@ -161,22 +161,43 @@ router.post('/login_process', async (req, res) => {
             return res.status(400).json({ success: false, error: '아이디와 비밀번호를 입력해주세요.' });
         }
 
-        // 🔥 [임시] DB 없이 로그인 허용 (Login Bypass)
-        console.log(`[LOGIN] ⚠️ EMERGENCY BYPASS ACTIVE for User: ${userID}`);
+        // 🔥 DB에서 사용자 조회
+        let user = null;
+        try {
+            const [dbUser] = await queryDatabase(
+                'SELECT id, userID, name, password, role, centerID FROM Users WHERE userID = ?',
+                [userID]
+            );
 
-        // 가짜 유저 객체 생성
-        const user = {
-            id: 999999, // 임시 ID
-            userID: userID,
-            name: `${userID}(임시)`,
-            role: 'student', // 기본 권한: 학생
-            centerID: 1, // 기본 센터 ID (오류 방지용)
-            password: 'BYPASS_PASSWORD', // 더미
-            userType: 'student'
-        };
+            if (dbUser) {
+                // DB에 사용자가 있을 경우 - 비밀번호 검증
+                const bcrypt = require('bcrypt');
+                const passwordMatch = await bcrypt.compare(password, dbUser.password);
 
-        // 세션 설정 전 로깅
-        console.log('[LOGIN] 세션 설정 시작 (Bypass)...');
+                if (passwordMatch) {
+                    user = dbUser;
+                    console.log(`[LOGIN] ✅ DB 사용자 인증 성공: ${userID}, Role: ${user.role}`);
+                } else {
+                    console.log(`[LOGIN] ❌ 비밀번호 불일치: ${userID}`);
+                    return res.status(401).json({ success: false, error: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+                }
+            }
+        } catch (dbError) {
+            console.error('[LOGIN] DB 조회 오류 (임시 학생 권한으로 처리):', dbError.message);
+        }
+
+        // 🔥 DB에 사용자가 없으면 기본 학생 권한으로 로그인
+        if (!user) {
+            console.log(`[LOGIN] ⚠️ DB에 사용자 없음 - 학생 권한으로 로그인: ${userID}`);
+            user = {
+                id: 999999, // 임시 ID
+                userID: userID,
+                name: `${userID}`,
+                role: 'student', // 기본 권한: 학생
+                centerID: 1, // 기본 센터 ID
+                userType: 'student'
+            };
+        }
 
         // 세션 데이터 설정
         req.session.is_logined = true;
@@ -623,6 +644,20 @@ router.post('/register-center', async (req, res) => {
         console.error('Center registration error:', error);
         res.status(500).json({ success: false, message: '가입 처리 중 오류가 발생했습니다' });
     }
+});
+
+// 로그아웃 처리
+router.get('/logout', (req, res) => {
+    console.log(`[LOGOUT] 사용자 로그아웃: ${req.session.userID}`);
+
+    req.session.destroy(err => {
+        if (err) {
+            console.error('[LOGOUT ERROR] 세션 삭제 실패:', err);
+            return res.status(500).json({ success: false, error: '로그아웃 중 오류가 발생했습니다.' });
+        }
+
+        res.redirect('/auth/login');
+    });
 });
 
 module.exports = router;

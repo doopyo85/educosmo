@@ -10,7 +10,8 @@
       "Bash(if [ -f .env ])",
       "Bash(then grep -E \"\\(AWS|S3|NCP|BUCKET|ENDPOINT\\)\" .env)",
       "Bash(else echo \"No .env file\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(mysql:*)"
     ]
   }
 }

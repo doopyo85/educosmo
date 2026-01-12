@@ -73,6 +73,81 @@ const checkSameCenter = async (req, res, next) => {
 // ============================================
 // API: 학생 목록 조회
 // ============================================
+
+
+// 🔥 데이터 그룹화 헬퍼 함수 (from kinderRouter.js logic)
+// To keep isolation, defined here locally.
+function groupByVolume(rows) {
+    const groups = {};
+    rows.forEach(row => {
+        // [0]Category, [1]Group, [2]Title, [3]Topic, ..., [7]Video, [8]Thumb, [9...]Images
+        if (!row[1] || !row[2]) return;
+
+        const groupName = row[1]; // Group
+        if (!groups[groupName]) {
+            groups[groupName] = { title: groupName, sessions: [] };
+        }
+
+        const images = row.slice(9, 16).filter(img => img && img.trim().startsWith('http'));
+
+        groups[groupName].sessions.push({
+            name: row[2], // Title
+            topic: row[3], // Topic
+            videoUrl: row[7], // Video
+            thumbnail: row[8], // Thumb
+            images: images
+        });
+    });
+    return Object.values(groups);
+}
+
+// 🔥 교사 자료 페이지 (Teacher! Sheet)
+router.get('/', requireTeacher, async (req, res) => {
+    try {
+        const eduSpreadsheetId = process.env.SPREADSHEET_ID_EDU || process.env.SPREADSHEET_ID;
+
+        // Fetch 'Teacher!' Sheet Data
+        // Range A:P covers same structure as Education Video sheet
+        const teacherSheetData = await getSheetData('Teacher!', 'A:P', eduSpreadsheetId);
+
+        // Group Data
+        // Teacher Request: "Show ALL data from Teacher sheet"
+        // We will put everything into "Level 1" slot and hide others via empty arrays or logic
+        const allGroups = groupByVolume(teacherSheetData);
+
+        res.render('kinder', {
+            // Main Tab Titles
+            pageTitle: '교사 교육자료',
+
+            // Lesson Tab Data (Only Level 1 used for ALL data)
+            level1Groups: allGroups,
+            level2Groups: [],
+            level3Groups: [],
+            aiLevel1Groups: [],
+            aiLevel2Groups: [],
+            aiLevel3Groups: [],
+
+            // Dynamic Tab Titles
+            level1Title: '전체 자료',
+            level2Title: ' ', // Empty title to hide or show blank
+            level3Title: ' ',
+            aiLevel1Title: ' ',
+            aiLevel2Title: ' ',
+            aiLevel3Title: ' ',
+
+            // Board Tab Data (Empty for now)
+            preschoolTitle: '',
+            preschoolAITitle: '',
+            preschoolItems: [],
+            preschoolAIItems: []
+        });
+
+    } catch (error) {
+        console.error('Teacher page error:', error);
+        res.status(500).send('자료를 불러오는 중 오류가 발생했습니다.');
+    }
+});
+
 router.get('/api/students', requireTeacher, async (req, res) => {
     try {
         const teacherCenterId = req.session.centerID;

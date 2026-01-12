@@ -319,38 +319,41 @@
                         <li class="nav-item">
                             <button class="nav-link active" id="tab-lv1" data-bs-toggle="pill"
                                 data-bs-target="#content-lv1" type="button" role="tab">
-                                Level 1 (5세)
+                                <%= level1Title || 'Level 1 (5세)' %>
                             </button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link" id="tab-lv2" data-bs-toggle="pill" data-bs-target="#content-lv2"
                                 type="button" role="tab">
-                                Level 2 (6세)
+                                <%= level2Title || 'Level 2 (6세)' %>
                             </button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link" id="tab-lv3" data-bs-toggle="pill" data-bs-target="#content-lv3"
                                 type="button" role="tab">
-                                Level 3 (7세)
+                                <%= level3Title || 'Level 3 (7세)' %>
                             </button>
                         </li>
                         <!-- Pre-AI Tabs -->
                         <li class="nav-item ms-3 border-start ps-3">
                             <button class="nav-link" id="tab-ai-lv1" data-bs-toggle="pill"
                                 data-bs-target="#content-ai-lv1" type="button" role="tab">
-                                <i class="bi bi-robot me-1"></i>Pre-AI 1 (5세)
+                                <i class="bi bi-robot me-1"></i>
+                                <%= aiLevel1Title || 'Pre-AI 1 (5세)' %>
                             </button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link" id="tab-ai-lv2" data-bs-toggle="pill"
                                 data-bs-target="#content-ai-lv2" type="button" role="tab">
-                                <i class="bi bi-robot me-1"></i>Pre-AI 2 (6세)
+                                <i class="bi bi-robot me-1"></i>
+                                <%= aiLevel2Title || 'Pre-AI 2 (6세)' %>
                             </button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link" id="tab-ai-lv3" data-bs-toggle="pill"
                                 data-bs-target="#content-ai-lv3" type="button" role="tab">
-                                <i class="bi bi-robot me-1"></i>Pre-AI 3 (7세)
+                                <i class="bi bi-robot me-1"></i>
+                                <%= aiLevel3Title || 'Pre-AI 3 (7세)' %>
                             </button>
                         </li>
                     </ul>

@@ -135,6 +135,14 @@ router.get('/', async (req, res) => {
             aiLevel2Groups,
             aiLevel3Groups,
 
+            // Dynamic Tab Titles
+            level1Title: 'Level 1 (5세)',
+            level2Title: 'Level 2 (6세)',
+            level3Title: 'Level 3 (7세)',
+            aiLevel1Title: 'Pre-AI 1 (5세)',
+            aiLevel2Title: 'Pre-AI 2 (6세)',
+            aiLevel3Title: 'Pre-AI 3 (7세)',
+
             pageTitle: '프리스쿨 교육자료'
         });
 
