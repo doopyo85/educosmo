@@ -118,26 +118,24 @@ class ContentComponent extends Component {
             this.state.currentExamName = data.examName;
             this.state.currentProblemNumber = 1;
 
-            // ✅ 150ms 후 데이터 확인하고 로드
-            setTimeout(() => {
+            // ✅ 데이터가 준비될 때까지 재귀적으로 체크 (최대 2초 대기)
+            const waitForData = (attempt = 0, maxAttempts = 20) => {
               this.updateProblemCount();
 
               if (this.state.totalProblems > 0) {
-                console.log(`문제 데이터 준비 완료: ${this.state.totalProblems}개 문제`);
+                console.log(`문제 데이터 준비 완료: ${this.state.totalProblems}개 문제 (시도 ${attempt + 1}회)`);
                 this.loadProblem(1);
+              } else if (attempt < maxAttempts) {
+                console.warn(`문제 데이터 대기 중... (${attempt + 1}/${maxAttempts})`);
+                setTimeout(() => waitForData(attempt + 1, maxAttempts), 100);
               } else {
-                console.warn('문제 데이터가 아직 준비되지 않음, 재시도 중...');
-                // 한 번 더 재시도 (총 300ms 대기)
-                setTimeout(() => {
-                  this.updateProblemCount();
-                  if (this.state.totalProblems > 0) {
-                    this.loadProblem(1);
-                  } else {
-                    this.showErrorScreen('문제 데이터를 불러올 수 없습니다.');
-                  }
-                }, 150);
+                console.error('문제 데이터 로드 시간 초과');
+                this.showErrorScreen('문제 데이터를 불러올 수 없습니다.');
               }
-            }, 150);
+            };
+
+            // 초기 지연 후 데이터 체크 시작
+            setTimeout(() => waitForData(), 100);
           }
         }
       });
