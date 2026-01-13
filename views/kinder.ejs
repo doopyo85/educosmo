@@ -7,320 +7,284 @@
     <title>
         <%= pageTitle %>
     </title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Doodle Sticker Theme CSS -->
     <style>
-        /* Card Grid Styles */
-        .group-header {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #1d1d1f;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #e5e5e5;
+        :root {
+            --doodle-bg: #ffffff;
+            --doodle-grid: #e5e5e5;
+            --doodle-primary: #FFD700;
+            /* Yellow */
+            --doodle-secondary: #FF6B6B;
+            /* Red */
+            --doodle-tertiary: #4ECDC4;
+            /* Teal/Blue */
+            --doodle-black: #2d2d2d;
+            --doodle-font: 'Gaegu', cursive, 'Jua', sans-serif;
         }
 
-        .kinder-card {
-            border: 1px solid #e5e5e5;
-            border-radius: 18px;
-            overflow: hidden;
-            transition: all 0.3s ease;
+        /* Import Google Fonts for hand-drawn look */
+        @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&display=swap');
+
+        body {
+            background-color: var(--doodle-bg);
+            background-image:
+                linear-gradient(var(--doodle-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--doodle-grid) 1px, transparent 1px);
+            background-size: 20px 20px;
+            font-family: var(--doodle-font);
+        }
+
+        /* Doodle Container - The Main Paper */
+        .doodle-paper {
             background: #fff;
-            cursor: pointer;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .kinder-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-            border-color: #d2d2d7;
-        }
-
-        .kinder-card-thumb {
-            height: 180px;
-            background-color: #f5f5f7;
+            border: 3px solid var(--doodle-black);
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
             position: relative;
-            overflow: hidden;
+            z-index: 5;
         }
 
-        .kinder-card-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-        .kinder-card:hover .kinder-card-thumb img {
-            transform: scale(1.05);
-        }
-
-        .kinder-card-body {
-            padding: 1.25rem;
-            flex-grow: 1;
+        /* Tabs - Notebook Bookmarks Style (Top) */
+        .doodle-nav-wrapper {
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 15px;
+            margin-bottom: -4px;
+            /* Slight overlap */
+            z-index: 10;
+            position: relative;
+            padding: 0 20px;
         }
 
-        .kinder-card-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #1d1d1f;
-            margin-bottom: 0.25rem;
-        }
-
-        .kinder-card-topic {
-            font-size: 0.9rem;
-            color: #86868b;
-            margin-bottom: 0;
-        }
-
-        /* Modal Styles */
-        .modal-content {
-            border-radius: 20px;
-            overflow: hidden;
-            border: none;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        .modal-header {
-            border-bottom: 1px solid #f5f5f7;
-            padding: 1.5rem 2rem;
+        .doodle-tab-main {
             background: #fff;
-        }
-
-        .modal-body {
-            padding: 2rem;
-            background: #fbfbfd;
-        }
-
-        .video-wrapper {
-            position: relative;
-            padding-bottom: 56.25%;
-            height: 0;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            background: #000;
-            margin-bottom: 2rem;
-        }
-
-        .video-wrapper iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .carousel-item img {
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Tabs Styling */
-        .main-nav-pills .nav-link {
-            border-radius: 12px;
+            border: 3px solid var(--doodle-black);
+            border-bottom: 3px solid var(--doodle-black);
+            /* Default closed */
+            border-radius: 15px 15px 0 0;
             padding: 12px 30px;
-            font-weight: 700;
-            margin: 0 8px;
-            color: #495057;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            font-size: 1.1rem;
-        }
-
-        .main-nav-pills .nav-link.active {
-            background-color: #0d6efd;
-            color: #fff;
-            border-color: #0d6efd;
-            box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);
-        }
-
-        .sub-nav-pills .nav-link {
-            border-radius: 20px;
-            padding: 8px 24px;
-            font-weight: 600;
-            margin: 0 6px;
-            color: #6c757d;
-            background: #fff;
-            border: 1px solid #e5e5e5;
+            font-family: 'Jua', sans-serif;
+            font-size: 1.3rem;
+            color: var(--doodle-black);
+            cursor: pointer;
+            position: relative;
             transition: all 0.2s;
+            box-shadow: 0 -2px 0 rgba(0, 0, 0, 0.05);
+            opacity: 0.9;
+            user-select: none;
         }
 
-        .sub-nav-pills .nav-link:hover {
-            background: #f5f5f7;
-            color: #1d1d1f;
+        .doodle-tab-main:hover {
+            transform: translateY(-3px);
+            opacity: 1;
         }
 
-        .sub-nav-pills .nav-link.active {
-            background-color: #1d1d1f;
+        .doodle-tab-main.active {
+            background: var(--doodle-primary);
+            /* Yellow active */
+            border-bottom: 3px solid var(--doodle-primary);
+            /* Blend with paper */
+            z-index: 20;
+            transform: translateY(0);
+            padding-bottom: 15px;
+            /* Extend down */
+            opacity: 1;
+        }
+
+        .doodle-tab-main:nth-child(2).active {
+            background: var(--doodle-tertiary);
+            /* Blue for Lessons */
+            border-bottom-color: var(--doodle-tertiary);
+        }
+
+        /* Sub Tabs - Sticky Notes */
+        .doodle-sub-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0 30px 0;
+            padding: 0;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .doodle-sticker-tab {
+            background: #fff;
+            border: 2px solid var(--doodle-black);
+            /* Hand-drawn shape */
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            padding: 10px 25px;
+            font-family: 'Jua', sans-serif;
+            font-size: 1.1rem;
+            color: var(--doodle-black);
+            box-shadow: 4px 4px 0 var(--doodle-black);
+            transition: all 0.2s;
+            transform: rotate(-2deg);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .doodle-sticker-tab:nth-child(even) {
+            transform: rotate(2deg);
+        }
+
+        .doodle-sticker-tab:hover {
+            transform: scale(1.05) rotate(0deg);
+        }
+
+        .doodle-sticker-tab.active {
+            background: var(--doodle-secondary);
+            /* Red */
             color: #fff;
-            border-color: #1d1d1f;
+            transform: scale(1.1) rotate(0deg);
+            z-index: 5;
+            box-shadow: 6px 6px 0 var(--doodle-black);
         }
 
-        /* Apple List Style (For Board) */
-        .apple-list-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-            overflow: hidden;
-            border: 1px solid rgba(0, 0, 0, 0.04);
-        }
-
-        .apple-list-header {
-            display: flex;
-            background-color: #fafafa;
-            border-bottom: 1px solid #efeef1;
-            padding: 18px 20px;
-            font-weight: 600;
-            color: #86868b;
-            font-size: 13px;
-        }
-
+        /* List Styling - Sticker Strips */
         .apple-list-row {
-            display: flex;
-            align-items: center;
-            padding: 20px 20px;
-            border-bottom: 1px solid #efeef1;
-            transition: background-color 0.2s;
-            text-decoration: none;
-            color: inherit;
-        }
+            background: #fff;
+            border: 2px solid var(--doodle-black);
+            border-radius: 20px;
+            /* Rounded card */
+            margin-bottom: 15px;
+            box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
 
-        .apple-list-row:last-child {
-            border-bottom: none;
+            /* Layout */
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 15px;
+            gap: 15px;
         }
 
         .apple-list-row:hover {
-            background-color: #fbfbfd;
+            transform: scale(1.01);
+            box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.15);
         }
 
         .col-category {
-            width: 15%;
+            min-width: 70px;
             text-align: center;
-            flex-shrink: 0;
         }
 
         .col-title {
-            width: 65%;
-            text-align: center;
-            font-weight: 600;
-            color: #1d1d1f;
-            padding: 0 15px;
+            flex-grow: 1;
+            text-align: left;
+            font-family: 'Gaegu', cursive;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #333;
+            line-height: 1.4;
         }
 
         .col-action {
-            width: 20%;
-            text-align: center;
             flex-shrink: 0;
         }
 
         .apple-badge {
+            background: var(--doodle-black);
+            color: #fff;
+            border-radius: 8px;
+            /* Square-ish */
+            font-family: 'Jua', sans-serif;
+            padding: 6px 10px;
+            transform: rotate(-3deg);
             display: inline-block;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .badge-primary {
-            background: #eef2ff;
-            color: #4338ca;
-        }
-
-        .badge-success {
-            background: #f0fdf4;
-            color: #15803d;
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+            font-size: 0.9rem;
         }
 
         .btn-apple-outline {
-            border: 1px solid #e5e5e5;
-            background: white;
-            color: #1d1d1f;
-            padding: 6px 16px;
-            border-radius: 18px;
-            font-size: 13px;
-            font-weight: 500;
-            text-decoration: none;
-            display: inline-flex;
+            border: 2px solid var(--doodle-black);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            padding: 0;
+            color: var(--doodle-black);
+            background: #fff;
+            box-shadow: 3px 3px 0 var(--doodle-black);
+            transition: all 0.1s;
         }
 
         .btn-apple-outline:hover {
-            border-color: #0071e3;
-            color: #0071e3;
-            background: #f5faff;
+            background: var(--doodle-primary);
+            box-shadow: 1px 1px 0 var(--doodle-black);
+            transform: translate(2px, 2px);
         }
 
+        .btn-apple-outline i {
+            font-size: 1.5rem;
+        }
+
+        .mobile-hidden-text {
+            display: none !important;
+        }
+
+        /* Cards for Lessons */
+        .kinder-card {
+            border: 3px solid var(--doodle-black);
+            border-radius: 20px;
+            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            background: #fff;
+            transition: all 0.2s;
+        }
+
+        .kinder-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .kinder-card-thumb img {
+            border-bottom: 3px solid var(--doodle-black);
+        }
+
+        .kinder-card-body {
+            font-family: 'Gaegu', cursive;
+            padding: 15px;
+        }
+
+        .kinder-card-title {
+            font-weight: bold;
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .kinder-card-topic {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        /* Mobile Adjustments */
         @media (max-width: 768px) {
-            .apple-list-header {
-                display: none;
+            .doodle-paper {
+                padding: 15px;
+                border-width: 2px;
             }
 
-            .apple-list-row {
-                /* Compact Row for Mobile */
-                display: flex;
-                flex-direction: row;
-                /* Horizontal, not vertical */
-                align-items: center;
-                /* Vertically center */
-                gap: 12px;
-                padding: 16px 15px;
-                text-align: left;
-                /* Keep text left aligned */
+            .doodle-tab-main {
+                padding: 10px 15px;
+                font-size: 1.1rem;
             }
 
-            .col-category {
-                width: auto;
-                /* Shrink to fit badge */
-                min-width: 60px;
-                /* Min width for alignment */
-                font-size: 11px;
-                /* Smaller badge text */
-            }
-
-            .apple-badge {
-                padding: 4px 10px;
-                font-size: 11px;
+            .doodle-sticker-tab {
+                padding: 8px 15px;
+                font-size: 1rem;
             }
 
             .col-title {
-                width: auto;
-                /* Allow flexible width */
-                flex-grow: 1;
-                /* Take up remaining space */
-                text-align: left;
-                /* Align Title Left */
-                padding: 0 5px;
-                /* Reduce padding */
-            }
-
-            .col-action {
-                width: auto;
-                /* Shrink to fit button */
-            }
-
-            .mobile-hidden-text {
-                display: none !important;
-                /* Hide 'Download' text on mobile */
-            }
-
-            .btn-apple-outline {
-                padding: 8px;
-                /* Square-ish button on mobile */
-            }
-
-            .btn-apple-outline i {
-                font-size: 1.2rem;
-                /* Larger icon */
+                font-size: 1.1rem;
             }
         }
     </style>
@@ -329,343 +293,328 @@
 <body>
     <%- include('partials/header') %>
 
-        <div class="container-fluid mt-4 mb-5" style="max-width: 1600px;">
+        <div class="container-fluid mt-5 mb-5" style="max-width: 1200px;">
             <div class="text-center mb-5">
-                <h2 class="fw-bold">
+                <h2 class="fw-bold"
+                    style="font-family: 'Jua', sans-serif; font-size: 2.5rem; text-shadow: 3px 3px 0 rgba(0,0,0,0.1);">
                     <%= pageTitle %>
                 </h2>
-                <p class="text-muted">교사들을 위한 교육 자료 및 수업 교안</p>
+                <p class="text-muted" style="font-family: 'Gaegu', cursive; font-size: 1.2rem;">즐거운 프리스쿨 교육 자료실 🎈</p>
             </div>
 
-            <!-- 🔥 Main Navigation Tabs (Board vs Lesson) -->
-            <ul class="nav nav-pills main-nav-pills justify-content-center mb-5" id="mainTabs" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active" id="tab-board" data-bs-toggle="pill" data-bs-target="#panel-board"
-                        type="button" role="tab">
-                        <i class="bi bi-file-earmark-text me-2"></i>교사 게시판
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="tab-lessons" data-bs-toggle="pill" data-bs-target="#panel-lessons"
-                        type="button" role="tab">
-                        <i class="bi bi-collection-play me-2"></i>수업 교안
-                    </button>
-                </li>
-            </ul>
+            <!-- DOODLE LAYOUT START -->
 
-            <div class="tab-content" id="mainTabContent">
+            <!-- 1. Top Navigation (Notebook Tabs) -->
+            <div class="doodle-nav-wrapper">
+                <div class="doodle-tab-main active" id="tab-board-trigger" onclick="switchMainTab('board')">
+                    <i class="bi bi-pencil-fill me-1"></i> 교사 게시판
+                </div>
+                <div class="doodle-tab-main" id="tab-lessons-trigger" onclick="switchMainTab('lessons')">
+                    <i class="bi bi-play-circle-fill me-1"></i> 수업 교안
+                </div>
+            </div>
 
-                <!-- Panel 1: Board (List View) - MOVED TO FIRST -->
-                <div class="tab-pane fade show active" id="panel-board" role="tabpanel">
-                    <div class="container" style="max-width: 1000px;">
-                        <!-- Board Sub Tabs -->
-                        <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4">
-                            <li class="nav-item">
-                                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#board-preschool">
-                                    <%= preschoolTitle %>
-                                </button>
-                            </li>
-                            <li class="nav-item">
-                                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#board-ai">
-                                    <%= preschoolAITitle %>
-                                </button>
-                            </li>
-                        </ul>
+            <!-- 2. Main Content Paper -->
+            <div class="doodle-paper">
 
-                        <div class="tab-content">
-                            <!-- Preschool List -->
-                            <div class="tab-pane fade show active" id="board-preschool">
-                                <div class="apple-list-container">
-                                    <div class="apple-list-header">
-                                        <div class="col-category">분류</div>
-                                        <div class="col-title">자료명</div>
-                                        <div class="col-action">다운로드</div>
+                <!-- ====== BOARD SECTION ====== -->
+                <div id="panel-board" class="doodle-panel">
+
+                    <!-- Sub Tabs (Stickers) -->
+                    <ul class="doodle-sub-tabs" role="tablist">
+                        <li>
+                            <button class="doodle-sticker-tab active" id="tab-preschool" data-bs-toggle="pill"
+                                data-bs-target="#board-preschool" type="button">
+                                🌟 프리스쿨
+                            </button>
+                        </li>
+                        <li>
+                            <button class="doodle-sticker-tab" id="tab-ai" data-bs-toggle="pill"
+                                data-bs-target="#board-ai" type="button">
+                                🤖 프리스쿨 AI
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content mt-4 container" style="max-width: 1000px;">
+                        <!-- Preschool List -->
+                        <div class="tab-pane fade show active" id="board-preschool" role="tabpanel">
+                            <% let prevType='' ; preschoolItems.forEach((item, index)=> {
+                                let showType = (item.type !== prevType);
+                                prevType = item.type;
+                                %>
+                                <div class="apple-list-row">
+                                    <div class="col-category">
+                                        <% if (showType) { %>
+                                            <span class="apple-badge">
+                                                <%= item.type %>
+                                            </span>
+                                            <% } %>
                                     </div>
-                                    <% let prevType='' ; preschoolItems.forEach((item, index)=> {
-                                        let showType = (item.type !== prevType);
-                                        prevType = item.type;
-                                        %>
-                                        <div class="apple-list-row">
-                                            <div class="col-category">
-                                                <% if (showType) { %>
-                                                    <span class="apple-badge badge-primary">
-                                                        <%= item.type %>
-                                                    </span>
-                                                    <% } %>
-                                            </div>
-                                            <div class="col-title">
-                                                <% if (Array.isArray(item.content)) { %>
-                                                    <% item.content.forEach((line, i)=> { %>
-                                                        <div class="<%= i > 0 ? 'mt-2' : '' %>">
-                                                            <%= line %>
-                                                        </div>
-                                                        <% }); %>
-                                                            <% } else { %>
-                                                                <%= item.content %>
-                                                                    <% } %>
-                                            </div>
-                                            <div class="col-action">
-                                                <% if (item.url && item.url.trim()) { %>
-                                                    <a href="<%= item.url %>" target="_blank" class="btn-apple-outline"
-                                                        aria-label="다운로드">
-                                                        <i class="bi bi-cloud-download"></i>
-                                                        <span class="d-none d-sm-inline mobile-hidden-text">다운로드</span>
-                                                    </a>
+                                    <div class="col-title">
+                                        <% if (Array.isArray(item.content)) { %>
+                                            <% item.content.forEach((line, i)=> { %>
+                                                <div class="<%= i > 0 ? 'mt-1' : '' %>">
+                                                    <%= line %>
+                                                </div>
+                                                <% }); %>
                                                     <% } else { %>
-                                                        <span class="text-muted small">준비중</span>
-                                                        <% } %>
-                                            </div>
-                                        </div>
-                                        <% }); %>
-                                </div>
-                            </div>
-
-                            <!-- Preschool AI List -->
-                            <div class="tab-pane fade" id="board-ai">
-                                <div class="apple-list-container">
-                                    <div class="apple-list-header">
-                                        <div class="col-category">분류</div>
-                                        <div class="col-title">자료명</div>
-                                        <div class="col-action">다운로드</div>
+                                                        <%= item.content %>
+                                                            <% } %>
                                     </div>
-                                    <% let prevAiType='' ; preschoolAIItems.forEach((item, index)=> {
-                                        let showAiType = (item.type !== prevAiType);
-                                        prevAiType = item.type;
-                                        %>
-                                        <div class="apple-list-row">
-                                            <div class="col-category">
-                                                <% if (showAiType) { %>
-                                                    <span class="apple-badge badge-success">
-                                                        <%= item.type %>
-                                                    </span>
-                                                    <% } %>
-                                            </div>
-                                            <div class="col-title">
-                                                <% if (Array.isArray(item.content)) { %>
-                                                    <% item.content.forEach((line, i)=> { %>
-                                                        <div class="<%= i > 0 ? 'mt-2' : '' %>">
-                                                            <%= line %>
-                                                        </div>
-                                                        <% }); %>
-                                                            <% } else { %>
-                                                                <%= item.content %>
-                                                                    <% } %>
-                                            </div>
-                                            <div class="col-action">
-                                                <% if (item.url && item.url.trim()) { %>
-                                                    <a href="<%= item.url %>" target="_blank" class="btn-apple-outline"
-                                                        aria-label="다운로드">
-                                                        <i class="bi bi-robot"></i>
-                                                        <span class="d-none d-sm-inline mobile-hidden-text">다운로드</span>
-                                                    </a>
-                                                    <% } else { %>
-                                                        <span class="text-muted small">준비중</span>
-                                                        <% } %>
-                                            </div>
-                                        </div>
-                                        <% }); %>
+                                    <div class="col-action">
+                                        <% if (item.url && item.url.trim()) { %>
+                                            <a href="<%= item.url %>" target="_blank" class="btn-apple-outline"
+                                                aria-label="다운로드">
+                                                <i class="bi bi-cloud-arrow-down-fill"></i>
+                                            </a>
+                                            <% } else { %>
+                                                <span class="text-muted small">🔒</span>
+                                                <% } %>
+                                    </div>
                                 </div>
-                            </div>
+                                <% }); %>
+                        </div>
+
+                        <!-- Preschool AI List -->
+                        <div class="tab-pane fade" id="board-ai" role="tabpanel">
+                            <% let prevAiType='' ; preschoolAIItems.forEach((item, index)=> {
+                                let showAiType = (item.type !== prevAiType);
+                                prevAiType = item.type;
+                                %>
+                                <div class="apple-list-row">
+                                    <div class="col-category">
+                                        <% if (showAiType) { %>
+                                            <span class="apple-badge" style="background: var(--doodle-secondary);">
+                                                <%= item.type %>
+                                            </span>
+                                            <% } %>
+                                    </div>
+                                    <div class="col-title">
+                                        <% if (Array.isArray(item.content)) { %>
+                                            <% item.content.forEach((line, i)=> { %>
+                                                <div class="<%= i > 0 ? 'mt-1' : '' %>">
+                                                    <%= line %>
+                                                </div>
+                                                <% }); %>
+                                                    <% } else { %>
+                                                        <%= item.content %>
+                                                            <% } %>
+                                    </div>
+                                    <div class="col-action">
+                                        <% if (item.url && item.url.trim()) { %>
+                                            <a href="<%= item.url %>" target="_blank" class="btn-apple-outline"
+                                                aria-label="다운로드">
+                                                <i class="bi bi-cloud-arrow-down-fill"></i>
+                                            </a>
+                                            <% } %>
+                                    </div>
+                                </div>
+                                <% }); %>
                         </div>
                     </div>
                 </div>
 
-                <!-- Panel 2: Lessons (Card Grid) - MOVED TO SECOND -->
-                <div class="tab-pane fade" id="panel-lessons" role="tabpanel">
-
-                    <!-- Sub Level Tabs -->
-                    <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4" id="levelTabs" role="tablist">
-                        <% if (lessonTabs && lessonTabs.length> 0) { %>
-                            <% lessonTabs.forEach((tab, index)=> { %>
-                                <li class="nav-item">
-                                    <button class="nav-link <%= index === 0 ? 'active' : '' %>" id="<%= tab.id %>-tab"
-                                        data-bs-toggle="pill" data-bs-target="#<%= tab.id %>" type="button" role="tab">
-                                        <% if (tab.title.toLowerCase().includes('ai')) { %>
-                                            <i class="bi bi-robot me-1"></i>
-                                            <% } %>
-                                                <%= tab.title %>
-                                    </button>
-                                </li>
-                                <% }); %>
-                                    <% } else { %>
-                                        <!-- Fallback or Empty State -->
-                                        <li class="nav-item">
-                                            <span class="nav-link disabled">No Categories Found</span>
-                                        </li>
-                                        <% } %>
+                <!-- ====== LESSONS SECTION ====== -->
+                <div id="panel-lessons" class="doodle-panel" style="display: none;">
+                    <!-- Internal Navigation for Lessons -->
+                    <ul class="doodle-sub-tabs" id="levelTabs" role="tablist">
+                        <% lessonTabs.forEach((tab, index)=> { %>
+                            <li>
+                                <button class="doodle-sticker-tab <%= index === 0 ? 'active' : '' %>"
+                                    id="<%= tab.id %>-tab" data-bs-toggle="pill" data-bs-target="#<%= tab.id %>"
+                                    type="button">
+                                    <%= tab.title %>
+                                </button>
+                            </li>
+                            <% }); %>
                     </ul>
 
-                    <!-- Lesson Content -->
                     <div class="tab-content" id="levelTabContent">
-                        <% function renderCardGrid(levelId, groups, isActive) { %>
-                            <div class="tab-pane fade <%= isActive ? 'show active' : '' %>" id="<%= levelId %>"
+                        <% lessonTabs.forEach((tab, index)=> { %>
+                            <div class="tab-pane fade <%= index === 0 ? 'show active' : '' %>" id="<%= tab.id %>"
                                 role="tabpanel">
-                                <div class="container" style="max-width: 1400px;">
-                                    <% if (groups.length===0) { %>
-                                        <div class="text-center py-5 text-muted">
-                                            <i class="bi bi-inbox fs-1"></i>
-                                            <p class="mt-3">등록된 콘텐츠가 없습니다.</p>
-                                        </div>
-                                        <% } %>
+                                <% if (tab.groups.length===0) { %>
+                                    <div class="text-center py-5">
+                                        <i class="bi bi-journal-x fs-1 opacity-25"></i>
+                                        <p class="mt-3 text-muted" style="font-family: 'Gaegu'; font-size: 1.5rem;">데이터가
+                                            없어요...</p>
+                                    </div>
+                                    <% } %>
 
-                                            <% groups.forEach((group)=> { %>
-                                                <div class="group-header">
-                                                    <%= group.title %>
-                                                </div>
-                                                <div
-                                                    class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4 mb-4">
-                                                    <% group.sessions.forEach((session)=> { %>
-                                                        <div class="col">
-                                                            <div class="kinder-card" data-title="<%= session.name %>"
-                                                                data-topic="<%= session.topic %>"
-                                                                data-video="<%= session.videoUrl %>"
-                                                                data-images='<%= JSON.stringify(session.images) %>'
-                                                                onclick="openLessonModal(this)">
+                                        <% tab.groups.forEach((group)=> { %>
+                                            <div class="group-header"
+                                                style="font-family: 'Jua'; border-left: 5px solid var(--doodle-secondary); padding-left: 15px; margin: 30px 0 20px;">
+                                                <%= group.title %>
+                                            </div>
+                                            <div
+                                                class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4 mb-4">
+                                                <% group.sessions.forEach((session)=> { %>
+                                                    <div class="col">
+                                                        <div class="kinder-card" onclick="openLessonModal(this)"
+                                                            data-title="<%= session.name %>"
+                                                            data-topic="<%= session.topic %>"
+                                                            data-video="<%= session.videoUrl %>"
+                                                            data-images='<%= JSON.stringify(session.images) %>'>
 
-                                                                <div class="kinder-card-thumb">
-                                                                    <% if (session.thumbnail) { %>
-                                                                        <img src="<%= session.thumbnail %>"
-                                                                            alt="<%= session.name %>" loading="lazy">
-                                                                        <% } else { %>
-                                                                            <div
-                                                                                class="d-flex align-items-center justify-content-center h-100 text-muted bg-light">
-                                                                                <i class="bi bi-image fs-1"></i>
-                                                                            </div>
-                                                                            <% } %>
-
-                                                                                <% if (session.videoUrl) { %>
-                                                                                    <div
-                                                                                        class="position-absolute bottom-0 end-0 m-2 badge bg-dark bg-opacity-75 rounded-pill">
+                                                            <div class="kinder-card-thumb position-relative">
+                                                                <% if (session.thumbnail) { %>
+                                                                    <img src="<%= session.thumbnail %>"
+                                                                        alt="<%= session.name %>" class="w-100"
+                                                                        style="aspect-ratio: 16/9; object-fit: cover;">
+                                                                    <% } else { %>
+                                                                        <div class="d-flex align-items-center justify-content-center bg-light"
+                                                                            style="aspect-ratio: 16/9;">
+                                                                            <i class="bi bi-image text-muted fs-2"></i>
+                                                                        </div>
+                                                                        <% } %>
+                                                                            <% if (session.videoUrl) { %>
+                                                                                <div
+                                                                                    class="position-absolute top-50 start-50 translate-middle">
+                                                                                    <div class="btn btn-light rounded-circle shadow-sm"
+                                                                                        style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; opacity: 0.8;">
                                                                                         <i
-                                                                                            class="bi bi-play-fill text-white"></i>
+                                                                                            class="bi bi-play-fill fs-3 text-primary"></i>
                                                                                     </div>
-                                                                                    <% } %>
+                                                                                </div>
+                                                                                <% } %>
+                                                            </div>
+                                                            <div class="kinder-card-body">
+                                                                <div class="kinder-card-title text-truncate">
+                                                                    <%= session.name %>
                                                                 </div>
-
-                                                                <div class="kinder-card-body">
-                                                                    <h5 class="kinder-card-title text-truncate">
-                                                                        <%= session.name %>
-                                                                    </h5>
-                                                                    <p class="kinder-card-topic text-truncate">
-                                                                        <%= session.topic %>?
-                                                                            "&nbsp;" : session.topic
-                                                                    </p>
+                                                                <div class="kinder-card-topic text-truncate">
+                                                                    <%= session.topic %>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <% }); %>
-                                                </div>
-                                                <% }); %>
-                                </div>
-                            </div>
-                            <% } %>
-
-                                <% if (lessonTabs && lessonTabs.length> 0) { %>
-                                    <% lessonTabs.forEach((tab, index)=> { %>
-                                        <%= renderCardGrid(tab.id, tab.groups, index===0) %>
+                                                    </div>
+                                                    <% }); %>
+                                            </div>
                                             <% }); %>
-                                                <% } %>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- Viewer Modal -->
-            <div class="modal fade" id="viewerModal" tabindex="-1" aria-labelledby="viewerModalLabel"
-                aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <div>
-                                <h5 class="modal-title fw-bold" id="viewerModalLabel">수업 보기</h5>
-                                <p class="text-muted small mb-0" id="viewerModalTopic">주제 설명</p>
                             </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- Video Container -->
-                            <div id="modalVideoContainer"></div>
+                            <% }); %>
+                    </div>
+                </div>
 
-                            <!-- Carousel Container -->
-                            <div id="modalCarouselContainer"></div>
+            </div>
+        </div>
+
+        <!-- Viewer Modal (Kept same logic, just styled if needed) -->
+        <div class="modal fade" id="viewerModal" tabindex="-1" aria-labelledby="viewerModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content" style="border: 3px solid var(--doodle-black); border-radius: 20px;">
+                    <div class="modal-header border-bottom-0">
+                        <div>
+                            <h5 class="modal-title fw-bold" id="viewerModalLabel" style="font-family: 'Jua';">수업 보기</h5>
+                            <p class="text-muted small mb-0" id="viewerModalTopic" style="font-family: 'Gaegu';">주제 설명
+                            </p>
                         </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Video Container -->
+                        <div id="modalVideoContainer"></div>
+                        <!-- Carousel Container -->
+                        <div id="modalCarouselContainer"></div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-            <script>
-                // Modal Instance
-                let viewerModal;
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-                document.addEventListener('DOMContentLoaded', () => {
-                    viewerModal = new bootstrap.Modal(document.getElementById('viewerModal'));
-                });
+        <!-- Custom Scripts -->
+        <script>
+            // Modal Instance
+            let viewerModal;
 
-                function openLessonModal(element) {
-                    const title = element.dataset.title;
-                    const topic = element.dataset.topic;
-                    const videoUrl = element.dataset.video;
-                    const images = JSON.parse(element.dataset.images || '[]');
+            document.addEventListener('DOMContentLoaded', function () {
+                viewerModal = new bootstrap.Modal(document.getElementById('viewerModal'));
 
-                    // Update Header
-                    document.getElementById('viewerModalLabel').textContent = title;
-                    document.getElementById('viewerModalTopic').textContent = topic;
+                // Auto-open modal if hash present (optional logic from before)
+                // ...
+            });
 
-                    // Update Video
-                    const videoContainer = document.getElementById('modalVideoContainer');
-                    if (videoUrl) {
-                        let embedUrl = videoUrl;
-                        if (videoUrl.includes('youtu.be/')) embedUrl = videoUrl.replace('youtu.be/', 'www.youtube.com/embed/');
-                        else if (videoUrl.includes('watch?v=')) embedUrl = videoUrl.replace('watch?v=', 'embed/');
+            // Toggle Main Tabs
+            function switchMainTab(tabName) {
+                // Update Tab UI
+                const allTabs = document.querySelectorAll('.doodle-tab-main');
+                allTabs.forEach(el => el.classList.remove('active'));
+                document.getElementById(`tab-${tabName}-trigger`).classList.add('active');
 
-                        videoContainer.innerHTML = `
-                    <div class="video-wrapper">
-                        <iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                    </div>`;
-                    } else {
-                        videoContainer.innerHTML = '';
+                // Show Panel
+                document.querySelectorAll('.doodle-panel').forEach(el => el.style.display = 'none');
+                document.getElementById(`panel-${tabName}`).style.display = 'block';
+
+                // Optional: Change Paper Border Color dynamically
+                const paper = document.querySelector('.doodle-paper');
+                if (tabName === 'lessons') {
+                    document.querySelector('.doodle-tab-main.active').style.borderBottomColor = 'var(--doodle-tertiary)';
+                }
+            }
+
+            function openLessonModal(element) {
+                const title = element.getAttribute('data-title');
+                const topic = element.getAttribute('data-topic');
+                const videoUrl = element.getAttribute('data-video');
+                const images = JSON.parse(element.getAttribute('data-images') || '[]');
+
+                document.getElementById('viewerModalLabel').textContent = title;
+                document.getElementById('viewerModalTopic').textContent = topic;
+
+                const videoContainer = document.getElementById('modalVideoContainer');
+                const carouselContainer = document.getElementById('modalCarouselContainer');
+
+                videoContainer.innerHTML = '';
+                carouselContainer.innerHTML = '';
+
+                // Render Video
+                if (videoUrl) {
+                    let embedUrl = videoUrl;
+                    if (videoUrl.includes('youtu.be') || videoUrl.includes('youtube.com')) {
+                        const videoId = videoUrl.split('/').pop().split('?')[0];
+                        embedUrl = 'https://www.youtube.com/embed/' + videoId;
                     }
-
-                    // Update Carousel
-                    const carouselContainer = document.getElementById('modalCarouselContainer');
-                    if (images.length > 0) {
-                        const indicators = images.map((_, i) =>
-                            `<button type="button" data-bs-target="#carouselGuide" data-bs-slide-to="${i}" class="${i === 0 ? 'active' : ''}" aria-current="${i === 0}"></button>`
-                        ).join('');
-
-                        const items = images.map((img, i) => `
-                    <div class="carousel-item ${i === 0 ? 'active' : ''}">
-                        <img src="${img}" class="d-block w-100" alt="Guide Image ${i + 1}">
+                    videoContainer.innerHTML = `
+                    <div class="ratio ratio-16x9 mb-3" style="border: 2px solid #000; border-radius: 10px; overflow: hidden;">
+                        <iframe src="${embedUrl}" allowfullscreen></iframe>
                     </div>
-                `).join('');
+                `;
+                }
 
-                        carouselContainer.innerHTML = `
-                    <h5 class="fw-bold mb-3 border-start border-4 border-primary ps-2">교사 지도서</h5>
-                    <div id="carouselGuide" class="carousel slide bg-light rounded" data-bs-ride="carousel">
-                        <div class="carousel-indicators">
-                            ${indicators}
+                // Render Images Carousel
+                if (images && images.length > 0) {
+                    // ... (existing carousel logic if needed, simplified for now)
+                    let slideIndicators = '';
+                    let slideItems = '';
+
+                    images.forEach((img, index) => {
+                        slideIndicators += `<button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="${index}" class="${index === 0 ? 'active' : ''}" aria-current="true"></button>`;
+                        slideItems += `
+                        <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                            <img src="${img}" class="d-block w-100 rounded" alt="Slide ${index}">
                         </div>
-                        <div class="carousel-inner">
-                            ${items}
-                        </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselGuide" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon bg-dark rounded-circle" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
+                    `;
+                    });
+
+                    carouselContainer.innerHTML = `
+                    <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-indicators">${slideIndicators}</div>
+                        <div class="carousel-inner">${slideItems}</div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                         </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#carouselGuide" data-bs-slide="next">
-                            <span class="carousel-control-next-icon bg-dark rounded-circle" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
                         </button>
                     </div>
                 `;
-                    } else {
-                        carouselContainer.innerHTML = videoUrl ? '' : '<div class="alert alert-secondary text-center">등록된 콘텐츠가 없습니다.</div>';
-                    }
-
-                    viewerModal.show();
                 }
-            </script>
+
+                viewerModal.show();
+            }
+        </script>
 </body>
 
 </html>
