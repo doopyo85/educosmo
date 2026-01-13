@@ -14,7 +14,9 @@
       "Bash(mysql:*)",
       "Bash(pm2 logs:*)",
       "Bash(nslookup:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(pm2 status:*)",
+      "Bash(npx pm2 status)"
     ]
   }
 }
