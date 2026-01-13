@@ -63,18 +63,27 @@ function groupByVolume(rows) {
 router.get('/', async (req, res) => {
     try {
         const eduSpreadsheetId = process.env.SPREADSHEET_ID_EDU || process.env.SPREADSHEET_ID;
+        console.log(`[DEBUG] Fetching data for Kinder Page using ID: ${eduSpreadsheetId?.substring(0, 5)}...`);
 
         // 🔥 병렬 데이터 호출
         const [
             kinderSheetData, // New 'kinder' sheet data
             allLessonData // Single Consolidated Sheet
         ] = await Promise.all([
-            // Tab 1: Board Data (New) - Uses Default SPREADSHEET_ID, Sheet 'kinder'
-            getSheetData('kinder', 'A:F', process.env.SPREADSHEET_ID),
+            // Tab 1: Board Data (New) - Try using eduSpreadsheetId assuming consolidation
+            // If they are separate, this might be wrong, but we suspect consolidation.
+            getSheetData('kinder', 'A:F', eduSpreadsheetId),
 
             // Tab 2: All Lessons from Single Sheet
             getSheetData('[교육영상]', 'A:P', eduSpreadsheetId)
         ]);
+
+        console.log(`[DEBUG] kinderSheetData length: ${kinderSheetData?.length}`);
+        console.log(`[DEBUG] allLessonData length: ${allLessonData?.length}`);
+
+        if (kinderSheetData.length > 0) {
+            console.log(`[DEBUG] First row of kinderSheetData: ${JSON.stringify(kinderSheetData[0])}`);
+        }
 
         // Helper to filter by Category column (Index 0)
         const filterByCategory = (rows, categoryKeyword) => {
@@ -85,6 +94,7 @@ router.get('/', async (req, res) => {
         // Extract unique categories from Column A (Index 0)
         // We trim whitespace and ignore empty values.
         const allCategories = [...new Set(allLessonData.map(row => row[0] ? row[0].trim() : '').filter(c => c !== ''))];
+        console.log(`[DEBUG] Extracted Categories: ${allCategories}`);
 
         // You might want to sort them. 
         // If specific order is needed, we might need a mapping or manual sort logic.
@@ -111,10 +121,11 @@ router.get('/', async (req, res) => {
 
         // Process Board Data (New Structure)
         // Expected Columns: [0]Page, [1]Category, [2]Group by, [3]차시명(Type), [4]주제(Content), [5]Download(URL)
-        const teacherBoardData = kinderSheetData.filter(row => row[1] === '교사게시판');
+        const teacherBoardData = kinderSheetData.filter(row => row[1] && row[1].trim() === '교사게시판');
+        console.log(`[DEBUG] teacherBoardData count: ${teacherBoardData.length}`);
 
         const preschoolItems = teacherBoardData
-            .filter(row => row[2] === '프리스쿨')
+            .filter(row => row[2] && row[2].trim() === '프리스쿨')
             .map(row => ({
                 type: row[3] || '',
                 content: row[4] || '',
@@ -123,13 +134,16 @@ router.get('/', async (req, res) => {
             }));
 
         const preschoolAIItems = teacherBoardData
-            .filter(row => row[2] === '프리스쿨AI')
+            .filter(row => row[2] && row[2].trim() === '프리스쿨AI')
             .map(row => ({
                 type: row[3] || '',
                 content: row[4] || '',
                 links: ['다운로드'], // Hardcoded link text
                 url: row[5] || ''
             }));
+
+        console.log(`[DEBUG] preschoolItems count: ${preschoolItems.length}`);
+        console.log(`[DEBUG] preschoolAIItems count: ${preschoolAIItems.length}`);
 
         const preschoolTitle = '프리스쿨';
         const preschoolAITitle = '프리스쿨 AI';
