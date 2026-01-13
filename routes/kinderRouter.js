@@ -43,14 +43,14 @@ function groupByVolume(rows) {
             };
         }
 
-        // Images start from Col L (Index 11) -> 11 to 17
-        const images = row.slice(11, 18).filter(img => img && img.trim().startsWith('http'));
+        // Images start from Col M (Index 12) -> 12 to 19 (IMG-1 to IMG-8)
+        const images = row.slice(12, 20).filter(img => img && img.trim().startsWith('http'));
 
         groups[groupName].sessions.push({
             name: row[3], // Title (Col D)
             topic: row[4], // Topic (Col E)
-            thumbnail: row[9],  // Thumb (Col J)
-            videoUrl: row[10], // Video (Col K)
+            thumbnail: row[11],  // Thumb (Col L, Index 11)
+            videoUrl: row[9], // Video (Col J, Index 9)
             images: images
         });
     });

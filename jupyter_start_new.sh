@@ -20,14 +20,14 @@ fi
 # 가상환경 활성화
 source myenv/bin/activate
 
-# Jupyter 설치 확인
-if ! command -v jupyter &> /dev/null; then
+# Jupyter 설치 확인 (Python 모듈로 체크)
+if ! python -m jupyter --version &> /dev/null; then
     echo "❌ ERROR: Jupyter가 설치되지 않았습니다."
     exit 1
 fi
 
 echo "✅ Python: $(which python)"
-echo "✅ Jupyter: $(which jupyter)"
+echo "✅ Jupyter Version: $(python -m jupyter --version | head -1)"
 
 # ✅ 한글 폰트 설정 파일 생성
 echo "🔧 한글 폰트 설정 파일 생성..."
