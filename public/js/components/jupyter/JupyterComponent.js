@@ -378,9 +378,12 @@ class JupyterComponent extends Component {
    // 노트북 로드
    loadNotebook(notebookUrl) {
        console.log('노트북 로드:', notebookUrl);
-       
+
        if (this.elements.iframe) {
-           this.elements.iframe.src = notebookUrl;
+           // 🔥 Jupyter base_url 추가 (상대 경로면 /jupyter/ 추가)
+           const fullUrl = notebookUrl.startsWith('/') ? notebookUrl : `/jupyter/${notebookUrl}`;
+           console.log('📍 Full URL:', fullUrl);
+           this.elements.iframe.src = fullUrl;
            this.setupLoadDetection();
        }
    }

@@ -134,6 +134,7 @@ async function uploadBufferToS3(buffer, key, contentType = 'application/octet-st
             Key: key,
             Body: buffer,
             ContentType: contentType,
+            ACL: 'public-read', // 🔥 파일 공개 권한 설정
             Metadata: {
                 'upload-date': new Date().toISOString(),
                 'upload-type': 'buffer'
@@ -203,6 +204,7 @@ async function copyInS3(sourceKey, destKey) {
             Bucket: BUCKET_NAME,
             CopySource: `${BUCKET_NAME}/${sourceKey}`,
             Key: destKey,
+            ACL: 'public-read', // 🔥 복사 후에도 공개 권한 유지
             MetadataDirective: 'COPY'
         });
 

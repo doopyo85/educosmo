@@ -268,8 +268,10 @@ router.post('/load-notebook', requireAuth, async (req, res) => {
             await uploadNotebookToS3(sessionID, notebook.filename, notebook.s3Key);
         }
 
-        // 4. Jupyter URL 생성
+        // 4. Jupyter URL 생성 (base_url이 /jupyter/로 끝나므로 앞에 / 제거)
         const notebookUrl = `/jupyter/notebooks/${saved.relativePath}`;
+        // 🔥 수정: iframe에서 사용할 때는 상대 경로로 (이중 슬래시 방지)
+        const iframeUrl = `notebooks/${saved.relativePath}`;
 
         console.log(`📍 Jupyter URL: ${notebookUrl}`);
         console.log(`==========================================\n`);
@@ -279,7 +281,7 @@ router.post('/load-notebook', requireAuth, async (req, res) => {
             sessionID: sessionID,
             userID: userID,
             notebook: notebook.filename,
-            notebookUrl: notebookUrl,
+            notebookUrl: iframeUrl, // 🔥 상대 경로 사용 (이중 슬래시 방지)
             s3Key: notebook.s3Key,
             isNew: notebook.isNew,
             message: notebook.isNew ? '새 노트북이 생성되었습니다.' : '기존 노트북을 불러왔습니다.',

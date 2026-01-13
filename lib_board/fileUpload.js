@@ -166,6 +166,7 @@ const attachmentUpload = multer({
     storage: multerS3({
         s3: s3Client,
         bucket: BUCKET_NAME,
+        acl: 'public-read', // 🔥 파일 공개 권한 설정
         key: function (req, file, cb) {
             // 🔥 한글 파일명 처리
             file.originalname = processKoreanFilename(file.originalname);
@@ -244,6 +245,7 @@ const editorImageUpload = multer({
     storage: multerS3({
         s3: s3Client,
         bucket: BUCKET_NAME,
+        acl: 'public-read', // 🔥 파일 공개 권한 설정
         key: function (req, file, cb) {
             // 🔥 한글 파일명 처리
             file.originalname = processKoreanFilename(file.originalname);
