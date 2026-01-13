@@ -10,6 +10,7 @@ const config = require('../config');
 const s3Config = {
     region: process.env.AWS_REGION || 'ap-northeast-2',
     endpoint: 'https://kr.object.ncloudstorage.com', // 🔥 NCP Endpoint 명시
+    forcePathStyle: true, // 🔥 NCP는 Path Style 강제 필요
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY

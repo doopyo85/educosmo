@@ -238,12 +238,12 @@ class JupyterComponent extends Component {
        }
    }
 
-   // 사용자별 빈 노트북 생성 및 로드
+   // 🔥 S3에서 노트북 로드 (NCP Object Storage 통합)
    async createAndLoadBlankNotebook() {
        try {
-           console.log('사용자별 빈 노트북 생성 시도...', this.state.userID);
-           
-           const response = await fetch('/api/jupyter/create-blank-notebook', {
+           console.log('📥 S3에서 노트북 로드 시도...', this.state.userID);
+
+           const response = await fetch('/api/jupyter/load-notebook', {
                method: 'POST',
                credentials: 'include',
                headers: {
@@ -253,32 +253,125 @@ class JupyterComponent extends Component {
                    userID: this.state.userID
                })
            });
-           
+
            if (response.ok) {
                const result = await response.json();
-               console.log('빈 노트북 생성 성공:', result);
-               
-               // 생성된 노트북으로 iframe 이동
+               console.log('✅ 노트북 로드 성공:', result);
+
+               // S3 세션 정보 저장
+               this.state.sessionID = result.sessionID;
+               this.state.s3Key = result.s3Key;
+               this.state.currentNotebook = result.notebook;
+
+               // Jupyter 노트북으로 iframe 이동
                if (result.success && result.notebookUrl) {
                    this.loadNotebook(result.notebookUrl);
-                   this.state.currentNotebook = result.notebook;
+
+                   // 🔥 자동 저장 타이머 시작 (5분마다)
+                   this.startAutoSave();
+
                    return true;
                } else {
-                   throw new Error(result.message || '노트북 생성 실패');
+                   throw new Error(result.message || '노트북 로드 실패');
                }
-               
+
            } else {
-               throw new Error(`노트북 생성 API 호출 실패: ${response.status}`);
+               const errorData = await response.json().catch(() => ({}));
+               throw new Error(errorData.error || `노트북 로드 API 호출 실패: ${response.status}`);
            }
-           
+
        } catch (error) {
-           console.error('빈 노트북 생성 실패:', error);
+           console.error('❌ 노트북 로드 실패:', error);
            this.state.lastError = error.message;
-           
+
            // 폴백: 기본 Jupyter 트리 뷰로 이동
-           console.log('폴백: 기본 Jupyter 인터페이스 사용');
+           console.log('⚠️ 폴백: 기본 Jupyter 인터페이스 사용');
            this.loadNotebook('/jupyter/tree');
            return true;
+       }
+   }
+
+   // 자동 저장 시작
+   startAutoSave() {
+       // 기존 타이머가 있으면 정리
+       if (this.autoSaveTimer) {
+           clearInterval(this.autoSaveTimer);
+       }
+
+       // 5분마다 자동 저장
+       this.autoSaveTimer = setInterval(() => {
+           this.saveNotebook();
+       }, 5 * 60 * 1000);
+
+       console.log('🔄 자동 저장 타이머 시작 (5분 간격)');
+   }
+
+   // 노트북 저장 (S3에 업로드)
+   async saveNotebook() {
+       try {
+           if (!this.state.sessionID || !this.state.userID || !this.state.currentNotebook) {
+               console.warn('저장 정보가 없습니다. 저장을 건너뜁니다.');
+               return false;
+           }
+
+           console.log('💾 노트북 저장 중...');
+
+           const response = await fetch('/api/jupyter/save-notebook', {
+               method: 'POST',
+               credentials: 'include',
+               headers: {
+                   'Content-Type': 'application/json',
+               },
+               body: JSON.stringify({
+                   sessionID: this.state.sessionID,
+                   userID: this.state.userID,
+                   filename: this.state.currentNotebook
+               })
+           });
+
+           if (response.ok) {
+               const result = await response.json();
+               console.log('✅ 노트북 저장 완료:', result);
+               return true;
+           } else {
+               const errorData = await response.json().catch(() => ({}));
+               console.error('❌ 노트북 저장 실패:', errorData.error);
+               return false;
+           }
+
+       } catch (error) {
+           console.error('❌ 노트북 저장 오류:', error);
+           return false;
+       }
+   }
+
+   // 세션 정리
+   async cleanupSession() {
+       try {
+           if (!this.state.sessionID) {
+               return;
+           }
+
+           console.log('🗑️ 세션 정리 중...');
+
+           // 자동 저장 타이머 중지
+           if (this.autoSaveTimer) {
+               clearInterval(this.autoSaveTimer);
+               this.autoSaveTimer = null;
+           }
+
+           // 서버에 세션 정리 요청
+           const response = await fetch(`/api/jupyter/session/${this.state.sessionID}`, {
+               method: 'DELETE',
+               credentials: 'include'
+           });
+
+           if (response.ok) {
+               console.log('✅ 세션 정리 완료');
+           }
+
+       } catch (error) {
+           console.error('❌ 세션 정리 오류:', error);
        }
    }
 
@@ -393,10 +486,19 @@ class JupyterComponent extends Component {
    
    deactivate() {
        console.log('JupyterComponent 비활성화');
-       
+
        super.deactivate();
        this.state.active = false;
-       
+
+       // 🔥 세션 정리 (마지막 저장 + 임시 파일 삭제)
+       if (this.state.sessionID) {
+           // 마지막 저장
+           this.saveNotebook().finally(() => {
+               // 세션 정리
+               this.cleanupSession();
+           });
+       }
+
        if (this.elements.container) {
            this.elements.container.classList.add('component-hidden');
            this.elements.container.classList.remove('component-visible');
