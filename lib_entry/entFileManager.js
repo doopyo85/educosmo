@@ -5,6 +5,7 @@ const tar = require('tar');
 const { uid } = require('uid');
 const Puid = require('puid');
 const fetch = require('node-fetch'); // 🔥 S3 다운로드용 추가
+const config = require('../config'); // 🔥 중앙 설정 파일
 
 /**
  * ENT 파일 생성 및 관리 모듈
@@ -731,13 +732,20 @@ class EntFileManager {
                                     // 디코딩 실패시 원본 사용
                                 }
 
+                                // ⭐ Storage URL 변환 (AWS S3 → NCP) - config.js 기반
+                                const convertedUrl = config.S3.convertStorageUrl(decodedUrl);
+                                if (convertedUrl !== decodedUrl) {
+                                    picture.fileurl = convertedUrl;
+                                    console.log(`🔄 Storage URL 변환 [${index}-${picIndex}]:`, {
+                                        original: decodedUrl.substring(0, 60),
+                                        converted: convertedUrl.substring(0, 60)
+                                    });
+                                }
                                 // 🔥 Windows 로컬 경로 감지 (모든 형태)
-                                const isWindowsPath = decodedUrl.startsWith('file:///') ||
+                                else if (decodedUrl.startsWith('file:///') ||
                                     decodedUrl.startsWith('C:/') ||
                                     decodedUrl.startsWith('C:\\') ||
-                                    /^[A-Z]:[\\/]/i.test(decodedUrl);
-
-                                if (isWindowsPath) {
+                                    /^[A-Z]:[\\/]/i.test(decodedUrl)) {
                                     // 해시 추출: ...temp/a2/b0/image/a2b07059405a83d7c0fcbaa1700cf6be.png
                                     const hashMatch = decodedUrl.match(/([a-f0-9]{32})\.(png|jpg|jpeg|gif|svg|webp|mp3|wav)$/i);
                                     if (hashMatch) {
@@ -787,12 +795,19 @@ class EntFileManager {
                                     decodedUrl = decodeURIComponent(sound.fileurl);
                                 } catch (e) { }
 
-                                const isWindowsPath = decodedUrl.startsWith('file:///') ||
+                                // ⭐ Storage URL 변환 (AWS S3 → NCP) - config.js 기반
+                                const convertedUrl = config.S3.convertStorageUrl(decodedUrl);
+                                if (convertedUrl !== decodedUrl) {
+                                    sound.fileurl = convertedUrl;
+                                    console.log(`🔄 Storage URL 변환(사운드) [${index}-${soundIndex}]:`, {
+                                        original: decodedUrl.substring(0, 60),
+                                        converted: convertedUrl.substring(0, 60)
+                                    });
+                                }
+                                else if (decodedUrl.startsWith('file:///') ||
                                     decodedUrl.startsWith('C:/') ||
                                     decodedUrl.startsWith('C:\\') ||
-                                    /^[A-Z]:[\\/]/i.test(decodedUrl);
-
-                                if (isWindowsPath) {
+                                    /^[A-Z]:[\\/]/i.test(decodedUrl)) {
                                     const hashMatch = decodedUrl.match(/([a-f0-9]{32})\.(mp3|wav|ogg)$/i);
                                     if (hashMatch) {
                                         const soundHash = hashMatch[1];
@@ -816,12 +831,19 @@ class EntFileManager {
                             decodedThumb = decodeURIComponent(obj.thumbnail);
                         } catch (e) { }
 
-                        const isWindowsPath = decodedThumb.startsWith('file:///') ||
+                        // ⭐ Storage URL 변환 (AWS S3 → NCP) - config.js 기반
+                        const convertedThumb = config.S3.convertStorageUrl(decodedThumb);
+                        if (convertedThumb !== decodedThumb) {
+                            obj.thumbnail = convertedThumb;
+                            console.log(`🔄 Storage URL 변환(썸네일) [${index}]:`, {
+                                original: decodedThumb.substring(0, 60),
+                                converted: convertedThumb.substring(0, 60)
+                            });
+                        }
+                        else if (decodedThumb.startsWith('file:///') ||
                             decodedThumb.startsWith('C:/') ||
                             decodedThumb.startsWith('C:\\') ||
-                            /^[A-Z]:[\\/]/i.test(decodedThumb);
-
-                        if (isWindowsPath) {
+                            /^[A-Z]:[\\/]/i.test(decodedThumb)) {
                             const hashMatch = decodedThumb.match(/([a-f0-9]{32})\.(png|jpg|jpeg|gif|svg|webp)$/i);
                             if (hashMatch) {
                                 const imageHash = hashMatch[1];

@@ -66,14 +66,11 @@ router.get('/', async (req, res) => {
 
         // 🔥 병렬 데이터 호출
         const [
-            preschoolData,
-            preschoolAIData,
+            kinderSheetData, // New 'kinder' sheet data
             allLessonData // Single Consolidated Sheet
         ] = await Promise.all([
-            // Tab 1: Board Data (Old) - Uses Default SPREADSHEET_ID
-            // K열(다운로드)를 포함하기 위해 A1:K14로 확장
-            getSheetData('교사게시판', 'A1:K14', process.env.SPREADSHEET_ID),
-            getSheetData('교사게시판', 'E1:K14', process.env.SPREADSHEET_ID),
+            // Tab 1: Board Data (New) - Uses Default SPREADSHEET_ID, Sheet 'kinder'
+            getSheetData('kinder', 'A:F', process.env.SPREADSHEET_ID),
 
             // Tab 2: All Lessons from Single Sheet
             getSheetData('[교육영상]', 'A:P', eduSpreadsheetId)
@@ -112,23 +109,30 @@ router.get('/', async (req, res) => {
             };
         });
 
-        // Process Board Data (unchanged)
-        const preschoolTitle = preschoolData[0] ? preschoolData[0][0] : '프리스쿨';
-        const preschoolAITitle = preschoolAIData[0] ? preschoolAIData[0][0] : '프리스쿨 AI';
+        // Process Board Data (New Structure)
+        // Expected Columns: [0]Page, [1]Category, [2]Group by, [3]차시명(Type), [4]주제(Content), [5]Download(URL)
+        const teacherBoardData = kinderSheetData.filter(row => row[1] === '교사게시판');
 
-        const preschoolItems = preschoolData.slice(2).map(row => ({
-            type: row[0] || '',
-            content: row[1] || '',
-            links: row[2] ? row[2].split('\n') : [],
-            url: row[10] || row[3] || '' // K열(인덱스 10) 우선, 없으면 D열
-        }));
+        const preschoolItems = teacherBoardData
+            .filter(row => row[2] === '프리스쿨')
+            .map(row => ({
+                type: row[3] || '',
+                content: row[4] || '',
+                links: ['다운로드'], // Hardcoded link text
+                url: row[5] || ''
+            }));
 
-        const preschoolAIItems = preschoolAIData.slice(2).map(row => ({
-            type: row[0] || '',
-            content: row[1] || '',
-            links: row[2] ? row[2].split('\n') : [],
-            url: row[6] || row[3] || '' // K열(E1 시작이므로 인덱스 6) 우선, 없으면 H열
-        }));
+        const preschoolAIItems = teacherBoardData
+            .filter(row => row[2] === '프리스쿨AI')
+            .map(row => ({
+                type: row[3] || '',
+                content: row[4] || '',
+                links: ['다운로드'], // Hardcoded link text
+                url: row[5] || ''
+            }));
+
+        const preschoolTitle = '프리스쿨';
+        const preschoolAITitle = '프리스쿨 AI';
 
         // 렌더링
         res.render('kinder', {

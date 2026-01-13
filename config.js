@@ -49,11 +49,48 @@ const API_ENDPOINTS = {
 const S3 = {
   REGION: process.env.AWS_REGION || 'ap-northeast-2',
   BUCKET_NAME: process.env.BUCKET_NAME || 'educodingnplaycontents',
+
   // 🔥 NCP Global Edge URL (CORS 자동 지원)
   // Edge 원본 경로: /educodingnplaycontents 설정되어 있음
   ASSET_URL: process.env.S3_ASSET_URL || 'https://onag54aw13447.edge.naverncp.com',
+
+  // 🔥 NCP Direct URL (Object Storage 직접 접근)
+  DIRECT_URL: process.env.S3_DIRECT_URL || 'https://kr.object.ncloudstorage.com/educodingnplaycontents',
+
   // 프록시 URL (백업용)
-  PROXY_URL: '/proxy/content'
+  PROXY_URL: '/proxy/content',
+
+  // 🔥 Legacy URL 매핑 (AWS S3 → NCP 자동 변환용)
+  LEGACY_URLS: [
+    'https://educodingnplaycontents.s3.amazonaws.com',
+    'https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com',
+    'http://educodingnplaycontents.s3.amazonaws.com',
+    'http://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com'
+  ],
+
+  // 🔥 URL 변환 함수 (AWS/NCP → 현재 사용 중인 Storage로 변환)
+  convertStorageUrl: (url) => {
+    if (!url || typeof url !== 'string') return url;
+
+    let convertedUrl = url;
+
+    // Legacy AWS S3 URL → NCP Direct URL로 변환
+    S3.LEGACY_URLS.forEach(legacyUrl => {
+      if (convertedUrl.includes(legacyUrl)) {
+        convertedUrl = convertedUrl.replace(legacyUrl, S3.DIRECT_URL);
+      }
+    });
+
+    // NCP Edge URL → NCP Direct URL로 변환 (일관성)
+    if (convertedUrl.includes('onag54aw13447.edge.naverncp.com')) {
+      convertedUrl = convertedUrl.replace(
+        'https://onag54aw13447.edge.naverncp.com',
+        S3.DIRECT_URL
+      );
+    }
+
+    return convertedUrl;
+  }
 };
 
 // Google API 설정
