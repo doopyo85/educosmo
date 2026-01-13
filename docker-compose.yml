@@ -16,6 +16,8 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      # Mount Jupyter notebooks directory from host
+      - /var/www/html/jupyter_notebooks:/app/jupyter_notebooks
       # Mount host AWS credentials if available (optional, but good for local dev)
       # - ~/.aws:/root/.aws:ro
     ports:
