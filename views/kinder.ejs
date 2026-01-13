@@ -296,23 +296,126 @@
             <!-- 🔥 Main Navigation Tabs (Board vs Lesson) -->
             <ul class="nav nav-pills main-nav-pills justify-content-center mb-5" id="mainTabs" role="tablist">
                 <li class="nav-item">
-                    <button class="nav-link active" id="tab-lessons" data-bs-toggle="pill"
-                        data-bs-target="#panel-lessons" type="button" role="tab">
-                        <i class="bi bi-collection-play me-2"></i>수업 교안
+                    <button class="nav-link active" id="tab-board" data-bs-toggle="pill" data-bs-target="#panel-board"
+                        type="button" role="tab">
+                        <i class="bi bi-file-earmark-text me-2"></i>교사 게시판
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" id="tab-board" data-bs-toggle="pill" data-bs-target="#panel-board"
-                        type="button" role="tab">
-                        <i class="bi bi-file-earmark-text me-2"></i>교사 게시판
+                    <button class="nav-link" id="tab-lessons" data-bs-toggle="pill"
+                        data-bs-target="#panel-lessons" type="button" role="tab">
+                        <i class="bi bi-collection-play me-2"></i>수업 교안
                     </button>
                 </li>
             </ul>
 
             <div class="tab-content" id="mainTabContent">
 
-                <!-- Panel 1: Lessons (Card Grid) -->
-                <div class="tab-pane fade show active" id="panel-lessons" role="tabpanel">
+                <!-- Panel 1: Board (List View) - MOVED TO FIRST -->
+                <div class="tab-pane fade show active" id="panel-board" role="tabpanel">
+                    <div class="container" style="max-width: 1000px;">
+                        <!-- Board Sub Tabs -->
+                        <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4">
+                            <li class="nav-item">
+                                <button class="nav-link active" data-bs-toggle="pill"
+                                    data-bs-target="#board-preschool">
+                                    <%= preschoolTitle %>
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="pill"
+                                    data-bs-target="#board-ai">
+                                    <%= preschoolAITitle %>
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <!-- Preschool List -->
+                            <div class="tab-pane fade show active" id="board-preschool">
+                                <div class="apple-list-container">
+                                    <div class="apple-list-header">
+                                        <div class="col-category">분류</div>
+                                        <div class="col-title">자료명</div>
+                                        <div class="col-action">다운로드</div>
+                                    </div>
+                                    <% 
+                                    let prevType = '';
+                                    preschoolItems.forEach((item, index) => { 
+                                        let showType = (item.type !== prevType);
+                                        prevType = item.type;
+                                    %>
+                                        <div class="apple-list-row">
+                                            <div class="col-category">
+                                                <% if (showType) { %>
+                                                    <span class="apple-badge badge-primary">
+                                                        <%= item.type %>
+                                                    </span>
+                                                <% } %>
+                                            </div>
+                                            <div class="col-title">
+                                                <%= item.content %>
+                                            </div>
+                                            <div class="col-action">
+                                                <% if (item.url && item.url.trim()) { %>
+                                                <a href="<%= item.url %>" target="_blank" class="btn-apple-outline">
+                                                    <i class="bi bi-cloud-download"></i>
+                                                    <span class="d-none d-sm-inline">다운로드</span>
+                                                </a>
+                                                <% } else { %>
+                                                    <span class="text-muted small">준비중</span>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                        <% }); %>
+                                </div>
+                            </div>
+
+                            <!-- Preschool AI List -->
+                            <div class="tab-pane fade" id="board-ai">
+                                <div class="apple-list-container">
+                                    <div class="apple-list-header">
+                                        <div class="col-category">분류</div>
+                                        <div class="col-title">자료명</div>
+                                        <div class="col-action">다운로드</div>
+                                    </div>
+                                    <% 
+                                    let prevAiType = '';
+                                    preschoolAIItems.forEach((item, index) => { 
+                                        let showAiType = (item.type !== prevAiType);
+                                        prevAiType = item.type;
+                                    %>
+                                        <div class="apple-list-row">
+                                            <div class="col-category">
+                                                <% if (showAiType) { %>
+                                                    <span class="apple-badge badge-success">
+                                                        <%= item.type %>
+                                                    </span>
+                                                <% } %>
+                                            </div>
+                                            <div class="col-title">
+                                                <%= item.content %>
+                                            </div>
+                                            <div class="col-action">
+                                                <% if (item.url && item.url.trim()) { %>
+                                                <a href="<%= item.url %>" target="_blank" class="btn-apple-outline">
+                                                    <i class="bi bi-robot"></i>
+                                                    <span class="d-none d-sm-inline">다운로드</span>
+                                                </a>
+                                                <% } else { %>
+                                                    <span class="text-muted small">준비중</span>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                        <% }); %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 2: Lessons (Card Grid) - MOVED TO SECOND -->
+                <div class="tab-pane fade" id="panel-lessons" role="tabpanel">
 
                     <!-- Sub Level Tabs -->
                     <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4" id="levelTabs" role="tablist">
@@ -413,113 +516,6 @@
                                                             <%= renderCardGrid(tab.id, tab.groups, index===0) %>
                                                                 <% }); %>
                                                                     <% } %>
-                                        </div>
-
-                                        <!-- Panel 2: Board (List View) -->
-                                        <div class="tab-pane fade" id="panel-board" role="tabpanel">
-                                            <div class="container" style="max-width: 1000px;">
-                                                <!-- Board Sub Tabs -->
-                                                <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4">
-                                                    <li class="nav-item">
-                                                        <button class="nav-link active" data-bs-toggle="pill"
-                                                            data-bs-target="#board-preschool">
-                                                            <%= preschoolTitle %>
-                                                        </button>
-                                                    </li>
-                                                    <li class="nav-item">
-                                                        <button class="nav-link" data-bs-toggle="pill"
-                                                            data-bs-target="#board-ai">
-                                                            <%= preschoolAITitle %>
-                                                        </button>
-                                                    </li>
-                                                </ul>
-
-                                                <div class="tab-content">
-                                                    <!-- Preschool List -->
-                                                    <div class="tab-pane fade show active" id="board-preschool">
-                                                        <div class="apple-list-container">
-                                                            <div class="apple-list-header">
-                                                                <div class="col-category">분류</div>
-                                                                <div class="col-title">자료명</div>
-                                                                <div class="col-action">다운로드</div>
-                                                            </div>
-                                                            <% preschoolItems.forEach(item=> { %>
-                                                                <div class="apple-list-row">
-                                                                    <div class="col-category"><span
-                                                                            class="apple-badge badge-primary">
-                                                                            <%= item.type %>
-                                                                        </span></div>
-                                                                    <div class="col-title">
-                                                                        <%= item.content %>
-                                                                    </div>
-                                                                    <div class="col-action">
-                                                                        <div
-                                                                            class="d-flex justify-content-center gap-2 flex-wrap">
-                                                                            <% item.links.forEach(linkText=> {
-                                                                                if(linkText.trim()) { %>
-                                                                                <a href="<%= item.url %>"
-                                                                                    target="_blank"
-                                                                                    class="btn-apple-outline">
-                                                                                    <i class="bi bi-cloud-download"></i>
-                                                                                    <span class="d-none d-sm-inline">
-                                                                                        <%= linkText %>
-                                                                                    </span>
-                                                                                </a>
-                                                                                <% }}); %>
-                                                                                    <% if (item.links.length===0) { %>
-                                                                                        <span class="text-muted"
-                                                                                            style="font-size: 13px;">준비중</span>
-                                                                                        <% } %>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <% }); %>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Preschool AI List -->
-                                                    <div class="tab-pane fade" id="board-ai">
-                                                        <div class="apple-list-container">
-                                                            <div class="apple-list-header">
-                                                                <div class="col-category">분류</div>
-                                                                <div class="col-title">자료명</div>
-                                                                <div class="col-action">다운로드</div>
-                                                            </div>
-                                                            <% preschoolAIItems.forEach(item=> { %>
-                                                                <div class="apple-list-row">
-                                                                    <div class="col-category"><span
-                                                                            class="apple-badge badge-success">
-                                                                            <%= item.type %>
-                                                                        </span></div>
-                                                                    <div class="col-title">
-                                                                        <%= item.content %>
-                                                                    </div>
-                                                                    <div class="col-action">
-                                                                        <div
-                                                                            class="d-flex justify-content-center gap-2 flex-wrap">
-                                                                            <% item.links.forEach(linkText=> {
-                                                                                if(linkText.trim()) { %>
-                                                                                <a href="<%= item.url %>"
-                                                                                    target="_blank"
-                                                                                    class="btn-apple-outline">
-                                                                                    <i class="bi bi-robot"></i> <span
-                                                                                        class="d-none d-sm-inline">
-                                                                                        <%= linkText %>
-                                                                                    </span>
-                                                                                </a>
-                                                                                <% }}); %>
-                                                                                    <% if (item.links.length===0) { %>
-                                                                                        <span class="text-muted"
-                                                                                            style="font-size: 13px;">준비중</span>
-                                                                                        <% } %>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <% }); %>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
 
                 </div>

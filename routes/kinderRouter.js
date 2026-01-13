@@ -68,7 +68,7 @@ router.get('/', async (req, res) => {
             allLessonData    // Education Video Cards Data
         ] = await Promise.all([
             // Tab 1: Board Data - Sheet 'kinder'
-            getSheetData('kinder', 'A:F', process.env.SPREADSHEET_ID),
+            getSheetData('kinder', 'A:D', process.env.SPREADSHEET_ID),
 
             // Tab 2: All Lessons - Sheet 'Teacher'
             getSheetData('Teacher', 'A:P', process.env.SPREADSHEET_ID)
@@ -107,26 +107,26 @@ router.get('/', async (req, res) => {
             };
         });
 
-        // Process Board Data (New Structure)
-        // Expected Columns: [0]Page, [1]Category, [2]Group by, [3]차시명(Type), [4]주제(Content), [5]Download(URL)
-        const teacherBoardData = kinderSheetData.filter(row => row[1] === '교사게시판');
+        // Process Board Data (New Structure from User Request)
+        // Expected Columns: [0]Category, [1]Group by, [2]주제(Title), [3]Download(URL)
+        // No explicit 'Board' column anymore. Filter by Category directly.
 
-        const preschoolItems = teacherBoardData
-            .filter(row => row[2] === '프리스쿨')
+        const preschoolItems = kinderSheetData
+            .filter(row => row[0] === '프리스쿨')
             .map(row => ({
-                type: row[3] || '',
-                content: row[4] || '',
-                links: ['다운로드'], // Hardcoded link text
-                url: row[5] || ''
+                type: row[1] || '',    // Group by
+                content: row[2] || '', // Title
+                links: ['다운로드'],
+                url: row[3] || ''      // URL
             }));
 
-        const preschoolAIItems = teacherBoardData
-            .filter(row => row[2] === '프리스쿨AI')
+        const preschoolAIItems = kinderSheetData
+            .filter(row => row[0] === '프리스쿨AI')
             .map(row => ({
-                type: row[3] || '',
-                content: row[4] || '',
-                links: ['다운로드'], // Hardcoded link text
-                url: row[5] || ''
+                type: row[1] || '',    // Group by
+                content: row[2] || '', // Title
+                links: ['다운로드'],
+                url: row[3] || ''      // URL
             }));
 
         const preschoolTitle = '프리스쿨';
