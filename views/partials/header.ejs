@@ -44,223 +44,258 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarContent">
-                    <!-- 검색창 삭제 요청으로 인한 주석 처리 또는 제거 -->
-                    <!-- 
+                    <!-- 🔥 Mobile Context Menu for Lessons (Only visible on Kinder page) -->
+                    <% if (typeof lessonTabs !=='undefined' && lessonTabs.length> 0) { %>
+                        <div class="d-lg-none py-2 border-bottom mb-2 bg-white rounded px-2 shadow-sm mx-2 mt-2">
+                            <strong class="px-2 text-primary small d-block mb-1"
+                                style="font-family: 'Jua', sans-serif;">수업 바로가기</strong>
+                            <ul class="nav flex-column">
+                                <% lessonTabs.forEach(function(tab, index) { %>
+                                    <li class="nav-item">
+                                        <a class="nav-link py-2 px-3 text-dark d-flex align-items-center" href="#"
+                                            onclick="if(typeof switchMainTab === 'function') { switchMainTab('lessons'); const tabBtn = document.getElementById('<%= tab.id %>-tab'); if(tabBtn) { tabBtn.click(); window.scrollTo(0,0); document.querySelector('.navbar-toggler').click(); } } return false;"
+                                            style="border-radius: 10px; transition: background 0.2s;">
+                                            <i class="bi bi-bookmark-star-fill me-2 text-warning"></i>
+                                            <span style="font-family: 'Gamja Flower', cursive; font-size: 1.1rem;">
+                                                <%= tab.title %>
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <% }); %>
+                            </ul>
+                        </div>
+                        <% } %>
+                            <!-- 검색창 삭제 요청으로 인한 주석 처리 또는 제거 -->
+                            <!-- 
             <form class="d-flex mx-auto" style="max-width: 400px;">
                 <input class="form-control me-2" type="search" placeholder="Search..." aria-label="Search" style="font-size: 16px; padding: 8px;">
             </form>
             -->
-                    <div class="mx-auto"></div> <!-- 마진 오토로 우측 정렬 유지 -->
-                    <% if (role==='admin' ) { %>
-                        <div class="board-notification-wrapper">
-                            <button class="board-icon-btn" onclick="goToAdmin()" title="관리자 대시보드"
-                                aria-label="관리자 대시보드로 이동">
-                                <i class="bi bi-gear-fill" aria-hidden="true"></i>
-                            </button>
-                            <div class="board-tooltip">관리자</div>
-                        </div>
-                        <% } %>
-                            <% if (role==='admin' || role==='teacher' || role==='manager' ) { %>
+                            <div class="mx-auto"></div> <!-- 마진 오토로 우측 정렬 유지 -->
+                            <% if (role==='admin' ) { %>
                                 <div class="board-notification-wrapper">
-                                    <button class="board-icon-btn" onclick="goToTeacher()" title="교사 전용 페이지"
-                                        aria-label="교사 전용 페이지로 이동">
-                                        <i class="bi bi-people-fill" aria-hidden="true"></i>
+                                    <button class="board-icon-btn" onclick="goToAdmin()" title="관리자 대시보드"
+                                        aria-label="관리자 대시보드로 이동">
+                                        <i class="bi bi-gear-fill" aria-hidden="true"></i>
                                     </button>
-                                    <div class="board-tooltip">교사 전용</div>
+                                    <div class="board-tooltip">관리자</div>
                                 </div>
                                 <% } %>
-                                    <div class="d-flex align-items-center">
-                                        <!-- 게시판 아이콘 (새 글 알림 포함) -->
-                                        <% if (locals.userID !=='nuri' ) { %>
-                                            <div class="board-notification-wrapper">
-                                                <button class="board-icon-btn" onclick="goToBoard()" title="게시판"
-                                                    aria-label="게시판으로 이동">
-                                                    <i class="bi bi-chat-square-text" aria-hidden="true"></i>
-                                                    <span class="new-post-badge" id="newPostBadge"
-                                                        aria-label="새 글 개수">0</span>
-                                                </button>
-                                                <div class="board-tooltip">새 글 확인</div>
-                                            </div>
+                                    <% if (role==='admin' || role==='teacher' || role==='manager' ) { %>
+                                        <div class="board-notification-wrapper">
+                                            <button class="board-icon-btn" onclick="goToTeacher()" title="교사 전용 페이지"
+                                                aria-label="교사 전용 페이지로 이동">
+                                                <i class="bi bi-people-fill" aria-hidden="true"></i>
+                                            </button>
+                                            <div class="board-tooltip">교사 전용</div>
+                                        </div>
+                                        <% } %>
+                                            <div class="d-flex align-items-center">
+                                                <!-- 게시판 아이콘 (새 글 알림 포함) -->
+                                                <% if (locals.userID !=='nuri' ) { %>
+                                                    <div class="board-notification-wrapper">
+                                                        <button class="board-icon-btn" onclick="goToBoard()" title="게시판"
+                                                            aria-label="게시판으로 이동">
+                                                            <i class="bi bi-chat-square-text" aria-hidden="true"></i>
+                                                            <span class="new-post-badge" id="newPostBadge"
+                                                                aria-label="새 글 개수">0</span>
+                                                        </button>
+                                                        <div class="board-tooltip">새 글 확인</div>
+                                                    </div>
 
-                                            <!-- 🔥 내 파일 아이콘 (전체 사용자) -->
-                                            <div class="board-notification-wrapper">
-                                                <% let s3Link='/s3/browser' ; if (role==='teacher' || role==='manager' )
-                                                    { s3Link='/s3/student-files' ; } else if (role==='student' ) {
-                                                    s3Link='/s3/my-files' ; } %>
-                                                    <a class="board-icon-btn d-flex align-items-center justify-content-center text-dark text-decoration-none"
-                                                        href="<%= s3Link %>" title="내 파일 관리" aria-label="내 파일 관리로 이동">
-                                                        <i class="bi bi-folder-fill" aria-hidden="true"></i>
-                                                    </a>
-                                                    <div class="board-tooltip">내 파일</div>
-                                            </div>
+                                                    <!-- 🔥 내 파일 아이콘 (전체 사용자) -->
+                                                    <div class="board-notification-wrapper">
+                                                        <% let s3Link='/s3/browser' ; if (role==='teacher' ||
+                                                            role==='manager' ) { s3Link='/s3/student-files' ; } else if
+                                                            (role==='student' ) { s3Link='/s3/my-files' ; } %>
+                                                            <a class="board-icon-btn d-flex align-items-center justify-content-center text-dark text-decoration-none"
+                                                                href="<%= s3Link %>" title="내 파일 관리"
+                                                                aria-label="내 파일 관리로 이동">
+                                                                <i class="bi bi-folder-fill" aria-hidden="true"></i>
+                                                            </a>
+                                                            <div class="board-tooltip">내 파일</div>
+                                                    </div>
 
-                                            <!-- 🔥 포트폴리오 (학생 전용) -->
-                                            <% if (role==='student' ) { %>
-                                                <div class="board-notification-wrapper">
-                                                    <a href="/my-universe"
-                                                        class="board-icon-btn d-flex align-items-center justify-content-center text-dark text-decoration-none"
-                                                        title="나의 학습이력" aria-label="나의 학습이력 보기">
-                                                        <i class="bi bi-clock-history" aria-hidden="true"></i>
-                                                    </a>
-                                                    <div class="board-tooltip">나의 학습</div>
-                                                </div>
-                                                <% } %>
-                                                    <% } %>
-
-                                                        <% if (role==='admin' || role==='teacher' || role==='manager' )
-                                                            { %>
-                                                            <div class="nav-item dropdown me-4">
-                                                                <a class="nav-link dropdown-toggle" href="#"
-                                                                    id="teacherResourcesDropdown" role="button"
-                                                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                                                    교사 전용페이지
-                                                                </a>
-                                                                <ul class="dropdown-menu"
-                                                                    aria-labelledby="teacherResourcesDropdown">
-                                                                    <li>
-                                                                        <a class="dropdown-item"
-                                                                            href="https://shop.codingnplay.co.kr/"
-                                                                            target="_blank">
-                                                                            <img src="/resource/imweb.png" alt="교재"
-                                                                                width="20" height="20" class="me-2"> 교재몰
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a class="dropdown-item"
-                                                                            href="https://www.miricanvas.com/workspace/team/drive"
-                                                                            target="_blank">
-                                                                            <img src="/resource/miricanvas.png" alt="홍보"
-                                                                                width="20" height="20" class="me-2"> 홍보물
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a class="dropdown-item"
-                                                                            href="http://naver.me/5YwLMZzj"
-                                                                            target="_blank">
-                                                                            <img src="/resource/navermybox.jpg"
-                                                                                alt="운영자료" width="20" height="20"
-                                                                                class="me-2"> 운영자료
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a class="dropdown-item"
-                                                                            href="https://edu.codingnplay.co.kr/"
-                                                                            target="_blank">
-                                                                            <img src="/resource/glide.png"
-                                                                                alt="지도서 영상보기" width="20" height="20"
-                                                                                class="me-2"> 지도서 영상보기
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a class="dropdown-item"
-                                                                            href="https://app.codingnplay.co.kr/report/books-page">
-                                                                            <i class="bi bi-clipboard-check me-2"></i>
-                                                                            평가지 출력
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a class="dropdown-item"
-                                                                            href="https://codingnplay.co.kr/%ec%bd%94%ed%94%8c%ec%86%8c%ec%8b%9d/"
-                                                                            target="_blank">
-                                                                            <i class="bi bi-award me-2"></i> 자격증/행사
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a class="dropdown-item"
-                                                                            href="https://us02web.zoom.us/j/3566471255?pwd=U3hGeFJ4dVZnYlRVNThTcHVKbUxTUT09"
-                                                                            target="_blank">
-                                                                            <img src="/resource/zoom.png" alt="줌 회의실"
-                                                                                width="20" height="20" class="me-2"> 줌
-                                                                            회의실
-                                                                        </a>
-                                                                    </li>
-
-                                                                </ul>
-                                                            </div>
+                                                    <!-- 🔥 포트폴리오 (학생 전용) -->
+                                                    <% if (role==='student' ) { %>
+                                                        <div class="board-notification-wrapper">
+                                                            <a href="/my-universe"
+                                                                class="board-icon-btn d-flex align-items-center justify-content-center text-dark text-decoration-none"
+                                                                title="나의 학습이력" aria-label="나의 학습이력 보기">
+                                                                <i class="bi bi-clock-history" aria-hidden="true"></i>
+                                                            </a>
+                                                            <div class="board-tooltip">나의 학습</div>
+                                                        </div>
+                                                        <% } %>
                                                             <% } %>
 
-                                                                <!-- 프로필 드롭다운 -->
-                                                                <div class="nav-item dropdown">
-                                                                    <a class="nav-link dropdown-toggle d-flex align-items-center"
-                                                                        href="#" id="profileDropdown" role="button"
-                                                                        data-bs-toggle="dropdown" aria-expanded="false"
-                                                                        style="padding: 0;">
-                                                                        <img src="/resource/profiles/default.webp"
-                                                                            alt="Profile" id="profileImage"
-                                                                            class="rounded-circle"
-                                                                            style="width: 40px; height: 40px;">
-                                                                        <span id="userName" class="ms-2">
-                                                                            <%= locals.userID || '게스트' %>
-                                                                        </span>
-                                                                    </a>
-
-                                                                    <% function canAccess(feature) { const
-                                                                        permissions=require('../../lib_login/permissions');
-                                                                        return permissions.hasFeatureAccess(locals.role,
-                                                                        feature); } %>
-
-                                                                        <ul class="dropdown-menu dropdown-menu-end"
-                                                                            aria-labelledby="profileDropdown">
-                                                                            <li class="px-3 py-2 text-muted">
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <img src="/resource/profiles/default.webp"
-                                                                                        alt="Profile"
-                                                                                        id="profileDropdownImage"
-                                                                                        class="rounded-circle"
-                                                                                        style="width: 50px; height: 50px;">
-                                                                                    <div class="ms-3">
-                                                                                        <div id="profileDropdownUserID"
-                                                                                            style="font-weight: 500;">
-                                                                                            <%= locals.userID || '게스트'
-                                                                                                %>
-                                                                                        </div>
-                                                                                        <div class="small text-muted"
-                                                                                            id="profileDropdownRole">
-                                                                                            <%= locals.role || 'guest'
-                                                                                                %>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </li>
+                                                                <% if (role==='admin' || role==='teacher' ||
+                                                                    role==='manager' ) { %>
+                                                                    <div class="nav-item dropdown me-4">
+                                                                        <a class="nav-link dropdown-toggle" href="#"
+                                                                            id="teacherResourcesDropdown" role="button"
+                                                                            data-bs-toggle="dropdown"
+                                                                            aria-expanded="false">
+                                                                            교사 전용페이지
+                                                                        </a>
+                                                                        <ul class="dropdown-menu"
+                                                                            aria-labelledby="teacherResourcesDropdown">
                                                                             <li>
-                                                                                <hr class="dropdown-divider">
-                                                                            </li>
-                                                                            <li>
-                                                                                <button class="dropdown-item"
-                                                                                    type="button" data-bs-toggle="modal"
-                                                                                    data-bs-target="#profileModal">
-                                                                                    <i
-                                                                                        class="bi bi-person-fill me-2"></i>프로필
-                                                                                    선택
-                                                                                </button>
-                                                                            </li>
-                                                                            <li>
-                                                                                <a class="dropdown-item" href="#"
-                                                                                    onclick="openMyInfoModal(); return false;">
-                                                                                    <i
-                                                                                        class="bi bi-pencil-square me-2"></i>내
-                                                                                    정보
-                                                                                    수정
+                                                                                <a class="dropdown-item"
+                                                                                    href="https://shop.codingnplay.co.kr/"
+                                                                                    target="_blank">
+                                                                                    <img src="/resource/imweb.png"
+                                                                                        alt="교재" width="20" height="20"
+                                                                                        class="me-2"> 교재몰
                                                                                 </a>
                                                                             </li>
                                                                             <li>
                                                                                 <a class="dropdown-item"
-                                                                                    href="/extension-guide">
-                                                                                    <i
-                                                                                        class="bi bi-puzzle me-2"></i>Extension
-                                                                                    가이드
+                                                                                    href="https://www.miricanvas.com/workspace/team/drive"
+                                                                                    target="_blank">
+                                                                                    <img src="/resource/miricanvas.png"
+                                                                                        alt="홍보" width="20" height="20"
+                                                                                        class="me-2"> 홍보물
                                                                                 </a>
                                                                             </li>
                                                                             <li>
-                                                                                <a class="dropdown-item" href="/logout">
-                                                                                    <i
-                                                                                        class="bi bi-box-arrow-right me-2"></i>로그아웃
+                                                                                <a class="dropdown-item"
+                                                                                    href="http://naver.me/5YwLMZzj"
+                                                                                    target="_blank">
+                                                                                    <img src="/resource/navermybox.jpg"
+                                                                                        alt="운영자료" width="20"
+                                                                                        height="20" class="me-2"> 운영자료
                                                                                 </a>
                                                                             </li>
-                                                                        </ul>
-                                                                </div>
+                                                                            <li>
+                                                                                <a class="dropdown-item"
+                                                                                    href="https://edu.codingnplay.co.kr/"
+                                                                                    target="_blank">
+                                                                                    <img src="/resource/glide.png"
+                                                                                        alt="지도서 영상보기" width="20"
+                                                                                        height="20" class="me-2"> 지도서
+                                                                                    영상보기
+                                                                                </a>
+                                                                            </li>
+                                                                            <li>
+                                                                                <a class="dropdown-item"
+                                                                                    href="https://app.codingnplay.co.kr/report/books-page">
+                                                                                    <i
+                                                                                        class="bi bi-clipboard-check me-2"></i>
+                                                                                    평가지 출력
+                                                                                </a>
+                                                                            </li>
+                                                                            <li>
+                                                                                <a class="dropdown-item"
+                                                                                    href="https://codingnplay.co.kr/%ec%bd%94%ed%94%8c%ec%86%8c%ec%8b%9d/"
+                                                                                    target="_blank">
+                                                                                    <i class="bi bi-award me-2"></i>
+                                                                                    자격증/행사
+                                                                                </a>
+                                                                            </li>
+                                                                            <li>
+                                                                                <a class="dropdown-item"
+                                                                                    href="https://us02web.zoom.us/j/3566471255?pwd=U3hGeFJ4dVZnYlRVNThTcHVKbUxTUT09"
+                                                                                    target="_blank">
+                                                                                    <img src="/resource/zoom.png"
+                                                                                        alt="줌 회의실" width="20"
+                                                                                        height="20" class="me-2"> 줌
+                                                                                    회의실
+                                                                                </a>
+                                                                            </li>
 
-                                    </div>
+                                                                        </ul>
+                                                                    </div>
+                                                                    <% } %>
+
+                                                                        <!-- 프로필 드롭다운 -->
+                                                                        <div class="nav-item dropdown">
+                                                                            <a class="nav-link dropdown-toggle d-flex align-items-center"
+                                                                                href="#" id="profileDropdown"
+                                                                                role="button" data-bs-toggle="dropdown"
+                                                                                aria-expanded="false"
+                                                                                style="padding: 0;">
+                                                                                <img src="/resource/profiles/default.webp"
+                                                                                    alt="Profile" id="profileImage"
+                                                                                    class="rounded-circle"
+                                                                                    style="width: 40px; height: 40px;">
+                                                                                <span id="userName" class="ms-2">
+                                                                                    <%= locals.userID || '게스트' %>
+                                                                                </span>
+                                                                            </a>
+
+                                                                            <% function canAccess(feature) { const
+                                                                                permissions=require('../../lib_login/permissions');
+                                                                                return
+                                                                                permissions.hasFeatureAccess(locals.role,
+                                                                                feature); } %>
+
+                                                                                <ul class="dropdown-menu dropdown-menu-end"
+                                                                                    aria-labelledby="profileDropdown">
+                                                                                    <li class="px-3 py-2 text-muted">
+                                                                                        <div
+                                                                                            class="d-flex align-items-center">
+                                                                                            <img src="/resource/profiles/default.webp"
+                                                                                                alt="Profile"
+                                                                                                id="profileDropdownImage"
+                                                                                                class="rounded-circle"
+                                                                                                style="width: 50px; height: 50px;">
+                                                                                            <div class="ms-3">
+                                                                                                <div id="profileDropdownUserID"
+                                                                                                    style="font-weight: 500;">
+                                                                                                    <%= locals.userID
+                                                                                                        || '게스트' %>
+                                                                                                </div>
+                                                                                                <div class="small text-muted"
+                                                                                                    id="profileDropdownRole">
+                                                                                                    <%= locals.role
+                                                                                                        || 'guest' %>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </li>
+                                                                                    <li>
+                                                                                        <hr class="dropdown-divider">
+                                                                                    </li>
+                                                                                    <li>
+                                                                                        <button class="dropdown-item"
+                                                                                            type="button"
+                                                                                            data-bs-toggle="modal"
+                                                                                            data-bs-target="#profileModal">
+                                                                                            <i
+                                                                                                class="bi bi-person-fill me-2"></i>프로필
+                                                                                            선택
+                                                                                        </button>
+                                                                                    </li>
+                                                                                    <li>
+                                                                                        <a class="dropdown-item"
+                                                                                            href="#"
+                                                                                            onclick="openMyInfoModal(); return false;">
+                                                                                            <i
+                                                                                                class="bi bi-pencil-square me-2"></i>내
+                                                                                            정보
+                                                                                            수정
+                                                                                        </a>
+                                                                                    </li>
+                                                                                    <li>
+                                                                                        <a class="dropdown-item"
+                                                                                            href="/extension-guide">
+                                                                                            <i
+                                                                                                class="bi bi-puzzle me-2"></i>Extension
+                                                                                            가이드
+                                                                                        </a>
+                                                                                    </li>
+                                                                                    <li>
+                                                                                        <a class="dropdown-item"
+                                                                                            href="/logout">
+                                                                                            <i
+                                                                                                class="bi bi-box-arrow-right me-2"></i>로그아웃
+                                                                                        </a>
+                                                                                    </li>
+                                                                                </ul>
+                                                                        </div>
+
+                                            </div>
                 </div>
     </div>
 </header>
