@@ -111,11 +111,25 @@ router.get('/', async (req, res) => {
         // Expected Columns: [0]Category, [1]Group by, [2]주제(Title), [3]Download(URL)
         // No explicit 'Board' column anymore. Filter by Category directly.
 
+        // Helper to parse content into array if it contains multiple items like "[A] [B]"
+        const parseContent = (text) => {
+            if (!text) return [];
+            // Matches "] [" or "][" or "]\n["
+            let items = text.split(/\]\s*\[/);
+            return items.map((item, index) => {
+                let str = item.trim();
+                // Add brackets back if missing
+                if (!str.startsWith('[')) str = '[' + str;
+                if (!str.endsWith(']')) str = str + ']';
+                return str;
+            });
+        };
+
         const preschoolItems = kinderSheetData
             .filter(row => row[0] === '프리스쿨')
             .map(row => ({
                 type: row[1] || '',    // Group by
-                content: row[2] || '', // Title
+                content: parseContent(row[2] || ''), // Title (Array)
                 links: ['다운로드'],
                 url: row[3] || ''      // URL
             }));
@@ -124,7 +138,7 @@ router.get('/', async (req, res) => {
             .filter(row => row[0] === '프리스쿨AI')
             .map(row => ({
                 type: row[1] || '',    // Group by
-                content: row[2] || '', // Title
+                content: parseContent(row[2] || ''), // Title (Array)
                 links: ['다운로드'],
                 url: row[3] || ''      // URL
             }));

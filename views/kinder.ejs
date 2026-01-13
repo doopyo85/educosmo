@@ -266,17 +266,61 @@
             }
 
             .apple-list-row {
-                flex-direction: column;
+                /* Compact Row for Mobile */
+                display: flex;
+                flex-direction: row;
+                /* Horizontal, not vertical */
+                align-items: center;
+                /* Vertically center */
                 gap: 12px;
-                padding: 20px;
-                text-align: center;
+                padding: 16px 15px;
+                text-align: left;
+                /* Keep text left aligned */
             }
 
-            .col-category,
-            .col-title,
+            .col-category {
+                width: auto;
+                /* Shrink to fit badge */
+                min-width: 60px;
+                /* Min width for alignment */
+                font-size: 11px;
+                /* Smaller badge text */
+            }
+
+            .apple-badge {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
+
+            .col-title {
+                width: auto;
+                /* Allow flexible width */
+                flex-grow: 1;
+                /* Take up remaining space */
+                text-align: left;
+                /* Align Title Left */
+                padding: 0 5px;
+                /* Reduce padding */
+            }
+
             .col-action {
-                width: 100%;
-                text-align: center;
+                width: auto;
+                /* Shrink to fit button */
+            }
+
+            .mobile-hidden-text {
+                display: none !important;
+                /* Hide 'Download' text on mobile */
+            }
+
+            .btn-apple-outline {
+                padding: 8px;
+                /* Square-ish button on mobile */
+            }
+
+            .btn-apple-outline i {
+                font-size: 1.2rem;
+                /* Larger icon */
             }
         }
     </style>
@@ -302,8 +346,8 @@
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" id="tab-lessons" data-bs-toggle="pill"
-                        data-bs-target="#panel-lessons" type="button" role="tab">
+                    <button class="nav-link" id="tab-lessons" data-bs-toggle="pill" data-bs-target="#panel-lessons"
+                        type="button" role="tab">
                         <i class="bi bi-collection-play me-2"></i>수업 교안
                     </button>
                 </li>
@@ -317,14 +361,12 @@
                         <!-- Board Sub Tabs -->
                         <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4">
                             <li class="nav-item">
-                                <button class="nav-link active" data-bs-toggle="pill"
-                                    data-bs-target="#board-preschool">
+                                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#board-preschool">
                                     <%= preschoolTitle %>
                                 </button>
                             </li>
                             <li class="nav-item">
-                                <button class="nav-link" data-bs-toggle="pill"
-                                    data-bs-target="#board-ai">
+                                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#board-ai">
                                     <%= preschoolAITitle %>
                                 </button>
                             </li>
@@ -339,32 +381,39 @@
                                         <div class="col-title">자료명</div>
                                         <div class="col-action">다운로드</div>
                                     </div>
-                                    <% 
-                                    let prevType = '';
-                                    preschoolItems.forEach((item, index) => { 
+                                    <% let prevType='' ; preschoolItems.forEach((item, index)=> {
                                         let showType = (item.type !== prevType);
                                         prevType = item.type;
-                                    %>
+                                        %>
                                         <div class="apple-list-row">
                                             <div class="col-category">
                                                 <% if (showType) { %>
                                                     <span class="apple-badge badge-primary">
                                                         <%= item.type %>
                                                     </span>
-                                                <% } %>
+                                                    <% } %>
                                             </div>
                                             <div class="col-title">
-                                                <%= item.content %>
+                                                <% if (Array.isArray(item.content)) { %>
+                                                    <% item.content.forEach((line, i)=> { %>
+                                                        <div class="<%= i > 0 ? 'mt-2' : '' %>">
+                                                            <%= line %>
+                                                        </div>
+                                                        <% }); %>
+                                                            <% } else { %>
+                                                                <%= item.content %>
+                                                                    <% } %>
                                             </div>
                                             <div class="col-action">
                                                 <% if (item.url && item.url.trim()) { %>
-                                                <a href="<%= item.url %>" target="_blank" class="btn-apple-outline">
-                                                    <i class="bi bi-cloud-download"></i>
-                                                    <span class="d-none d-sm-inline">다운로드</span>
-                                                </a>
-                                                <% } else { %>
-                                                    <span class="text-muted small">준비중</span>
-                                                <% } %>
+                                                    <a href="<%= item.url %>" target="_blank" class="btn-apple-outline"
+                                                        aria-label="다운로드">
+                                                        <i class="bi bi-cloud-download"></i>
+                                                        <span class="d-none d-sm-inline mobile-hidden-text">다운로드</span>
+                                                    </a>
+                                                    <% } else { %>
+                                                        <span class="text-muted small">준비중</span>
+                                                        <% } %>
                                             </div>
                                         </div>
                                         <% }); %>
@@ -379,32 +428,39 @@
                                         <div class="col-title">자료명</div>
                                         <div class="col-action">다운로드</div>
                                     </div>
-                                    <% 
-                                    let prevAiType = '';
-                                    preschoolAIItems.forEach((item, index) => { 
+                                    <% let prevAiType='' ; preschoolAIItems.forEach((item, index)=> {
                                         let showAiType = (item.type !== prevAiType);
                                         prevAiType = item.type;
-                                    %>
+                                        %>
                                         <div class="apple-list-row">
                                             <div class="col-category">
                                                 <% if (showAiType) { %>
                                                     <span class="apple-badge badge-success">
                                                         <%= item.type %>
                                                     </span>
-                                                <% } %>
+                                                    <% } %>
                                             </div>
                                             <div class="col-title">
-                                                <%= item.content %>
+                                                <% if (Array.isArray(item.content)) { %>
+                                                    <% item.content.forEach((line, i)=> { %>
+                                                        <div class="<%= i > 0 ? 'mt-2' : '' %>">
+                                                            <%= line %>
+                                                        </div>
+                                                        <% }); %>
+                                                            <% } else { %>
+                                                                <%= item.content %>
+                                                                    <% } %>
                                             </div>
                                             <div class="col-action">
                                                 <% if (item.url && item.url.trim()) { %>
-                                                <a href="<%= item.url %>" target="_blank" class="btn-apple-outline">
-                                                    <i class="bi bi-robot"></i>
-                                                    <span class="d-none d-sm-inline">다운로드</span>
-                                                </a>
-                                                <% } else { %>
-                                                    <span class="text-muted small">준비중</span>
-                                                <% } %>
+                                                    <a href="<%= item.url %>" target="_blank" class="btn-apple-outline"
+                                                        aria-label="다운로드">
+                                                        <i class="bi bi-robot"></i>
+                                                        <span class="d-none d-sm-inline mobile-hidden-text">다운로드</span>
+                                                    </a>
+                                                    <% } else { %>
+                                                        <span class="text-muted small">준비중</span>
+                                                        <% } %>
                                             </div>
                                         </div>
                                         <% }); %>
@@ -419,104 +475,97 @@
 
                     <!-- Sub Level Tabs -->
                     <ul class="nav nav-pills sub-nav-pills justify-content-center mb-4" id="levelTabs" role="tablist">
-                    <% if (lessonTabs && lessonTabs.length > 0) { %>
-                        <% lessonTabs.forEach((tab, index) => { %>
-                            <li class="nav-item">
-                                <button class="nav-link <%= index === 0 ? 'active' : '' %>" id="<%= tab.id %>-tab"
-                                    data-bs-toggle="pill" data-bs-target="#<%= tab.id %>" type="button" role="tab">
-                                    <% if (tab.title.toLowerCase().includes('ai')) { %>
-                                        <i class="bi bi-robot me-1"></i>
-                                    <% } %>
-                                    <%= tab.title %>
-                                </button>
-                            </li>
-                        <% }); %>
-                    <% } else { %>
-                        <!-- Fallback or Empty State -->
-                        <li class="nav-item">
-                            <span class="nav-link disabled">No Categories Found</span>
-                        </li>
-                    <% } %>
+                        <% if (lessonTabs && lessonTabs.length> 0) { %>
+                            <% lessonTabs.forEach((tab, index)=> { %>
+                                <li class="nav-item">
+                                    <button class="nav-link <%= index === 0 ? 'active' : '' %>" id="<%= tab.id %>-tab"
+                                        data-bs-toggle="pill" data-bs-target="#<%= tab.id %>" type="button" role="tab">
+                                        <% if (tab.title.toLowerCase().includes('ai')) { %>
+                                            <i class="bi bi-robot me-1"></i>
+                                            <% } %>
+                                                <%= tab.title %>
+                                    </button>
+                                </li>
+                                <% }); %>
+                                    <% } else { %>
+                                        <!-- Fallback or Empty State -->
+                                        <li class="nav-item">
+                                            <span class="nav-link disabled">No Categories Found</span>
+                                        </li>
+                                        <% } %>
                     </ul>
 
-                                        <!-- Lesson Content -->
-                                        <div class="tab-content" id="levelTabContent">
-                                            <% function renderCardGrid(levelId, groups, isActive) { %>
-                                                <div class="tab-pane fade <%= isActive ? 'show active' : '' %>"
-                                                    id="<%= levelId %>" role="tabpanel">
-                                                    <div class="container" style="max-width: 1400px;">
-                                                        <% if (groups.length===0) { %>
-                                                            <div class="text-center py-5 text-muted">
-                                                                <i class="bi bi-inbox fs-1"></i>
-                                                                <p class="mt-3">등록된 콘텐츠가 없습니다.</p>
-                                                            </div>
-                                                            <% } %>
-
-                                                                <% groups.forEach((group)=> { %>
-                                                                    <div class="group-header">
-                                                                        <%= group.title %>
-                                                                    </div>
-                                                                    <div
-                                                                        class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4 mb-4">
-                                                                        <% group.sessions.forEach((session)=> { %>
-                                                                            <div class="col">
-                                                                                <div class="kinder-card"
-                                                                                    data-title="<%= session.name %>"
-                                                                                    data-topic="<%= session.topic %>"
-                                                                                    data-video="<%= session.videoUrl %>"
-                                                                                    data-images='<%= JSON.stringify(session.images) %>'
-                                                                                    onclick="openLessonModal(this)">
-
-                                                                                    <div class="kinder-card-thumb">
-                                                                                        <% if (session.thumbnail) { %>
-                                                                                            <img src="<%= session.thumbnail %>"
-                                                                                                alt="<%= session.name %>"
-                                                                                                loading="lazy">
-                                                                                            <% } else { %>
-                                                                                                <div
-                                                                                                    class="d-flex align-items-center justify-content-center h-100 text-muted bg-light">
-                                                                                                    <i
-                                                                                                        class="bi bi-image fs-1"></i>
-                                                                                                </div>
-                                                                                                <% } %>
-
-                                                                                                    <% if
-                                                                                                        (session.videoUrl)
-                                                                                                        { %>
-                                                                                                        <div
-                                                                                                            class="position-absolute bottom-0 end-0 m-2 badge bg-dark bg-opacity-75 rounded-pill">
-                                                                                                            <i
-                                                                                                                class="bi bi-play-fill text-white"></i>
-                                                                                                        </div>
-                                                                                                        <% } %>
-                                                                                    </div>
-
-                                                                                    <div class="kinder-card-body">
-                                                                                        <h5
-                                                                                            class="kinder-card-title text-truncate">
-                                                                                            <%= session.name %>
-                                                                                        </h5>
-                                                                                        <p
-                                                                                            class="kinder-card-topic text-truncate">
-                                                                                            <%= session.topic %>?
-                                                                                                "&nbsp;" : session.topic
-                                                                                        </p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <% }); %>
-                                                                    </div>
-                                                                    <% }); %>
-                                                    </div>
-                                                </div>
-                                                <% } %>
-
-                                                    <% if (lessonTabs && lessonTabs.length> 0) { %>
-                                                        <% lessonTabs.forEach((tab, index)=> { %>
-                                                            <%= renderCardGrid(tab.id, tab.groups, index===0) %>
-                                                                <% }); %>
-                                                                    <% } %>
+                    <!-- Lesson Content -->
+                    <div class="tab-content" id="levelTabContent">
+                        <% function renderCardGrid(levelId, groups, isActive) { %>
+                            <div class="tab-pane fade <%= isActive ? 'show active' : '' %>" id="<%= levelId %>"
+                                role="tabpanel">
+                                <div class="container" style="max-width: 1400px;">
+                                    <% if (groups.length===0) { %>
+                                        <div class="text-center py-5 text-muted">
+                                            <i class="bi bi-inbox fs-1"></i>
+                                            <p class="mt-3">등록된 콘텐츠가 없습니다.</p>
                                         </div>
+                                        <% } %>
+
+                                            <% groups.forEach((group)=> { %>
+                                                <div class="group-header">
+                                                    <%= group.title %>
+                                                </div>
+                                                <div
+                                                    class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4 mb-4">
+                                                    <% group.sessions.forEach((session)=> { %>
+                                                        <div class="col">
+                                                            <div class="kinder-card" data-title="<%= session.name %>"
+                                                                data-topic="<%= session.topic %>"
+                                                                data-video="<%= session.videoUrl %>"
+                                                                data-images='<%= JSON.stringify(session.images) %>'
+                                                                onclick="openLessonModal(this)">
+
+                                                                <div class="kinder-card-thumb">
+                                                                    <% if (session.thumbnail) { %>
+                                                                        <img src="<%= session.thumbnail %>"
+                                                                            alt="<%= session.name %>" loading="lazy">
+                                                                        <% } else { %>
+                                                                            <div
+                                                                                class="d-flex align-items-center justify-content-center h-100 text-muted bg-light">
+                                                                                <i class="bi bi-image fs-1"></i>
+                                                                            </div>
+                                                                            <% } %>
+
+                                                                                <% if (session.videoUrl) { %>
+                                                                                    <div
+                                                                                        class="position-absolute bottom-0 end-0 m-2 badge bg-dark bg-opacity-75 rounded-pill">
+                                                                                        <i
+                                                                                            class="bi bi-play-fill text-white"></i>
+                                                                                    </div>
+                                                                                    <% } %>
+                                                                </div>
+
+                                                                <div class="kinder-card-body">
+                                                                    <h5 class="kinder-card-title text-truncate">
+                                                                        <%= session.name %>
+                                                                    </h5>
+                                                                    <p class="kinder-card-topic text-truncate">
+                                                                        <%= session.topic %>?
+                                                                            "&nbsp;" : session.topic
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <% }); %>
+                                                </div>
+                                                <% }); %>
+                                </div>
+                            </div>
+                            <% } %>
+
+                                <% if (lessonTabs && lessonTabs.length> 0) { %>
+                                    <% lessonTabs.forEach((tab, index)=> { %>
+                                        <%= renderCardGrid(tab.id, tab.groups, index===0) %>
+                                            <% }); %>
+                                                <% } %>
+                    </div>
 
                 </div>
             </div>
