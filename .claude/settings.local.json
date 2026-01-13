@@ -11,7 +11,10 @@
       "Bash(then grep -E \"\\(AWS|S3|NCP|BUCKET|ENDPOINT\\)\" .env)",
       "Bash(else echo \"No .env file\")",
       "Bash(fi)",
-      "Bash(mysql:*)"
+      "Bash(mysql:*)",
+      "Bash(pm2 logs:*)",
+      "Bash(nslookup:*)",
+      "Bash(netstat:*)"
     ]
   }
 }

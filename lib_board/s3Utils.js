@@ -4,15 +4,19 @@ const sharp = require('sharp');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 
-// 🔐 S3 클라이언트 설정 - IAM Role 기반 인증
-// EC2 인스턴스에 IAM Role이 있으면 자동으로 자격 증명을 가져옴
+const config = require('../config');
+
+// 🔐 S3 클라이언트 설정 - NCP Endpoint & Credentials
 const s3Config = {
-    region: process.env.AWS_REGION || 'ap-northeast-2'
+    region: process.env.AWS_REGION || 'ap-northeast-2',
+    endpoint: 'https://kr.object.ncloudstorage.com', // 🔥 NCP Endpoint 명시
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
 };
 
-// 🔥 수정: IAM Role을 우선 사용하도록 변경
-// credentials를 명시하지 않으면 AWS SDK가 자동으로 IAM Role을 감지
-console.log('🔐 [S3Utils] IAM Role로 AWS 자격 증명 사용 (credentials 생략)');
+console.log('🔐 [S3Utils] NCP S3 Endpoint 설정 완료:', s3Config.endpoint);
 
 const s3Client = new S3Client(s3Config);
 
@@ -33,24 +37,24 @@ async function uploadBase64Image(base64Data, originalName = 'pasted-image.png') 
         // Base64 데이터에서 헤더 제거
         const base64WithoutHeader = base64Data.replace(/^data:image\/[a-z]+;base64,/, '');
         const buffer = Buffer.from(base64WithoutHeader, 'base64');
-        
+
         // 이미지 포맷 감지 및 최적화
         const optimizedBuffer = await optimizeImage(buffer);
-        
+
         // S3 키 생성
         const ext = path.extname(originalName) || '.png';
         const key = generateImageKey(ext, true); // 임시 이미지로 업로드
-        
+
         // S3에 업로드
         const uploadResult = await uploadBufferToS3(optimizedBuffer, key, 'image/png');
-        
+
         return {
             key: key,
-            url: `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+            url: `${config.S3.ASSET_URL}/${key}`,
             size: optimizedBuffer.length,
             originalName: originalName
         };
-        
+
     } catch (error) {
         console.error('Base64 이미지 업로드 오류:', error);
         throw new Error('이미지 업로드 중 오류가 발생했습니다.');
@@ -68,12 +72,12 @@ async function optimizeImage(buffer, options = {}) {
             quality = 85,
             format = 'jpeg'
         } = options;
-        
+
         let sharpInstance = sharp(buffer);
-        
+
         // 메타데이터 확인
         const metadata = await sharpInstance.metadata();
-        
+
         // 리사이징이 필요한 경우
         if (metadata.width > maxWidth || metadata.height > maxHeight) {
             sharpInstance = sharpInstance.resize(maxWidth, maxHeight, {
@@ -81,7 +85,7 @@ async function optimizeImage(buffer, options = {}) {
                 withoutEnlargement: true
             });
         }
-        
+
         // 포맷별 최적화
         if (format === 'jpeg') {
             sharpInstance = sharpInstance.jpeg({ quality, progressive: true });
@@ -90,9 +94,9 @@ async function optimizeImage(buffer, options = {}) {
         } else if (format === 'webp') {
             sharpInstance = sharpInstance.webp({ quality });
         }
-        
+
         return await sharpInstance.toBuffer();
-        
+
     } catch (error) {
         console.error('이미지 최적화 오류:', error);
         // 최적화 실패 시 원본 반환
@@ -112,7 +116,7 @@ async function generateThumbnail(imageBuffer, size = 200) {
             })
             .jpeg({ quality: 80 })
             .toBuffer();
-            
+
     } catch (error) {
         console.error('썸네일 생성 오류:', error);
         throw new Error('썸네일 생성 중 오류가 발생했습니다.');
@@ -134,10 +138,10 @@ async function uploadBufferToS3(buffer, key, contentType = 'application/octet-st
                 'upload-type': 'buffer'
             }
         });
-        
+
         const result = await s3Client.send(uploadCommand);
         return result;
-        
+
     } catch (error) {
         console.error('S3 버퍼 업로드 오류:', error);
         throw new Error('파일 업로드 중 오류가 발생했습니다.');
@@ -153,17 +157,17 @@ async function downloadFromS3(key) {
             Bucket: BUCKET_NAME,
             Key: key
         });
-        
+
         const response = await s3Client.send(getCommand);
-        
+
         // Stream을 Buffer로 변환
         const chunks = [];
         for await (const chunk of response.Body) {
             chunks.push(chunk);
         }
-        
+
         return Buffer.concat(chunks);
-        
+
     } catch (error) {
         console.error('S3 다운로드 오류:', error);
         throw new Error('파일 다운로드 중 오류가 발생했습니다.');
@@ -179,10 +183,10 @@ async function deleteFromS3(key) {
             Bucket: BUCKET_NAME,
             Key: key
         });
-        
+
         await s3Client.send(deleteCommand);
         console.log(`S3 파일 삭제 완료: ${key}`);
-        
+
     } catch (error) {
         console.error('S3 파일 삭제 오류:', error);
         throw new Error('파일 삭제 중 오류가 발생했습니다.');
@@ -200,10 +204,10 @@ async function copyInS3(sourceKey, destKey) {
             Key: destKey,
             MetadataDirective: 'COPY'
         });
-        
+
         await s3Client.send(copyCommand);
         console.log(`S3 파일 복사 완료: ${sourceKey} → ${destKey}`);
-        
+
     } catch (error) {
         console.error('S3 파일 복사 오류:', error);
         throw new Error('파일 복사 중 오류가 발생했습니다.');
@@ -220,10 +224,10 @@ async function generateUploadUrl(key, contentType, expiresIn = 3600) {
             Key: key,
             ContentType: contentType
         });
-        
+
         const uploadUrl = await getSignedUrl(s3Client, putCommand, { expiresIn });
         return uploadUrl;
-        
+
     } catch (error) {
         console.error('업로드 URL 생성 오류:', error);
         throw new Error('업로드 URL 생성 중 오류가 발생했습니다.');
@@ -240,10 +244,10 @@ async function generateDownloadUrl(key, filename, expiresIn = 900) {
             Key: key,
             ResponseContentDisposition: `attachment; filename="${encodeURIComponent(filename)}"`
         });
-        
+
         const downloadUrl = await getSignedUrl(s3Client, getCommand, { expiresIn });
         return downloadUrl;
-        
+
     } catch (error) {
         console.error('다운로드 URL 생성 오류:', error);
         throw new Error('다운로드 URL 생성 중 오류가 발생했습니다.');
@@ -289,7 +293,7 @@ async function moveFromTempToPermanent(tempKey) {
     try {
         // temp 경로에서 정식 경로로 변환
         let permanentKey;
-        
+
         if (tempKey.includes('/images/temp/')) {
             const filename = path.basename(tempKey);
             const ext = path.extname(filename);
@@ -301,15 +305,15 @@ async function moveFromTempToPermanent(tempKey) {
         } else {
             throw new Error('올바르지 않은 임시 파일 경로입니다.');
         }
-        
+
         // 파일 복사
         await copyInS3(tempKey, permanentKey);
-        
+
         // 임시 파일 삭제
         await deleteFromS3(tempKey);
-        
+
         return permanentKey;
-        
+
     } catch (error) {
         console.error('파일 이동 오류:', error);
         throw new Error('파일 이동 중 오류가 발생했습니다.');
@@ -325,10 +329,10 @@ async function checkFileExists(key) {
             Bucket: BUCKET_NAME,
             Key: key
         });
-        
+
         await s3Client.send(headCommand);
         return true;
-        
+
     } catch (error) {
         if (error.name === 'NoSuchKey') {
             return false;
@@ -346,10 +350,10 @@ async function processContentImages(content) {
     if (!content) {
         return { content: content, movedImages: [] };
     }
-    
+
     const movedImages = [];
     let updatedContent = content;
-    
+
     try {
         // 🔥 S3 temp 이미지 URL 패턴 찾기 (board/ 제거)
         // 예: https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/images/temp/uuid.png
@@ -357,53 +361,53 @@ async function processContentImages(content) {
             `https://${BUCKET_NAME}\\.s3\\.[^/]+\\.amazonaws\\.com/(images/temp/[^"'\\s]+)`,
             'gi'
         );
-        
+
         const matches = content.match(tempImagePattern) || [];
         console.log(`📸 content 내 temp 이미지 발견: ${matches.length}개`);
-        
+
         for (const match of matches) {
             try {
                 // URL에서 S3 키 추출
                 const urlObj = new URL(match);
                 const tempKey = decodeURIComponent(urlObj.pathname.substring(1)); // 앞의 '/' 제거
-                
+
                 console.log(`🔄 이미지 이동 시작: ${tempKey}`);
-                
+
                 // temp 경로인지 확인
                 if (!tempKey.includes('/temp/')) {
                     console.log(`⏭️ temp 경로가 아님, 건너뜀: ${tempKey}`);
                     continue;
                 }
-                
+
                 // 정식 경로로 이동
                 const permanentKey = await moveFromTempToPermanent(tempKey);
-                const permanentUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'ap-northeast-2'}.amazonaws.com/${permanentKey}`;
-                
+                const permanentUrl = `${config.S3.ASSET_URL}/${permanentKey}`;
+
                 // content 내 URL 교체
                 updatedContent = updatedContent.split(match).join(permanentUrl);
-                
+
                 movedImages.push({
                     originalUrl: match,
                     originalKey: tempKey,
                     newUrl: permanentUrl,
                     newKey: permanentKey
                 });
-                
+
                 console.log(`✅ 이미지 이동 완료: ${tempKey} → ${permanentKey}`);
-                
+
             } catch (moveError) {
                 console.error(`❌ 이미지 이동 실패: ${match}`, moveError.message);
                 // 개별 이미지 이동 실패해도 계속 진행
             }
         }
-        
+
         console.log(`📸 총 ${movedImages.length}개 이미지 영구 저장 완료`);
-        
+
         return {
             content: updatedContent,
             movedImages: movedImages
         };
-        
+
     } catch (error) {
         console.error('❌ content 이미지 처리 오류:', error);
         // 오류 발생해도 원본 content 반환
@@ -420,31 +424,31 @@ async function processAttachmentFiles(attachments) {
     if (!attachments || !Array.isArray(attachments) || attachments.length === 0) {
         return attachments;
     }
-    
+
     const processedAttachments = [];
-    
+
     for (const attachment of attachments) {
         try {
             const key = attachment.key || attachment.stored_name;
-            
+
             if (!key) {
                 processedAttachments.push(attachment);
                 continue;
             }
-            
+
             // temp 경로인지 확인
             if (!key.includes('/temp/')) {
                 console.log(`⏭️ 첨부파일 temp 경로 아님, 건너뜀: ${key}`);
                 processedAttachments.push(attachment);
                 continue;
             }
-            
+
             console.log(`🔄 첨부파일 이동 시작: ${key}`);
-            
+
             // 정식 경로로 이동
             const permanentKey = await moveFromTempToPermanent(key);
-            const permanentUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'ap-northeast-2'}.amazonaws.com/${permanentKey}`;
-            
+            const permanentUrl = `${config.S3.ASSET_URL}/${permanentKey}`;
+
             // 업데이트된 정보로 교체
             processedAttachments.push({
                 ...attachment,
@@ -453,16 +457,16 @@ async function processAttachmentFiles(attachments) {
                 url: permanentUrl,
                 s3_url: permanentUrl
             });
-            
+
             console.log(`✅ 첨부파일 이동 완료: ${key} → ${permanentKey}`);
-            
+
         } catch (moveError) {
             console.error(`❌ 첨부파일 이동 실패:`, moveError.message);
             // 실패해도 원본 정보 유지
             processedAttachments.push(attachment);
         }
     }
-    
+
     return processedAttachments;
 }
 

@@ -7,11 +7,11 @@ const { saveAttachment, getAttachmentsByPostId, deleteAttachment, getDownloadUrl
 const db = require('../../lib_login/db');
 
 // 🔥 용량 체크 및 사용량 업데이트 함수 import
-const { 
-    canUpload, 
-    increaseUsage, 
+const {
+    canUpload,
+    increaseUsage,
     decreaseUsage,
-    recordFile 
+    recordFile
 } = require('../../lib_storage/quotaChecker');
 const { formatBytes } = require('../../lib_storage/storagePolicy');
 
@@ -27,21 +27,21 @@ router.post('/upload', authenticateUser, async (req, res) => {
             'SELECT id, centerID FROM Users WHERE userID = ?',
             [userId]
         );
-        
+
         if (!user) {
             return res.status(401).json({
                 success: false,
                 error: '사용자 정보를 찾을 수 없습니다.'
             });
         }
-        
+
         // multer 미들웨어 실행
         attachmentUpload.array('files', 10)(req, res, async (err) => {
             if (err) {
                 console.error('파일 업로드 오류:', err);
-                
+
                 let errorMessage = '파일 업로드 중 오류가 발생했습니다.';
-                
+
                 if (err.code === 'LIMIT_FILE_SIZE') {
                     errorMessage = '파일 크기가 너무 큽니다.';
                 } else if (err.code === 'LIMIT_FILE_COUNT') {
@@ -49,13 +49,13 @@ router.post('/upload', authenticateUser, async (req, res) => {
                 } else if (err.message) {
                     errorMessage = err.message;
                 }
-                
+
                 return res.status(400).json({
                     success: false,
                     error: errorMessage
                 });
             }
-            
+
             try {
                 if (!req.files || req.files.length === 0) {
                     return res.status(400).json({
@@ -63,16 +63,16 @@ router.post('/upload', authenticateUser, async (req, res) => {
                         error: '업로드할 파일을 선택해주세요.'
                     });
                 }
-                
+
                 const userRole = req.session.role;
                 const clientIP = req.ip || req.connection.remoteAddress;
-                
+
                 // 🔥 Step 2: 총 파일 크기 계산 및 용량 체크
                 const totalSize = req.files.reduce((sum, file) => sum + file.size, 0);
                 console.log(`📊 업로드 용량 체크: ${formatBytes(totalSize)}`);
-                
+
                 const quotaCheck = await canUpload(user.id, user.centerID, totalSize);
-                
+
                 if (!quotaCheck.allowed) {
                     console.log('❌ 용량 초과:', quotaCheck.message);
                     return res.status(413).json({
@@ -86,7 +86,7 @@ router.post('/upload', authenticateUser, async (req, res) => {
                         }
                     });
                 }
-                
+
                 console.log('파일 업로드 요청:', {
                     userId,
                     userRole,
@@ -94,29 +94,29 @@ router.post('/upload', authenticateUser, async (req, res) => {
                     totalSize: formatBytes(totalSize),
                     clientIP
                 });
-                
+
                 const uploadedFiles = [];
                 const errors = [];
                 let totalUploadedSize = 0;
-                
+
                 // 각 파일에 대해 보안 검증 및 처리
                 for (const file of req.files) {
                     try {
                         // 🔥 한글 파일명 처리 (이미 multer에서 처리되었지만 한번 더 확인)
                         const originalName = processKoreanFilename(file.originalname);
-                        
+
                         console.log('🔥 파일 처리:', {
                             original: file.originalname,
                             processed: originalName,
                             size: file.size,
                             type: file.mimetype
                         });
-                        
+
                         // 보안 검증
                         const securityCheck = await validateUploadSecurity(
                             file, userId, userRole, null, clientIP
                         );
-                        
+
                         if (!securityCheck.isValid) {
                             errors.push({
                                 filename: originalName,
@@ -124,7 +124,7 @@ router.post('/upload', authenticateUser, async (req, res) => {
                             });
                             continue;
                         }
-                        
+
                         // 파일 정보 구성
                         const fileInfo = {
                             key: file.key,
@@ -134,7 +134,7 @@ router.post('/upload', authenticateUser, async (req, res) => {
                             location: file.location,
                             bucket: file.bucket
                         };
-                        
+
                         uploadedFiles.push({
                             tempId: Date.now() + Math.random(),
                             key: file.key,
@@ -144,9 +144,9 @@ router.post('/upload', authenticateUser, async (req, res) => {
                             url: file.location,
                             isImage: file.mimetype.startsWith('image/')
                         });
-                        
+
                         totalUploadedSize += file.size;
-                        
+
                         // 🔥 Step 3: UserFiles 테이블에 파일 기록
                         await recordFile(user.id, user.centerID, {
                             category: 'board',
@@ -156,9 +156,9 @@ router.post('/upload', authenticateUser, async (req, res) => {
                             type: file.mimetype,
                             url: file.location
                         });
-                        
+
                         console.log('파일 업로드 성공:', originalName);
-                        
+
                     } catch (fileError) {
                         console.error('파일 처리 오류:', fileError);
                         errors.push({
@@ -167,20 +167,20 @@ router.post('/upload', authenticateUser, async (req, res) => {
                         });
                     }
                 }
-                
+
                 // 🔥 Step 4: 성공적으로 업로드된 파일들의 용량 증가
                 if (totalUploadedSize > 0) {
                     await increaseUsage(user.id, user.centerID, totalUploadedSize, 'board');
                     console.log(`✅ 사용량 업데이트: +${formatBytes(totalUploadedSize)}`);
                 }
-                
+
                 // 업로드 로그 기록
                 try {
                     await logUploadActivity(userId, clientIP, req.files, uploadedFiles, errors);
                 } catch (logError) {
                     console.error('업로드 로그 기록 오류:', logError);
                 }
-                
+
                 // 결과 반환
                 res.json({
                     success: true,
@@ -193,7 +193,7 @@ router.post('/upload', authenticateUser, async (req, res) => {
                         userUsage: quotaCheck.userUsage
                     } : null
                 });
-                
+
             } catch (error) {
                 console.error('파일 업로드 처리 오류:', error);
                 res.status(500).json({
@@ -220,55 +220,55 @@ router.post('/posts/:postId/attachments', authenticateUser, async (req, res) => 
         const { postId } = req.params;
         const { fileKeys } = req.body; // S3 키 배열
         const userId = req.session.userID;
-        
+
         if (!fileKeys || !Array.isArray(fileKeys) || fileKeys.length === 0) {
             return res.status(400).json({
                 success: false,
                 error: '연결할 파일을 선택해주세요.'
             });
         }
-        
+
         // 게시글 존재 및 권한 확인
         const posts = await db.queryDatabase(
             'SELECT * FROM board_posts WHERE id = ?',
             [postId]
         );
-        
+
         if (posts.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: '게시글을 찾을 수 없습니다.'
             });
         }
-        
+
         const post = posts[0];
         const canEdit = post.author === userId || ['admin', 'manager'].includes(req.session.role);
-        
+
         if (!canEdit) {
             return res.status(403).json({
                 success: false,
                 error: '첨부파일을 추가할 권한이 없습니다.'
             });
         }
-        
+
         const attachedFiles = [];
-        
+
         // 각 파일을 정식 첨부파일로 등록
         for (const fileKey of fileKeys) {
             try {
                 // 🔥 S3에서 파일 메타데이터 가져오기 (한글 파일명 복원)
                 const s3Metadata = await getS3FileMetadata(fileKey);
-                
+
                 const attachmentData = {
                     post_id: postId,
                     original_name: s3Metadata.originalName || fileKey.split('/').pop(),
                     stored_name: fileKey,
                     file_size: s3Metadata.fileSize || 0,
                     file_type: s3Metadata.contentType || 'application/octet-stream',
-                    s3_url: `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${fileKey}`,
+                    s3_url: `${require('../../config').S3.ASSET_URL}/${fileKey}`,
                     is_image: fileKey.includes('images/') || (s3Metadata.contentType && s3Metadata.contentType.startsWith('image/'))
                 };
-                
+
                 const result = await db.queryDatabase(`
                     INSERT INTO board_attachments 
                     (post_id, original_name, stored_name, file_size, file_type, s3_url, is_image, created_at)
@@ -282,26 +282,26 @@ router.post('/posts/:postId/attachments', authenticateUser, async (req, res) => 
                     attachmentData.s3_url,
                     attachmentData.is_image
                 ]);
-                
+
                 attachedFiles.push({
                     id: result.insertId,
                     ...attachmentData
                 });
-                
+
             } catch (attachError) {
                 console.error('첨부파일 등록 오류:', attachError);
             }
         }
-        
+
         // 게시글 첨부파일 개수 업데이트
         await updatePostAttachmentCount(postId);
-        
+
         res.json({
             success: true,
             attachments: attachedFiles,
             message: `${attachedFiles.length}개 파일이 첨부되었습니다.`
         });
-        
+
     } catch (error) {
         console.error('첨부파일 연결 오류:', error);
         res.status(500).json({
@@ -318,14 +318,14 @@ router.post('/posts/:postId/attachments', authenticateUser, async (req, res) => 
 router.get('/posts/:postId/attachments', async (req, res) => {
     try {
         const { postId } = req.params;
-        
+
         const attachments = await getAttachmentsByPostId(postId);
-        
+
         res.json({
             success: true,
             attachments: attachments
         });
-        
+
     } catch (error) {
         console.error('첨부파일 목록 조회 오류:', error);
         res.status(500).json({
@@ -343,25 +343,25 @@ router.get('/:id/download', async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.session?.userID;
-        
+
         console.log('파일 다운로드 요청:', {
             attachmentId: id,
             userId: userId || 'anonymous',
             userAgent: req.headers['user-agent'],
             ip: req.ip
         });
-        
+
         // 첨부파일 정보 및 다운로드 URL 생성
         const downloadInfo = await getDownloadUrl(id, userId);
-        
+
         console.log('다운로드 URL 생성 완료:', {
             filename: downloadInfo.filename,
             size: downloadInfo.file_size
         });
-        
+
         // 🔥 다운로드 카운터 업데이트
         await updateDownloadCounter(id, userId, req.ip);
-        
+
         // 🔥 개선: JSON 응답으로 변경 (보안 강화)
         res.json({
             success: true,
@@ -370,13 +370,13 @@ router.get('/:id/download', async (req, res) => {
             file_size: downloadInfo.file_size,
             expires_in: 900 // 15분
         });
-        
+
     } catch (error) {
         console.error('파일 다운로드 오류:', error);
-        
+
         let statusCode = 500;
         let errorMessage = '파일 다운로드 중 오류가 발생했습니다.';
-        
+
         if (error.message.includes('찾을 수 없습니다')) {
             statusCode = 404;
             errorMessage = '파일을 찾을 수 없습니다.';
@@ -384,7 +384,7 @@ router.get('/:id/download', async (req, res) => {
             statusCode = 403;
             errorMessage = '파일 다운로드 권한이 없습니다.';
         }
-        
+
         res.status(statusCode).json({
             success: false,
             error: errorMessage
@@ -399,24 +399,24 @@ router.get('/:id/download', async (req, res) => {
 router.get('/:id/count', async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const [attachment] = await db.queryDatabase(
             'SELECT download_count FROM board_attachments WHERE id = ?',
             [id]
         );
-        
+
         if (!attachment) {
             return res.status(404).json({
                 success: false,
                 error: '첨부파일을 찾을 수 없습니다.'
             });
         }
-        
+
         res.json({
             success: true,
             download_count: attachment.download_count || 0
         });
-        
+
     } catch (error) {
         console.error('다운로드 카운트 조회 오류:', error);
         res.status(500).json({
@@ -435,66 +435,66 @@ router.delete('/:id', authenticateUser, async (req, res) => {
         const { id } = req.params;
         const userId = req.session.userID;
         const userRole = req.session.role;
-        
+
         console.log('첨부파일 삭제 요청:', {
             attachmentId: id,
             userId,
             userRole
         });
-        
+
         // 첨부파일 정보 조회 (삭제 전 로깅용)
         const attachments = await db.queryDatabase(
             'SELECT * FROM board_attachments WHERE id = ?',
             [id]
         );
-        
+
         if (attachments.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: '첨부파일을 찾을 수 없습니다.'
             });
         }
-        
+
         const attachment = attachments[0];
         const fileSize = attachment.file_size || 0;
-        
+
         // 🔥 사용자 DB ID 조회 (용량 감소용)
         const [user] = await db.queryDatabase(
             'SELECT id, centerID FROM Users WHERE userID = ?',
             [userId]
         );
-        
+
         // 삭제 실행
         const result = await deleteAttachment(id, userId, userRole);
-        
+
         // 🔥 파일 삭제 성공 시 사용량 감소
         if (user && fileSize > 0) {
             await decreaseUsage(user.id, user.centerID, fileSize, 'board');
             console.log(`📊 사용량 감소: -${formatBytes(fileSize)}`);
         }
-        
+
         // 게시글 첨부파일 개수 업데이트
         await updatePostAttachmentCount(attachment.post_id);
-        
+
         console.log('첨부파일 삭제 완료:', {
             attachmentId: id,
             filename: attachment.original_name,
             s3Key: attachment.stored_name,
             freedSpace: formatBytes(fileSize)
         });
-        
+
         res.json({
             success: true,
             message: `파일 '${attachment.original_name}'이(가) 삭제되었습니다.`,
             freedSpace: formatBytes(fileSize)
         });
-        
+
     } catch (error) {
         console.error('첨부파일 삭제 오류:', error);
-        
+
         let statusCode = 500;
         let errorMessage = '첨부파일 삭제 중 오류가 발생했습니다.';
-        
+
         if (error.message.includes('찾을 수 없습니다')) {
             statusCode = 404;
             errorMessage = '첨부파일을 찾을 수 없습니다.';
@@ -502,7 +502,7 @@ router.delete('/:id', authenticateUser, async (req, res) => {
             statusCode = 403;
             errorMessage = '첨부파일을 삭제할 권한이 없습니다.';
         }
-        
+
         res.status(statusCode).json({
             success: false,
             error: errorMessage
@@ -519,16 +519,16 @@ async function getS3FileMetadata(s3Key) {
     try {
         const { GetObjectCommand } = require('@aws-sdk/client-s3');
         const { s3Client, BUCKET_NAME } = require('../../lib_board/fileUpload');
-        
+
         const command = new GetObjectCommand({
             Bucket: BUCKET_NAME,
             Key: s3Key
         });
-        
+
         const response = await s3Client.send(command);
-        
+
         let originalName = s3Key.split('/').pop(); // 기본값
-        
+
         // 메타데이터에서 한글 파일명 복원
         if (response.Metadata && response.Metadata['original-name-utf8']) {
             try {
@@ -540,7 +540,7 @@ async function getS3FileMetadata(s3Key) {
                 console.warn('파일명 디코딩 실패:', decodeError);
             }
         }
-        
+
         return {
             originalName: originalName,
             fileSize: response.ContentLength || 0,
@@ -548,7 +548,7 @@ async function getS3FileMetadata(s3Key) {
             lastModified: response.LastModified,
             metadata: response.Metadata
         };
-        
+
     } catch (error) {
         console.error('S3 메타데이터 조회 오류:', error);
         return {
@@ -567,7 +567,7 @@ async function logUploadActivity(userId, clientIP, uploadedFiles, successFiles, 
         for (const file of uploadedFiles) {
             const isSuccess = successFiles.some(f => f.originalName === file.originalname);
             const fileErrors = errors.find(e => e.filename === file.originalname);
-            
+
             // 실제 구현에서는 board_upload_logs 테이블에 기록
             console.log('Upload Log:', {
                 userId,
@@ -593,15 +593,15 @@ async function updateDownloadCounter(attachmentId, userId, clientIP) {
             'UPDATE board_attachments SET download_count = download_count + 1 WHERE id = ?',
             [attachmentId]
         );
-        
+
         // 다운로드 로그 기록 (선택사항)
         // await db.queryDatabase(`
         //     INSERT INTO board_download_logs (attachment_id, user_id, ip_address, downloaded_at)
         //     VALUES (?, ?, ?, NOW())
         // `, [attachmentId, userId, clientIP]);
-        
+
         console.log(`다운로드 카운터 업데이트: attachment ${attachmentId}, user ${userId || 'anonymous'}`);
-        
+
     } catch (error) {
         console.error('다운로드 카운터 업데이트 오류:', error);
         // 카운터 업데이트 실패해도 다운로드는 진행
@@ -628,7 +628,7 @@ async function updatePostAttachmentCount(postId) {
                 )
             WHERE id = ?
         `, [postId, postId, postId]);
-        
+
     } catch (error) {
         console.error('첨부파일 개수 업데이트 오류:', error);
     }
