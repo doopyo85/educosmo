@@ -104,11 +104,10 @@ function groupByVolume(rows) {
 // 🔥 교사 자료 페이지 (Teacher! Sheet)
 router.get('/', requireTeacher, async (req, res) => {
     try {
-        const eduSpreadsheetId = process.env.SPREADSHEET_ID_EDU || process.env.SPREADSHEET_ID;
-
         // Fetch 'Teacher!' Sheet Data
         // Range A:P covers same structure as Education Video sheet
-        const teacherSheetData = await getSheetData('Teacher!', 'A:P', eduSpreadsheetId);
+        // 🔥 Fix: Combine sheet name and range, pass spreadsheetId as 2nd arg
+        const teacherSheetData = await getSheetData('Teacher!A:P');
 
         // Group Data
         // Teacher Request: "Show ALL data from Teacher sheet"

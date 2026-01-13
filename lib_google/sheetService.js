@@ -10,14 +10,14 @@ async function initGoogleSheets() {
     }
 }
 
-async function getSheetData(range) {
+async function getSheetData(range, customSpreadsheetId) {
     if (!sheets) {
         await initGoogleSheets();
     }
 
     try {
         const requestParams = {
-            spreadsheetId: config.GOOGLE_API.SPREADSHEET_ID,
+            spreadsheetId: customSpreadsheetId || config.GOOGLE_API.SPREADSHEET_ID,
             range: range,
         };
 
