@@ -19,7 +19,7 @@ services:
       # Mount host AWS credentials if available (optional, but good for local dev)
       # - ~/.aws:/root/.aws:ro
     ports:
-      - "8889:8888"
+      - "8000:8888"
     environment:
       - JUPYTER_PORT=8888
       - AWS_REGION=${AWS_REGION:-kr}

@@ -5,29 +5,14 @@ echo "=== Jupyter 시작: $(date) ==="
 # 작업 디렉토리
 cd /var/www/html
 
-# 가상환경 확인
-if [ ! -d "myenv" ]; then
-    echo "❌ ERROR: myenv 가상환경이 없습니다."
-    exit 1
-fi
-
-# Python 실행 권한 확인
-if [ ! -x "myenv/bin/python" ]; then
-    echo "🔧 Python 실행 권한 수정..."
-    chmod +x myenv/bin/python*
-fi
-
-# 가상환경 활성화
-source myenv/bin/activate
-
-# Jupyter 설치 확인 (Python 모듈로 체크)
-if ! python -m jupyter --version &> /dev/null; then
+# 시스템 Jupyter 확인
+if ! /usr/local/bin/python3.10 -m jupyter --version &> /dev/null; then
     echo "❌ ERROR: Jupyter가 설치되지 않았습니다."
     exit 1
 fi
 
-echo "✅ Python: $(which python)"
-echo "✅ Jupyter Version: $(python -m jupyter --version | head -1)"
+echo "✅ Python: /usr/local/bin/python3.10"
+echo "✅ Jupyter Version: $(/usr/local/bin/python3.10 -m jupyter --version | head -1)"
 
 # ✅ 한글 폰트 설정 파일 생성
 echo "🔧 한글 폰트 설정 파일 생성..."
@@ -59,8 +44,8 @@ echo "✅ 한글 폰트 설정 완료"
 # 노트북 디렉토리로 이동
 cd jupyter_notebooks
 
-# Jupyter 서버 실행 (가상환경 Python을 명시적으로 사용)
-exec /var/www/html/myenv/bin/python -m jupyter notebook \
+# Jupyter 서버 실행 (시스템 Python 사용)
+exec /usr/local/bin/python3.10 -m jupyter notebook \
   --ip=0.0.0.0 \
   --port=8000 \
   --no-browser \
