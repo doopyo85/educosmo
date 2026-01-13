@@ -815,6 +815,14 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
     console.error('COS problems JSON 파싱 오류:', e);
   }
 
+  // 🔥 URL 정규화: /COS/ -> /cos/, /ENT/ -> /ent/ 등
+  const normalizeUrl = (url) => {
+    if (!url) return '';
+    return url.replace(/\/([A-Z]+)\//g, (match, folder) => {
+      return '/' + folder.toLowerCase() + '/';
+    });
+  };
+
   // 사용자 정보
   const userID = req.session.userID || 'guest';
   const userRole = req.session.role || 'guest';
@@ -822,9 +830,9 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
   // 플랫폼별 에디터 URL 생성
   let editorUrl = '';
   if (platform === 'scratch') {
-    editorUrl = `/scratch/?project_file=${encodeURIComponent(projectUrl)}`;
+    editorUrl = `/scratch/?project_file=${encodeURIComponent(normalizeUrl(projectUrl))}`;
   } else if (platform === 'entry') {
-    editorUrl = `/entry_editor/?s3Url=${encodeURIComponent(projectUrl)}&userID=${userID}&role=${userRole}`;
+    editorUrl = `/entry_editor/?s3Url=${encodeURIComponent(normalizeUrl(projectUrl))}&userID=${userID}&role=${userRole}`;
   } else {
     return res.status(400).send('지원하지 않는 플랫폼입니다.');
   }
@@ -837,7 +845,7 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
     buttonType: buttonType || 'solution',
     problems: problemsData,
     editorUrl: editorUrl,
-    imgUrl: imgUrl || '',
+    imgUrl: normalizeUrl(imgUrl) || '',
     userID: userID,
     userRole: userRole
   });
