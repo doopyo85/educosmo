@@ -397,6 +397,12 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+
+            /* Fix Modal Close Button Overlap */
+            .modal-dialog {
+                margin-top: 70px;
+                /* Push down to clear header */
+            }
         }
     </style>
 </head>
@@ -696,34 +702,22 @@
                 }
 
                 // Render Images Carousel
+                // Render Images (Vertical Stack for Mobile Zoom/Scroll)
                 if (images && images.length > 0) {
-                    // ... (existing carousel logic if needed, simplified for now)
-                    let slideIndicators = '';
-                    let slideItems = '';
-
-                    images.forEach((img, index) => {
-                        slideIndicators += `<button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="${index}" class="${index === 0 ? 'active' : ''}" aria-current="true"></button>`;
-                        slideItems += `
-                        <div class="carousel-item ${index === 0 ? 'active' : ''}">
-                            <img src="${img}" class="d-block w-100 rounded" alt="Slide ${index}" referrerpolicy="no-referrer">
+                    const imageStack = images.map((img, index) => `
+                        <div class="mb-3">
+                            <img src="${img}" class="img-fluid rounded border border-2 border-light shadow-sm w-100" 
+                                 alt="Page ${index + 1}" 
+                                 loading="lazy"
+                                 referrerpolicy="no-referrer">
                         </div>
-                    `;
-                    });
+                    `).join('');
 
                     carouselContainer.innerHTML = `
-                    <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel" data-bs-touch="true">
-                        <div class="carousel-indicators">${slideIndicators}</div>
-                        <div class="carousel-inner">${slideItems}</div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon bg-dark rounded-circle" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
-                            <span class="carousel-control-next-icon bg-dark rounded-circle" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
-                    </div>
-                `;
+                        <div class="d-flex flex-column">
+                            ${imageStack}
+                        </div>
+                    `;
                 }
 
                 viewerModal.show();

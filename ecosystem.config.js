@@ -59,25 +59,6 @@ module.exports = {
         SERVICE_TYPE: 'appinventor'
       },
       kill_timeout: 10000
-    },
-    {
-      name: 'jupyter-server',
-      script: './jupyter_start_new.sh',
-      cwd: '/var/www/html',
-      instances: 1,
-      exec_mode: 'fork',
-      watch: false,
-      interpreter: '/bin/bash',
-      env: {
-        NODE_ENV: 'production',
-        PORT: 8000,
-        SERVICE_TYPE: 'jupyter',
-        JUPYTER_PORT: 8000
-      },
-      kill_timeout: 10000,
-      autorestart: true,
-      max_restarts: 5,
-      restart_delay: 5000
     }
   ]
 };
