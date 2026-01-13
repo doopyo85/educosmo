@@ -755,7 +755,9 @@ class EntFileManager {
                                         const isSound = ['mp3', 'wav'].includes(extension.toLowerCase());
                                         const assetType = isSound ? 'sound' : 'image';
                                         const folderPath = `${fileHash.substring(0, 2)}/${fileHash.substring(2, 4)}/${assetType}`;
-                                        picture.fileurl = `/temp/${folderPath}/${fileHash}.${extension}`;
+                                        // 🔥 사용자 세션 디렉토리 포함
+                                        const sessionSuffix = sessionID ? `_${sessionID}` : '';
+                                        picture.fileurl = `/temp/ent_files/users/${userID}${sessionSuffix}/${folderPath}/${fileHash}.${extension}`;
 
                                         console.log(`🔄 Windows경로→서버경로 변환 [${index}-${picIndex}]:`, {
                                             original: decodedUrl.substring(0, 50) + '...',
@@ -776,7 +778,9 @@ class EntFileManager {
                                 const filename = picture.filename;
                                 const imageType = picture.imageType || 'png';
                                 const folderPath = `${filename.substring(0, 2)}/${filename.substring(2, 4)}/image`;
-                                picture.fileurl = `/temp/${folderPath}/${filename}.${imageType}`;
+                                // 🔥 사용자 세션 디렉토리 포함
+                                const sessionSuffix = sessionID ? `_${sessionID}` : '';
+                                picture.fileurl = `/temp/ent_files/users/${userID}${sessionSuffix}/${folderPath}/${filename}.${imageType}`;
 
                                 console.log(`📸 이미지 경로 설정 [${index}-${picIndex}]:`, {
                                     filename: filename,
@@ -813,7 +817,9 @@ class EntFileManager {
                                         const soundHash = hashMatch[1];
                                         const extension = hashMatch[2];
                                         const folderPath = `${soundHash.substring(0, 2)}/${soundHash.substring(2, 4)}/sound`;
-                                        sound.fileurl = `/temp/${folderPath}/${soundHash}.${extension}`;
+                                        // 🔥 사용자 세션 디렉토리 포함
+                                        const sessionSuffix = sessionID ? `_${sessionID}` : '';
+                                        sound.fileurl = `/temp/ent_files/users/${userID}${sessionSuffix}/${folderPath}/${soundHash}.${extension}`;
                                         console.log(`🔊 사운드 Windows경로 변환 [${index}-${soundIndex}]:`, sound.fileurl);
                                     }
                                 }
@@ -849,7 +855,9 @@ class EntFileManager {
                                 const imageHash = hashMatch[1];
                                 const extension = hashMatch[2];
                                 const folderPath = `${imageHash.substring(0, 2)}/${imageHash.substring(2, 4)}/image`;
-                                obj.thumbnail = `/temp/${folderPath}/${imageHash}.${extension}`;
+                                // 🔥 사용자 세션 디렉토리 포함
+                                const sessionSuffix = sessionID ? `_${sessionID}` : '';
+                                obj.thumbnail = `/temp/ent_files/users/${userID}${sessionSuffix}/${folderPath}/${imageHash}.${extension}`;
                                 console.log(`🖼️ 썸네일 Windows경로 변환 [${index}]:`, obj.thumbnail);
                             }
                         }
