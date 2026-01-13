@@ -35,11 +35,21 @@ async function getSheetData(range) {
         config.S3.ASSET_URL = config.S3.ASSET_URL.replace(/\/$/, ''); // Trailing slash 제거 안전장치
 
         const legacyS3Url = 'https://kr.object.ncloudstorage.com/educodingnplaycontents';
+        const edgeUrl = 'https://onag54aw13447.edge.naverncp.com';
 
         return rows.map(row => {
             return row.map(cell => {
-                if (typeof cell === 'string' && cell.includes(legacyS3Url)) {
-                    return cell.split(legacyS3Url).join(config.S3.ASSET_URL);
+                if (typeof cell === 'string') {
+                    // Legacy NCP URL 변환
+                    if (cell.includes(legacyS3Url)) {
+                        return cell.split(legacyS3Url).join(config.S3.ASSET_URL);
+                    }
+                    // 🔥 Edge URL 경로 수정: /COS/ -> /cos/, /ENT/ -> /ent/ 등
+                    if (cell.includes(edgeUrl)) {
+                        return cell.replace(/\/([A-Z]+)\//g, (match, folder) => {
+                            return '/' + folder.toLowerCase() + '/';
+                        });
+                    }
                 }
                 return cell;
             });
