@@ -501,7 +501,7 @@ class ContentComponent extends Component {
       // pptUrl이 .md 파일인 경우, 해당 파일명을 그대로 사용
       if (currentMenuData.pptUrl && currentMenuData.pptUrl.endsWith('.md')) {
         const mdFileName = currentMenuData.pptUrl.split('/').pop();  //
-        problemUrl = `${window.CONFIG.S3_ASSET_URL}/DataAnalysis/${mdFileName}`;
+        problemUrl = `${window.CONFIG.S3_ASSET_URL}/Github_sync_contents/DataAnalysis/${mdFileName}`;
         console.log('ContentComponent: MD 파일 URL 사용:', problemUrl);
       } else {
         // 기본 HTML 파일 사용
