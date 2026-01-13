@@ -237,9 +237,9 @@ app.use((req, res, next) => {
 
   let imgSrcIndex = cspParts.findIndex(part => part.startsWith('img-src'));
   if (imgSrcIndex !== -1) {
-    cspParts[imgSrcIndex] += " data: blob: https://entry-cdn.pstatic.net https://kr.object.ncloudstorage.com";
+    cspParts[imgSrcIndex] += " data: blob: https://entry-cdn.pstatic.net https://kr.object.ncloudstorage.com https://codingnplay.co.kr https://cdn.imweb.me";
   } else {
-    cspParts.push(`img-src 'self' data: blob: https: https://entry-cdn.pstatic.net ${config.S3.ASSET_URL}`);
+    cspParts.push(`img-src 'self' data: blob: https: https://entry-cdn.pstatic.net ${config.S3.ASSET_URL} https://codingnplay.co.kr https://cdn.imweb.me`);
   }
 
   let fontSrcIndex = cspParts.findIndex(part => part.startsWith('font-src'));
