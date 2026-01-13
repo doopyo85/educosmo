@@ -90,6 +90,24 @@ const S3 = {
     }
 
     return convertedUrl;
+  },
+
+  // 🔥 NCP Object Storage SDK 설정
+  NCP: {
+    ENDPOINT: process.env.NCP_ENDPOINT || 'https://kr.object.ncloudstorage.com',
+    ACCESS_KEY: process.env.NCP_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID,
+    SECRET_KEY: process.env.NCP_SECRET_KEY || process.env.AWS_SECRET_ACCESS_KEY,
+    REGION: 'kr-standard',
+
+    // Jupyter 사용자 폴더 경로 생성
+    getUserPath: (userID) => {
+      return `users/${userID}/jupyter/`;
+    },
+
+    // Jupyter 노트북 파일 경로 생성
+    getNotebookPath: (userID, fileName) => {
+      return `users/${userID}/jupyter/${fileName}`;
+    }
   }
 };
 

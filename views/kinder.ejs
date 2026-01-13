@@ -492,7 +492,8 @@
                                                                 <% if (session.thumbnail) { %>
                                                                     <img src="<%= session.thumbnail %>"
                                                                         alt="<%= session.name %>" class="w-100"
-                                                                        style="aspect-ratio: 16/9; object-fit: cover;">
+                                                                        style="aspect-ratio: 16/9; object-fit: cover;"
+                                                                        referrerpolicy="no-referrer">
                                                                     <% } else { %>
                                                                         <div class="d-flex align-items-center justify-content-center bg-light"
                                                                             style="aspect-ratio: 16/9;">
@@ -624,7 +625,7 @@
                         slideIndicators += `<button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="${index}" class="${index === 0 ? 'active' : ''}" aria-current="true"></button>`;
                         slideItems += `
                         <div class="carousel-item ${index === 0 ? 'active' : ''}">
-                            <img src="${img}" class="d-block w-100 rounded" alt="Slide ${index}">
+                            <img src="${img}" class="d-block w-100 rounded" alt="Slide ${index}" referrerpolicy="no-referrer">
                         </div>
                     `;
                     });

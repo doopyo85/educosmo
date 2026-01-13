@@ -23,19 +23,18 @@ async function getSheetData(sheetName, range, spreadsheetId) {
 
 // 🔥 데이터 그룹화 헬퍼 함수
 // Adjusted for Single Sheet with Category Column at Index 0
+// 🔥 데이터 그룹화 헬퍼 함수
+// Adjusted for Schema:
+// [0]Page(kinder), [1]Category(Tab), [2]Group(Vol), [3]Title, [4]Topic, ...
+// [9]Thumbnail, [10]Video, [11...]Images
 function groupByVolume(rows) {
     const groups = {};
 
-    // Rows are already filtered, so we can iterate directly.
-    // If the first row is a header, filtering might have kept or removed it. 
-    // Usually 'filterByCategory' removes the header unless it matches the keyword.
-    // We assume incoming rows are data rows.
-
     rows.forEach(row => {
-        // [0]Category, [1]Group, [2]Title, [3]Topic, ..., [7]Video, [8]Thumb, [9...]Images
-        if (!row[1] || !row[2]) return;
+        // Validation: Must have Group(C) and Title(D)
+        if (!row[2] || !row[3]) return;
 
-        const groupName = row[1]; // Group (e.g., 1호)
+        const groupName = row[2]; // Group (Col C)
 
         if (!groups[groupName]) {
             groups[groupName] = {
@@ -44,15 +43,14 @@ function groupByVolume(rows) {
             };
         }
 
-        // J열(인덱스 9)이 URL, K열부터 이미지
-        // Images start from Index 10 (Column K) -> 10 to 16
-        const images = row.slice(10, 17).filter(img => img && img.trim().startsWith('http'));
+        // Images start from Col L (Index 11) -> 11 to 17
+        const images = row.slice(11, 18).filter(img => img && img.trim().startsWith('http'));
 
         groups[groupName].sessions.push({
-            name: row[2], // Title (C열)
-            topic: row[3], // Topic (D열)
-            videoUrl: row[9], // URL (J열, 인덱스 9)
-            thumbnail: row[8], // Thumb (I열, 인덱스 8)
+            name: row[3], // Title (Col D)
+            topic: row[4], // Topic (Col E)
+            thumbnail: row[9],  // Thumb (Col J)
+            videoUrl: row[10], // Video (Col K)
             images: images
         });
     });
@@ -65,56 +63,49 @@ router.get('/', async (req, res) => {
         // 🔥 병렬 데이터 호출
         const [
             kinderSheetData, // Teacher Board Data
-            allLessonData    // Education Video Cards Data
+            allRawData    // Education Video Cards Data (Raw)
         ] = await Promise.all([
             // Tab 1: Board Data - Sheet 'kinder'
             getSheetData('kinder', 'A:D', process.env.SPREADSHEET_ID),
 
             // Tab 2: All Lessons - Sheet 'Teacher'
-            getSheetData('Teacher', 'A:P', process.env.SPREADSHEET_ID)
+            getSheetData('Teacher', 'A:Q', process.env.SPREADSHEET_ID)
         ]);
 
-        // Helper to filter by Category column (Index 0)
-        const filterByCategory = (rows, categoryKeyword) => {
-            return rows.filter(row => row[0] && row[0].includes(categoryKeyword));
-        };
+        // 1. Filter by Page Column (Col A, Index 0) == 'kinder'
+        //    (User requested to exclude 'center' etc.)
+        const kinderLessonData = allRawData.filter(row => row[0] && row[0].trim().toLowerCase() === 'kinder');
 
-        // 🔥 Dynamic Category Extraction
-        // Extract unique categories from Column A (Index 0)
-        // We trim whitespace and ignore empty values.
-        const allCategories = [...new Set(allLessonData.map(row => row[0] ? row[0].trim() : '').filter(c => c !== ''))];
-
-        // You might want to sort them. 
-        // If specific order is needed, we might need a mapping or manual sort logic.
-        // For now, sorting alphabetically or native sheet order (by appearance) is best.
-        // Native sheet order approach:
+        // 2. Extract Categories from Col B (Index 1) for Tabs
         const categoriesInOrder = [];
         const seen = new Set();
-        allLessonData.forEach(row => {
-            const c = row[0] ? row[0].trim() : '';
-            if (c && !seen.has(c)) {
-                seen.add(c);
-                categoriesInOrder.push(c);
+        kinderLessonData.forEach(row => {
+            const cat = row[1] ? row[1].trim() : '';
+            if (cat && !seen.has(cat)) {
+                seen.add(cat);
+                categoriesInOrder.push(cat);
             }
         });
 
-        // Create Tabs structure
+        // 3. Helper to filter rows by Category (Col B)
+        const filterByCat = (rows, catKeyword) => {
+            return rows.filter(row => row[1] && row[1].trim() === catKeyword);
+        };
+
+        // 4. Create Tabs structure
         const lessonTabs = categoriesInOrder.map((cat, index) => {
             return {
-                id: `dynamic-tab-${index}`, // Unique ID for tab
+                id: `dynamic-tab-${index}`,
                 title: cat,
-                groups: groupByVolume(filterByCategory(allLessonData, cat))
+                groups: groupByVolume(filterByCat(kinderLessonData, cat))
             };
         });
 
-        // Process Board Data (New Structure from User Request)
-        // Expected Columns: [0]Category, [1]Group by, [2]주제(Title), [3]Download(URL)
-        // No explicit 'Board' column anymore. Filter by Category directly.
-
+        // Process Board Data (Preserved)
+        // ... (No changes to preschoolItems logic yet unless board sheet also changed)
         // Helper to parse content into array if it contains multiple items like "[A] [B]"
         const parseContent = (text) => {
             if (!text) return [];
-            // Matches "] [" or "][" or "]\n["
             let items = text.split(/\]\s*\[/);
             return items.map((item, index) => {
                 let str = item.trim();
@@ -128,19 +119,19 @@ router.get('/', async (req, res) => {
         const preschoolItems = kinderSheetData
             .filter(row => row[0] === '프리스쿨')
             .map(row => ({
-                type: row[1] || '',    // Group by
-                content: parseContent(row[2] || ''), // Title (Array)
+                type: row[1] || '',
+                content: parseContent(row[2] || ''),
                 links: ['다운로드'],
-                url: row[3] || ''      // URL
+                url: row[3] || ''
             }));
 
         const preschoolAIItems = kinderSheetData
             .filter(row => row[0] === '프리스쿨AI')
             .map(row => ({
-                type: row[1] || '',    // Group by
-                content: parseContent(row[2] || ''), // Title (Array)
+                type: row[1] || '',
+                content: parseContent(row[2] || ''),
                 links: ['다운로드'],
-                url: row[3] || ''      // URL
+                url: row[3] || ''
             }));
 
         const preschoolTitle = '프리스쿨';

@@ -119,10 +119,21 @@ app.use('/', express.static('./', {
     }
 }));
 
-// 🖼️ ENT 파일 이미지 정적 파일 서빙 (수정됨)
+// 🖼️ ENT 파일 이미지 정적 파일 서빙 - 사용자 세션 디렉토리 지원
+app.use('/temp/ent_files/users', express.static('/var/www/html/temp/ent_files/users', {
+    setHeaders: (res, filePath) => {
+        console.log(`🖼️ ENT 사용자 이미지 서빙: ${filePath}`);
+        res.set('Cache-Control', 'public, max-age=3600');
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        res.set('X-Image-Source', 'EntryJS-8070-UserSession');
+    }
+}));
+
+// 🖼️ ENT 파일 이미지 정적 파일 서빙 - current 디렉토리 (하위 호환성)
 app.use('/temp', express.static('/var/www/html/temp/ent_files/current', {
     setHeaders: (res, filePath) => {
-        console.log(`🖼️ ENT 이미지 서빙 요청: ${filePath}`);
+        console.log(`🖼️ ENT 이미지 서빙 (current): ${filePath}`);
         res.set('Cache-Control', 'public, max-age=3600');
         res.set('Access-Control-Allow-Origin', '*');
         res.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
@@ -163,7 +174,9 @@ app.use('/temp/*', (req, res, next) => {
     next();
 });
 
-console.log('✅ ENT 이미지 정적 파일 서빙 설정: /temp -> /var/www/html/temp/ent_files/current');
+console.log('✅ ENT 이미지 정적 파일 서빙 설정:');
+console.log('   - /temp/ent_files/users -> /var/www/html/temp/ent_files/users (사용자 세션)');
+console.log('   - /temp -> /var/www/html/temp/ent_files/current (하위 호환)');
 
 // npm 패키지 서빙
 app.use('/node_modules', express.static('./node_modules'));
