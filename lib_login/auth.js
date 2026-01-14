@@ -64,9 +64,23 @@ router.get('/login', (req, res) => {
       <div style="text-align: center;">
         <img src="${logoSrc}" alt="${logoAlt}" style="width: 80px; height: auto; margin-bottom: 20px;"/>
       </div>
-      
+
+      <!-- 공지사항 -->
+      <div style="background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="margin: 0 0 15px 0; color: #856404; font-size: 16px; font-weight: bold; text-align: center;">■ 공지안내 ■</h3>
+        <div style="color: #856404; font-size: 14px; line-height: 1.8;">
+          <p style="margin: 0 0 10px 0;">지난 10일 아마존 서버에서 IP 차단으로 인해 계정이 잠기는 문제가 발생하였습니다.</p>
+          <p style="margin: 0 0 10px 0;">현재 서버를 복구 중에 있어 일부 기능들이 오작동하고 있습니다.</p>
+          <p style="margin: 10px 0; padding: 10px; background-color: #fff; border-left: 4px solid #ffc107;">
+            <strong>현재 교사계정은 활성화되었으나,<br>
+            학생 계정은 다시 회원가입 또는 교사계정에서 생성해 주시기 바랍니다.</strong>
+          </p>
+          <p style="margin: 10px 0 0 0; text-align: center; font-size: 13px;">불편을 드려 대단히 죄송합니다.<br>감사합니다.</p>
+        </div>
+      </div>
+
       ${alertHTML}
-      
+
       <form id="loginForm">
         <input class="login" type="text" name="userID" placeholder="아이디" autocomplete="username" required>
         <input class="login" type="password" name="password" placeholder="비밀번호" autocomplete="current-password" required>
@@ -181,22 +195,14 @@ router.post('/login_process', async (req, res) => {
                     console.log(`[LOGIN] ❌ 비밀번호 불일치: ${userID}`);
                     return res.status(401).json({ success: false, error: '아이디 또는 비밀번호가 일치하지 않습니다.' });
                 }
+            } else {
+                // DB에 사용자가 없으면 로그인 거부
+                console.log(`[LOGIN] ❌ 사용자 없음: ${userID}`);
+                return res.status(401).json({ success: false, error: '아이디 또는 비밀번호가 일치하지 않습니다.' });
             }
         } catch (dbError) {
-            console.error('[LOGIN] DB 조회 오류 (임시 학생 권한으로 처리):', dbError.message);
-        }
-
-        // 🔥 DB에 사용자가 없으면 기본 학생 권한으로 로그인
-        if (!user) {
-            console.log(`[LOGIN] ⚠️ DB에 사용자 없음 - 학생 권한으로 로그인: ${userID}`);
-            user = {
-                id: 999999, // 임시 ID
-                userID: userID,
-                name: `${userID}`,
-                role: 'student', // 기본 권한: 학생
-                centerID: 1, // 기본 센터 ID
-                userType: 'student'
-            };
+            console.error('[LOGIN] DB 조회 오류:', dbError.message);
+            return res.status(500).json({ success: false, error: '로그인 처리 중 오류가 발생했습니다.' });
         }
 
         // 세션 데이터 설정
@@ -286,7 +292,7 @@ router.get('/register', async (req, res) => {
         const html = template.HTML(title, `
             <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">회원정보를 입력하세요</h2>
             <form id="registerForm">
-                <input class="login" type="text" name="userID" id="userID" placeholder="아이디 (공백 불가)" required pattern="\\S+" title="아이디에 공백을 포함할 수 없습니다">
+                <input class="login" type="text" name="userID" id="userID" placeholder="아이디" required>
                 <input class="login" type="password" name="password" placeholder="비밀번호" required>
                 <input class="login" type="email" name="email" placeholder="이메일">
                 <input class="login" type="text" name="name" placeholder="이름" required>
@@ -358,16 +364,6 @@ router.get('/register', async (req, res) => {
                 </div>
             </div>
             <script>
-                // 아이디 입력란 실시간 검증
-                document.getElementById('userID').addEventListener('input', function(event) {
-                    const userID = event.target.value;
-                    if (/\s/.test(userID)) {
-                        event.target.setCustomValidity('아이디에 공백을 포함할 수 없습니다.');
-                    } else {
-                        event.target.setCustomValidity('');
-                    }
-                });
-
                 document.getElementById('registerForm').addEventListener('submit', function(event) {
                     event.preventDefault();
 
@@ -378,12 +374,6 @@ router.get('/register', async (req, res) => {
 
                     const formData = new FormData(this);
                     const data = Object.fromEntries(formData.entries());
-
-                    // 최종 공백 검증
-                    if (/\s/.test(data.userID)) {
-                        alert('아이디에 공백을 포함할 수 없습니다.');
-                        return;
-                    }
 
                     fetch('/auth/register', {
                         method: 'POST',
@@ -439,17 +429,12 @@ router.post('/register', async (req, res) => {
     try {
         const { userID, password, email, name, phone, birthdate, role, centerID } = req.body;
 
-        // userID 유효성 검사 (공백 체크)
+        // userID 유효성 검사
         if (!userID || userID.trim() === '') {
             return res.status(400).json({ error: '아이디를 입력해주세요.' });
         }
 
-        // userID에 공백 포함 여부 검사
-        if (/\s/.test(userID)) {
-            return res.status(400).json({ error: '아이디에 공백을 포함할 수 없습니다.' });
-        }
-
-        // userID 중복 체크 추가
+        // userID 중복 체크
         const checkDuplicateQuery = 'SELECT id FROM Users WHERE userID = ?';
         const existingUser = await queryDatabase(checkDuplicateQuery, [userID]);
 
@@ -510,11 +495,6 @@ router.post('/api/check-userid', async (req, res) => {
             return res.json({ available: false, message: '아이디를 입력하세요' });
         }
 
-        // userID에 공백 포함 여부 검사
-        if (/\s/.test(userID)) {
-            return res.json({ available: false, message: '아이디에 공백을 포함할 수 없습니다' });
-        }
-
         const existingUser = await queryDatabase('SELECT id FROM Users WHERE userID = ?', [userID]);
 
         res.json({ available: existingUser.length === 0 });
@@ -571,11 +551,6 @@ router.post('/register-center', async (req, res) => {
         // 필수 필드 검증
         if (!userID || !password || !name || !email || !centerName || !role || !phone) {
             return res.status(400).json({ success: false, message: '모든 필수 항목을 입력해주세요' });
-        }
-
-        // userID에 공백 포함 여부 검사
-        if (/\s/.test(userID)) {
-            return res.status(400).json({ success: false, message: '아이디에 공백을 포함할 수 없습니다' });
         }
 
         // 휴대폰 인증 확인

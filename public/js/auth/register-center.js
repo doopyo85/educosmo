@@ -3,6 +3,7 @@ let currentStep = 1;
 let userIDChecked = false;
 let phoneVerified = false;
 let tempData = {};
+let lastCheckedUserID = ''; // 마지막으로 중복 확인한 아이디 저장
 
 // Alert 표시 함수
 function showAlert(message, type = 'info') {
@@ -57,12 +58,6 @@ document.getElementById('checkUserIDBtn').addEventListener('click', async functi
         return;
     }
 
-    if (/\s/.test(userID)) {
-        statusEl.textContent = '아이디에 공백을 포함할 수 없습니다';
-        statusEl.className = 'verification-status error';
-        return;
-    }
-
     if (userID.length < 4 || userID.length > 20) {
         statusEl.textContent = '아이디는 4~20자여야 합니다';
         statusEl.className = 'verification-status error';
@@ -82,10 +77,12 @@ document.getElementById('checkUserIDBtn').addEventListener('click', async functi
             statusEl.textContent = '✓ 사용 가능한 아이디입니다';
             statusEl.className = 'verification-status success';
             userIDChecked = true;
+            lastCheckedUserID = userID; // 중복 확인한 아이디 저장
         } else {
             statusEl.textContent = '✗ 이미 사용 중인 아이디입니다';
             statusEl.className = 'verification-status error';
             userIDChecked = false;
+            lastCheckedUserID = '';
         }
     } catch (error) {
         console.error('Error:', error);
@@ -94,17 +91,17 @@ document.getElementById('checkUserIDBtn').addEventListener('click', async functi
     }
 });
 
-// 아이디 입력 시 중복 확인 상태 초기화 및 공백 검증
+// 아이디 입력 시 중복 확인 상태 초기화
 document.getElementById('userID').addEventListener('input', function() {
-    userIDChecked = false;
     const statusEl = document.getElementById('userIDStatus');
+    const currentValue = this.value.trim();
 
-    if (/\s/.test(this.value)) {
-        statusEl.textContent = '아이디에 공백을 포함할 수 없습니다';
-        statusEl.className = 'verification-status error';
-    } else {
+    // 중복 확인한 아이디와 현재 입력값이 다를 때만 중복 확인 상태 초기화
+    if (currentValue !== lastCheckedUserID) {
+        userIDChecked = false;
         statusEl.textContent = '';
     }
+    // 같으면 중복 확인 상태 유지 (statusEl도 그대로 유지)
 });
 
 // 비밀번호 확인

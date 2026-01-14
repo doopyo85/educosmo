@@ -16,7 +16,8 @@
       "Bash(nslookup:*)",
       "Bash(netstat:*)",
       "Bash(pm2 status:*)",
-      "Bash(npx pm2 status)"
+      "Bash(npx pm2 status)",
+      "Bash(git reset:*)"
     ]
   }
 }

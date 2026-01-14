@@ -48,12 +48,24 @@ class ExtensionBridge {
       if (marker) this.isExtensionInstalled = true;
     }
 
+    /* 
     if (!this.isExtensionInstalled) {
       this.showInstallGuide();
       return false;
+    } 
+    */
+
+    // Fallback: 확장프로그램이 없으면 새 탭으로 열기 시도
+    if (!this.isExtensionInstalled) {
+      const targetUrl = options.openUrl || options.templateUrl;
+      if (targetUrl) {
+        console.log('NOTICE: Extension missing, opening URL directly:', targetUrl);
+        window.open(targetUrl, '_blank');
+        return true;
+      }
     }
 
-    const { platform, missionId, userId, missionTitle, templateUrl, openUrl } = options;
+    const { platform, missionId, userId, missionTitle, templateUrl, openUrl, problemImageUrl, grade, sample, problem } = options;
 
     // Validation
     if (!platform || !missionId || !userId) {
@@ -71,7 +83,11 @@ class ExtensionBridge {
           userId,
           missionTitle: missionTitle || `과제 ${missionId}`,
           templateUrl: templateUrl || null,
-          openUrl: openUrl || null
+          openUrl: openUrl || null,
+          problemImageUrl: problemImageUrl || null,  // COS 문제 이미지 URL
+          grade: grade || null,                      // COS 급수
+          sample: sample || null,                    // COS 샘플 번호
+          problem: problem || null                   // COS 문제 번호
         }
       });
       window.dispatchEvent(event);

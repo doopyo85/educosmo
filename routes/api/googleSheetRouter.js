@@ -20,7 +20,7 @@ function transformS3UrlToNCP(url) {
   // }
 
   if (awsS3Pattern.test(url)) {
-    const transformedUrl = url.replace(awsS3Pattern, config.S3.ASSET_URL + '/');
+    const transformedUrl = url.replace(awsS3Pattern, config.S3.DIRECT_URL + '/');
     console.log(`🔄 URL 변환: ${url.substring(0, 50)}... -> ${transformedUrl.substring(0, 50)}...`);
     return transformedUrl;
   }

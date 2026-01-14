@@ -898,12 +898,20 @@ class ProjectCardManager {
         const isCOS = project.category && project.category.toUpperCase().startsWith('COS');
 
         // COS용 버튼 (문제/정답/풀이)
-        // 문제 버튼은 이미지이므로 새 탭에서 열기
-        // 정답/풀이 버튼은 에디터 로드 + 이미지 팝업
+        // 문제 버튼은 이미지를 새 탭에서 열기
+        // 정답/풀이 버튼은 load-project 클래스로 기존 핸들러 사용 (1486줄)
         const cosButtons = isCOS ? `
             ${project.img ? `<button class="btn btn-info btn-sm" onclick="window.open('${project.img}', '_blank'); event.stopPropagation();">문제</button>` : ''}
-            ${project.answer ? this.createProjectButton('정답', project.answer, 'btn-success', project.img) : ''}
-            ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', project.img) : ''}
+            ${project.answer ? `<button class="btn btn-success btn-sm load-project"
+                                        data-url="${project.answer}"
+                                        data-img="${project.img || ''}"
+                                        data-project-name="${projectName}"
+                                        title="정답">정답</button>` : ''}
+            ${project.solution ? `<button class="btn btn-warning btn-sm load-project"
+                                          data-url="${project.solution}"
+                                          data-img="${project.img || ''}"
+                                          data-project-name="${projectName}"
+                                          title="풀이">풀이</button>` : ''}
         ` : '';
 
         // 🔥 Extension 연동 속성 - [기본] 버튼용 (data-action 제외, card_project.js에서 직접 처리)
@@ -985,12 +993,20 @@ class ProjectCardManager {
         const isCOS = project.category && project.category.toUpperCase().startsWith('COS');
 
         // COS용 버튼 (문제/정답/풀이)
-        // 문제 버튼은 이미지이므로 새 탭에서 열기
-        // 정답/풀이 버튼은 에디터 로드 + 이미지 팝업
+        // 문제 버튼은 이미지를 새 탭에서 열기
+        // 정답/풀이 버튼은 load-project 클래스로 기존 핸들러 사용 (1486줄)
         const cosButtons = isCOS ? `
             ${project.img ? `<button class="btn btn-info btn-sm" onclick="window.open('${project.img}', '_blank'); event.stopPropagation();">문제</button>` : ''}
-            ${project.answer ? this.createProjectButton('정답', project.answer, 'btn-success', project.img) : ''}
-            ${project.solution ? this.createProjectButton('풀이', project.solution, 'btn-warning', project.img) : ''}
+            ${project.answer ? `<button class="btn btn-success btn-sm load-project"
+                                        data-url="${project.answer}"
+                                        data-img="${project.img || ''}"
+                                        data-project-name="${projectName}"
+                                        title="정답">정답</button>` : ''}
+            ${project.solution ? `<button class="btn btn-warning btn-sm load-project"
+                                          data-url="${project.solution}"
+                                          data-img="${project.img || ''}"
+                                          data-project-name="${projectName}"
+                                          title="풀이">풀이</button>` : ''}
         ` : '';
 
         // CPE용 버튼 (기본/완성/확장)
@@ -1484,12 +1500,44 @@ class ProjectCardManager {
                 const card = e.target.closest('.project-card') || e.target.closest('.cos-td-btn');
                 const projectName = card?.querySelector('.project-card-title')?.textContent || 'COS 문제';
 
-                // 🔥 COS: data-img 속성이 있으면 분할 화면 에디터로 이동
+                // 🔥 COS: data-img 속성이 있으면 Extension으로 에디터 열기
                 const imgUrl = e.target.getAttribute('data-img');
                 if (imgUrl) {
-                    // COS 자격증 문제 - 분할 화면 에디터로 이동
-                    const cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
-                    window.open(cosEditorUrl, '_blank');
+                    // COS 자격증 문제 - 프로젝트명에서 급수/샘플/문제번호 파싱
+                    // 형식: "COS 1급 샘플1-01"
+                    const projectNameAttr = e.target.getAttribute('data-project-name');
+                    const match = (projectNameAttr || projectName).match(/COS\s*(\d)급\s*샘플(\d)-(\d+)/i);
+
+                    if (match && window.extensionBridge) {
+                        const [, grade, sample, problem] = match;
+                        const missionId = `cos-${grade}-${sample}-${problem}`;
+                        const missionTitle = `COS ${grade}급 샘플${sample}-${problem}번`;
+
+                        // Extension으로 에디터 열기 (문제 이미지 사이드바 포함)
+                        const openUrl = this.config.projectType === 'entry'
+                            ? `https://playentry.org/ws/new?type=normal&mode=block&lang=ko`
+                            : `https://scratch.mit.edu/projects/editor`;
+
+                        window.extensionBridge.openEditor({
+                            platform: this.config.projectType,
+                            missionId: missionId,
+                            userId: this.userID || 'guest',
+                            missionTitle: missionTitle,
+                            openUrl: openUrl,
+                            problemImageUrl: imgUrl,
+                            grade: grade,
+                            sample: sample,
+                            problem: problem
+                        });
+                    } else {
+                        // Extension 없으면 /cos-editor 페이지로 폴백
+                        let cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
+                        if (match) {
+                            const [, grade, sample, problem] = match;
+                            cosEditorUrl += `&grade=${grade}&sample=${sample}&problem=${problem}`;
+                        }
+                        window.open(cosEditorUrl, '_blank');
+                    }
 
                     // 학습 기록
                     try {
