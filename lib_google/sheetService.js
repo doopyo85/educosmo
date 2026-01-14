@@ -2,9 +2,29 @@ const { google } = require('googleapis');
 const config = require('../config');
 
 let sheets;
+let authClient; // Service Account 인증용
 
 async function initGoogleSheets() {
+    // 읽기 전용: API Key 사용
     sheets = google.sheets({ version: 'v4', auth: config.GOOGLE_API.KEY });
+
+    // 쓰기: Service Account 사용
+    try {
+        // Service Account JSON 키 파일 경로 또는 환경변수
+        if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+            const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+            authClient = new google.auth.GoogleAuth({
+                credentials: credentials,
+                scopes: ['https://www.googleapis.com/auth/spreadsheets']
+            });
+            console.log('✅ Google Sheets Service Account 인증 성공');
+        } else {
+            console.warn('⚠️ GOOGLE_SERVICE_ACCOUNT_KEY not found. Write operations will fail.');
+        }
+    } catch (error) {
+        console.error('❌ Service Account 인증 실패:', error.message);
+    }
+
     if (process.env.NODE_ENV === 'development') {
         console.log('Google Sheets API 초기화 성공');
     }
@@ -68,11 +88,19 @@ async function getSheetData(range, customSpreadsheetId) {
  * @returns {Promise<Object>} - 추가 결과
  */
 async function appendSheetData(range, values, customSpreadsheetId) {
-    if (!sheets) {
+    if (!sheets || !authClient) {
         await initGoogleSheets();
     }
 
+    if (!authClient) {
+        throw new Error('Google Service Account 인증이 필요합니다. GOOGLE_SERVICE_ACCOUNT_KEY 환경변수를 설정하세요.');
+    }
+
     try {
+        // Service Account로 인증된 Sheets 클라이언트 생성
+        const auth = await authClient.getClient();
+        const sheetsWithAuth = google.sheets({ version: 'v4', auth });
+
         const requestParams = {
             spreadsheetId: customSpreadsheetId || config.GOOGLE_API.SPREADSHEET_ID,
             range: range,
@@ -83,7 +111,7 @@ async function appendSheetData(range, values, customSpreadsheetId) {
             }
         };
 
-        const response = await sheets.spreadsheets.values.append(requestParams);
+        const response = await sheetsWithAuth.spreadsheets.values.append(requestParams);
 
         console.log('✅ Google Sheets 데이터 추가 성공:', response.data);
 
@@ -95,6 +123,7 @@ async function appendSheetData(range, values, customSpreadsheetId) {
 
     } catch (error) {
         console.error(`스프레드시트 데이터 추가 오류 (${range}):`, error.message);
+        console.error('Full error:', error);
         throw error;
     }
 }
