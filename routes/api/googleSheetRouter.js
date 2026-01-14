@@ -14,10 +14,10 @@ function transformS3UrlToNCP(url) {
   //  -> https://onag54aw13447.edge.naverncp.com/...
   const awsS3Pattern = /https?:\/\/educodingnplaycontents\.s3\.amazonaws\.com\//gi;
 
-  // 🔥 .sb2 파일은 NCP에 없으므로 (CloudFront/S3 원본 사용) 변환하지 않음
-  if (url.toLowerCase().endsWith('.sb2')) {
-    return url;
-  }
+  // 🔥 .sb2 파일도 NCP URL로 변환 허용 (기존에는 제외했었음)
+  // if (url.toLowerCase().endsWith('.sb2')) {
+  //   return url;
+  // }
 
   if (awsS3Pattern.test(url)) {
     const transformedUrl = url.replace(awsS3Pattern, config.S3.ASSET_URL + '/');

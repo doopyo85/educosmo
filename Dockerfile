@@ -3,14 +3,13 @@ FROM python:3.10-slim
 
 # Install system dependencies
 # - s3fs, fuse: For S3 mounting
-# - fonts-nanum, fonts-nanum-coding, fonts-noto-cjk: For Korean font support
-# - graphviz, libgl1-mesa-glx: For visualization and opencv
+# - fonts-nanum, fonts-noto-cjk: For Korean font support
+# - graphviz, libgl1: For visualization and opencv
 # - build-essential, git: For installing some python packages
 RUN apt-get update && apt-get install -y \
     s3fs \
     fuse \
     fonts-nanum \
-    fonts-nanum-coding \
     fonts-noto-cjk \
     fontconfig \
     fonts-dejavu \
@@ -20,7 +19,7 @@ RUN apt-get update && apt-get install -y \
     procps \
     vim \
     graphviz \
-    libgl1-mesa-glx \
+    libgl1 \
     && rm -rf /var/lib/apt/lists/* \
     && fc-cache -f -v
 

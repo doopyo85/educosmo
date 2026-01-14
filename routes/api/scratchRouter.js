@@ -154,7 +154,7 @@ router.post('/save-project', requireAuth, async (req, res) => {
                 ContentType: 'application/x-scratch'
             }));
 
-            const s3Url = `https://${S3_BUCKET}.s3.${config.S3.REGION}.amazonaws.com/${s3Key}`;
+            const s3Url = `${config.S3.DIRECT_URL}/${s3Key}`;
 
             // ProjectSubmissions만 저장 (용량 미산정)
             const autosaveResult = await parallelSave.saveAutosaveOnly({
@@ -211,14 +211,14 @@ router.post('/save-project', requireAuth, async (req, res) => {
                     ContentType: 'image/png'
                 }));
 
-                thumbnailUrl = `https://${S3_BUCKET}.s3.${config.S3.REGION}.amazonaws.com/${thumbnailKey}`;
+                thumbnailUrl = `${config.S3.DIRECT_URL}/${thumbnailKey}`;
                 console.log(`썸네일 저장 완료: ${thumbnailKey}`);
             } catch (thumbError) {
                 console.error('썸네일 저장 실패 (무시하고 계속):', thumbError.message);
             }
         }
 
-        const s3Url = `https://${S3_BUCKET}.s3.${config.S3.REGION}.amazonaws.com/${s3Key}`;
+        const s3Url = `${config.S3.DIRECT_URL}/${s3Key}`;
 
         // 🔥 병렬 저장: UserFiles + ProjectSubmissions 동시 INSERT
         const saveResult = await parallelSave.saveProjectParallel({
@@ -357,7 +357,7 @@ router.put('/save-project/:fileId', requireAuth, async (req, res) => {
                     ContentType: 'image/png'
                 }));
 
-                thumbnailUrl = `https://${S3_BUCKET}.s3.${config.S3.REGION}.amazonaws.com/${thumbnailKey}`;
+                thumbnailUrl = `${config.S3.DIRECT_URL}/${thumbnailKey}`;
                 console.log(`썸네일 업데이트 완료: ${thumbnailKey}`);
             } catch (thumbError) {
                 console.error('썸네일 업데이트 실패 (무시하고 계속):', thumbError.message);
@@ -399,7 +399,7 @@ router.put('/save-project/:fileId', requireAuth, async (req, res) => {
             // ProjectSubmissions에 매칭 레코드가 없는 경우 (레거시 데이터)
             // UserFiles만 업데이트 + 용량 조정
             const { increaseUsage, decreaseUsage } = require('../../lib_storage/quotaChecker');
-            
+
             if (sizeDiff > 0) {
                 await increaseUsage(user.id, user.centerID, sizeDiff, 'scratch');
             } else if (sizeDiff < 0) {
@@ -609,7 +609,7 @@ router.delete('/project/:fileId', requireAuth, async (req, res) => {
                 const thumbnailMatch = file.stored_name.match(/\/([^/]+)\.sb3$/);
                 const projectId = thumbnailMatch ? thumbnailMatch[1] : fileId;
                 const thumbnailKey = `${S3_THUMBNAIL_PATH}/${encodeURIComponent(userID)}/${projectId}.png`;
-                
+
                 await s3Client.send(new DeleteObjectCommand({
                     Bucket: S3_BUCKET,
                     Key: thumbnailKey
@@ -799,7 +799,7 @@ router.put('/share/:fileId', requireAuth, async (req, res) => {
             // 공유 시: gallery_projects에 INSERT 또는 UPDATE
             const projectTitle = file.original_name.replace(/\.sb3$/i, '');
             const embedUrl = `/scratch/?project_file=${encodeURIComponent(file.s3_url)}&mode=player&embed=1`;
-            
+
             // 기존 레코드 확인 (UserFiles.id를 submission_id로 활용)
             const [existingGallery] = await db.queryDatabase(
                 `SELECT id FROM gallery_projects WHERE user_id = ? AND platform = 'scratch' AND s3_url = ?`,
@@ -968,7 +968,7 @@ router.post('/gallery/:fileId/view', async (req, res) => {
 router.get('/gallery/users', async (req, res) => {
     try {
         const { category } = req.query;
-        
+
         let categoryFilter = "uf.file_category IN ('scratch', 'entry', 'python')";
         if (category) {
             categoryFilter = 'uf.file_category = ?';
@@ -1031,7 +1031,7 @@ router.get('/gallery/user/:userId', async (req, res) => {
 
         let categoryFilter = "uf.file_category IN ('scratch', 'entry', 'python')";
         let params = [targetUser.id];
-        
+
         if (category) {
             categoryFilter = 'uf.file_category = ?';
             params.push(category);
