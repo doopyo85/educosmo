@@ -115,10 +115,11 @@ async function getOrCreateNotebookFromS3(userID) {
 }
 
 /**
- * 🔥 사용자별 디렉토리에 노트북 저장 (단순화)
+ * 🔥 사용자별 디렉토리에 노트북 저장 (S3 구조 매칭)
  */
 async function saveNotebookToUserDir(userID, filename, content) {
-    const userDir = path.join(NOTEBOOKS_DIR, userID);
+    // S3 구조와 동일하게: users/{userID}/jupyter/
+    const userDir = path.join(NOTEBOOKS_DIR, 'users', userID, 'jupyter');
     const filePath = path.join(userDir, filename);
 
     // 디렉토리 생성
@@ -133,15 +134,16 @@ async function saveNotebookToUserDir(userID, filename, content) {
     return {
         userDir: userDir,
         filePath: filePath,
-        relativePath: `${userID}/${filename}`
+        relativePath: `users/${userID}/jupyter/${filename}`
     };
 }
 
 /**
- * 🔥 사용자 디렉토리의 노트북을 S3에 업로드 (단순화)
+ * 🔥 사용자 디렉토리의 노트북을 S3에 업로드 (S3 구조 매칭)
  */
 async function uploadNotebookToS3(userID, filename, s3Key) {
-    const filePath = path.join(NOTEBOOKS_DIR, userID, filename);
+    // S3 구조와 동일한 로컬 경로: users/{userID}/jupyter/
+    const filePath = path.join(NOTEBOOKS_DIR, 'users', userID, 'jupyter', filename);
 
     try {
         // 로컬 파일 읽기
@@ -167,10 +169,11 @@ async function uploadNotebookToS3(userID, filename, s3Key) {
 }
 
 /**
- * 🔥 사용자 디렉토리 초기화 (필요시 사용)
+ * 🔥 사용자 디렉토리 초기화 (S3 구조 매칭)
  */
 async function ensureUserDirectory(userID) {
-    const userDir = path.join(NOTEBOOKS_DIR, userID);
+    // S3 구조와 동일하게: users/{userID}/jupyter/
+    const userDir = path.join(NOTEBOOKS_DIR, 'users', userID, 'jupyter');
     try {
         await fs.mkdir(userDir, { recursive: true });
         console.log(`📁 사용자 디렉토리 생성/확인: ${userDir}`);

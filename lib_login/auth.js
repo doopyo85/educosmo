@@ -66,7 +66,10 @@ router.get('/login', (req, res) => {
       </div>
 
       <!-- 공지사항 (포스트잇 스타일) -->
-      <div style="position: fixed; top: 30px; right: 30px; width: 320px; background-color: #fff740; padding: 25px 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); transform: rotate(1deg); z-index: 9999; font-family: sans-serif; color: #333;">
+      <div style="position: fixed; top: 50%; right: 10%; width: 320px; background-color: #fff740; padding: 25px 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); transform: translateY(-50%) rotate(1deg); z-index: 9999; font-family: sans-serif; color: #333;">
+        <!-- 코딩너구리 이미지 -->
+        <img src="/resource/sorry.webp" alt="죄송합니다" style="position: absolute; top: -60px; right: -20px; width: 100px; transform: rotate(10deg); z-index: 10000;">
+        
         <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 120px; height: 35px; background-color: rgba(255, 255, 255, 0.3); box-shadow: 0 1px 2px rgba(0,0,0,0.1);"></div>
         <h3 style="margin: 0 0 15px 0; font-size: 18px; font-weight: bold; text-align: center; border-bottom: 2px dashed #d1c936; padding-bottom: 10px;">📌 공지안내</h3>
         <div style="font-size: 14px; line-height: 1.6;">
