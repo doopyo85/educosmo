@@ -528,4 +528,78 @@ router.post('/logs/track', async (req, res) => {
     }
 });
 
+// ==========================================
+// 🔥 Google Sheets: Add Project
+// ==========================================
+router.post('/sheets/add-project', requireDbUser, async (req, res) => {
+    // 명시적으로 JSON 응답 설정
+    res.setHeader('Content-Type', 'application/json');
+
+    try {
+        const { category, title, description, url, tags } = req.body;
+
+        // 입력 검증
+        if (!category || !title || !url) {
+            return res.status(400).json({
+                success: false,
+                error: 'category, title, url are required'
+            });
+        }
+
+        // 로그인한 사용자 정보
+        const userName = req.user.nickname || req.user.name || '익명';
+        console.log(`📝 [Pong2] 프로젝트 추가 요청 - User: ${userName}, Category: ${category}, Title: ${title}`);
+
+        // 1. 썸네일 자동 추출 (에러가 발생해도 계속 진행)
+        let thumbnailUrl = 'https://kr.object.ncloudstorage.com/educodingnplaycontents/thumbs/default.png';
+
+        try {
+            const { extractThumbnail } = require('../../lib_pong/thumbnailExtractor');
+            const extracted = await extractThumbnail(url);
+            if (extracted) {
+                thumbnailUrl = extracted;
+            }
+            console.log(`🖼️ Thumbnail: ${thumbnailUrl}`);
+        } catch (thumbError) {
+            console.error('⚠️ Thumbnail extraction failed, using default:', thumbError.message);
+        }
+
+        // 2. 구글 시트에 데이터 추가
+        // pong! 시트의 컬럼: A=카테고리, B=콘텐츠명, C=한줄요약, D=stageURL, E=imgURL, F=Tag
+        const { appendSheetData } = require('../../lib_google/sheetService');
+
+        const rowData = [
+            [
+                category,           // A: 카테고리
+                title,              // B: 콘텐츠명
+                description || '',  // C: 한줄요약
+                url,                // D: stageURL
+                thumbnailUrl,       // E: imgURL
+                tags || ''          // F: Tag
+            ]
+        ];
+
+        // pong! 시트에 추가 (시트 ID는 config에서 가져옴)
+        const result = await appendSheetData('pong!!A:F', rowData);
+
+        console.log(`✅ [Pong2] 프로젝트가 구글시트에 추가되었습니다.`);
+
+        return res.json({
+            success: true,
+            message: '프로젝트가 성공적으로 추가되었습니다.',
+            thumbnailUrl: thumbnailUrl,
+            updatedRange: result.updatedRange
+        });
+
+    } catch (error) {
+        console.error('❌ [Pong2] Add Project Error:', error);
+        console.error('Error stack:', error.stack);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to add project',
+            message: error.message
+        });
+    }
+});
+
 module.exports = router;

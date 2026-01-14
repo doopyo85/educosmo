@@ -2,34 +2,41 @@ const db = require('../lib_login/db');
 
 async function checkTables() {
     try {
-        console.log('--- Checking Database Tables ---');
+        console.log('Using app database configuration...');
 
-        // 1. List all tables
-        const tables = await db.queryDatabase('SHOW TABLES');
-        const tableNames = tables.map(t => Object.values(t)[0]);
-        console.log('Tables found:', tableNames);
+        const tablesToCheck = ['ContentMap', 'LearningLogs', 'Users', 'UserStorageUsage'];
 
-        // 2. Check specific tables
-        const targetTables = ['Users', 'LearningLogs', 'ContentMap'];
+        for (const table of tablesToCheck) {
+            try {
+                // Using the specific queryDatabase function from db module
+                const rows = await db.queryDatabase(`SELECT COUNT(*) as count FROM ${table}`);
 
-        for (const table of targetTables) {
-            if (tableNames.includes(table)) {
-                const count = await db.queryDatabase(`SELECT COUNT(*) as count FROM ${table}`);
-                console.log(`Table [${table}]: ${count[0].count} rows`);
+                if (rows && rows.length > 0) {
+                    console.log(`✅ Table '${table}' exists. Row count: ${rows[0].count}`);
 
-                if (table === 'ContentMap' && count[0].count > 0) {
-                    const sample = await db.queryDatabase(`SELECT * FROM ${table} LIMIT 5`);
-                    console.log(`[${table}] Sample Data:`, sample);
+                    if (table === 'ContentMap' && rows[0].count > 0) {
+                        const sample = await db.queryDatabase(`SELECT * FROM ContentMap LIMIT 1`);
+                        console.log('   Sample ContentMap row:', sample[0]);
+                    }
+                } else {
+                    console.log(`❓ Table '${table}' returned no rows or unexpected format.`);
                 }
-            } else {
-                console.log(`❌ Table [${table}] NOT FOUND!`);
+
+            } catch (err) {
+                // Determine if it is a missing table error
+                if (err.message && err.message.includes("doesn't exist")) {
+                    console.error(`❌ Table '${table}' DOES NOT EXIST.`);
+                } else {
+                    console.error(`⚠️ Error checking '${table}':`, err.message);
+                }
             }
         }
 
     } catch (error) {
-        console.error('Error checking database:', error);
+        console.error('Script execution failed:', error);
     } finally {
-        process.exit();
+        // We might need to force exit since db pool might keep event loop open
+        setTimeout(() => process.exit(0), 1000);
     }
 }
 

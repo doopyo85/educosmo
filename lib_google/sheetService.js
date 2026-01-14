@@ -60,4 +60,43 @@ async function getSheetData(range, customSpreadsheetId) {
     }
 }
 
-module.exports = { getSheetData, initGoogleSheets };
+/**
+ * 구글 시트에 데이터 추가 (Append)
+ * @param {string} range - 시트 범위 (예: 'pong!!A:F')
+ * @param {Array<Array>} values - 추가할 데이터 (2차원 배열)
+ * @param {string} customSpreadsheetId - 선택적 스프레드시트 ID
+ * @returns {Promise<Object>} - 추가 결과
+ */
+async function appendSheetData(range, values, customSpreadsheetId) {
+    if (!sheets) {
+        await initGoogleSheets();
+    }
+
+    try {
+        const requestParams = {
+            spreadsheetId: customSpreadsheetId || config.GOOGLE_API.SPREADSHEET_ID,
+            range: range,
+            valueInputOption: 'RAW', // RAW = 수식 해석 안함, USER_ENTERED = 수식 해석
+            insertDataOption: 'INSERT_ROWS', // 새 행으로 추가
+            resource: {
+                values: values
+            }
+        };
+
+        const response = await sheets.spreadsheets.values.append(requestParams);
+
+        console.log('✅ Google Sheets 데이터 추가 성공:', response.data);
+
+        return {
+            success: true,
+            updatedRange: response.data.updates.updatedRange,
+            updatedRows: response.data.updates.updatedRows
+        };
+
+    } catch (error) {
+        console.error(`스프레드시트 데이터 추가 오류 (${range}):`, error.message);
+        throw error;
+    }
+}
+
+module.exports = { getSheetData, initGoogleSheets, appendSheetData };
