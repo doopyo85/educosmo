@@ -3,12 +3,15 @@ FROM python:3.10-slim
 
 # Install system dependencies
 # - s3fs, fuse: For S3 mounting
-# - fonts-nanum: For Korean font support in matplotlib
+# - fonts-nanum, fonts-nanum-coding, fonts-noto-cjk: For Korean font support
+# - graphviz, libgl1-mesa-glx: For visualization and opencv
 # - build-essential, git: For installing some python packages
 RUN apt-get update && apt-get install -y \
     s3fs \
     fuse \
     fonts-nanum \
+    fonts-nanum-coding \
+    fonts-noto-cjk \
     fontconfig \
     fonts-dejavu \
     build-essential \
@@ -16,6 +19,8 @@ RUN apt-get update && apt-get install -y \
     git \
     procps \
     vim \
+    graphviz \
+    libgl1-mesa-glx \
     && rm -rf /var/lib/apt/lists/* \
     && fc-cache -f -v
 
@@ -26,6 +31,12 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # Matplotlib Configuration
 ENV MPLCONFIGDIR=/etc/matplotlib
 COPY matplotlibrc /etc/matplotlib/matplotlibrc
+
+# Create a configuration file for matplotlib to use NanumGothic by default
+# This helps avoid runtime configuration issues for some plots
+RUN mkdir -p /root/.config/matplotlib
+RUN echo "font.family : NanumGothic" > /root/.config/matplotlib/matplotlibrc
+RUN echo "axes.unicode_minus : False" >> /root/.config/matplotlib/matplotlibrc
 
 # Font Configuration (Alias Malgun Gothic -> NanumGothic)
 COPY local.conf /etc/fonts/local.conf

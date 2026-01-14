@@ -17,3 +17,9 @@ ydata-profiling
 sweetviz
 autoviz
 dtale
+streamlit
+joblib
+psutil
+memory_profiler
+nest_asyncio
+flask
