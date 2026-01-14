@@ -101,8 +101,8 @@ function groupByVolume(rows) {
     return Object.values(groups);
 }
 
-// 🔥 교사 자료 페이지 (Teacher! Sheet)
-router.get('/', requireTeacher, async (req, res) => {
+// 🔥 교사 자료 페이지 (Teacher! Sheet) -> /class-materials 로 이동
+router.get('/class-materials', requireTeacher, async (req, res) => {
     try {
         // Fetch 'Teacher!' Sheet Data
         // Range A:P covers same structure as Education Video sheet
@@ -700,15 +700,7 @@ router.get('/student-management/attendance', requireTeacher, async (req, res) =>
     });
 });
 
-// 수업 자료 (Coming Soon)
-router.get('/class-materials', requireTeacher, (req, res) => {
-    res.render('teacher/student-management', {
-        userID: req.session.userID,
-        role: req.session.role,
-        centerID: req.session.centerID,
-        currentView: 'class-materials'
-    });
-});
+
 
 // 진로 진학 (Coming Soon)
 router.get('/career-info', requireTeacher, (req, res) => {
