@@ -55,15 +55,15 @@ class ExtensionBridge {
     } 
     */
 
-    // Fallback: 확장프로그램이 없으면 새 탭으로 열기 시도
-    if (!this.isExtensionInstalled) {
-      const targetUrl = options.openUrl || options.templateUrl;
-      if (targetUrl) {
-        console.log('NOTICE: Extension missing, opening URL directly:', targetUrl);
-        window.open(targetUrl, '_blank');
-        return true;
-      }
-    }
+    // Fallback: 확장프로그램이 없으면 새 탭으로 열기 시도 (COS 기능을 위해 비활성화)
+    // if (!this.isExtensionInstalled) {
+    //   const targetUrl = options.openUrl || options.templateUrl;
+    //   if (targetUrl) {
+    //     console.log('NOTICE: Extension approach prioritized. Fallback skipped.');
+    //     // window.open(targetUrl, '_blank');
+    //     // return true;
+    //   }
+    // }
 
     const { platform, missionId, userId, missionTitle, templateUrl, openUrl, problemImageUrl, grade, sample, problem } = options;
 
