@@ -66,7 +66,10 @@ router.get('/login', (req, res) => {
       </div>
 
       <!-- 공지사항 (포스트잇 스타일) -->
-      <div style="position: fixed; top: 50%; right: 10%; width: 320px; background-color: #fff740; padding: 25px 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); transform: translateY(-50%) rotate(1deg); z-index: 9999; font-family: sans-serif; color: #333;">
+      <div id="sticky-notice" style="position: fixed; top: 50%; right: 10%; width: 320px; background-color: #fff740; padding: 25px 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); transform: translateY(-50%) rotate(1deg); z-index: 9999; font-family: sans-serif; color: #333;">
+        <!-- 닫기 버튼 -->
+        <div onclick="document.getElementById('sticky-notice').style.display='none'" style="position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 24px; font-weight: bold; color: #333; z-index: 10001;" aria-label="Close notice">&times;</div>
+
         <!-- 코딩너구리 이미지 -->
         <img src="/resource/sorry.webp" alt="죄송합니다" style="position: absolute; top: -60px; right: -20px; width: 100px; transform: rotate(10deg); z-index: 10000;">
         
