@@ -238,7 +238,7 @@ class JupyterComponent extends Component {
        }
    }
 
-   // 🔥 S3에서 노트북 로드 (NCP Object Storage 통합)
+   // 🔥 S3에서 노트북 로드 (단순화 - 사용자 디렉토리 기반)
    async createAndLoadBlankNotebook() {
        try {
            console.log('📥 S3에서 노트북 로드 시도...', this.state.userID);
@@ -258,10 +258,10 @@ class JupyterComponent extends Component {
                const result = await response.json();
                console.log('✅ 노트북 로드 성공:', result);
 
-               // S3 세션 정보 저장
-               this.state.sessionID = result.sessionID;
+               // 사용자 노트북 정보 저장 (sessionID 제거)
                this.state.s3Key = result.s3Key;
                this.state.currentNotebook = result.notebook;
+               this.state.localPath = result.localPath;
 
                // Jupyter 노트북으로 iframe 이동
                if (result.success && result.notebookUrl) {
@@ -306,10 +306,10 @@ class JupyterComponent extends Component {
        console.log('🔄 자동 저장 타이머 시작 (5분 간격)');
    }
 
-   // 노트북 저장 (S3에 업로드)
+   // 노트북 저장 (S3에 업로드) - 단순화
    async saveNotebook() {
        try {
-           if (!this.state.sessionID || !this.state.userID || !this.state.currentNotebook) {
+           if (!this.state.userID || !this.state.currentNotebook) {
                console.warn('저장 정보가 없습니다. 저장을 건너뜁니다.');
                return false;
            }
@@ -323,7 +323,6 @@ class JupyterComponent extends Component {
                    'Content-Type': 'application/json',
                },
                body: JSON.stringify({
-                   sessionID: this.state.sessionID,
                    userID: this.state.userID,
                    filename: this.state.currentNotebook
                })
@@ -345,14 +344,10 @@ class JupyterComponent extends Component {
        }
    }
 
-   // 세션 정리
-   async cleanupSession() {
+   // 🔥 정리 작업 (단순화 - 타이머만 중지)
+   cleanup() {
        try {
-           if (!this.state.sessionID) {
-               return;
-           }
-
-           console.log('🗑️ 세션 정리 중...');
+           console.log('🗑️ Jupyter 정리 중...');
 
            // 자동 저장 타이머 중지
            if (this.autoSaveTimer) {
@@ -360,18 +355,10 @@ class JupyterComponent extends Component {
                this.autoSaveTimer = null;
            }
 
-           // 서버에 세션 정리 요청
-           const response = await fetch(`/api/jupyter/session/${this.state.sessionID}`, {
-               method: 'DELETE',
-               credentials: 'include'
-           });
-
-           if (response.ok) {
-               console.log('✅ 세션 정리 완료');
-           }
+           console.log('✅ Jupyter 정리 완료');
 
        } catch (error) {
-           console.error('❌ 세션 정리 오류:', error);
+           console.error('❌ Jupyter 정리 오류:', error);
        }
    }
 
@@ -493,14 +480,10 @@ class JupyterComponent extends Component {
        super.deactivate();
        this.state.active = false;
 
-       // 🔥 세션 정리 (마지막 저장 + 임시 파일 삭제)
-       if (this.state.sessionID) {
-           // 마지막 저장
-           this.saveNotebook().finally(() => {
-               // 세션 정리
-               this.cleanupSession();
-           });
-       }
+       // 🔥 마지막 저장 후 정리
+       this.saveNotebook().finally(() => {
+           this.cleanup();
+       });
 
        if (this.elements.container) {
            this.elements.container.classList.add('component-hidden');

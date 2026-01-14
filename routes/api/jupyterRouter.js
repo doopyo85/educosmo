@@ -11,7 +11,6 @@ const JUPYTER_HOST = process.env.JUPYTER_HOST || 'localhost';
 const JUPYTER_PORT = process.env.JUPYTER_PORT || 8889;
 const JUPYTER_URL = `http://${JUPYTER_HOST}:${JUPYTER_PORT}`;
 const NOTEBOOKS_DIR = path.join(__dirname, '../../jupyter_notebooks');
-const SESSIONS_DIR = path.join(NOTEBOOKS_DIR, 'sessions');
 
 // S3 Manager 인스턴스
 const S3Manager = require('../../lib_storage/s3Manager');
@@ -116,33 +115,33 @@ async function getOrCreateNotebookFromS3(userID) {
 }
 
 /**
- * 세션별 임시 디렉토리에 노트북 저장
+ * 🔥 사용자별 디렉토리에 노트북 저장 (단순화)
  */
-async function saveNotebookToSession(sessionID, filename, content) {
-    const sessionDir = path.join(SESSIONS_DIR, sessionID);
-    const filePath = path.join(sessionDir, filename);
+async function saveNotebookToUserDir(userID, filename, content) {
+    const userDir = path.join(NOTEBOOKS_DIR, userID);
+    const filePath = path.join(userDir, filename);
 
     // 디렉토리 생성
-    await fs.mkdir(sessionDir, { recursive: true });
+    await fs.mkdir(userDir, { recursive: true });
 
     // 노트북 저장
     const notebookJson = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
     await fs.writeFile(filePath, notebookJson, 'utf8');
 
-    console.log(`💾 세션 디렉토리에 노트북 저장: ${filePath}`);
+    console.log(`💾 사용자 디렉토리에 노트북 저장: ${filePath}`);
 
     return {
-        sessionDir: sessionDir,
+        userDir: userDir,
         filePath: filePath,
-        relativePath: `sessions/${sessionID}/${filename}`
+        relativePath: `${userID}/${filename}`
     };
 }
 
 /**
- * 세션 디렉토리의 노트북을 S3에 업로드
+ * 🔥 사용자 디렉토리의 노트북을 S3에 업로드 (단순화)
  */
-async function uploadNotebookToS3(sessionID, filename, s3Key) {
-    const filePath = path.join(SESSIONS_DIR, sessionID, filename);
+async function uploadNotebookToS3(userID, filename, s3Key) {
+    const filePath = path.join(NOTEBOOKS_DIR, userID, filename);
 
     try {
         // 로컬 파일 읽기
@@ -168,52 +167,17 @@ async function uploadNotebookToS3(sessionID, filename, s3Key) {
 }
 
 /**
- * 세션 정리 (임시 파일 삭제)
+ * 🔥 사용자 디렉토리 초기화 (필요시 사용)
  */
-async function cleanupSession(sessionID) {
-    const sessionDir = path.join(SESSIONS_DIR, sessionID);
-
+async function ensureUserDirectory(userID) {
+    const userDir = path.join(NOTEBOOKS_DIR, userID);
     try {
-        await fs.rm(sessionDir, { recursive: true, force: true });
-        console.log(`🗑️ 세션 정리 완료: ${sessionID}`);
-        return true;
+        await fs.mkdir(userDir, { recursive: true });
+        console.log(`📁 사용자 디렉토리 생성/확인: ${userDir}`);
+        return userDir;
     } catch (error) {
-        console.error(`❌ 세션 정리 실패: ${sessionID}`, error);
-        return false;
-    }
-}
-
-/**
- * 오래된 세션 자동 정리 (1시간 이상)
- */
-async function cleanupOldSessions() {
-    try {
-        await fs.mkdir(SESSIONS_DIR, { recursive: true });
-        const sessions = await fs.readdir(SESSIONS_DIR);
-        const now = Date.now();
-        const oneHour = 60 * 60 * 1000;
-
-        let cleanedCount = 0;
-
-        for (const sessionID of sessions) {
-            const sessionDir = path.join(SESSIONS_DIR, sessionID);
-            const stats = await fs.stat(sessionDir);
-            const age = now - stats.mtimeMs;
-
-            if (age > oneHour) {
-                await cleanupSession(sessionID);
-                cleanedCount++;
-            }
-        }
-
-        if (cleanedCount > 0) {
-            console.log(`🗑️ 오래된 세션 ${cleanedCount}개 정리 완료`);
-        }
-
-        return cleanedCount;
-    } catch (error) {
-        console.error('세션 자동 정리 오류:', error);
-        return 0;
+        console.error(`❌ 사용자 디렉토리 생성 실패: ${userID}`, error);
+        throw error;
     }
 }
 
@@ -230,9 +194,8 @@ router.get('/status', async (req, res) => {
             url: JUPYTER_URL,
             proxy_url: '/jupyter',
             notebooks_dir: NOTEBOOKS_DIR,
-            sessions_dir: SESSIONS_DIR,
-            storage: 'NCP Object Storage (S3)',
-            message: 'Jupyter with NCP S3 Integration',
+            storage: 'NCP Object Storage (S3) + Local User Directories',
+            message: 'Jupyter with Simplified User-based Directory Structure',
             timestamp: new Date().toISOString()
         });
     } catch (error) {
@@ -246,40 +209,39 @@ router.get('/status', async (req, res) => {
 });
 
 /**
- * 🔥 핵심 API: S3에서 노트북 로드 + 세션 생성 + Jupyter 리다이렉트
+ * 🔥 핵심 API: S3에서 노트북 로드 + 사용자 디렉토리에 저장 (단순화)
  */
 router.post('/load-notebook', requireAuth, async (req, res) => {
     try {
         const userID = req.session?.userID || req.body.userID || 'testuser';
-        const sessionID = req.sessionID || generateSessionID();
 
-        console.log(`\n========== Jupyter 노트북 로드 ==========`);
+        console.log(`\n========== Jupyter 노트북 로드 (단순화) ==========`);
         console.log(`👤 사용자: ${userID}`);
-        console.log(`🔑 세션: ${sessionID}`);
 
         // 1. S3에서 노트북 가져오기 (없으면 새로 생성)
         const notebook = await getOrCreateNotebookFromS3(userID);
 
-        // 2. 세션별 임시 디렉토리에 저장
-        const saved = await saveNotebookToSession(sessionID, notebook.filename, notebook.content);
+        // 2. 사용자별 디렉토리에 저장
+        const saved = await saveNotebookToUserDir(userID, notebook.filename, notebook.content);
 
         // 3. 새 노트북이면 S3에 업로드
         if (notebook.isNew) {
-            await uploadNotebookToS3(sessionID, notebook.filename, notebook.s3Key);
+            await uploadNotebookToS3(userID, notebook.filename, notebook.s3Key);
         }
 
-        // 4. Jupyter URL 생성 (절대 경로 사용)
+        // 4. Jupyter URL 생성 (사용자 디렉토리 경로)
         const notebookUrl = `/jupyter/notebooks/${saved.relativePath}`;
 
         console.log(`📍 Jupyter URL: ${notebookUrl}`);
+        console.log(`📁 로컬 경로: ${saved.filePath}`);
         console.log(`==========================================\n`);
 
         res.json({
             success: true,
-            sessionID: sessionID,
             userID: userID,
             notebook: notebook.filename,
-            notebookUrl: notebookUrl, // 🔥 절대 경로 사용
+            notebookUrl: notebookUrl,
+            localPath: saved.relativePath,
             s3Key: notebook.s3Key,
             isNew: notebook.isNew,
             message: notebook.isNew ? '새 노트북이 생성되었습니다.' : '기존 노트북을 불러왔습니다.',
@@ -298,23 +260,23 @@ router.post('/load-notebook', requireAuth, async (req, res) => {
 });
 
 /**
- * 노트북 저장 (임시 디렉토리 → S3)
+ * 🔥 노트북 저장 (사용자 디렉토리 → S3) - 단순화
  */
 router.post('/save-notebook', requireAuth, async (req, res) => {
     try {
-        const { sessionID, userID, filename } = req.body;
+        const { userID, filename } = req.body;
 
-        if (!sessionID || !userID || !filename) {
+        if (!userID || !filename) {
             return res.status(400).json({
                 success: false,
-                error: 'sessionID, userID, filename이 필요합니다.'
+                error: 'userID, filename이 필요합니다.'
             });
         }
 
-        console.log(`💾 노트북 저장 요청: ${userID}/${filename} (세션: ${sessionID})`);
+        console.log(`💾 노트북 저장 요청: ${userID}/${filename}`);
 
         const s3Key = `users/${userID}/jupyter/${filename}`;
-        const result = await uploadNotebookToS3(sessionID, filename, s3Key);
+        const result = await uploadNotebookToS3(userID, filename, s3Key);
 
         res.json({
             success: true,
@@ -336,72 +298,11 @@ router.post('/save-notebook', requireAuth, async (req, res) => {
     }
 });
 
-/**
- * 세션 종료 (임시 파일 삭제)
- */
-router.delete('/session/:sessionID', requireAuth, async (req, res) => {
-    try {
-        const { sessionID } = req.params;
-
-        console.log(`🗑️ 세션 종료 요청: ${sessionID}`);
-
-        const cleaned = await cleanupSession(sessionID);
-
-        res.json({
-            success: cleaned,
-            message: cleaned ? '세션이 종료되었습니다.' : '세션을 찾을 수 없습니다.',
-            sessionID: sessionID,
-            timestamp: new Date().toISOString()
-        });
-
-    } catch (error) {
-        console.error('❌ 세션 종료 실패:', error);
-        res.status(500).json({
-            success: false,
-            error: '세션 종료에 실패했습니다.',
-            details: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
-});
-
-/**
- * 오래된 세션 자동 정리 (관리자용)
- */
-router.post('/cleanup-sessions', async (req, res) => {
-    try {
-        const cleanedCount = await cleanupOldSessions();
-
-        res.json({
-            success: true,
-            message: `${cleanedCount}개의 세션이 정리되었습니다.`,
-            cleanedCount: cleanedCount,
-            timestamp: new Date().toISOString()
-        });
-
-    } catch (error) {
-        console.error('❌ 세션 정리 실패:', error);
-        res.status(500).json({
-            success: false,
-            error: '세션 정리에 실패했습니다.',
-            details: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
-});
-
 // =====================================================================
-// 백그라운드 작업: 자동 세션 정리 (1시간마다)
+// 초기 설정: 노트북 루트 디렉토리 생성
 // =====================================================================
-setInterval(() => {
-    cleanupOldSessions().catch(err => {
-        console.error('자동 세션 정리 오류:', err);
-    });
-}, 60 * 60 * 1000); // 1시간
-
-// 초기 세션 디렉토리 생성
-fs.mkdir(SESSIONS_DIR, { recursive: true }).catch(err => {
-    console.error('세션 디렉토리 생성 실패:', err);
+fs.mkdir(NOTEBOOKS_DIR, { recursive: true }).catch(err => {
+    console.error('노트북 디렉토리 생성 실패:', err);
 });
 
 module.exports = router;
