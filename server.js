@@ -559,7 +559,7 @@ app.use('/entry_editor', createProxyMiddleware({
 }));
 
 // 라우터 설정
-const authRouter = require('./routes/authRouter');
+const entryRouter = require('./routes/entryRouter');
 const myUniverseRouter = require('./routes/myUniverseRouter');
 const ttsRouter = require('./routes/api/ttsRouter');
 app.use('/api', authenticateUser, ttsRouter);
