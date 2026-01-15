@@ -336,6 +336,61 @@ app.post('/api/picture/paint', (req, res) => {
     proxyReq.end();
 });
 
+// 🔥 ENT 프로젝트 로드 API - 3000번 서버로 프록시
+app.get('/entry/api/load-project', (req, res) => {
+    const { s3Url, file } = req.query;
+
+    console.log('📦 [8070] ENT 프로젝트 로드 API 프록시 요청:', { s3Url, file });
+
+    if (!s3Url && !file) {
+        return res.status(400).json({
+            success: false,
+            error: 's3Url 또는 file 파라미터가 필요합니다.'
+        });
+    }
+
+    // Query string 구성
+    const queryParams = new URLSearchParams();
+    if (s3Url) queryParams.set('s3Url', s3Url);
+    if (file) queryParams.set('file', file);
+
+    const options = {
+        hostname: 'localhost',
+        port: 3000,
+        path: `/entry/api/load-project?${queryParams.toString()}`,
+        method: 'GET',
+        headers: {
+            'Cookie': req.headers.cookie || ''
+        }
+    };
+
+    const proxyReq = http.request(options, (proxyRes) => {
+        let data = '';
+        proxyRes.on('data', (chunk) => { data += chunk; });
+        proxyRes.on('end', () => {
+            try {
+                const jsonData = JSON.parse(data);
+                console.log('✅ [8070] ENT 프로젝트 로드 프록시 응답:', {
+                    success: jsonData.success,
+                    fileName: jsonData.fileName,
+                    hasProjectData: !!jsonData.projectData
+                });
+                res.json(jsonData);
+            } catch (e) {
+                console.error('❌ [8070] ENT 프로젝트 로드 프록시 응답 파싱 오류:', e);
+                res.status(500).json({ success: false, error: 'Proxy response parse error' });
+            }
+        });
+    });
+
+    proxyReq.on('error', (e) => {
+        console.error('❌ [8070] ENT 프로젝트 로드 프록시 요청 오류:', e);
+        res.status(500).json({ success: false, error: 'Proxy request failed' });
+    });
+
+    proxyReq.end();
+});
+
 // 404 핸들러
 app.use((req, res) => {
     res.status(404).json({
