@@ -68,7 +68,7 @@ educodingnplay 플랫폼에서 학생, 교사, 관리자가 AWS S3에 저장된 
 ┌─────────────────────────────────────────────────────┐
 │                  Storage Layer                      │
 │  ┌──────────────────────────────────────────────┐   │
-│  │  AWS S3 Bucket                               │   │
+│  │  NCP Object Storage Bucket                               │   │
 │  │  educodingnplaycontents                      │   │
 │  │                                              │   │
 │  │  users/                                      │   │
@@ -106,7 +106,7 @@ educodingnplay 플랫폼에서 학생, 교사, 관리자가 AWS S3에 저장된 
    ↓
 7. GET /api/s3/browse?prefix=users/student1/
    ↓
-8. AWS S3 ListObjectsV2Command 실행
+8. NCP Object Storage ListObjectsV2Command 실행
    ↓
 9. 파일/폴더 목록 반환 (JSON)
    ↓

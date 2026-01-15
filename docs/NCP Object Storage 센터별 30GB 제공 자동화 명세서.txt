@@ -1,0 +1,389 @@
+NCP Object Storage 센터별 30GB 제공 자동화 명세서
+================================================================================
+작성일: 2026-01-15
+플랫폼: NCP (Naver Cloud Platform)
+버전: 2.0 (AWS → NCP 마이그레이션)
+================================================================================
+
+1. 목표
+================================================================================
+
+센터(학원) 1곳당 NCP Object Storage 저장공간 30GB를 제공한다.
+
+센터 생성/삭제/정산/경고까지 운영자 수동 작업 없이 자동화한다.
+
+보안상 센터가 NCP 자격증명(API Key)을 직접 가지지 않는다.
+
+2. 시스템 구성 개요
+================================================================================
+
+2.1 핵심 원칙
+--------------------------------------------------------------------------------
+
+센터 단위 분리: "센터 = 독립된 저장공간"
+
+하드쿼터는 앱에서 통제: Object Storage는 용량 제한을 직접 못 거므로 업로드 전 용량 체크로 30GB 강제
+
+NCP API Key는 서버만 보유: 업로드는 서버 경유 또는 Presigned URL 방식
+
+2.2 권장 아키텍처
+--------------------------------------------------------------------------------
+
+단일 NCP 계정
+
+단일 버킷 사용: educodingnplaycontents
+
+센터별 폴더 격리: educodingnplaycontents/centers/{center_id}/
+
+업로드는 서버 경유 또는 SDK 직접 업로드
+
+용량/과금/알림은 서버가 집계 및 통제
+
+3. 데이터 모델(DB) 명세
+================================================================================
+
+3.1 CenterStorageUsage 테이블
+--------------------------------------------------------------------------------
+CREATE TABLE CenterStorageUsage (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    center_id INT NOT NULL UNIQUE,
+
+    -- 사용량 및 제한
+    total_usage BIGINT DEFAULT 0 COMMENT '센터 전체 사용량 (bytes)',
+    storage_limit BIGINT DEFAULT 32212254720 COMMENT '용량 제한 (기본 30GB)',
+
+    -- 플랜 정보
+    plan_type ENUM('free', 'basic', 'pro', 'enterprise') DEFAULT 'free',
+    plan_expires_at DATE NULL,
+
+    -- 통계
+    object_count INT DEFAULT 0,
+    last_calculated_at TIMESTAMP NULL,
+
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    INDEX idx_center_id (center_id),
+    INDEX idx_plan_type (plan_type)
+) COMMENT='센터별 NCP Object Storage 사용량';
+
+3.2 UserStorageUsage 테이블
+--------------------------------------------------------------------------------
+CREATE TABLE UserStorageUsage (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    center_id INT,
+
+    -- 플랫폼별 사용량
+    entry_usage BIGINT DEFAULT 0,
+    scratch_usage BIGINT DEFAULT 0,
+    python_usage BIGINT DEFAULT 0,
+    appinventor_usage BIGINT DEFAULT 0,
+    gallery_usage BIGINT DEFAULT 0,
+    board_usage BIGINT DEFAULT 0,
+
+    total_usage BIGINT DEFAULT 0,
+    storage_limit BIGINT NULL,
+
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY unique_user_storage (user_id)
+) COMMENT='사용자별 NCP Object Storage 사용량';
+
+4. NCP Object Storage 경로 구조
+================================================================================
+
+4.1 버킷 구조
+--------------------------------------------------------------------------------
+educodingnplaycontents/
+├── users/                    # 사용자별 개인 파일
+│   ├── {userID}/
+│   │   ├── entry/
+│   │   │   ├── draft/
+│   │   │   └── final/
+│   │   ├── scratch/
+│   │   ├── python/
+│   │   ├── appinventor/
+│   │   └── gallery/
+│
+├── centers/                  # 센터별 공유 파일 (향후)
+│   └── {center_id}/
+│       ├── shared/
+│       └── templates/
+│
+├── sb3/                      # Scratch 템플릿
+├── ent/                      # Entry 템플릿
+└── resource/                 # 공통 리소스
+
+4.2 URL 형식
+--------------------------------------------------------------------------------
+# NCP Object Storage Direct URL
+https://kr.object.ncloudstorage.com/educodingnplaycontents/users/student1/entry/draft/project.ent
+
+# NCP Global Edge (CDN)
+https://onag54aw13447.edge.naverncp.com/users/student1/entry/draft/project.ent
+
+4.3 보안 설정
+--------------------------------------------------------------------------------
+Public Access: 차단 (버킷 전체)
+Encryption: 기본 암호화 활성화
+CORS: 도메인별 허용 설정
+
+CORS 예시:
+{
+  "CORSRules": [
+    {
+      "AllowedOrigins": [
+        "https://app.cosmoedu.co.kr",
+        "https://app.codingnplay.co.kr"
+      ],
+      "AllowedMethods": ["GET", "HEAD", "PUT", "POST", "DELETE"],
+      "AllowedHeaders": ["*"],
+      "MaxAgeSeconds": 3000
+    }
+  ]
+}
+
+5. API/업무 흐름 명세
+================================================================================
+
+5.1 센터 생성 (Create Center)
+--------------------------------------------------------------------------------
+트리거: 관리자/본사에서 센터 등록
+
+서버 처리 순서:
+1. center_id 생성
+2. CenterStorageUsage 레코드 생성
+   - storage_limit = 32212254720 (30GB)
+   - plan_type = 'free'
+3. NCP Object Storage에 센터 폴더 생성 (선택)
+   - centers/{center_id}/.placeholder
+
+실패 롤백 규칙:
+- DB 저장 실패 → 생성된 폴더 삭제
+- 트랜잭션 롤백
+
+5.2 업로드 (Upload) — 30GB 강제
+--------------------------------------------------------------------------------
+권장 방식: 서버 경유 업로드
+
+흐름:
+1. 클라이언트가 POST /api/upload 요청 (파일 + 메타데이터)
+2. 서버가 DB에서 used_bytes 조회
+3. used_bytes + file_size > 30GB 이면 거절 (413)
+4. 통과 시 NCP Object Storage SDK로 업로드
+5. 업로드 완료 → UserStorageUsage, CenterStorageUsage 업데이트
+6. UserFiles 테이블에 파일 메타데이터 기록
+
+예시 코드:
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+
+const s3Client = new S3Client({
+  region: 'kr-standard',
+  endpoint: 'https://kr.object.ncloudstorage.com',
+  credentials: {
+    accessKeyId: process.env.NCP_ACCESS_KEY,
+    secretAccessKey: process.env.NCP_SECRET_KEY
+  }
+});
+
+const uploadCommand = new PutObjectCommand({
+  Bucket: 'educodingnplaycontents',
+  Key: `users/${userID}/entry/draft/${fileName}`,
+  Body: fileBuffer,
+  ContentType: mimeType
+});
+
+await s3Client.send(uploadCommand);
+
+5.3 다운로드 (Download)
+--------------------------------------------------------------------------------
+방식 1: Direct URL (공개 읽기 권한 있는 경우)
+https://kr.object.ncloudstorage.com/educodingnplaycontents/users/student1/file.ent
+
+방식 2: Presigned URL (비공개 파일)
+const { GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+
+const command = new GetObjectCommand({
+  Bucket: 'educodingnplaycontents',
+  Key: 'users/student1/private.ent'
+});
+
+const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+
+5.4 센터 삭제 (Delete Center)
+--------------------------------------------------------------------------------
+1. 센터 status = DELETING
+2. 센터 폴더 내 객체 전체 삭제 (배치)
+   - centers/{center_id}/ 하위 모두 삭제
+3. DB에서 CenterStorageUsage 삭제
+4. 센터 status = DELETED
+
+중요: 대량 파일은 배치/큐 처리 필요
+
+6. 사용량 계산 (30GB 판단 기준)
+================================================================================
+
+6.1 집계 방식
+--------------------------------------------------------------------------------
+실시간 집계:
+- UserStorageUsage, CenterStorageUsage 테이블 사용
+- 파일 업로드 시 즉시 증가
+- 파일 삭제 시 즉시 감소
+
+배치 검증 (선택):
+- 일 1회 NCP Object Storage ListObjects로 실제 용량 재계산
+- DB와 불일치 시 보정
+
+6.2 집계 구현
+--------------------------------------------------------------------------------
+const { ListObjectsV2Command } = require('@aws-sdk/client-s3');
+
+async function calculateCenterUsage(centerId) {
+  const prefix = `centers/${centerId}/`;
+  let totalSize = 0;
+  let continuationToken = null;
+
+  do {
+    const command = new ListObjectsV2Command({
+      Bucket: 'educodingnplaycontents',
+      Prefix: prefix,
+      ContinuationToken: continuationToken
+    });
+
+    const response = await s3Client.send(command);
+
+    for (const obj of response.Contents || []) {
+      totalSize += obj.Size;
+    }
+
+    continuationToken = response.NextContinuationToken;
+  } while (continuationToken);
+
+  return totalSize;
+}
+
+7. 모니터링/알림 정책
+================================================================================
+
+7.1 임계치
+--------------------------------------------------------------------------------
+| 플랜   | 경고 (80%)  | 강경고 (95%)  | 차단 (100%)  |
+|--------|-------------|---------------|--------------|
+| 30GB   | 24GB        | 28.5GB        | 30GB         |
+| 100GB  | 80GB        | 95GB          | 100GB        |
+
+7.2 알림 채널
+--------------------------------------------------------------------------------
+- 본사 관리자 대시보드
+- 센터 관리자 이메일
+- 내부 슬랙/카톡 (선택)
+
+8. 보안/권한
+================================================================================
+
+8.1 NCP API Key 관리
+--------------------------------------------------------------------------------
+서버 환경 변수:
+NCP_ACCESS_KEY=your_access_key
+NCP_SECRET_KEY=your_secret_key
+NCP_ENDPOINT=https://kr.object.ncloudstorage.com
+NCP_REGION=kr-standard
+
+서버 코드에서만 사용:
+- 클라이언트에 절대 노출 금지
+- .env 파일로 관리
+- Git에 커밋 금지 (.gitignore 추가)
+
+8.2 보안 정책
+--------------------------------------------------------------------------------
+- Object Storage Public Access 전면 차단
+- 업로드/다운로드는 서버 경유 또는 Presigned URL
+- 파일명에 개인정보 노출 금지 (권장: UUID)
+- CORS 정책으로 허용 도메인 제한
+
+9. 플랜별 용량 정책
+================================================================================
+
+| 플랜       | 센터당 용량 | 사용자당 용량 | 월 요금   |
+|------------|-------------|---------------|-----------|
+| Free       | 30 GB       | 500 MB        | 무료      |
+| Basic      | 100 GB      | 2 GB          | ₩9,900    |
+| Pro        | 500 GB      | 5 GB          | ₩29,900   |
+| Enterprise | 2 TB        | 무제한        | 별도 협의 |
+
+10. 플랜 변경 로직
+================================================================================
+
+10.1 30GB → 100GB (확장)
+--------------------------------------------------------------------------------
+- 즉시 허용
+- storage_plan = 'basic'
+- storage_limit_bytes = 107374182400
+- 업로드 즉시 허용
+
+10.2 100GB → 30GB (축소)
+--------------------------------------------------------------------------------
+IF used_bytes <= 30GB:
+  → 즉시 전환
+ELSE:
+  → status = SUSPENDED
+  → 업로드 차단
+  → 파일 정리 요청
+
+자동 복구:
+- 배치 작업 시 used_bytes <= 30GB 확인
+- 조건 만족 시 status = ACTIVE 복구
+
+11. NCP vs AWS 차이점 정리
+================================================================================
+
+| 항목          | AWS S3                    | NCP Object Storage           |
+|---------------|---------------------------|------------------------------|
+| 엔드포인트    | s3.amazonaws.com          | kr.object.ncloudstorage.com  |
+| 리전          | ap-northeast-2            | kr-standard                  |
+| SDK           | @aws-sdk/client-s3        | @aws-sdk/client-s3 (호환)    |
+| CDN           | CloudFront                | Global Edge                  |
+| 인증          | IAM Key                   | API Key (Access/Secret)      |
+| 버킷 네이밍   | 전역 고유                 | 계정 내 고유                 |
+
+12. 마이그레이션 체크리스트
+================================================================================
+
+✅ 환경 변수 변경
+  - AWS_REGION → NCP_REGION
+  - AWS_ACCESS_KEY_ID → NCP_ACCESS_KEY
+  - AWS_SECRET_ACCESS_KEY → NCP_SECRET_KEY
+
+✅ config.js 업데이트
+  - S3.DIRECT_URL 변경
+  - S3.ASSET_URL 변경 (Global Edge)
+
+✅ DB 테이블 생성
+  - UserStorageUsage
+  - CenterStorageUsage
+  - UserFiles
+
+✅ 기존 데이터 마이그레이션
+  - AWS S3 → NCP Object Storage 복사
+  - URL 경로 업데이트
+
+✅ 문서 업데이트
+  - 모든 AWS S3 참조 → NCP Object Storage
+
+13. 참고 자료
+================================================================================
+
+NCP Object Storage 공식 문서:
+https://www.ncloud.com/product/storage/objectStorage
+
+NCP Global Edge (CDN):
+https://www.ncloud.com/product/networking/globalEdge
+
+SDK 사용법:
+- Node.js: AWS SDK v3 호환
+- Python: boto3 호환
+
+================================================================================
+END OF DOCUMENT
+================================================================================

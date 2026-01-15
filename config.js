@@ -248,6 +248,7 @@ const CSP = {
     "https://kr.object.ncloudstorage.com", // 🔥 NCP Object Storage 추가
     "https://onag54aw13447.edge.naverncp.com", // 🔥 NCP Global Edge 추가
     // codingnplay 도메인들
+    "https://app.codingnplay.co.kr:8070",
     "https://app.codingnplay.co.kr:8080",
     "https://app.codingnplay.co.kr:8888",
     "https://app.codingnplay.co.kr:8889",
@@ -256,6 +257,7 @@ const CSP = {
     "http://app.codingnplay.co.kr:6080",
     "https://app.codingnplay.co.kr/report/",
     // 🔥 cosmoedu 도메인들 추가
+    "https://app.cosmoedu.co.kr:8070",
     "https://app.cosmoedu.co.kr:8080",
     "https://app.cosmoedu.co.kr:8888",
     "https://app.cosmoedu.co.kr:8889",
@@ -297,7 +299,7 @@ const Roles = {
 // 서비스 포트 설정
 const SERVICES = {
   SCRATCH: `${BASE_URL}:8601`,
-  ENTRY: `${BASE_URL}:8080`,
+  ENTRY: `${BASE_URL}:8070`,
   APPINVENTOR: `${BASE_URL}:8888`,
   JUPYTER: `${BASE_URL}:8889`,
 };

@@ -18,7 +18,8 @@
       "Bash(pm2 status:*)",
       "Bash(npx pm2 status)",
       "Bash(git reset:*)",
-      "Bash(npx pm2:*)"
+      "Bash(npx pm2:*)",
+      "Bash(find:*)"
     ]
   }
 }
