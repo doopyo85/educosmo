@@ -48,12 +48,13 @@ class ExtensionBridge {
       if (marker) this.isExtensionInstalled = true;
     }
 
-    /* 
+
     if (!this.isExtensionInstalled) {
-      this.showInstallGuide();
+      // this.showInstallGuide(); // 팝업 비활성화
+      console.warn('Extension not detected, falling back to internal editor.');
       return false;
-    } 
-    */
+    }
+
 
     // Fallback: 확장프로그램이 없으면 새 탭으로 열기 시도 (COS 기능을 위해 비활성화)
     // if (!this.isExtensionInstalled) {
