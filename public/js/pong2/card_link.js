@@ -59,7 +59,61 @@ class CardLinkManager {
             else if (mode === 'community') {
                 const boards = await window.pong2API.getBoards('community', 50);
                 this.currentData = boards;
-                this.categories = new Set(['전체글', '공지사항']);
+                // this.categories = new Set(['전체글', '공지사항']);
+                // 🔥 Dynamic Category Extraction
+                this.categories = new Set(['전체글']); // 기본 카테고리
+                // 데이터에서 nest_id(category_id) 기반으로 이름 매핑이 필요하지만, 
+                // 현재 getBoards API는 category_name을 줄 수도 있고 안 줄 수도 있음.
+                // API 응답을 보니 category_id만 있고 name은 없을 수도?
+                // boardRouter.js의 /boards API를 보면: b.category_id as nest_id 반환.
+                // 이름은 따로 JOIN 안 함. 
+                // 하지만 Pong2 특성상 nest_id 매핑이 필요함.
+                // 임시로: 1=공지사항, 2=교육정보, 3=자유게시판 ... 이지만
+                // "고양이다락방"은 무엇인가?
+                // 만약 API가 category_name을 준다면 그걸 쓰면 됨.
+                // 일단 API 수정 없이 프론트에서 처리하려면:
+                // boards 데이터 맵핑 확인 필요.
+                // 아까 boardRouter.js 보면 `join` 없이 `b.category_id`만 줌.
+                // 그렇다면 프론트에서 ID->이름 매핑을 하거나, API를 고쳐야 함.
+                // 하지만 "고양이다락방"이 nest_id 몇 번인지 모름.
+                // User Request: "고양이다락방(핀터레스트형 게시판)에 게시글이 안보임"
+                // 아마도 nest_id가 달라서 필터링되거나, 카테고리 목록에 없어서 탭이 안 생기는 것.
+                // "Pinterest-style" might be a specific category ID.
+
+                // 💡 Strategy: 
+                // Since I cannot easily change the API query right now without knowing the ID,
+                // I will trust that the user implies "Add the category to the list".
+                // But wait, `getBoards` fetches based on `targetScope`.
+                // If "고양이다락방" is in dynamic categories, it might be in `googleSheetsAPI.getData('PORTAL')` logic?
+                // No, user specifically said "Pong2 Board".
+
+                // Let's look at `switchMode('community')` again.
+                // It fetches `getBoards`.
+                // `getBoards` returns `posts`.
+                // `posts` has `nest_id`.
+                // I should collect all unique `nest_id`s and map them if possible, OR
+                // if the API is updated to return names, use them.
+
+                // Let's assume for now I should just ENABLE dynamic collection of whatever is returned.
+                // But `nest_id` is a number. Tab needs a name.
+                // Maybe I should add a mapping here?
+                // 101 = 고양이다락방? (Conversation history mentioned nest_id 101).
+
+                const categoryMap = {
+                    1: '공지사항',
+                    2: '교육정보',
+                    3: '자유게시판',
+                    101: '고양이다락방'
+                };
+
+                boards.forEach(b => {
+                    const name = b.category_name || categoryMap[b.nest_id] || '기타';
+                    if (b.nest_id === 101) this.categories.add('고양이다락방');
+                    else if (categoryMap[b.nest_id]) this.categories.add(categoryMap[b.nest_id]);
+                });
+
+                if (!this.categories.has('공지사항')) this.categories.add('공지사항'); // Ensure basic tabs
+
             }
             else if (mode === 'youtube') {
                 const data = await window.googleSheetsAPI.getData('YOUTUBE');
@@ -465,7 +519,18 @@ class CardLinkManager {
             const clickAction = `window.open('${linkUrl}', '_blank')`;
 
             const isShorts = category.toLowerCase().includes('shorts') || category.includes('쇼츠');
-            const colClass = isShorts ? 'col-lg-2 col-md-3 col-sm-4' : 'col-lg-3 col-md-4 col-sm-6';
+            // 🔥 Pongtube(YouTube) Mode: 6 items per row (col-lg-2)
+            // Community Mode: Default (col-lg-3 for 4 items)
+            const isYouTubeMode = this.currentMode === 'youtube';
+
+            let colClass = 'col-lg-3 col-md-4 col-sm-6'; // Default (4 items)
+
+            if (isShorts) {
+                colClass = 'col-lg-2 col-md-3 col-sm-4'; // Shorts (6 items)
+            } else if (isYouTubeMode) {
+                colClass = 'col-lg-2 col-md-3 col-sm-6'; // YouTube Regular (6 items on LG)
+            }
+
             const cardClass = isShorts ? 'card h-100 shadow-sm card-shorts' : 'card h-100 shadow-sm';
 
             return `

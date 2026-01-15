@@ -82,6 +82,14 @@ const authenticateUser = (req, res, next) => {
       return next();
     } catch (err) {
       console.error('❌ JWT 인증 실패:', err.message);
+
+      // 🔥 Fallback: 토큰이 만료되었거나 유효하지 않더라도, 
+      // 웹 세션이 유효하다면 통과시킴 (브라우저에서 stale token이 헤더에 남아있는 경우 방지)
+      if (req.session && req.session.is_logined) {
+        console.log('✅ JWT 실패했으나 유효한 세션이 있어 통과함:', req.session.userID);
+        return next();
+      }
+
       return res.status(401).json({
         success: false,
         loggedIn: false,

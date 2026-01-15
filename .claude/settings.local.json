@@ -19,7 +19,12 @@
       "Bash(npx pm2 status)",
       "Bash(git reset:*)",
       "Bash(npx pm2:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(ssh:*)"
     ]
   }
 }
