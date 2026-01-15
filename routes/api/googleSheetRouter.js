@@ -12,16 +12,20 @@ function transformS3UrlToNCP(url) {
   // AWS S3 패턴 감지 및 변환
   // 예: https://educodingnplaycontents.s3.amazonaws.com/...
   //  -> https://onag54aw13447.edge.naverncp.com/...
+  // AWS S3 패턴
   const awsS3Pattern = /https?:\/\/educodingnplaycontents\.s3\.amazonaws\.com\//gi;
-
-  // 🔥 .sb2 파일도 NCP URL로 변환 허용 (기존에는 제외했었음)
-  // if (url.toLowerCase().endsWith('.sb2')) {
-  //   return url;
-  // }
+  // NCP Global Edge 패턴
+  const ncpEdgePattern = /https?:\/\/onag54aw13447\.edge\.naverncp\.com\//gi;
 
   if (awsS3Pattern.test(url)) {
     const transformedUrl = url.replace(awsS3Pattern, config.S3.DIRECT_URL + '/');
-    console.log(`🔄 URL 변환: ${url.substring(0, 50)}... -> ${transformedUrl.substring(0, 50)}...`);
+    console.log(`🔄 AWS S3 URL 변환: ${url.substring(0, 50)}... -> ${transformedUrl.substring(0, 50)}...`);
+    return transformedUrl;
+  }
+
+  if (ncpEdgePattern.test(url)) {
+    const transformedUrl = url.replace(ncpEdgePattern, config.S3.DIRECT_URL + '/');
+    console.log(`🔄 NCP Edge URL 변환: ${url.substring(0, 50)}... -> ${transformedUrl.substring(0, 50)}...`);
     return transformedUrl;
   }
 

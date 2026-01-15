@@ -786,47 +786,61 @@ router.get('/api/student-progress', requireTeacher, async (req, res) => {
         }
 
         const query = `
-            SELECT 
+            SELECT
                 u.id AS user_id,
                 u.name,
                 u.userID AS username,
                 u.profile_image,
-                DATE_FORMAT(MAX(l.end_time), '%Y-%m-%d') AS last_learning_at,
-                
-                -- Platform: Scratch
-                COUNT(DISTINCT CASE WHEN LOWER(cm.platform) = 'scratch' THEN l.content_name END) AS scratch_completed,
+                DATE_FORMAT(MAX(COALESCE(l.end_time, l.start_time)), '%Y-%m-%d') AS last_learning_at,
+
+                -- Platform: Scratch (학습 일수 기반)
+                COUNT(DISTINCT CASE
+                    WHEN l.content_type = 'scratch' AND l.content_name LIKE '%/scratch_project%'
+                    THEN DATE(l.start_time)
+                END) AS scratch_completed,
                 (SELECT COUNT(*) FROM ContentMap WHERE LOWER(platform) = 'scratch' AND is_active = 1) AS scratch_total,
-                
-                -- Platform: Entry
-                COUNT(DISTINCT CASE WHEN LOWER(cm.platform) = 'entry' THEN l.content_name END) AS entry_completed,
+
+                -- Platform: Entry (학습 일수 기반)
+                COUNT(DISTINCT CASE
+                    WHEN l.content_type = 'entry' AND (l.content_name LIKE '%/entry_project%' OR l.content_name LIKE '%/entry/api%')
+                    THEN DATE(l.start_time)
+                END) AS entry_completed,
                 (SELECT COUNT(*) FROM ContentMap WHERE LOWER(platform) = 'entry' AND is_active = 1) AS entry_total,
 
                 -- Platform: App Inventor
-                COUNT(DISTINCT CASE WHEN LOWER(cm.platform) IN ('appinventor', 'app_inventor', 'app inventor') THEN l.content_name END) AS appinventor_completed,
+                COUNT(DISTINCT CASE
+                    WHEN l.content_type = 'appinventor'
+                    THEN DATE(l.start_time)
+                END) AS appinventor_completed,
                 (SELECT COUNT(*) FROM ContentMap WHERE LOWER(platform) IN ('appinventor', 'app_inventor', 'app inventor') AND is_active = 1) AS appinventor_total,
 
-                -- Platform: Python
-                COUNT(DISTINCT CASE WHEN LOWER(cm.platform) = 'python' THEN l.content_name END) AS python_completed,
+                -- Platform: Python (학습 일수 기반)
+                COUNT(DISTINCT CASE
+                    WHEN l.content_type = 'python'
+                    THEN DATE(l.start_time)
+                END) AS python_completed,
                 (SELECT COUNT(*) FROM ContentMap WHERE LOWER(platform) = 'python' AND is_active = 1) AS python_total,
 
                 -- Platform: Data Analysis
-                COUNT(DISTINCT CASE WHEN LOWER(cm.platform) IN ('data_analysis', 'dataanalysis', 'data analysis', 'data') THEN l.content_name END) AS dataanalysis_completed,
+                COUNT(DISTINCT CASE
+                    WHEN l.content_type IN ('data_analysis', 'dataanalysis', 'data')
+                    THEN DATE(l.start_time)
+                END) AS dataanalysis_completed,
                 (SELECT COUNT(*) FROM ContentMap WHERE LOWER(platform) IN ('data_analysis', 'dataanalysis', 'data analysis', 'data') AND is_active = 1) AS dataanalysis_total,
 
-                -- CT Level Logic (Overall)
+                -- CT Level Logic (Overall - 전체 학습 일수 기반)
                 CASE
-                    WHEN COUNT(DISTINCT l.content_name) >= 120 THEN 120
-                    WHEN COUNT(DISTINCT l.content_name) >= 70 THEN 70
-                    WHEN COUNT(DISTINCT l.content_name) >= 50 THEN 50
-                    WHEN COUNT(DISTINCT l.content_name) >= 30 THEN 30
+                    WHEN COUNT(DISTINCT DATE(l.start_time)) >= 120 THEN 120
+                    WHEN COUNT(DISTINCT DATE(l.start_time)) >= 70 THEN 70
+                    WHEN COUNT(DISTINCT DATE(l.start_time)) >= 50 THEN 50
+                    WHEN COUNT(DISTINCT DATE(l.start_time)) >= 30 THEN 30
                     ELSE 0
                 END AS ct_level,
-                
+
                 COALESCE(usu.total_usage, 0) AS storage_usage
 
             FROM Users u
             LEFT JOIN LearningLogs l ON l.user_id = u.id
-            LEFT JOIN ContentMap cm ON cm.content_name = l.content_name
             LEFT JOIN UserStorageUsage usu ON usu.user_id = u.id
             ${whereClause}
             GROUP BY u.id, u.name, u.userID, u.profile_image, usu.total_usage
