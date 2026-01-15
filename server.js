@@ -832,7 +832,8 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
   if (platform === 'scratch') {
     editorUrl = `/scratch/?project_file=${encodeURIComponent(normalizeUrl(projectUrl))}`;
   } else if (platform === 'entry') {
-    editorUrl = `/entry_editor/?s3Url=${encodeURIComponent(normalizeUrl(projectUrl))}&userID=${userID}&role=${userRole}`;
+    // config.SERVICES.ENTRY (8070 port) 사용
+    editorUrl = `${config.SERVICES.ENTRY}/entry_editor/?s3Url=${encodeURIComponent(normalizeUrl(projectUrl))}&userID=${userID}&role=${userRole}`;
   } else {
     return res.status(400).send('지원하지 않는 플랫폼입니다.');
   }
