@@ -580,7 +580,7 @@ router.post('/sheets/add-project', requireDbUser, async (req, res) => {
         ];
 
         // pong! 시트에 추가 (시트 ID는 config에서 가져옴)
-        const result = await appendSheetData('pong!!A:F', rowData);
+        const result = await appendSheetData('pong!A:F', rowData);
 
         console.log(`✅ [Pong2] 프로젝트가 구글시트에 추가되었습니다.`);
 
