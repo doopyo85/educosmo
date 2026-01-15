@@ -1486,9 +1486,44 @@ class ProjectCardManager {
             }
 
             // 기존 load-project 버튼 처리 (COS 카드 버튼 등)
-            // 🔥 data-action="open-editor"가 있는 경우 Extension에 처리를 위임하고 여기서는 무시
+            // 🔥 data-action="open-editor"가 있는 경우 Extension 확인 후 처리
             if (e.target.classList.contains('load-project')) {
-                if (e.target.getAttribute('data-action') === 'open-editor') return;
+                // data-action="open-editor"가 있는 버튼 ([완성][확장] 등)
+                if (e.target.getAttribute('data-action') === 'open-editor') {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const templateUrl = e.target.getAttribute('data-template-url');
+                    const missionId = e.target.getAttribute('data-mission-id') || 'project';
+                    const missionTitle = e.target.getAttribute('data-mission-title') || 'Project';
+                    const userId = e.target.getAttribute('data-user-id') || this.userID || 'guest';
+                    const platform = e.target.getAttribute('data-platform') || this.config.projectType;
+
+                    console.log('🎯 [완성/확장] 버튼 클릭:', { templateUrl, missionId, platform });
+
+                    // Extension이 있으면 Extension 처리
+                    if (window.extensionBridge && window.extensionBridge.isExtensionInstalled) {
+                        console.log('✅ Extension 감지 - Extension으로 처리');
+                        window.extensionBridge.openEditor({
+                            platform: platform,
+                            missionId: missionId,
+                            userId: userId,
+                            missionTitle: missionTitle,
+                            templateUrl: templateUrl
+                        });
+                    } else {
+                        // Extension이 없으면 내부 에디터로 폴백
+                        console.log('📂 Extension 없음 - 내부 에디터로 이동');
+                        if (platform === 'entry' && templateUrl) {
+                            this.loadProjectInEntryGUI(templateUrl);
+                        } else if (platform === 'scratch' && templateUrl) {
+                            this.loadProjectInScratchGUI(templateUrl);
+                        } else {
+                            console.error('프로젝트 URL이 없습니다');
+                        }
+                    }
+                    return;
+                }
 
                 e.preventDefault();
                 e.stopPropagation();
