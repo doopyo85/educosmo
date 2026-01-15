@@ -546,8 +546,20 @@ const routes = {
 
 // 🔥 Python 문제은행 API 라우터
 app.use('/api/python-problems', authenticateUser, require('./routes/pythonProblemRouter'));
+// 🔥 Entry Editor 프록시 설정 (8070 포트)
+// /entry_editor 경로를 localhost:8070/ 으로 프록시
+app.use('/entry_editor', createProxyMiddleware({
+  target: 'http://localhost:8070',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/entry_editor': '' // /entry_editor 경로 제거 후 전달
+  },
+  ws: true, // WebSocket 지원
+  logLevel: 'debug'
+}));
 
-const entryRouter = require('./routes/entryRouter');
+// 라우터 설정
+const authRouter = require('./routes/authRouter');
 const myUniverseRouter = require('./routes/myUniverseRouter');
 const ttsRouter = require('./routes/api/ttsRouter');
 app.use('/api', authenticateUser, ttsRouter);
@@ -841,8 +853,8 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
   if (platform === 'scratch') {
     editorUrl = `/scratch/?project_file=${encodeURIComponent(normalizeUrl(projectUrl))}`;
   } else if (platform === 'entry') {
-    // config.SERVICES.ENTRY (8070 port) 사용 - Entry 서버는 루트(/)에서 에디터를 서빙함
-    editorUrl = `${config.SERVICES.ENTRY}/?s3Url=${encodeURIComponent(normalizeUrl(projectUrl))}&userID=${userID}&role=${userRole}`;
+    // 8070 포트 직접 접근 대신 프록시 경로 사용 (/entry_editor -> localhost:8070)
+    editorUrl = `/entry_editor/?s3Url=${encodeURIComponent(normalizeUrl(projectUrl))}&userID=${userID}&role=${userRole}`;
   } else {
     return res.status(400).send('지원하지 않는 플랫폼입니다.');
   }
@@ -858,7 +870,7 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
     imgUrl: normalizeUrl(imgUrl) || '',
     userID: userID,
     userRole: userRole,
-    entryBaseUrl: config.SERVICES.ENTRY // 클라이언트 사이드에서 URL 생성 시 필요
+    entryBaseUrl: '/entry_editor' // 프록시 경로 사용
   });
 });
 
