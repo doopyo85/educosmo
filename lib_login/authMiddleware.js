@@ -31,7 +31,7 @@ function handleUnauthorized(req, res, message) {
             user.id,
             user.centerID,
             'SESSION_EXPIRE',
-            req.originalUrl,
+            req.originalUrl.substring(0, 255),
             req.ip,
             req.headers['user-agent'],
             'Session expired - auto logout'
@@ -99,6 +99,10 @@ const authenticateUser = (req, res, next) => {
       const { queryDatabase } = require('./db');
 
       // Use subquery to get numeric user_id from string userID (username)
+      // Truncate URL to avoid DB error
+      const safeUrl = req.originalUrl.substring(0, 255);
+      const safeActionDetail = ('Page View: ' + req.path).substring(0, 255);
+
       queryDatabase(`
         INSERT INTO UserActivityLogs 
         (user_id, center_id, action_type, url, ip_address, user_agent, action_detail, status) 
@@ -116,10 +120,10 @@ const authenticateUser = (req, res, next) => {
       `, [
         req.session.centerID,
         'GET',
-        req.originalUrl,
+        safeUrl,
         req.ip,
         req.headers['user-agent'],
-        'Page View: ' + req.path,
+        safeActionDetail,
         req.session.userID
       ]).catch(err => {
         // Silently fail or log to console if needed

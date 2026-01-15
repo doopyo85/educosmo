@@ -413,6 +413,7 @@
             const buttonType = '<%= buttonType %>';
             const userID = '<%= userID %>';
             const userRole = '<%= userRole %>';
+            const entryBaseUrl = '<%= entryBaseUrl %>';
             let currentProblemNum = '<%= currentProblem %>';
             let currentImgUrl = '<%= imgUrl %>';
             
@@ -500,7 +501,8 @@
                     if (platform === 'scratch') {
                         newEditorUrl = `/scratch/?project_file=${encodeURIComponent(projectUrl)}`;
                     } else if (platform === 'entry') {
-                        newEditorUrl = `/entry_editor/?s3Url=${encodeURIComponent(projectUrl)}&userID=${userID}&role=${userRole}`;
+                        // Entry 서버 루트(/) 사용
+                        newEditorUrl = `${entryBaseUrl}/?s3Url=${encodeURIComponent(projectUrl)}&userID=${userID}&role=${userRole}`;
                     }
                     
                     editorIframe.src = newEditorUrl;

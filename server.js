@@ -823,6 +823,15 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
     });
   };
 
+  // problems JSON 내부 URL 정규화
+  if (problemsData) {
+    Object.keys(problemsData).forEach(key => {
+      if (problemsData[key].img) problemsData[key].img = normalizeUrl(problemsData[key].img);
+      if (problemsData[key].answer) problemsData[key].answer = normalizeUrl(problemsData[key].answer);
+      if (problemsData[key].solution) problemsData[key].solution = normalizeUrl(problemsData[key].solution);
+    });
+  }
+
   // 사용자 정보
   const userID = req.session.userID || 'guest';
   const userRole = req.session.role || 'guest';
@@ -832,8 +841,8 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
   if (platform === 'scratch') {
     editorUrl = `/scratch/?project_file=${encodeURIComponent(normalizeUrl(projectUrl))}`;
   } else if (platform === 'entry') {
-    // config.SERVICES.ENTRY (8070 port) 사용
-    editorUrl = `${config.SERVICES.ENTRY}/entry_editor/?s3Url=${encodeURIComponent(normalizeUrl(projectUrl))}&userID=${userID}&role=${userRole}`;
+    // config.SERVICES.ENTRY (8070 port) 사용 - Entry 서버는 루트(/)에서 에디터를 서빙함
+    editorUrl = `${config.SERVICES.ENTRY}/?s3Url=${encodeURIComponent(normalizeUrl(projectUrl))}&userID=${userID}&role=${userRole}`;
   } else {
     return res.status(400).send('지원하지 않는 플랫폼입니다.');
   }
@@ -848,7 +857,8 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
     editorUrl: editorUrl,
     imgUrl: normalizeUrl(imgUrl) || '',
     userID: userID,
-    userRole: userRole
+    userRole: userRole,
+    entryBaseUrl: config.SERVICES.ENTRY // 클라이언트 사이드에서 URL 생성 시 필요
   });
 });
 
