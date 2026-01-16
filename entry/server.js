@@ -337,7 +337,8 @@ app.post('/api/picture/paint', (req, res) => {
 });
 
 // 🔥 ENT 프로젝트 로드 API - 3000번 서버로 프록시
-app.get('/entry/api/load-project', (req, res) => {
+// Apache에서 /entry/api/load-project → 8070의 /api/load-project로 전달됨
+app.get('/api/load-project', (req, res) => {
     const { s3Url, file } = req.query;
 
     console.log('📦 [8070] ENT 프로젝트 로드 API 프록시 요청:', { s3Url, file });
