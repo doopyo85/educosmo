@@ -141,14 +141,14 @@ router.get('/class-materials', requireTeacher, async (req, res) => {
             };
         });
 
-        res.render('kinder', {
+        res.render('teacher/class_materials', {
             // Main Tab Titles
             pageTitle: '교사 교육자료',
 
             // Dynamic Tabs Data
             lessonTabs,
 
-            // Board Tab Data (Empty for now)
+            // Board Tab Data (Not needed for this view but passing empty just in case)
             preschoolTitle: '',
             preschoolAITitle: '',
             preschoolItems: [],
