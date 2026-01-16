@@ -65,6 +65,7 @@
                     }
                 </style>
 
+                <% if (typeof ajax==='undefined' || !ajax) { %>
                 <div class="board-layout-container">
                     <!-- 🔥 왼쪽 네비게이션 (Board Style) -->
                     <div class="board-sidebar">
@@ -109,6 +110,7 @@
                     <!-- 🔥 메인 콘텐츠 -->
                     <div class="board-main-content"
                         style="<%= (typeof currentView !== 'undefined' && (currentView === 'class-materials' || currentView === 'career-info')) ? 'display: none;' : '' %>">
+                <% } %>
                         <!-- 1. 학생 관리 뷰 -->
                         <div id="student-management-view" style="padding: 24px;">
                             <% let pageTitle='학습 진도' ; let pageSubtitle='학생 관리 > 학습 진도' ; if (typeof currentView
@@ -347,8 +349,10 @@
                             <i class="bi bi-cone-striped fs-1 text-muted mb-3"></i>
                             <h4 class="text-muted">준비중입니다. 곧 만나실 수 있으실거에요 ^~^/. 기대해주세요</h4>
                         </div>
+                <% if (typeof ajax==='undefined' || !ajax) { %>
                     </div>
                 </div>
+                <% } %>
 
                 <!-- 학생 추가/수정 모달 -->
                 <div class="modal fade" id="studentModal" tabindex="-1">

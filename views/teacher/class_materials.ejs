@@ -289,23 +289,7 @@
             pointer-events: none;
         }
 
-        /* 🔥 Full Width Content Override for Class Materials */
-        /* Note: We keep board-layout-container standard (1400px centered) to align sidebar with other pages. */
-
-        .board-sidebar {
-            /* Ensure sidebar visually matches standard */
-            min-height: calc(100vh - 100px);
-        }
-
-        .board-main-content {
-            /* Unlock the fixed width (900px) from board-layout.css */
-            flex: 1 !important;
-            max-width: none !important;
-            min-width: auto !important;
-            padding: 0;
-            overflow-x: hidden;
-        }
-
+        /* Class Materials Specific Styles */
         .library-wrapper {
             padding: 30px;
             width: 100%;
@@ -315,10 +299,10 @@
             width: 100%;
         }
 
-        /* Adjust grid for wider screens */
+        /* Adjust grid to fit within 900px main content width */
         .shelf-row {
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 30px;
         }
     </style>
 </head>
