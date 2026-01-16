@@ -289,25 +289,19 @@
             pointer-events: none;
         }
 
-        /* 🔥 Full Width Layout Overrides for Class Materials */
-        .board-layout-container {
-            max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            display: flex;
-        }
+        /* 🔥 Full Width Content Override for Class Materials */
+        /* Note: We keep board-layout-container standard (1400px centered) to align sidebar with other pages. */
 
         .board-sidebar {
-            width: 250px;
-            min-width: 250px;
-            border-right: 1px solid #dee2e6;
-            background: #f8f9fa;
-            min-height: calc(100vh - 60px);
-            /* Height minus header */
+            /* Ensure sidebar visually matches standard */
+            min-height: calc(100vh - 100px);
         }
 
         .board-main-content {
-            flex: 1;
+            /* Unlock the fixed width (900px) from board-layout.css */
+            flex: 1 !important;
+            max-width: none !important;
+            min-width: auto !important;
             padding: 0;
             overflow-x: hidden;
         }
