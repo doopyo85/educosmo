@@ -288,6 +288,44 @@
             cursor: not-allowed;
             pointer-events: none;
         }
+
+        /* 🔥 Full Width Layout Overrides for Class Materials */
+        .board-layout-container {
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: flex;
+        }
+
+        .board-sidebar {
+            width: 250px;
+            min-width: 250px;
+            border-right: 1px solid #dee2e6;
+            background: #f8f9fa;
+            min-height: calc(100vh - 60px);
+            /* Height minus header */
+        }
+
+        .board-main-content {
+            flex: 1;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .library-wrapper {
+            padding: 30px;
+            width: 100%;
+        }
+
+        .bookshelf-container {
+            width: 100%;
+        }
+
+        /* Adjust grid for wider screens */
+        .shelf-row {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 40px;
+        }
     </style>
 </head>
 
