@@ -364,7 +364,7 @@ class S3Explorer {
       let folderLabel = displayName;
 
       if (folder.userName) {
-        folderLabel = `<span class="fw-bold text-primary me-1">(${folder.userName})</span> <span class="text-dark">${displayName}</span>`;
+        folderLabel = `<span class="text-muted small me-1" style="font-size: 0.85rem;">(${folder.userName})</span> <span class="text-dark">${displayName}</span>`;
       }
 
       return `
