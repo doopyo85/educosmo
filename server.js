@@ -541,8 +541,7 @@ const routes = {
   'python': require('./routes/pythonRouter'),
   'template': require('./routes/templateRouter'),
   'gallery': require('./routes/galleryRouter'),  // 🔥 갤러리 공유 시스템
-  's3': require('./routes/s3Router'),  // 🔥 통합 S3 브라우저
-  'certification': require('./routes/certificationRouter') // 🔥 자격증 다운로드 센터
+  's3': require('./routes/s3Router')  // 🔥 통합 S3 브라우저
 };
 
 // 🔥 Python 문제은행 API 라우터
