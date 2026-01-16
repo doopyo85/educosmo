@@ -23,50 +23,134 @@
     <%- include('../partials/header') %>
 
         <% if (role==='teacher' || role==='manager' ) { %>
-            <div class="board-layout-container">
-                <!-- 🔥 왼쪽 네비게이션 (Shared Sidebar) -->
-                <div class="board-sidebar">
-                    <div class="board-sidebar-header">
-                        <i class="bi bi-person-video3"></i> 교사 전용 메뉴
-                    </div>
+            <!-- 🔥 Teacher Dashboard Style Override for S3 Browser -->
+            <style>
+                /* 1. Layout Container Restructuring */
+                .board-layout-container {
+                    max-width: 1400px;
+                    margin: 20px auto;
+                    padding: 0 15px;
+                }
 
-                    <!-- 학생 관리 -->
-                    <div class="board-nav-group mb-2">
-                        <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">
-                            <i class="bi bi-people me-2"></i> 학생 관리
-                        </div>
-                        <div class="d-flex flex-column gap-1">
-                            <a href="/teacher/student-management/progress" class="board-category-item ps-5 py-2"
-                                style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                                학습 진도
-                            </a>
-                            <a href="/teacher/student-management/list" class="board-category-item ps-5 py-2"
-                                style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                                학생 목록
-                            </a>
-                            <a href="/teacher/student-management/attendance" class="board-category-item ps-5 py-2"
-                                style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                                출석부
-                            </a>
-                        </div>
-                    </div>
+                /* 2. Remove Default S3 Wrapper Styles */
+                .s3-browser-wrapper {
+                    border: none !important;
+                    background: transparent !important;
+                    box-shadow: none !important;
+                    height: auto !important;
+                    overflow: visible !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                }
 
-                    <a href="/teacher/class-materials" class="board-category-item">
-                        <i class="bi bi-journal-text"></i> 수업 자료
-                    </a>
+                /* 3. Hide Breadcrumb/Filter container borders to blend in */
+                .breadcrumb-container,
+                .platform-filter {
+                    background: transparent !important;
+                    border: none !important;
+                    padding-left: 0 !important;
+                    padding-right: 0 !important;
+                    margin-bottom: 10px;
+                }
 
-                    <!-- 🔥 Active File Manager -->
-                    <a href="/s3/student-files" class="board-category-item active">
-                        <i class="bi bi-folder2-open"></i> 학생 파일
-                    </a>
+                /* 4. Main Content Area Split */
+                .s3-browser-content {
+                    display: flex !important;
+                    gap: 20px !important;
+                    /* Gap between "Sidebar" and "Content" */
+                    align-items: flex-start !important;
+                    overflow: visible !important;
+                    height: auto !important;
+                }
 
-                    <a href="/teacher/career-info" class="board-category-item">
-                        <i class="bi bi-signpost-split"></i> 진로 진학
-                    </a>
-                </div>
+                /* 5. Folder Tree -> Becomes "Sidebar" */
+                .folder-tree-container {
+                    width: 250px !important;
+                    min-width: 250px !important;
+                    flex-shrink: 0 !important;
 
-                <!-- 🔥 메인 콘텐츠 (Wrapped) -->
-                <div class="board-main-content p-0 d-flex flex-column">
+                    /* Sidebar Visuals */
+                    background: #fff !important;
+                    border: 1px solid #e0e0e0 !important;
+                    border-radius: 8px !important;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+
+                    /* Sticky Positioning */
+                    position: sticky !important;
+                    top: 20px !important;
+                    height: calc(100vh - 100px) !important;
+
+                    display: flex !important;
+                    flex-direction: column !important;
+                }
+
+                /* Folder Tree Header -> Sidebar Header */
+                .folder-tree-header {
+                    background-color: #495057 !important;
+                    color: white !important;
+                    padding: 15px !important;
+                    border-radius: 8px 8px 0 0 !important;
+                    border-bottom: none !important;
+                }
+
+                .folder-tree-header h4 {
+                    color: white !important;
+                    font-size: 1rem !important;
+                    font-weight: bold !important;
+                }
+
+                /* Folder Items */
+                .folder-item {
+                    padding: 12px 20px !important;
+                    border-bottom: 1px solid #f1f3f4 !important;
+                }
+
+                .folder-item:hover {
+                    background-color: #f8f9fa !important;
+                    color: #495057 !important;
+                }
+
+                .folder-item.selected {
+                    background-color: #e3f2fd !important;
+                    color: #1976d2 !important;
+                    font-weight: 500 !important;
+                    border-left: 3px solid #1976d2 !important;
+                }
+
+                /* 6. File List -> Becomes "Main Content" */
+                .file-list-container {
+                    flex: 1 !important;
+
+                    /* Content Visuals */
+                    background: #fff !important;
+                    border: 1px solid #e0e0e0 !important;
+                    border-radius: 8px !important;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+
+                    height: calc(100vh - 100px) !important;
+                    overflow: hidden !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                }
+
+                /* Toolbar adjustments */
+                .file-list-toolbar {
+                    background: #fff !important;
+                    border-bottom: 1px solid #dee2e6 !important;
+                    border-radius: 8px 8px 0 0 !important;
+                }
+
+                /* Hide the page-level header for S3 to reduce clutter? 
+           Or modify it. Let's keep it but maybe style it cleanly inside board-layout-container 
+        */
+                .s3-browser-header {
+                    padding: 0 0 20px 0 !important;
+                    background: transparent !important;
+                }
+            </style>
+            <% } %>
+
+                <div class="board-layout-container" style="flex-direction: column; display: block;">
                     <!-- 통합 헤더 (페이지 타이틀 바) -->
                     <div class="s3-browser-header">
                         <div class="d-flex justify-content-between align-items-center">
@@ -74,223 +158,202 @@
                                 <div>
                                     <h5 class="mb-1">
                                         <i class="bi bi-folder-open me-2"></i>
-                                        학생 파일 관리 (센터 <%= centerID %>)
+                                        <% if (role==='admin' ) { %>
+                                            S3 파일 관리 (전체)
+                                            <% } else if (role==='teacher' || role==='manager' ) { %>
+                                                학생 파일 관리 <span class="text-muted fs-6 fw-normal ms-2">(센터 <%= centerID
+                                                        %>)</span>
+                                                <% } else { %>
+                                                    내 파일 관리
+                                                    <% } %>
                                     </h5>
                                     <p class="text-muted mb-0 small">
-                                        소속 학생들의 저장 파일을 조회할 수 있습니다.
+                                        <% if (role==='admin' ) { %>
+                                            모든 사용자의 저장 파일을 조회하고 관리할 수 있습니다.
+                                            <% } else if (role==='teacher' || role==='manager' ) { %>
+                                                학생들의 파일을 조회하고 관리할 수 있습니다. 좌측 폴더 트리에서 학생을 선택하세요.
+                                                <% } else { %>
+                                                    나의 저장 파일을 조회할 수 있습니다.
+                                                    <% } %>
                                     </p>
                                 </div>
                             </div>
 
                             <div class="d-flex align-items-center gap-3">
-                                <span class="badge bg-success">
-                                    <%= role %>
-                                </span>
-                                <span class="badge bg-info">센터 ID: <%= centerID %></span>
+                                <div>
+                                    <% if (role==='admin' ) { %>
+                                        <span class="badge bg-danger">Admin</span>
+                                        <% } else if (role==='teacher' || role==='manager' ) { %>
+                                            <span class="badge bg-success">
+                                                <%= role %>
+                                            </span>
+                                            <span class="badge bg-info">센터 <%= centerID %></span>
+                                            <% } else { %>
+                                                <span class="badge bg-primary">
+                                                    <%= role %>
+                                                </span>
+                                                <% } %>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- S3 브라우저 컨테이너 -->
-                    <div id="s3-browser" style="flex: 1;"></div>
-                </div>
-            </div>
-            <% } else { %>
-                <!-- 통합 헤더 (페이지 타이틀 바) - Regular View -->
-                <div class="s3-browser-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <div>
-                                <h5 class="mb-1">
-                                    <i class="bi bi-folder-open me-2"></i>
-                                    <% if (role==='admin' ) { %>
-                                        S3 파일 관리 (전체)
-                                        <% } else { %>
-                                            내 파일 관리
-                                            <% } %>
-                                </h5>
-                                <p class="text-muted mb-0 small">
-                                    <% if (role==='admin' ) { %>
-                                        모든 사용자의 저장 파일을 조회하고 관리할 수 있습니다.
-                                        <% } else { %>
-                                            나의 저장 파일을 조회할 수 있습니다.
-                                            <% } %>
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center gap-3">
-                            <div>
-                                <% if (role==='admin' ) { %>
-                                    <span class="badge bg-danger">Admin</span>
-                                    <span class="badge bg-secondary">전체 접근</span>
-                                    <% } else { %>
-                                        <span class="badge bg-primary">
-                                            <%= role %>
-                                        </span>
-                                        <span class="badge bg-secondary">개인</span>
-                                        <% } %>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="s3-browser"></div>
                 </div>
 
-                <!-- S3 브라우저 컨테이너 -->
-                <div id="s3-browser"></div>
-                <% } %>
+                <!-- Bootstrap JS -->
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                <script src="/js/components/S3Explorer.js"></script>
 
-                    <!-- Bootstrap JS -->
-                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-                    <script src="/js/components/S3Explorer.js"></script>
+                <!-- 초기화 스크립트 -->
+                <script>
+                    (function () {
+                        console.log('🚀 S3 Browser 초기화 시작...');
 
-                    <!-- 초기화 스크립트 -->
-                    <script>
-                        (function () {
-                            console.log('🚀 S3 Browser 초기화 시작...');
+                        const role = '<%= role %>';
+                        const userID = '<%= userID %>';
+                        const scope = '<%= scope %>';
 
-                            const role = '<%= role %>';
-                            const userID = '<%= userID %>';
-                            const scope = '<%= scope %>';
+                        const initialPath = '<%= typeof initialPath !== "undefined" ? initialPath : "" %>'; // 🔥 초기 경로
+                        const s3AssetUrl = '<%= typeof s3AssetUrl !== "undefined" ? s3AssetUrl : "" %>'; // 🔥 NCP Asset URL
 
-                            const initialPath = '<%= typeof initialPath !== "undefined" ? initialPath : "" %>'; // 🔥 초기 경로
-                            const s3AssetUrl = '<%= typeof s3AssetUrl !== "undefined" ? s3AssetUrl : "" %>'; // 🔥 NCP Asset URL
+                        // 역할별 루트 경로 설정
+                        let rootPath = '';
+                        if (initialPath) {
+                            rootPath = initialPath; // 🔥 초기 경로가 있으면 그것을 사용
+                        } else if (role === 'admin') {
+                            rootPath = '';
+                        } else if (role === 'teacher' || role === 'manager') {
+                            rootPath = 'users/';
+                        } else if (role === 'student') {
+                            rootPath = `users/${userID}/`; // ✅ 학생은 본인 폴더에서 시작
+                        }
 
-                            // 역할별 루트 경로 설정
-                            let rootPath = '';
-                            if (initialPath) {
-                                rootPath = initialPath; // 🔥 초기 경로가 있으면 그것을 사용
-                            } else if (role === 'admin') {
-                                rootPath = '';
-                            } else if (role === 'teacher' || role === 'manager') {
-                                rootPath = 'users/';
-                            } else if (role === 'student') {
-                                rootPath = `users/${userID}/`; // ✅ 학생은 본인 폴더에서 시작
+                        console.log('📍 Initial Path:', rootPath);
+
+                        // 🔥 역할별 업로드 권한 설정
+                        let enableUpload = false;
+                        if (role === 'admin') {
+                            enableUpload = true;  // Admin은 모든 곳에 업로드 가능
+                        } else if (role === 'teacher' || role === 'manager') {
+                            enableUpload = true;  // Teacher/Manager는 학생 폴더에 업로드 가능
+                        } else if (role === 'student') {
+                            enableUpload = true;  // Student는 본인 폴더에 업로드 가능
+                        }
+
+                        window.s3Explorer = new S3Explorer({
+                            containerId: 's3-browser',
+                            apiEndpoint: '/api/s3/browse',
+                            scope: scope,
+                            rootPath: rootPath,
+                            s3AssetUrl: s3AssetUrl, // 🔥 NCP Asset URL 전달
+                            userID: userID,        // ✅ 반드시 전달
+                            userRole: role,        // ✅ 역할 전달
+                            allowedPlatforms: ['scratch', 'entry', 'gallery', 'portfolio'],
+                            enableUpload: enableUpload,  // 🔥 역할별 업로드 권한
+                            enableDelete: <%= enableDelete %>,
+                            enablePreview: true,
+                            onError: function (error) {
+                                console.error('❌ 오류 발생:', error);
+                                showModalNotification('오류가 발생했습니다: ' + error.message, 'danger');
                             }
-
-                            console.log('📍 Initial Path:', rootPath);
-
-                            // 🔥 역할별 업로드 권한 설정
-                            let enableUpload = false;
-                            if (role === 'admin') {
-                                enableUpload = true;  // Admin은 모든 곳에 업로드 가능
-                            } else if (role === 'teacher' || role === 'manager') {
-                                enableUpload = true;  // Teacher/Manager는 학생 폴더에 업로드 가능
-                            } else if (role === 'student') {
-                                enableUpload = true;  // Student는 본인 폴더에 업로드 가능
-                            }
-
-                            window.s3Explorer = new S3Explorer({
-                                containerId: 's3-browser',
-                                apiEndpoint: '/api/s3/browse',
-                                scope: scope,
-                                rootPath: rootPath,
-                                s3AssetUrl: s3AssetUrl, // 🔥 NCP Asset URL 전달
-                                userID: userID,        // ✅ 반드시 전달
-                                userRole: role,        // ✅ 역할 전달
-                                allowedPlatforms: ['scratch', 'entry', 'gallery', 'portfolio'],
-                                enableUpload: enableUpload,  // 🔥 역할별 업로드 권한
-                                enableDelete: <%= enableDelete %>,
-                                enablePreview: true,
-                                onError: function (error) {
-                                    console.error('❌ 오류 발생:', error);
-                                    showModalNotification('오류가 발생했습니다: ' + error.message, 'danger');
-                                }
             });
 
-                        console.log('✅ S3 Browser 초기화 완료');
+                    console.log('✅ S3 Browser 초기화 완료');
 
-                        function showModalNotification(message, type = 'info') {
-                            const alertDiv = document.createElement('div');
-                            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-                            alertDiv.style.cssText = 'position: absolute; top: 10px; right: 10px; z-index: 9999; min-width: 300px;';
-                            alertDiv.innerHTML = `
+                    function showModalNotification(message, type = 'info') {
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+                        alertDiv.style.cssText = 'position: absolute; top: 10px; right: 10px; z-index: 9999; min-width: 300px;';
+                        alertDiv.innerHTML = `
                     ${message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
-                            document.body.appendChild(alertDiv);
-                            setTimeout(() => alertDiv.remove(), 5000);
-                        }
+                        document.body.appendChild(alertDiv);
+                        setTimeout(() => alertDiv.remove(), 5000);
+                    }
 
-                        window.showModalNotification = showModalNotification;
+                    window.showModalNotification = showModalNotification;
         }) ();
-                    </script>
+                </script>
 
-                    <style>
-                        body {
-                            margin: 0;
-                            padding: 0;
-                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-                            display: flex;
-                            flex-direction: column;
-                            height: 100vh;
-                            background: #fff;
-                        }
+                <style>
+                    body {
+                        margin: 0;
+                        padding: 0;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+                        display: flex;
+                        flex-direction: column;
+                        height: 100vh;
+                        background: #fff;
+                    }
 
-                        .s3-browser-header {
-                            flex-shrink: 0;
-                            background: #f1f3f5;
-                            padding: 15px 25px;
-                        }
+                    .s3-browser-header {
+                        flex-shrink: 0;
+                        background: #f1f3f5;
+                        padding: 15px 25px;
+                    }
 
-                        .s3-browser-header h5 {
-                            font-size: 1.5rem;
-                            font-weight: 700;
-                            color: #212529;
-                            margin: 0;
-                        }
+                    .s3-browser-header h5 {
+                        font-size: 1.5rem;
+                        font-weight: 700;
+                        color: #212529;
+                        margin: 0;
+                    }
 
-                        .s3-browser-header .text-muted {
-                            color: #6c757d !important;
-                            font-size: 0.9rem;
-                        }
+                    .s3-browser-header .text-muted {
+                        color: #6c757d !important;
+                        font-size: 0.9rem;
+                    }
 
-                        /* 메인 컨테이너 Style (Full Stretch) */
-                        #s3-browser {
-                            flex: 1;
-                            padding: 20px;
-                            overflow: hidden;
-                            background: #f8f9fa;
-                            display: flex;
-                            flex-direction: column;
-                        }
+                    /* 메인 컨테이너 Style (Full Stretch) */
+                    #s3-browser {
+                        flex: 1;
+                        padding: 20px;
+                        overflow: hidden;
+                        background: #f8f9fa;
+                        display: flex;
+                        flex-direction: column;
+                    }
 
-                        /* S3Wrapper 강제 스타일 오버라이드 */
-                        .s3-browser-wrapper {
-                            height: 100% !important;
-                            width: 100% !important;
-                            border: none !important;
-                            /* 🔥 이중 테두리 제거 */
-                            border-radius: 0 !important;
-                            box-shadow: none !important;
-                            /* 🔥 그림자 제거 */
-                        }
+                    /* S3Wrapper 강제 스타일 오버라이드 */
+                    .s3-browser-wrapper {
+                        height: 100% !important;
+                        width: 100% !important;
+                        border: none !important;
+                        /* 🔥 이중 테두리 제거 */
+                        border-radius: 0 !important;
+                        box-shadow: none !important;
+                        /* 🔥 그림자 제거 */
+                    }
 
-                        .badge {
-                            font-size: 0.75rem;
-                            padding: 0.4em 0.8em;
-                            font-weight: 600;
-                            border-radius: 6px;
-                            letter-spacing: 0.3px;
-                        }
+                    .badge {
+                        font-size: 0.75rem;
+                        padding: 0.4em 0.8em;
+                        font-weight: 600;
+                        border-radius: 6px;
+                        letter-spacing: 0.3px;
+                    }
 
-                        #s3-browser::-webkit-scrollbar {
-                            width: 10px;
-                        }
+                    #s3-browser::-webkit-scrollbar {
+                        width: 10px;
+                    }
 
-                        #s3-browser::-webkit-scrollbar-track {
-                            background: #e9ecef;
-                            border-radius: 5px;
-                        }
+                    #s3-browser::-webkit-scrollbar-track {
+                        background: #e9ecef;
+                        border-radius: 5px;
+                    }
 
-                        #s3-browser::-webkit-scrollbar-thumb {
-                            background: #adb5bd;
-                            border-radius: 5px;
-                        }
+                    #s3-browser::-webkit-scrollbar-thumb {
+                        background: #adb5bd;
+                        border-radius: 5px;
+                    }
 
-                        #s3-browser::-webkit-scrollbar-thumb:hover {
-                            background: #868e96;
-                        }
-                    </style>
+                    #s3-browser::-webkit-scrollbar-thumb:hover {
+                        background: #868e96;
+                    }
+                </style>
 </body>
 
 </html>
