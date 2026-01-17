@@ -145,7 +145,7 @@ router.get('/boards', async (req, res) => {
         }
 
         query = `
-            SELECT b.id, b.title, b.image_url, b.author, b.created_at as created, b.views, b.author_type, b.board_scope, b.category_id as nest_id
+            SELECT b.id, b.title, b.content, b.image_url, b.author, b.created_at as created, b.views, b.author_type, b.board_scope, b.category_id as nest_id
             FROM board_posts b
             WHERE b.is_public = 1
             AND b.board_scope = ?
