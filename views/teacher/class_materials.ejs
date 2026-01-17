@@ -344,10 +344,10 @@
                                                             <img src="<%= coverImg %>" alt="<%= group.title %>"
                                                                 loading="lazy" referrerpolicy="no-referrer">
                                                         </div>
-                                                        <% } else { // Generate random soft color for text cover const
-                                                            colors=['#e3f2fd', '#f3e5f5' , '#e8f5e9' , '#fff3e0'
-                                                            , '#ffebee' , '#e0f7fa' ]; const
-                                                            randColor=colors[Math.floor(Math.random() * colors.length)];
+                                                        <% } else {
+                                                            // Generate random soft color for text cover
+                                                            const colors=['#e3f2fd', '#f3e5f5', '#e8f5e9', '#fff3e0', '#ffebee', '#e0f7fa'];
+                                                            const randColor=colors[Math.floor(Math.random() * colors.length)];
                                                             %>
                                                             <div class="book-cover text-only"
                                                                 style="background-color: <%= randColor %>;">
