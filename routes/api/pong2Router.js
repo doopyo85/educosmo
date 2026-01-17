@@ -131,7 +131,7 @@ router.get('/boards', async (req, res) => {
         const { type, limit, nestId } = req.query; // type can be 'community', 'teacher', 'portfolio'
 
         let query, params = [];
-        let targetScope = 'COMMUNITY'; // Default
+        let targetScope = 'PONG2'; // 🔥 PONG2 게시판 조회
 
         if (type === 'teacher') targetScope = 'TEACHER';
 
@@ -278,7 +278,7 @@ router.post('/boards', requireDbUser, async (req, res) => {
         let imageUrl = image_url || null; // 🔥 이미지 URL 추가
 
         // Determine Scope AND Category
-        let boardScope = 'COMMUNITY';
+        let boardScope = 'PONG2';  // 🔥 PONG2 작성 글은 board_scope = 'PONG2'
         let categoryId = nest_id || 3; // Default to 3 (Game/Free) if not provided, but frontend should force it.
 
         if (board_type === 'TEACHER') {

@@ -149,6 +149,7 @@ router.get('/posts', async (req, res) => {
                     CASE WHEN created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END as is_new
                 FROM board_posts
                 WHERE category_id IN (1, 2, 3)
+                AND (board_scope = 'EDUCOSMO' OR board_scope IS NULL)
                 ORDER BY is_pinned DESC, is_notice DESC, created_at DESC
                 LIMIT 20
             `);
@@ -183,6 +184,7 @@ router.get('/posts', async (req, res) => {
                 CASE WHEN created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END as is_new
             FROM board_posts
             WHERE category_id = ?
+            AND (board_scope = 'EDUCOSMO' OR board_scope IS NULL)
             ORDER BY is_pinned DESC, is_notice DESC, created_at DESC
             LIMIT 20
         `, [categoryId]);
@@ -384,10 +386,10 @@ router.post('/posts', authenticateUser, async (req, res) => {
 
         // 게시글 INSERT
         const insertQuery = `
-            INSERT INTO board_posts 
-            (category_id, title, content, author, author_id, source, ccl, is_notice, is_pinned, 
-             attachment_count, has_images, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            INSERT INTO board_posts
+            (category_id, title, content, author, author_id, source, ccl, is_notice, is_pinned,
+             attachment_count, has_images, board_scope, is_public, author_type, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'EDUCOSMO', 1, 'PAID', NOW(), NOW())
         `;
 
         const result = await db.queryDatabase(insertQuery, [

@@ -309,9 +309,11 @@
         }
 
         /* Adjust grid to fit within 900px main content width */
+        /* Adjust grid to fit within 900px main content width */
         .shelf-row {
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 30px;
+            /* User Request: 12 items per row (Yearly structure) */
+            grid-template-columns: repeat(12, 1fr);
+            gap: 12px;
         }
     </style>
 </head>
