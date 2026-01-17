@@ -354,7 +354,7 @@ router.post('/boards/:id/react', requireDbUser, async (req, res) => {
 
         // Toggle: Check if exists
         const existing = await queryDatabase(`
-            SELECT id FROM BoardReactions 
+            SELECT id FROM BoardReactions
             WHERE post_id = ? AND user_id = ? AND user_type = ? AND reaction_type = ?
         `, [id, req.user.id, req.user.type, type]);
 
@@ -373,6 +373,51 @@ router.post('/boards/:id/react', requireDbUser, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Reaction failed' });
+    }
+});
+
+// ==========================================
+// Delete Post (Author only)
+// ==========================================
+router.delete('/boards/:id', requireDbUser, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        console.log(`🗑️ [Pong2] Delete request for post ${id} by user ${req.user.id} (${req.user.type})`);
+
+        // 1. Get post info to check ownership
+        const posts = await queryDatabase(`
+            SELECT author_id, author_type, title
+            FROM board_posts
+            WHERE id = ? AND is_deleted = 0
+        `, [id]);
+
+        if (posts.length === 0) {
+            console.log(`❌ Post ${id} not found or already deleted`);
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        const post = posts[0];
+
+        // 2. Check ownership
+        if (post.author_id !== req.user.id || post.author_type !== req.user.type) {
+            console.log(`❌ Permission denied: Post author (${post.author_type}:${post.author_id}) != User (${req.user.type}:${req.user.id})`);
+            return res.status(403).json({ error: 'You can only delete your own posts' });
+        }
+
+        // 3. Soft delete the post
+        await queryDatabase(`
+            UPDATE board_posts
+            SET is_deleted = 1
+            WHERE id = ?
+        `, [id]);
+
+        console.log(`✅ Post ${id} ("${post.title}") deleted successfully`);
+        res.json({ success: true, message: 'Post deleted successfully' });
+
+    } catch (error) {
+        console.error('❌ Delete post error:', error);
+        res.status(500).json({ error: 'Failed to delete post', message: error.message });
     }
 });
 
