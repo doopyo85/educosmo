@@ -208,7 +208,7 @@
 
                 <!-- 초기화 스크립트 -->
                 <script>
-                    (function () {
+                    document.addEventListener('DOMContentLoaded', function () {
                         console.log('🚀 S3 Browser 초기화 시작...');
 
                         const role = '<%= role %>';
@@ -258,9 +258,10 @@
                                 console.error('❌ 오류 발생:', error);
                                 showModalNotification('오류가 발생했습니다: ' + error.message, 'danger');
                             }
-            });
+                        });
 
-                    console.log('✅ S3 Browser 초기화 완료');
+                        console.log('✅ S3 Browser 초기화 완료');
+                    });
 
                     function showModalNotification(message, type = 'info') {
                         const alertDiv = document.createElement('div');
@@ -275,7 +276,6 @@
                     }
 
                     window.showModalNotification = showModalNotification;
-        }) ();
                 </script>
 
                 <style>
