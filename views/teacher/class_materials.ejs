@@ -291,19 +291,24 @@
 
         /* 🔥 Full Width Layout Overrides for Class Materials */
         .board-layout-container {
-            max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            max-width: 98% !important;
+            margin: 20px auto !important;
+            padding: 0 10px !important;
             display: flex;
+            gap: 20px;
         }
 
         .board-sidebar {
             width: 250px;
             min-width: 250px;
-            border-right: 1px solid #dee2e6;
-            background: #f8f9fa;
-            min-height: calc(100vh - 60px);
-            /* Height minus header */
+            /* Restore card look */
+            border: 1px solid #dee2e6;
+            background: #fff;
+            /* Sticky behavior from board-layout.css is preserved, but we ensure height logic matches */
+            height: fit-content;
+            min-height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .board-main-content {
@@ -312,6 +317,10 @@
             min-width: auto !important;
             padding: 0;
             overflow-x: hidden;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            /* Match standard card look */
         }
 
         /* Class Materials Specific Styles */
