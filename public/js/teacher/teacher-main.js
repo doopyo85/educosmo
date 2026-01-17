@@ -3,7 +3,8 @@ const TeacherMain = {
 
     init() {
         this.bindEvents();
-        this.loadPage('student-management');
+        // 🔥 Fix: Direct link to avoid redirect dropping ajax param
+        this.loadPage('student-management/progress');
     },
 
     bindEvents() {
@@ -58,10 +59,18 @@ const TeacherMain = {
     },
 
     initPageScript(page) {
+        // 🔥 Handle various sub-paths for student-management
+        if (page.includes('student-management')) {
+            if (window.StudentManagement) {
+                window.StudentManagement.init();
+            }
+            return;
+        }
+
         switch (page) {
-            case 'student-management':
-                if (window.StudentManagement) {
-                    window.StudentManagement.init();
+            case 'student-progress':
+                if (window.StudentProgress) {
+                    window.StudentProgress.init();
                 }
                 break;
             case 'student-progress':
