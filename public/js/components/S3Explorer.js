@@ -312,6 +312,35 @@ class S3Explorer {
   }
 
   /**
+   * 🍞 Breadcrumb 렌더링
+   */
+  renderBreadcrumbs(breadcrumbs) {
+    const container = document.getElementById('s3-breadcrumb');
+    if (!container) return;
+
+    let filteredBreadcrumbs = breadcrumbs;
+
+    // 비admin은 Root 숨김
+    if (!this.canAccessRoot) {
+      filteredBreadcrumbs = breadcrumbs.filter((crumb, idx) => {
+        if (idx === 0 && (!crumb.path || crumb.path === '' || crumb.path === '/')) {
+          return false;
+        }
+        return true;
+      });
+    }
+
+    container.innerHTML = filteredBreadcrumbs.map((crumb, idx) => {
+      const displayName = this.escapeHtml(decodeURIComponent(crumb.name));
+
+      if (idx === filteredBreadcrumbs.length - 1) {
+        return `<span class="breadcrumb-current">${displayName}</span>`;
+      }
+      return `<a href="#" class="breadcrumb-link" onclick="window.s3Explorer.navigateTo('${crumb.path}'); return false;">${displayName}</a>`;
+    }).join(' <span class="breadcrumb-separator">/</span> ');
+  }
+
+  /**
    * 🌳 트리 루트 렌더링
    */
   renderTreeRoot(folders) {
