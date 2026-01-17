@@ -479,9 +479,21 @@
                     sessions.forEach(session => {
                         const sessionData = JSON.stringify(session).replace(/'/g, "&apos;");
 
-                        const thumb = session.thumbnail || '/resource/profiles/default.webp';
+                        let thumbUrl = session.thumbnail || '/resource/profiles/default.webp';
                         const hasVideo = !!session.videoUrl;
                         const hasImages = session.images && session.images.length > 0;
+
+                        // 🔴 Request 4: Use YouTube Thumbnail for Video items
+                        if (hasVideo && (session.videoUrl.includes('youtube.com') || session.videoUrl.includes('youtu.be'))) {
+                            try {
+                                const videoId = session.videoUrl.split('/').pop().split('?')[0];
+                                if (videoId) {
+                                    thumbUrl = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+                                }
+                            } catch (e) {
+                                console.warn('YouTube ID extraction failed', e);
+                            }
+                        }
 
                         // Clean Topic
                         // Sometimes topic is repeated or empty
@@ -489,7 +501,7 @@
                         const li = document.createElement('li');
                         li.className = 'session-item';
                         li.innerHTML = `
-                         <img src="${thumb}" class="session-thumb" alt="thumb" loading="lazy">
+                         <img src="${thumbUrl}" class="session-thumb" alt="thumb" loading="lazy" referrerpolicy="no-referrer">
                          <div class="session-info">
                              <div class="session-title">${session.name}</div>
                              <div class="session-topic">${session.topic || ''}</div>
@@ -537,7 +549,7 @@
                 if (!session.images || session.images.length === 0) return;
 
                 const html = session.images.map(img => `
-                <img src="${img}" style="max-width: 100%; height: auto; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5);" loading="lazy">
+                <img src="${img}" style="max-width: 100%; height: auto; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5);" loading="lazy" referrerpolicy="no-referrer">
             `).join('');
 
                 container.innerHTML = `

@@ -80,21 +80,24 @@ const checkSameCenter = async (req, res, next) => {
 function groupByVolume(rows) {
     const groups = {};
     rows.forEach(row => {
-        // [0]Category, [1]Group, [2]Title, [3]Topic, ..., [7]Video, [8]Thumb, [9...]Images
-        if (!row[1] || !row[2]) return;
+        // Data Structure based on User Request:
+        // [0]Page, [1]Category, [2]Group by, [3]차시명, [4]주제, [5]활동명, [6]CT, [7]강의자, [8]시간, [9]URL, [10]Download, [11]Thumb, [12~]IMG...
 
-        const groupName = row[1]; // Group
+        if (!row[2] || !row[3]) return;
+
+        const groupName = row[2]; // Group by
         if (!groups[groupName]) {
             groups[groupName] = { title: groupName, sessions: [] };
         }
 
-        const images = row.slice(9, 16).filter(img => img && img.trim().startsWith('http'));
+        // Images start from Index 12 (IMG-1) to Index 23 (IMG-12)
+        const images = row.slice(12, 24).filter(img => img && img.trim().startsWith('http'));
 
         groups[groupName].sessions.push({
-            name: row[2], // Title
-            topic: row[3], // Topic
-            videoUrl: row[7], // Video
-            thumbnail: row[8], // Thumb
+            name: row[3], // 차시명
+            topic: row[5] || row[4] || '', // 활동명 fallback to 주제
+            videoUrl: row[9], // URL
+            thumbnail: row[11], // Thumb
             images: images
         });
     });
@@ -105,31 +108,31 @@ function groupByVolume(rows) {
 router.get('/class-materials', requireTeacher, async (req, res) => {
     try {
         // Fetch 'Teacher!' Sheet Data
-        // Range A:P covers same structure as Education Video sheet
-        // 🔥 Fix: Combine sheet name and range, pass spreadsheetId as 2nd arg
-        const teacherSheetData = await getSheetData('Teacher!A:P');
+        // Range A:X covers up to IMG-12
+        const teacherSheetData = await getSheetData('Teacher!A:X');
 
         // Group Data
-        // Teacher Request: "Show ALL data from Teacher sheet"
-        // We will put everything into "Level 1" slot and hide others via empty arrays or logic
-        // Group Data
-        // Extract unique categories from Column A (Index 0)
-        const allCategories = [...new Set(teacherSheetData.map(row => row[0] ? row[0].trim() : '').filter(c => c !== ''))];
+        // Extract unique categories from Column A (Index 0) - "Page" column
+        // Filter out '페이지' which is likely the header row
+        const allCategories = [...new Set(teacherSheetData
+            .map(row => row[0] ? row[0].trim() : '')
+            .filter(c => c !== '' && c !== '페이지')
+        )];
 
         // Native sheet order approach:
         const categoriesInOrder = [];
         const seen = new Set();
         teacherSheetData.forEach(row => {
             const c = row[0] ? row[0].trim() : '';
-            if (c && !seen.has(c)) {
+            if (c && c !== '페이지' && !seen.has(c)) {
                 seen.add(c);
                 categoriesInOrder.push(c);
             }
         });
 
-        // Helper filter (same as kinderRouter)
+        // Helper filter
         const filterByCategory = (rows, categoryKeyword) => {
-            return rows.filter(row => row[0] && row[0].includes(categoryKeyword));
+            return rows.filter(row => row[0] && row[0] === categoryKeyword); // Use exact match for Page column
         };
 
         // Create Tabs structure
