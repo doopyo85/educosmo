@@ -289,44 +289,7 @@
             pointer-events: none;
         }
 
-        /* 🔥 Full Width Layout Overrides for Class Materials */
-        .board-layout-container {
-            width: 96% !important;
-            /* Force explicit width to fill screen */
-            max-width: none !important;
-            /* Remove any constraints */
-            margin: 30px auto !important;
-            /* Center with top margin */
-            padding: 0 !important;
-            display: flex;
-            gap: 30px;
-            /* Increase gap for better separation */
-        }
 
-        .board-sidebar {
-            width: 250px;
-            min-width: 250px;
-            /* Restore card look */
-            border: 1px solid #dee2e6;
-            background: #fff;
-            /* Sticky behavior from board-layout.css is preserved, but we ensure height logic matches */
-            height: fit-content;
-            min-height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .board-main-content {
-            flex: 1;
-            max-width: none !important;
-            min-width: auto !important;
-            padding: 0;
-            overflow-x: hidden;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            min-height: calc(100vh - 120px);
-        }
 
         /* Class Materials Specific Styles */
         .library-wrapper {
