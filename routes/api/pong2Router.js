@@ -112,6 +112,20 @@ async function initPong2Tables() {
             )
         `);
         console.log('UserActivityLogs table checked/created');
+
+        // 🔥 Add is_deleted column to board_posts if it doesn't exist
+        try {
+            await queryDatabase(`
+                ALTER TABLE board_posts
+                ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT 0
+            `);
+            console.log('✅ board_posts.is_deleted column added/verified');
+        } catch (error) {
+            // Column might already exist, that's OK
+            if (!error.message.includes('Duplicate column')) {
+                console.error('⚠️ Error adding is_deleted column:', error.message);
+            }
+        }
     } catch (error) {
         console.error('Pong2 Table Init Error:', error);
     }
