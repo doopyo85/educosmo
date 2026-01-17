@@ -897,78 +897,60 @@ class S3Explorer {
 
     let dragCounter = 0;  // 중첩된 드래그 이벤트 처리
 
-    // ... Drag and Drop implementation ...
-  }
-}
+    // 페이지 전체에 드래그 오버
+    mainContent.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-// Helper for Tree Loading
-function toggleLoadingSpinner(container, show) {
-  if (show) {
-    const spinner = document.createElement('div');
-    spinner.className = 'tree-spinner spinner-border spinner-border-sm text-secondary ms-2';
-    spinner.role = 'status';
-    container.appendChild(spinner);
-  } else {
-    const spinner = container.querySelector('.tree-spinner');
-    if (spinner) spinner.remove();
-  }
-}
+      dragCounter++;
 
+      if (dragCounter === 1) {
+        overlay.style.display = 'flex';
+        console.log('📤 드래그 진입');
+      }
+    });
 
-// 페이지 전체에 드래그 오버
-mainContent.addEventListener('dragenter', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+    // 드래그 오버 (필수: preventDefault)
+    mainContent.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
 
-  dragCounter++;
+    // 드래그 나가기
+    mainContent.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-  if (dragCounter === 1) {
-    overlay.style.display = 'flex';
-    console.log('📤 드래그 진입');
-  }
-});
+      dragCounter--;
 
-// 드래그 오버 (필수: preventDefault)
-mainContent.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-});
+      if (dragCounter === 0) {
+        overlay.style.display = 'none';
+        console.log('🚫 드래그 이탈');
+      }
+    });
 
-// 드래그 나가기
-mainContent.addEventListener('dragleave', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+    // 🔥 드롭 (파일 업로드)
+    mainContent.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-  dragCounter--;
+      dragCounter = 0;
+      overlay.style.display = 'none';
 
-  if (dragCounter === 0) {
-    overlay.style.display = 'none';
-    console.log('🚫 드래그 이탈');
-  }
-});
+      const files = e.dataTransfer.files;
 
-// 🔥 드롭 (파일 업로드)
-mainContent.addEventListener('drop', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+      if (!files || files.length === 0) {
+        console.log('⚠️ 드롭된 파일이 없습니다.');
+        return;
+      }
 
-  dragCounter = 0;
-  overlay.style.display = 'none';
+      console.log(`📤 ${files.length}개 파일 드롭됨`);
 
-  const files = e.dataTransfer.files;
+      // 🔥 직접 업로드 (모달 없이)
+      this.uploadDroppedFiles(files);
+    });
 
-  if (!files || files.length === 0) {
-    console.log('⚠️ 드롭된 파일이 없습니다.');
-    return;
-  }
-
-  console.log(`📤 ${files.length}개 파일 드롭됨`);
-
-  // 🔥 직접 업로드 (모달 없이)
-  this.uploadDroppedFiles(files);
-});
-
-console.log('✅ 드래그 앤 드롭 설정 완료');
+    console.log('✅ 드래그 앤 드롭 설정 완료');
   }
 
   /**
@@ -1028,19 +1010,19 @@ console.log('✅ 드래그 앤 드롭 설정 완료');
   } finally {
     this.showLoading(false);
   }
-}
+  }
 
-/**
- * 🔥 업로드 모달 표시
- */
-upload() {
-  this.showUploadModal();
-}
+  /**
+   * 🔥 업로드 모달 표시
+   */
+  upload() {
+    this.showUploadModal();
+  }
 
-/**
- * 🔥 업로드 모달 생성
- */
-showUploadModal() {
+  /**
+   * 🔥 업로드 모달 생성
+   */
+  showUploadModal() {
   const modal = document.createElement('div');
   modal.className = 'upload-modal-overlay';
   modal.id = 'uploadModal';
@@ -1466,6 +1448,19 @@ updateSelectAllCheckbox() {
     this.showError('Scratch에서 파일을 열 수 없습니다.');
   }
 }
+}
+
+// Helper for Tree Loading
+function toggleLoadingSpinner(container, show) {
+  if (show) {
+    const spinner = document.createElement('div');
+    spinner.className = 'tree-spinner spinner-border spinner-border-sm text-secondary ms-2';
+    spinner.role = 'status';
+    container.appendChild(spinner);
+  } else {
+    const spinner = container.querySelector('.tree-spinner');
+    if (spinner) spinner.remove();
+  }
 }
 
 // 전역 인스턴스 (페이지에서 접근 가능)

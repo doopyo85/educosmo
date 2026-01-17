@@ -15,21 +15,21 @@ router.use((req, res, next) => {
         'http://localhost:5173',
         'https://app.codingnplay.co.kr'
     ];
-    
+
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
     }
-    
+
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    
+
     // Preflight 요청 처리
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
-    
+
     next();
 });
 
@@ -37,15 +37,15 @@ router.use((req, res, next) => {
 router.use((req, res, next) => {
     // 원본 res.send를 저장
     const originalSend = res.send.bind(res);
-    
-    res.send = function(body) {
+
+    res.send = function (body) {
         // Content-Type이 설정되지 않았으면 JSON으로 설정
         if (!res.get('Content-Type')) {
             res.set('Content-Type', 'application/json');
         }
         return originalSend(body);
     };
-    
+
     next();
 });
 
@@ -115,14 +115,19 @@ async function initPong2Tables() {
 
         // 🔥 Add is_deleted column to board_posts if it doesn't exist
         try {
+            // MySQL 5.7 doesn't support IF NOT EXISTS for ADD COLUMN, so we try adding it and catch duplicate error
             await queryDatabase(`
                 ALTER TABLE board_posts
-                ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT 0
+                ADD COLUMN is_deleted BOOLEAN DEFAULT 0
             `);
-            console.log('✅ board_posts.is_deleted column added/verified');
+            console.log('✅ board_posts.is_deleted column added');
         } catch (error) {
-            // Column might already exist, that's OK
-            if (!error.message.includes('Duplicate column')) {
+            // Column might already exist, checks for common error messages
+            // ER_DUP_FIELDNAME (1060) or text "Duplicate column"
+            if (error.message.includes('Duplicate column') || error.code === 'ER_DUP_FIELDNAME' || error.errno === 1060) {
+                // Already exists, ignore
+                console.log('ℹ️ board_posts.is_deleted already exists');
+            } else {
                 console.error('⚠️ Error adding is_deleted column:', error.message);
             }
         }
@@ -162,6 +167,7 @@ router.get('/boards', async (req, res) => {
             SELECT b.id, b.title, b.content, b.image_url, b.author, b.created_at as created, b.views, b.author_type, b.board_scope, b.category_id as nest_id
             FROM board_posts b
             WHERE b.is_public = 1
+            AND b.is_deleted = 0
             AND b.board_scope = ?
         `;
         params.push(targetScope);
@@ -207,6 +213,7 @@ router.get('/boards/:id', async (req, res) => {
             FROM board_posts b
             WHERE b.id = ? 
             AND b.is_public = 1 
+            AND b.is_deleted = 0
         `, [id]);
 
         if (posts.length === 0) {
