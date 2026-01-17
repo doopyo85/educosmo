@@ -130,6 +130,8 @@ router.get('/boards', async (req, res) => {
     try {
         const { type, limit, nestId } = req.query; // type can be 'community', 'teacher', 'portfolio'
 
+        console.log('🔍 PONG2 게시판 조회:', { type, limit, nestId });
+
         let query, params = [];
         let targetScope = 'PONG2'; // 🔥 PONG2 게시판 조회
 
@@ -145,7 +147,7 @@ router.get('/boards', async (req, res) => {
         query = `
             SELECT b.id, b.title, b.image_url, b.author, b.created_at as created, b.views, b.author_type, b.board_scope, b.category_id as nest_id
             FROM board_posts b
-            WHERE b.is_public = 1 
+            WHERE b.is_public = 1
             AND b.board_scope = ?
         `;
         params.push(targetScope);
@@ -161,7 +163,12 @@ router.get('/boards', async (req, res) => {
 
         query += ` ORDER BY b.created_at DESC LIMIT ${limitVal} OFFSET ${offsetVal}`;
 
+        console.log('📊 실행 쿼리:', query);
+        console.log('📊 파라미터:', params);
+
         const posts = await queryDatabase(query, params);
+
+        console.log(`✅ 조회 결과: ${posts.length}개 게시글`);
 
         // Enhance with comment/reaction counts? (Optional for list view performance)
         // For now, keep it simple.
