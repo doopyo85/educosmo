@@ -291,11 +291,16 @@
 
         /* 🔥 Full Width Layout Overrides for Class Materials */
         .board-layout-container {
-            max-width: 98% !important;
-            margin: 20px auto !important;
-            padding: 0 10px !important;
+            width: 96% !important;
+            /* Force explicit width to fill screen */
+            max-width: none !important;
+            /* Remove any constraints */
+            margin: 30px auto !important;
+            /* Center with top margin */
+            padding: 0 !important;
             display: flex;
-            gap: 20px;
+            gap: 30px;
+            /* Increase gap for better separation */
         }
 
         .board-sidebar {
@@ -320,7 +325,7 @@
             background: #fff;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            /* Match standard card look */
+            min-height: calc(100vh - 120px);
         }
 
         /* Class Materials Specific Styles */
