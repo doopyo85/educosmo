@@ -10,17 +10,27 @@ const { getSheetData } = require('../lib_google/sheetService'); // 🔥 Google S
 const requireTeacher = (req, res, next) => {
     const allowedRoles = ['teacher', 'manager', 'admin'];
     if (!req.session || !req.session.is_logined) {
-        return res.status(401).json({
-            success: false,
-            message: '로그인이 필요합니다.'
-        });
+        // API 요청인 경우 JSON 응답
+        if (req.path.startsWith('/api/')) {
+            return res.status(401).json({
+                success: false,
+                message: '로그인이 필요합니다.'
+            });
+        }
+        // 페이지 요청인 경우 로그인 페이지로 리다이렉트
+        return res.redirect('/login?redirect=' + encodeURIComponent(req.originalUrl));
     }
 
     if (!allowedRoles.includes(req.session.role)) {
-        return res.status(403).json({
-            success: false,
-            message: '교사/관리자 권한이 필요합니다.'
-        });
+        // API 요청인 경우 JSON 응답
+        if (req.path.startsWith('/api/')) {
+            return res.status(403).json({
+                success: false,
+                message: '교사/관리자 권한이 필요합니다.'
+            });
+        }
+        // 페이지 요청인 경우 에러 페이지 또는 홈으로 리다이렉트
+        return res.status(403).send('교사/관리자 권한이 필요합니다. <a href="/">홈으로 돌아가기</a>');
     }
 
     next();
