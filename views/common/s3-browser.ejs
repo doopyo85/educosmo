@@ -35,29 +35,25 @@
                     padding: 0 15px;
                 }
 
-                /* 2. S3 Wrapper becomes flex container for sidebar + content */
+                /* 2. S3 Wrapper - transparent wrapper */
                 .s3-browser-wrapper {
                     border: none !important;
                     background: transparent !important;
                     box-shadow: none !important;
-                    height: auto !important;
-                    overflow: visible !important;
-                    display: contents !important;
+                    width: 100% !important;
                 }
 
-                /* 3. Breadcrumb inside main content */
+                /* 3. Breadcrumb - hide for now */
                 .breadcrumb-container {
-                    background: #f8f9fa !important;
-                    border: none !important;
-                    border-bottom: 1px solid #dee2e6 !important;
-                    padding: 12px 20px !important;
-                    margin: 0 !important;
-                    border-radius: 8px 8px 0 0 !important;
+                    display: none !important;
                 }
 
-                /* 4. Hide s3-browser-content wrapper */
+                /* 4. S3 Browser Content - flex row for sidebar + main */
                 .s3-browser-content {
-                    display: contents !important;
+                    display: flex !important;
+                    flex-direction: row !important;
+                    gap: 20px !important;
+                    align-items: flex-start !important;
                 }
 
                 /* 5. Folder Tree -> board-sidebar style */
