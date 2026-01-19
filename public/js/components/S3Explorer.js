@@ -206,7 +206,7 @@ class S3Explorer {
           <p>현재 경로에 업로드됩니다</p>
         </div>
       </div>
-      </div >
+      </div>
       `;
 
     // 🔥 드래그 앤 드롭 이벤트 등록
@@ -222,13 +222,13 @@ class S3Explorer {
     }
 
     return `
-      < div class="platform-filter" >
+      <div class="platform-filter">
         <label>플랫폼:</label>
         <select id="platform-select" onchange="window.s3Explorer.filterByPlatform(this.value)">
           <option value="">전체</option>
           ${this.config.platforms.map(p => `<option value="${p}">${p}</option>`).join('')}
         </select>
-      </div >
+      </div>
       `;
   }
 
@@ -270,7 +270,7 @@ class S3Explorer {
       this.showLoading(true);
 
       const platform = document.getElementById('platform-select')?.value || '';
-      const url = `${this.config.apiEndpoint}?prefix = ${encodeURIComponent(path)}${platform ? '&platform=' + platform : ''} `;
+      const url = `${this.config.apiEndpoint}?prefix=${encodeURIComponent(path)}${platform ? '&platform=' + platform : ''}`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -352,9 +352,9 @@ class S3Explorer {
       const displayName = this.escapeHtml(decodeURIComponent(crumb.name));
 
       if (idx === filteredBreadcrumbs.length - 1) {
-        return `< span class="breadcrumb-current" > ${displayName}</span > `;
+        return `<span class="breadcrumb-current">${displayName}</span>`;
       }
-      return `< a href = "#" class="breadcrumb-link" onclick = "window.s3Explorer.navigateTo('${crumb.path}'); return false;" > ${displayName}</a > `;
+      return `<a href="#" class="breadcrumb-link" onclick="window.s3Explorer.navigateTo('${crumb.path}'); return false;">${displayName}</a>`;
     }).join(' <span class="breadcrumb-separator">/</span> ');
   }
 
@@ -544,7 +544,7 @@ class S3Explorer {
           <p class="empty-desc">업로드하려면 파일을 여기에 드래그하거나 [업로드] 버튼을 누르세요.</p>
         </div>
       </td>
-        </tr > `;
+        </tr>`;
       return;
     }
 
@@ -563,22 +563,22 @@ class S3Explorer {
       if (this.config.onFileSelect) {
         // Use this.escapeHtml() and escape single quotes within the name
         const safeName = this.escapeHtml(displayName).replace(/'/g, "\\'");
-        onClickEvent = `onclick = "window.s3Explorer.handleFileClick('${file.key}', '${safeName}')" style = "cursor: pointer; background: #e8f0fe;"`;
+        onClickEvent = `onclick="window.s3Explorer.handleFileClick('${file.key}', '${safeName}')" style="cursor: pointer; background: #e8f0fe;"`;
       } else {
         if (ext === 'ent') {
-          onClickEvent = `onclick = "window.s3Explorer.openInEntry('${file.key}')" style = "cursor: pointer;"`;
+          onClickEvent = `onclick="window.s3Explorer.openInEntry('${file.key}')" style="cursor: pointer;"`;
         } else if (ext === 'sb2' || ext === 'sb3') {
-          onClickEvent = `onclick = "window.s3Explorer.openInScratch('${file.key}')" style = "cursor: pointer;"`;
+          onClickEvent = `onclick="window.s3Explorer.openInScratch('${file.key}')" style="cursor: pointer;"`;
         }
       }
 
       // 🔥 체크박스 추가 (삭제 권한 있을 때만)
       const checkboxHtml = this.config.enableDelete
-        ? `< td > <input type="checkbox" class="file-checkbox" data-key="${file.key}" onclick="window.s3Explorer.toggleFileSelection('${file.key}')"></td>`
+        ? `<td><input type="checkbox" class="file-checkbox" data-key="${file.key}" onclick="window.s3Explorer.toggleFileSelection('${file.key}')"></td>`
         : '';
 
       return `
-      < tr data - key="${file.key}" >
+      <tr data-key="${file.key}">
         ${checkboxHtml}
           <td ${onClickEvent}>
             <span class="file-icon">${file.icon}</span>
@@ -618,12 +618,12 @@ class S3Explorer {
       const ext = displayName.split('.').pop().toLowerCase();
       const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext);
 
-      let thumbnailHtml = `< span class="grid-icon" > ${file.icon}</span > `;
+      let thumbnailHtml = `<span class="grid-icon">${file.icon}</span>`;
 
       // 이미지인 경우: ID를 부여하고 로딩 큐에 추가
       const imgId = `thumb - ${Math.random().toString(36).substr(2, 9)} `;
       if (isImage) {
-        thumbnailHtml = `< div class="grid-thumbnail-placeholder" id = "${imgId}" > <span class="grid-icon">${file.icon}</span></div > `;
+        thumbnailHtml = `<div class="grid-thumbnail-placeholder" id="${imgId}"><span class="grid-icon">${file.icon}</span></div>`;
         imagesToLoad.push({ id: imgId, key: file.key });
       }
 
@@ -631,19 +631,19 @@ class S3Explorer {
       let onClickEvent = '';
 
       if (this.config.onFileSelect) {
-        onClickEvent = `onclick = "window.s3Explorer.handleFileClick('${file.key}', '${this.escapeHtml(displayName)}')"`;
+        onClickEvent = `onclick="window.s3Explorer.handleFileClick('${file.key}', '${this.escapeHtml(displayName)}')"`;
       } else {
         if (ext === 'ent') {
-          onClickEvent = `onclick = "window.s3Explorer.openInEntry('${file.key}')"`;
+          onClickEvent = `onclick="window.s3Explorer.openInEntry('${file.key}')"`;
         } else if (ext === 'sb2' || ext === 'sb3') {
-          onClickEvent = `onclick = "window.s3Explorer.openInScratch('${file.key}')"`;
+          onClickEvent = `onclick="window.s3Explorer.openInScratch('${file.key}')"`;
         } else {
-          onClickEvent = `onclick = "window.s3Explorer.preview('${file.key}')"`;
+          onClickEvent = `onclick="window.s3Explorer.preview('${file.key}')"`;
         }
       }
 
       return `
-      < div class="grid-item" title = "${displayName}" >
+      <div class="grid-item" title="${displayName}">
           <div class="grid-preview" ${onClickEvent}>
             ${thumbnailHtml}
           </div>
@@ -656,7 +656,7 @@ class S3Explorer {
           ${this.config.enableDelete ?
           `<button class="grid-delete-btn" onclick="window.s3Explorer.deleteFile('${file.key}')" title="삭제">&times;</button>` : ''
         }
-        </div >
+        </div>
       `;
     }).join('');
 
@@ -680,7 +680,7 @@ class S3Explorer {
 
         if (data.success && data.data) {
           // data.data는 base64 또는 URL
-          el.innerHTML = `< img src = "${data.data}" class="grid-thumbnail" loading = "lazy" alt = "thumb" > `;
+          el.innerHTML = `<img src="${data.data}" class="grid-thumbnail" loading="lazy" alt="thumb">`;
         }
       } catch (e) {
         console.warn('썸네일 로드 실패:', item.key);
