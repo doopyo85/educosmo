@@ -65,26 +65,7 @@ router.get('/login', (req, res) => {
         <img src="${logoSrc}" alt="${logoAlt}" style="width: 80px; height: auto; margin-bottom: 20px;"/>
       </div>
 
-      <!-- 공지사항 (포스트잇 스타일) -->
-      <div id="sticky-notice" style="position: fixed; top: 50%; right: 10%; width: 320px; background-color: #fff740; padding: 25px 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); transform: translateY(-50%) rotate(1deg); z-index: 9999; font-family: sans-serif; color: #333;">
-        <!-- 닫기 버튼 -->
-        <div onclick="document.getElementById('sticky-notice').style.display='none'" style="position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 24px; font-weight: bold; color: #333; z-index: 10001;" aria-label="Close notice">&times;</div>
 
-        <!-- 코딩너구리 이미지 -->
-        <img src="/resource/sorry.webp" alt="죄송합니다" style="position: absolute; top: -60px; right: -20px; width: 100px; transform: rotate(10deg); z-index: 10000;">
-        
-        <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 120px; height: 35px; background-color: rgba(255, 255, 255, 0.3); box-shadow: 0 1px 2px rgba(0,0,0,0.1);"></div>
-        <h3 style="margin: 0 0 15px 0; font-size: 18px; font-weight: bold; text-align: center; border-bottom: 2px dashed #d1c936; padding-bottom: 10px;">📌 공지안내</h3>
-        <div style="font-size: 14px; line-height: 1.6;">
-          <p style="margin-bottom: 10px;">지난 10일 아마존 서버에서 IP 차단으로 인해 계정이 잠기는 문제가 발생하였습니다.</p>
-          <p style="margin-bottom: 10px;">현재 서버를 복구 중에 있어 일부 기능들이 오작동하고 있습니다.</p>
-          <div style="background-color: rgba(255,255,255,0.5); padding: 8px; border-radius: 4px; border: 1px dashed #aaa; margin: 10px 0;">
-            <strong style="color: #d32f2f;">현재 교사계정은 활성화되었으나,<br>
-            학생 계정은 다시 회원가입 또는 교사계정에서 생성해 주시기 바랍니다.</strong>
-          </div>
-          <p style="margin-top: 15px; text-align: center; font-size: 13px; color: #555;">불편을 드려 대단히 죄송합니다.<br>감사합니다.</p>
-        </div>
-      </div>
 
       ${alertHTML}
 
