@@ -44,7 +44,8 @@
    전체 레이아웃
 ======================================== */
 .s3-browser-wrapper {
-  max-width: 1400px;
+  max-width: 1920px;
+  width: 95%;
   margin: 30px auto;
   display: flex;
   flex-direction: column;
@@ -195,8 +196,8 @@
    폴더 트리 (왼쪽)
 ======================================== */
 .folder-tree-container {
-  width: 280px;
-  min-width: 280px;
+  width: 350px;
+  min-width: 350px;
   flex-shrink: 0;
   position: sticky;
   top: 90px;
@@ -531,6 +532,7 @@
   padding: 14px 20px;
   color: var(--s3-text-main);
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .file-list-table td.empty {
