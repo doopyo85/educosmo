@@ -114,8 +114,17 @@ function groupByVolume(rows) {
     return Object.values(groups);
 }
 
-// 🔥 교사 자료 페이지 (Teacher! Sheet) -> /class-materials 로 이동
-router.get('/class-materials', requireTeacher, async (req, res) => {
+// ============================================
+// 수업 자료 - 서브메뉴
+// ============================================
+
+// 수업 자료 메인 리다이렉트
+router.get('/class-materials', requireTeacher, (req, res) => {
+    res.redirect('/teacher/class-materials/lessons');
+});
+
+// 🔥 교안 및 영상 (Teacher! Sheet)
+router.get('/class-materials/lessons', requireTeacher, async (req, res) => {
     try {
         // Fetch 'Teacher!' Sheet Data
         // Range A:X covers up to IMG-12
@@ -154,7 +163,7 @@ router.get('/class-materials', requireTeacher, async (req, res) => {
             };
         });
 
-        res.render('teacher/class_materials', {
+        res.render('teacher/class_materials_lessons', {
             // Main Tab Titles
             pageTitle: '교사 교육자료',
 
@@ -172,6 +181,55 @@ router.get('/class-materials', requireTeacher, async (req, res) => {
         console.error('Teacher page error:', error);
         res.status(500).send('자료를 불러오는 중 오류가 발생했습니다.');
     }
+});
+
+// 다운로드 폴더
+router.get('/class-materials/downloads', requireTeacher, (req, res) => {
+    res.render('teacher/class_materials_downloads', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.session.centerID,
+        currentView: 'downloads'
+    });
+});
+
+// ============================================
+// 진로 진학 - 서브메뉴
+// ============================================
+
+// 진로 진학 메인 리다이렉트
+router.get('/career-info', requireTeacher, (req, res) => {
+    res.redirect('/teacher/career-info/university');
+});
+
+// 대학정보
+router.get('/career-info/university', requireTeacher, (req, res) => {
+    res.render('teacher/career_info_university', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.session.centerID,
+        currentView: 'university'
+    });
+});
+
+// 입결라인
+router.get('/career-info/cutlines', requireTeacher, (req, res) => {
+    res.render('teacher/career_info_cutlines', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.session.centerID,
+        currentView: 'cutlines'
+    });
+});
+
+// 블로그
+router.get('/career-info/blog', requireTeacher, (req, res) => {
+    res.render('teacher/career_info_blog', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.session.centerID,
+        currentView: 'blog'
+    });
 });
 
 router.get('/api/students', requireTeacher, async (req, res) => {

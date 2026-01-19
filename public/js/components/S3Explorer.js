@@ -536,7 +536,7 @@ class S3Explorer {
 
     if (files.length === 0) {
       tbody.innerHTML = `
-      < tr >
+        <tr>
       <td colspan="${colSpan}" class="empty-state-cell">
         <div class="empty-state">
           <i class="bi bi-cloud-arrow-up"></i>
