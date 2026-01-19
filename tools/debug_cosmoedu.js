@@ -1,5 +1,3 @@
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const { queryDatabase } = require('../lib_login/db');
 
 async function debugUser() {

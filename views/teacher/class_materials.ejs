@@ -207,6 +207,14 @@
             color: var(--lib-text-primary);
             font-family: var(--lib-font-serif);
             opacity: 0.9;
+
+            /* Fix alignment: Force constant height for titles */
+            height: 44px;
+            line-height: 1.4;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
         /* === Empty State === */
@@ -272,18 +280,15 @@
 
                 <!-- 수업 자료 (Submenu) -->
                 <div class="board-nav-group mb-2">
-                    <div class="board-category-item text-dark fw-bold"
-                        style="cursor: default; background: none;">
+                    <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">
                         <i class="bi bi-journal-text me-2"></i> 수업 자료
                     </div>
                     <div class="d-flex flex-column gap-1">
-                        <a href="/teacher/class-materials/lessons"
-                            class="board-category-item ps-5 py-2 active"
+                        <a href="/teacher/class-materials/lessons" class="board-category-item ps-5 py-2 active"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             교안 및 영상
                         </a>
-                        <a href="/teacher/class-materials/downloads"
-                            class="board-category-item ps-5 py-2"
+                        <a href="/teacher/class-materials/downloads" class="board-category-item ps-5 py-2"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             다운로드 폴더
                         </a>
@@ -292,23 +297,19 @@
 
                 <!-- 진로 진학 (Submenu) -->
                 <div class="board-nav-group mb-2">
-                    <div class="board-category-item text-dark fw-bold"
-                        style="cursor: default; background: none;">
+                    <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">
                         <i class="bi bi-signpost-split me-2"></i> 진로 진학
                     </div>
                     <div class="d-flex flex-column gap-1">
-                        <a href="/teacher/career-info/university"
-                            class="board-category-item ps-5 py-2"
+                        <a href="/teacher/career-info/university" class="board-category-item ps-5 py-2"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             대학정보
                         </a>
-                        <a href="/teacher/career-info/cutlines"
-                            class="board-category-item ps-5 py-2"
+                        <a href="/teacher/career-info/cutlines" class="board-category-item ps-5 py-2"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             입결라인
                         </a>
-                        <a href="/teacher/career-info/blog"
-                            class="board-category-item ps-5 py-2"
+                        <a href="/teacher/career-info/blog" class="board-category-item ps-5 py-2"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             블로그
                         </a>

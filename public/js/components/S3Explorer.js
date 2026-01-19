@@ -392,12 +392,12 @@ class S3Explorer {
     // Check if it has userName (Student Name)
     let label = folder.name;
     if (folder.userName) {
-      label = `< span class="fw-bold text-primary me-1" > (${folder.userName})</span > ${folder.name} `;
+      label = `<span class="fw-bold text-primary me-1">(${folder.userName})</span> ${folder.name}`;
     }
 
     // Node Content
     const content = document.createElement('div');
-    content.className = `tree - content ${this.currentPath === folder.fullPath ? 'active' : ''} `;
+    content.className = `folder-item ${this.currentPath === folder.fullPath ? 'active' : ''}`;
     content.onclick = (e) => {
       // Prevent toggle triggering select if we want distinct actions?
       // Usually clicking name selects AND toggles if strictly hierarchy. 
