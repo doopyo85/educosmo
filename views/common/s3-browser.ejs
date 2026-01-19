@@ -25,62 +25,55 @@
         <% if (role==='teacher' || role==='manager' ) { %>
             <!-- 🔥 Teacher Dashboard Style Override for S3 Browser -->
             <style>
-                /* 1. Layout Container Restructuring */
+                /* 1. Use board-layout structure */
                 .board-layout-container {
-                    max-width: 100%;
-                    width: 100%;
-                    margin: 0;
-                    padding: 0;
+                    max-width: 1400px;
+                    margin: 20px auto;
+                    display: flex;
+                    gap: 20px;
+                    align-items: flex-start;
+                    padding: 0 15px;
                 }
 
-                /* 2. Remove Default S3 Wrapper Styles */
+                /* 2. S3 Wrapper becomes flex container for sidebar + content */
                 .s3-browser-wrapper {
                     border: none !important;
                     background: transparent !important;
                     box-shadow: none !important;
                     height: auto !important;
                     overflow: visible !important;
-                    display: flex !important;
-                    flex-direction: column !important;
+                    display: contents !important;
                 }
 
-                /* 3. Hide Breadcrumb/Filter container borders to blend in */
-                .breadcrumb-container,
-                .platform-filter {
-                    background: transparent !important;
+                /* 3. Breadcrumb inside main content */
+                .breadcrumb-container {
+                    background: #f8f9fa !important;
                     border: none !important;
-                    padding-left: 0 !important;
-                    padding-right: 0 !important;
-                    margin-bottom: 10px;
+                    border-bottom: 1px solid #dee2e6 !important;
+                    padding: 12px 20px !important;
+                    margin: 0 !important;
+                    border-radius: 8px 8px 0 0 !important;
                 }
 
-                /* 4. Main Content Area Split */
+                /* 4. Hide s3-browser-content wrapper */
                 .s3-browser-content {
-                    display: flex !important;
-                    gap: 20px !important;
-                    /* Gap between "Sidebar" and "Content" */
-                    align-items: flex-start !important;
-                    overflow: visible !important;
-                    height: auto !important;
+                    display: contents !important;
                 }
 
-                /* 5. Folder Tree -> Becomes "Sidebar" */
+                /* 5. Folder Tree -> board-sidebar style */
                 .folder-tree-container {
                     width: 250px !important;
                     min-width: 250px !important;
                     flex-shrink: 0 !important;
-
-                    /* Sidebar Visuals */
+                    position: sticky !important;
+                    top: 90px !important;
+                    height: fit-content !important;
+                    max-height: calc(100vh - 110px) !important;
+                    overflow-y: auto !important;
                     background: #fff !important;
                     border: 1px solid #e0e0e0 !important;
                     border-radius: 8px !important;
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-
-                    /* Sticky Positioning */
-                    position: sticky !important;
-                    top: 20px !important;
-                    height: calc(100vh - 100px) !important;
-
                     display: flex !important;
                     flex-direction: column !important;
                 }
@@ -98,109 +91,113 @@
                     color: white !important;
                     font-size: 1rem !important;
                     font-weight: bold !important;
+                    margin: 0 !important;
                 }
 
-                /* Folder Items */
-                .folder-item {
+                /* Tree node items - board-category-item style */
+                .tree-node {
                     padding: 12px 20px !important;
                     border-bottom: 1px solid #f1f3f4 !important;
+                    cursor: pointer !important;
+                    transition: background-color 0.2s !important;
+                    color: #6c757d !important;
                 }
 
-                .folder-item:hover {
+                .tree-node:hover {
                     background-color: #f8f9fa !important;
                     color: #495057 !important;
                 }
 
-                .folder-item.selected {
+                .tree-node.active {
                     background-color: #e3f2fd !important;
                     color: #1976d2 !important;
                     font-weight: 500 !important;
                     border-left: 3px solid #1976d2 !important;
                 }
 
-                /* 6. File List -> Becomes "Main Content" */
+                /* 6. File List -> board-main-content style */
                 .file-list-container {
                     flex: 1 !important;
-
-                    /* Content Visuals */
+                    min-width: 600px !important;
                     background: #fff !important;
                     border: 1px solid #e0e0e0 !important;
                     border-radius: 8px !important;
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-
-                    height: calc(100vh - 100px) !important;
-                    overflow: hidden !important;
                     display: flex !important;
                     flex-direction: column !important;
+                    max-height: calc(100vh - 110px) !important;
+                    overflow: hidden !important;
                 }
 
                 /* Toolbar adjustments */
                 .file-list-toolbar {
                     background: #fff !important;
                     border-bottom: 1px solid #dee2e6 !important;
-                    border-radius: 8px 8px 0 0 !important;
+                    border-radius: 0 !important;
+                    padding: 15px 20px !important;
                 }
 
-                /* Hide the page-level header for S3 to reduce clutter?
-           Or modify it. Let's keep it but maybe style it cleanly inside board-layout-container
-        */
+                /* Page header */
                 .s3-browser-header {
-                    padding: 20px !important;
-                    background: #f8f9fa !important;
-                    border-bottom: 1px solid #dee2e6;
+                    max-width: 1400px;
+                    margin: 0 auto 20px;
+                    padding: 0 15px !important;
+                    background: transparent !important;
+                    border: none !important;
                 }
             </style>
             <% } %>
 
-                <div class="board-layout-container" style="flex-direction: column; display: block;">
-                    <!-- 통합 헤더 (페이지 타이틀 바) -->
-                    <div class="s3-browser-header">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center">
-                                <div>
-                                    <h5 class="mb-1">
-                                        <i class="bi bi-folder-open me-2"></i>
-                                        <% if (role==='admin' ) { %>
-                                            S3 파일 관리 (전체)
-                                            <% } else if (role==='teacher' || role==='manager' ) { %>
-                                                학생 파일 관리 <span class="text-muted fs-6 fw-normal ms-2">(센터 <%= centerID
-                                                        %>)</span>
-                                                <% } else { %>
-                                                    내 파일 관리
-                                                    <% } %>
-                                    </h5>
-                                    <p class="text-muted mb-0 small">
-                                        <% if (role==='admin' ) { %>
-                                            모든 사용자의 저장 파일을 조회하고 관리할 수 있습니다.
-                                            <% } else if (role==='teacher' || role==='manager' ) { %>
-                                                학생들의 파일을 조회하고 관리할 수 있습니다. 좌측 폴더 트리에서 학생을 선택하세요.
-                                                <% } else { %>
-                                                    나의 저장 파일을 조회할 수 있습니다.
-                                                    <% } %>
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="d-flex align-items-center gap-3">
-                                <div>
+                <!-- Page Header -->
+                <div class="s3-browser-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div>
+                                <h5 class="mb-1">
+                                    <i class="bi bi-folder-open me-2"></i>
                                     <% if (role==='admin' ) { %>
-                                        <span class="badge bg-danger">Admin</span>
+                                        S3 파일 관리 (전체)
                                         <% } else if (role==='teacher' || role==='manager' ) { %>
-                                            <span class="badge bg-success">
+                                            학생 파일 관리 <span class="text-muted fs-6 fw-normal ms-2">(센터 <%= centerID
+                                                    %>)</span>
+                                            <% } else { %>
+                                                내 파일 관리
+                                                <% } %>
+                                </h5>
+                                <p class="text-muted mb-0 small">
+                                    <% if (role==='admin' ) { %>
+                                        모든 사용자의 저장 파일을 조회하고 관리할 수 있습니다.
+                                        <% } else if (role==='teacher' || role==='manager' ) { %>
+                                            학생들의 파일을 조회하고 관리할 수 있습니다. 좌측 폴더 트리에서 학생을 선택하세요.
+                                            <% } else { %>
+                                                나의 저장 파일을 조회할 수 있습니다.
+                                            <% } %>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3">
+                            <div>
+                                <% if (role==='admin' ) { %>
+                                    <span class="badge bg-danger">Admin</span>
+                                    <% } else if (role==='teacher' || role==='manager' ) { %>
+                                        <span class="badge bg-success">
+                                            <%= role %>
+                                        </span>
+                                        <span class="badge bg-info">센터 <%= centerID %></span>
+                                        <% } else { %>
+                                            <span class="badge bg-primary">
                                                 <%= role %>
                                             </span>
-                                            <span class="badge bg-info">센터 <%= centerID %></span>
-                                            <% } else { %>
-                                                <span class="badge bg-primary">
-                                                    <%= role %>
-                                                </span>
-                                                <% } %>
-                                </div>
+                                            <% } %>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- S3 브라우저 컨테이너 -->
+                <!-- Board Layout Container -->
+                <div class="board-layout-container">
+                    <!-- S3 브라우저 컨테이너 (사이드바 + 메인 컨텐츠) -->
                     <div id="s3-browser"></div>
                 </div>
 
@@ -262,7 +259,7 @@
                             }
                         });
 
-                        console.log('✅ S3 Browser 초기화 완료');
+                    console.log('✅ S3 Browser 초기화 완료');
                     });
 
                     function showModalNotification(message, type = 'info') {
@@ -285,17 +282,15 @@
                         margin: 0;
                         padding: 0;
                         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-                        display: flex;
-                        flex-direction: column;
-                        min-height: 100vh;
                         background: #f8f9fa;
                     }
 
                     .s3-browser-header {
-                        flex-shrink: 0;
                         background: #fff;
                         padding: 20px;
                         border-bottom: 1px solid #dee2e6;
+                        max-width: 1400px;
+                        margin: 0 auto;
                     }
 
                     .s3-browser-header h5 {
@@ -310,51 +305,12 @@
                         font-size: 0.9rem;
                     }
 
-                    /* 메인 컨테이너 Style (Full Stretch) */
-                    #s3-browser {
-                        flex: 1;
-                        padding: 0;
-                        overflow: hidden;
-                        background: #f8f9fa;
-                        display: flex;
-                        flex-direction: column;
-                    }
-
-                    /* S3Wrapper 강제 스타일 오버라이드 */
-                    .s3-browser-wrapper {
-                        height: 100% !important;
-                        width: 100% !important;
-                        border: none !important;
-                        /* 🔥 이중 테두리 제거 */
-                        border-radius: 0 !important;
-                        box-shadow: none !important;
-                        /* 🔥 그림자 제거 */
-                    }
-
                     .badge {
                         font-size: 0.75rem;
                         padding: 0.4em 0.8em;
                         font-weight: 600;
                         border-radius: 6px;
                         letter-spacing: 0.3px;
-                    }
-
-                    #s3-browser::-webkit-scrollbar {
-                        width: 10px;
-                    }
-
-                    #s3-browser::-webkit-scrollbar-track {
-                        background: #e9ecef;
-                        border-radius: 5px;
-                    }
-
-                    #s3-browser::-webkit-scrollbar-thumb {
-                        background: #adb5bd;
-                        border-radius: 5px;
-                    }
-
-                    #s3-browser::-webkit-scrollbar-thumb:hover {
-                        background: #868e96;
                     }
                 </style>
 </body>
