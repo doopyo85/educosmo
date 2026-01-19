@@ -121,15 +121,6 @@ class S3Explorer {
 
     container.innerHTML = `
       <div class="s3-browser-wrapper">
-        <!-- Breadcrumb -->
-        <div class="breadcrumb-container">
-          <div id="s3-breadcrumb" class="breadcrumb"></div>
-          <div class="breadcrumb-actions">
-            <button onclick="window.s3Explorer.refresh()" title="새로고침" class="btn-icon-white"><i class="bi bi-arrow-clockwise"></i></button>
-            <button onclick="window.s3Explorer.closePage()" title="창 닫기" class="btn-icon-white"><i class="bi bi-x-lg"></i></button>
-          </div>
-        </div>
-        
         <!-- 메인 컨텐츠 -->
         <div class="s3-browser-content" id="mainContent">
 
@@ -141,8 +132,18 @@ class S3Explorer {
             <div id="s3-folder-tree" class="folder-tree"></div>
           </div>
           
-          <!-- 오른쪽: 파일 목록 -->
+          <!-- 오른쪽: 파일 목록 + Breadcrumb -->
           <div class="file-list-container">
+            <!-- Breadcrumb (Moved Inside) -->
+            <div class="breadcrumb-container">
+              <div id="s3-breadcrumb" class="breadcrumb"></div>
+              <div class="breadcrumb-actions">
+                <button onclick="window.s3Explorer.refresh()" title="새로고침" class="btn-icon-white"><i class="bi bi-arrow-clockwise"></i></button>
+                <button onclick="window.s3Explorer.closePage()" title="창 닫기" class="btn-icon-white"><i class="bi bi-x-lg"></i></button>
+              </div>
+            </div>
+
+
             <!-- 툴바 -->
             <div class="file-list-toolbar">
               <div class="toolbar-left">
@@ -191,22 +192,22 @@ class S3Explorer {
           </div>
         </div>
         
-        <!-- 로딩 오버레이 -->
+        <!--로딩 오버레이-- >
         <div id="s3-loading" class="loading-overlay" style="display: none;">
           <div class="spinner"></div>
           <p>불러오는 중...</p>
         </div>
         
-        <!-- 🔥 드래그 앤 드롭 오버레이 -->
-        <div id="drag-drop-overlay" class="drag-drop-overlay" style="display: none;">
-          <div class="drag-drop-message">
-            <i class="bi bi-cloud-upload" style="font-size: 64px; color: #007bff;"></i>
-            <h3>📤 파일을 드롭하세요</h3>
-            <p>현재 경로에 업로드됩니다</p>
-          </div>
+        <!-- 🔥 드래그 앤 드롭 오버레이-- >
+      <div id="drag-drop-overlay" class="drag-drop-overlay" style="display: none;">
+        <div class="drag-drop-message">
+          <i class="bi bi-cloud-upload" style="font-size: 64px; color: #007bff;"></i>
+          <h3>📤 파일을 드롭하세요</h3>
+          <p>현재 경로에 업로드됩니다</p>
         </div>
       </div>
-    `;
+      </div >
+      `;
 
     // 🔥 드래그 앤 드롭 이벤트 등록
     this.setupDragAndDrop();
@@ -221,14 +222,14 @@ class S3Explorer {
     }
 
     return `
-      <div class="platform-filter">
+      < div class="platform-filter" >
         <label>플랫폼:</label>
         <select id="platform-select" onchange="window.s3Explorer.filterByPlatform(this.value)">
           <option value="">전체</option>
           ${this.config.platforms.map(p => `<option value="${p}">${p}</option>`).join('')}
         </select>
-      </div>
-    `;
+      </div >
+      `;
   }
 
   /**
@@ -269,7 +270,7 @@ class S3Explorer {
       this.showLoading(true);
 
       const platform = document.getElementById('platform-select')?.value || '';
-      const url = `${this.config.apiEndpoint}?prefix=${encodeURIComponent(path)}${platform ? '&platform=' + platform : ''}`;
+      const url = `${this.config.apiEndpoint}?prefix = ${encodeURIComponent(path)}${platform ? '&platform=' + platform : ''} `;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -285,7 +286,20 @@ class S3Explorer {
       this.renderFileList(data.files);
 
       // Update File Count
-      document.getElementById('file-count').textContent = `${data.folders.length + data.files.length}개 항목`;
+      // Update File Count
+      const folderCount = data.folders ? data.folders.length : 0;
+      const fileCount = data.files ? data.files.length : 0;
+
+      const countEl = document.getElementById('file-count');
+      if (countEl) {
+        if (fileCount === 0 && folderCount > 0) {
+          countEl.textContent = `파일 0개(${folderCount}개 폴더)`;
+        } else if (fileCount === 0 && folderCount === 0) {
+          countEl.textContent = `항목 없음`;
+        } else {
+          countEl.textContent = `파일 ${fileCount} 개(${folderCount}개 폴더)`;
+        }
+      }
 
       // 2. Tree Update Strategy
       if (updateTree) {
@@ -321,22 +335,26 @@ class S3Explorer {
     let filteredBreadcrumbs = breadcrumbs;
 
     // 비admin은 Root 숨김
+    // 비admin은 Root 숨기기 (단, Root만 남았을 땐 "내 파일"로 표시)
     if (!this.canAccessRoot) {
-      filteredBreadcrumbs = breadcrumbs.filter((crumb, idx) => {
-        if (idx === 0 && (!crumb.path || crumb.path === '' || crumb.path === '/')) {
-          return false;
-        }
-        return true;
-      });
+      // Root (첫 번째 항목) 제거 조건
+      // 1. Root 경로여야 함 ('' 또는 '/')
+      // 2. 전체 길이가 1보다 커야 함 (즉, 하위 폴더에 있는 경우)
+      if (breadcrumbs.length > 1 && (!breadcrumbs[0].path || breadcrumbs[0].path === '' || breadcrumbs[0].path === '/')) {
+        filteredBreadcrumbs = breadcrumbs.slice(1);
+      } else if (breadcrumbs.length === 1 && (!breadcrumbs[0].path || breadcrumbs[0].path === '' || breadcrumbs[0].path === '/')) {
+        // Root만 있는데 접근 권한이 없으면 "내 파일" 등으로 대체 표시
+        filteredBreadcrumbs[0].name = "내 파일";
+      }
     }
 
     container.innerHTML = filteredBreadcrumbs.map((crumb, idx) => {
       const displayName = this.escapeHtml(decodeURIComponent(crumb.name));
 
       if (idx === filteredBreadcrumbs.length - 1) {
-        return `<span class="breadcrumb-current">${displayName}</span>`;
+        return `< span class="breadcrumb-current" > ${displayName}</span > `;
       }
-      return `<a href="#" class="breadcrumb-link" onclick="window.s3Explorer.navigateTo('${crumb.path}'); return false;">${displayName}</a>`;
+      return `< a href = "#" class="breadcrumb-link" onclick = "window.s3Explorer.navigateTo('${crumb.path}'); return false;" > ${displayName}</a > `;
     }).join(' <span class="breadcrumb-separator">/</span> ');
   }
 
@@ -374,12 +392,12 @@ class S3Explorer {
     // Check if it has userName (Student Name)
     let label = folder.name;
     if (folder.userName) {
-      label = `<span class="fw-bold text-primary me-1">(${folder.userName})</span> ${folder.name}`;
+      label = `< span class="fw-bold text-primary me-1" > (${folder.userName})</span > ${folder.name} `;
     }
 
     // Node Content
     const content = document.createElement('div');
-    content.className = `tree-content ${this.currentPath === folder.fullPath ? 'active' : ''}`;
+    content.className = `tree - content ${this.currentPath === folder.fullPath ? 'active' : ''} `;
     content.onclick = (e) => {
       // Prevent toggle triggering select if we want distinct actions?
       // Usually clicking name selects AND toggles if strictly hierarchy. 
@@ -452,7 +470,7 @@ class S3Explorer {
       // Don't show global loading for this small action
       toggleLoadingSpinner(container, true);
 
-      const url = `${this.config.apiEndpoint}?prefix=${encodeURIComponent(path)}`;
+      const url = `${this.config.apiEndpoint}?prefix = ${encodeURIComponent(path)} `;
       const response = await fetch(url);
       const data = await response.json();
 
@@ -485,7 +503,7 @@ class S3Explorer {
     if (oldActive) oldActive.classList.remove('active');
 
     // Find new active
-    const node = document.querySelector(`.tree-node[data-path="${path}"]`);
+    const node = document.querySelector(`.tree - node[data - path="${path}"]`);
     if (node) {
       const content = node.querySelector('.tree-content');
       if (content) content.classList.add('active');
@@ -517,7 +535,16 @@ class S3Explorer {
     const colSpan = this.config.enableDelete ? 5 : 4;
 
     if (files.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="${colSpan}" class="empty">파일이 없습니다.</td></tr>`;
+      tbody.innerHTML = `
+      < tr >
+      <td colspan="${colSpan}" class="empty-state-cell">
+        <div class="empty-state">
+          <i class="bi bi-cloud-arrow-up"></i>
+          <p class="empty-title">파일이 없습니다.</p>
+          <p class="empty-desc">업로드하려면 파일을 여기에 드래그하거나 [업로드] 버튼을 누르세요.</p>
+        </div>
+      </td>
+        </tr > `;
       return;
     }
 
@@ -536,23 +563,23 @@ class S3Explorer {
       if (this.config.onFileSelect) {
         // Use this.escapeHtml() and escape single quotes within the name
         const safeName = this.escapeHtml(displayName).replace(/'/g, "\\'");
-        onClickEvent = `onclick="window.s3Explorer.handleFileClick('${file.key}', '${safeName}')" style="cursor: pointer; background: #e8f0fe;"`;
+        onClickEvent = `onclick = "window.s3Explorer.handleFileClick('${file.key}', '${safeName}')" style = "cursor: pointer; background: #e8f0fe;"`;
       } else {
         if (ext === 'ent') {
-          onClickEvent = `onclick="window.s3Explorer.openInEntry('${file.key}')" style="cursor: pointer;"`;
+          onClickEvent = `onclick = "window.s3Explorer.openInEntry('${file.key}')" style = "cursor: pointer;"`;
         } else if (ext === 'sb2' || ext === 'sb3') {
-          onClickEvent = `onclick="window.s3Explorer.openInScratch('${file.key}')" style="cursor: pointer;"`;
+          onClickEvent = `onclick = "window.s3Explorer.openInScratch('${file.key}')" style = "cursor: pointer;"`;
         }
       }
 
       // 🔥 체크박스 추가 (삭제 권한 있을 때만)
       const checkboxHtml = this.config.enableDelete
-        ? `<td><input type="checkbox" class="file-checkbox" data-key="${file.key}" onclick="window.s3Explorer.toggleFileSelection('${file.key}')"></td>`
+        ? `< td > <input type="checkbox" class="file-checkbox" data-key="${file.key}" onclick="window.s3Explorer.toggleFileSelection('${file.key}')"></td>`
         : '';
 
       return `
-        <tr data-key="${file.key}">
-          ${checkboxHtml}
+      < tr data - key="${file.key}" >
+        ${checkboxHtml}
           <td ${onClickEvent}>
             <span class="file-icon">${file.icon}</span>
             <span class="file-name">${displayName}</span>
@@ -562,7 +589,7 @@ class S3Explorer {
           <td class="actions">
             ${this.config.enableDelete ? `<button onclick="window.s3Explorer.deleteFile('${file.key}')" title="삭제">🗑️</button>` : ''}
           </td>
-        </tr>
+        </tr >
       `;
     }).join('');
 
@@ -591,12 +618,12 @@ class S3Explorer {
       const ext = displayName.split('.').pop().toLowerCase();
       const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext);
 
-      let thumbnailHtml = `<span class="grid-icon">${file.icon}</span>`;
+      let thumbnailHtml = `< span class="grid-icon" > ${file.icon}</span > `;
 
       // 이미지인 경우: ID를 부여하고 로딩 큐에 추가
-      const imgId = `thumb-${Math.random().toString(36).substr(2, 9)}`;
+      const imgId = `thumb - ${Math.random().toString(36).substr(2, 9)} `;
       if (isImage) {
-        thumbnailHtml = `<div class="grid-thumbnail-placeholder" id="${imgId}"><span class="grid-icon">${file.icon}</span></div>`;
+        thumbnailHtml = `< div class="grid-thumbnail-placeholder" id = "${imgId}" > <span class="grid-icon">${file.icon}</span></div > `;
         imagesToLoad.push({ id: imgId, key: file.key });
       }
 
@@ -604,19 +631,19 @@ class S3Explorer {
       let onClickEvent = '';
 
       if (this.config.onFileSelect) {
-        onClickEvent = `onclick="window.s3Explorer.handleFileClick('${file.key}', '${this.escapeHtml(displayName)}')"`;
+        onClickEvent = `onclick = "window.s3Explorer.handleFileClick('${file.key}', '${this.escapeHtml(displayName)}')"`;
       } else {
         if (ext === 'ent') {
-          onClickEvent = `onclick="window.s3Explorer.openInEntry('${file.key}')"`;
+          onClickEvent = `onclick = "window.s3Explorer.openInEntry('${file.key}')"`;
         } else if (ext === 'sb2' || ext === 'sb3') {
-          onClickEvent = `onclick="window.s3Explorer.openInScratch('${file.key}')"`;
+          onClickEvent = `onclick = "window.s3Explorer.openInScratch('${file.key}')"`;
         } else {
-          onClickEvent = `onclick="window.s3Explorer.preview('${file.key}')"`;
+          onClickEvent = `onclick = "window.s3Explorer.preview('${file.key}')"`;
         }
       }
 
       return `
-        <div class="grid-item" title="${displayName}">
+      < div class="grid-item" title = "${displayName}" >
           <div class="grid-preview" ${onClickEvent}>
             ${thumbnailHtml}
           </div>
@@ -627,8 +654,9 @@ class S3Explorer {
              <span class="grid-size">${file.sizeFormatted}</span>
           </div>
           ${this.config.enableDelete ?
-          `<button class="grid-delete-btn" onclick="window.s3Explorer.deleteFile('${file.key}')" title="삭제">&times;</button>` : ''}
-        </div>
+          `<button class="grid-delete-btn" onclick="window.s3Explorer.deleteFile('${file.key}')" title="삭제">&times;</button>` : ''
+        }
+        </div >
       `;
     }).join('');
 
@@ -647,12 +675,12 @@ class S3Explorer {
         const el = document.getElementById(item.id);
         if (!el) continue;
 
-        const response = await fetch(`/api/s3/preview?key=${encodeURIComponent(item.key)}`);
+        const response = await fetch(`/ api / s3 / preview ? key = ${encodeURIComponent(item.key)} `);
         const data = await response.json();
 
         if (data.success && data.data) {
           // data.data는 base64 또는 URL
-          el.innerHTML = `<img src="${data.data}" class="grid-thumbnail" loading="lazy" alt="thumb">`;
+          el.innerHTML = `< img src = "${data.data}" class="grid-thumbnail" loading = "lazy" alt = "thumb" > `;
         }
       } catch (e) {
         console.warn('썸네일 로드 실패:', item.key);
@@ -741,14 +769,14 @@ class S3Explorer {
 
     // Root 경로 차단
     if (!path || path === '' || path === '/') {
-      console.log(`❌ Root 접근 차단 - Role: ${this.config.userRole}`);
+      console.log(`❌ Root 접근 차단 - Role: ${this.config.userRole} `);
       return false;
     }
 
     // manager/teacher는 users/ 하위만 허용
     if (this.config.scope === 'center' || this.config.userRole === 'manager' || this.config.userRole === 'teacher') {
       if (!path.startsWith('users/')) {
-        console.log(`❌ users/ 외부 접근 차단 - Role: ${this.config.userRole}, Path: ${path}`);
+        console.log(`❌ users / 외부 접근 차단 - Role: ${this.config.userRole}, Path: ${path} `);
         return false;
       }
       return true;
@@ -756,7 +784,7 @@ class S3Explorer {
 
     // student는 본인 폴더만 허용
     if (this.config.scope === 'self' || this.config.userRole === 'student') {
-      const allowedPath = `users/${this.config.userID}/`;
+      const allowedPath = `users / ${this.config.userID}/`;
       if (!path.startsWith(allowedPath)) {
         console.log(`❌ 본인 폴더 외부 접근 차단 - Role: ${this.config.userRole}, Path: ${path}`);
         return false;
@@ -986,59 +1014,59 @@ class S3Explorer {
    * 🔥 드롭된 파일 업로드
    */
   async uploadDroppedFiles(files) {
-  try {
-    const fileArray = Array.from(files);
+    try {
+      const fileArray = Array.from(files);
 
-    // 파일 개수 및 크기 검증
-    if (fileArray.length > 10) {
-      this.showError('한 번에 최대 10개 파일까지 업로드할 수 있습니다.');
-      return;
+      // 파일 개수 및 크기 검증
+      if (fileArray.length > 10) {
+        this.showError('한 번에 최대 10개 파일까지 업로드할 수 있습니다.');
+        return;
+      }
+
+      const maxSize = 100 * 1024 * 1024; // 100MB
+      const oversizedFiles = fileArray.filter(f => f.size > maxSize);
+      if (oversizedFiles.length > 0) {
+        this.showError(`파일 크기가 100MB를 초과합니다: ${oversizedFiles.map(f => f.name).join(', ')}`);
+        return;
+      }
+
+      // 로딩 표시
+      this.showLoading(true);
+
+      // FormData 생성
+      const formData = new FormData();
+      fileArray.forEach(file => {
+        formData.append('files', file);
+      });
+      formData.append('folder', this.currentPath);  // 🔥 현재 경로
+
+      console.log(`📤 드롭 업로드 시작: ${fileArray.length}개 파일, 경로: ${this.currentPath}`);
+
+      // 업로드 요청
+      const response = await fetch('/api/s3/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || '업로드에 실패했습니다.');
+      }
+
+      console.log(`✅ 드롭 업로드 성공:`, data);
+
+      this.showSuccess(data.message || `${fileArray.length}개 파일 업로드 완료`);
+
+      // 새로고침
+      this.refresh();
+
+    } catch (error) {
+      console.error('❌ 드롭 업로드 실패:', error);
+      this.showError(error.message || '업로드에 실패했습니다.');
+    } finally {
+      this.showLoading(false);
     }
-
-    const maxSize = 100 * 1024 * 1024; // 100MB
-    const oversizedFiles = fileArray.filter(f => f.size > maxSize);
-    if (oversizedFiles.length > 0) {
-      this.showError(`파일 크기가 100MB를 초과합니다: ${oversizedFiles.map(f => f.name).join(', ')}`);
-      return;
-    }
-
-    // 로딩 표시
-    this.showLoading(true);
-
-    // FormData 생성
-    const formData = new FormData();
-    fileArray.forEach(file => {
-      formData.append('files', file);
-    });
-    formData.append('folder', this.currentPath);  // 🔥 현재 경로
-
-    console.log(`📤 드롭 업로드 시작: ${fileArray.length}개 파일, 경로: ${this.currentPath}`);
-
-    // 업로드 요청
-    const response = await fetch('/api/s3/upload', {
-      method: 'POST',
-      body: formData
-    });
-
-    const data = await response.json();
-
-    if (!data.success) {
-      throw new Error(data.error || '업로드에 실패했습니다.');
-    }
-
-    console.log(`✅ 드롭 업로드 성공:`, data);
-
-    this.showSuccess(data.message || `${fileArray.length}개 파일 업로드 완료`);
-
-    // 새로고침
-    this.refresh();
-
-  } catch (error) {
-    console.error('❌ 드롭 업로드 실패:', error);
-    this.showError(error.message || '업로드에 실패했습니다.');
-  } finally {
-    this.showLoading(false);
-  }
   }
 
   /**
@@ -1052,11 +1080,11 @@ class S3Explorer {
    * 🔥 업로드 모달 생성
    */
   showUploadModal() {
-  const modal = document.createElement('div');
-  modal.className = 'upload-modal-overlay';
-  modal.id = 'uploadModal';
+    const modal = document.createElement('div');
+    modal.className = 'upload-modal-overlay';
+    modal.id = 'uploadModal';
 
-  modal.innerHTML = `
+    modal.innerHTML = `
       <div class="upload-modal">
         <div class="upload-modal-header">
           <h3>📤 파일 업로드</h3>
@@ -1102,64 +1130,64 @@ class S3Explorer {
       </div>
     `;
 
-  document.body.appendChild(modal);
+    document.body.appendChild(modal);
 
-  // 이벤트 리스너 등록
-  this.setupUploadEvents();
-}
+    // 이벤트 리스너 등록
+    this.setupUploadEvents();
+  }
 
-/**
- * 🔥 업로드 이벤트 설정
- */
-setupUploadEvents() {
-  const dropZone = document.getElementById('dropZone');
-  const fileInput = document.getElementById('fileInput');
+  /**
+   * 🔥 업로드 이벤트 설정
+   */
+  setupUploadEvents() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
 
-  // 클릭으로 파일 선택
-  dropZone.addEventListener('click', () => {
-    fileInput.click();
-  });
+    // 클릭으로 파일 선택
+    dropZone.addEventListener('click', () => {
+      fileInput.click();
+    });
 
-  // 파일 선택 시
-  fileInput.addEventListener('change', (e) => {
-    this.handleFileSelect(e.target.files);
-  });
+    // 파일 선택 시
+    fileInput.addEventListener('change', (e) => {
+      this.handleFileSelect(e.target.files);
+    });
 
-  // 드래그 오버
-  dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.classList.add('drag-over');
-  });
+    // 드래그 오버
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
 
-  dropZone.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-  });
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+    });
 
-  // 드롭
-  dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-    this.handleFileSelect(e.dataTransfer.files);
-  });
-}
+    // 드롭
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      this.handleFileSelect(e.dataTransfer.files);
+    });
+  }
 
-/**
- * 🔥 파일 선택 처리
- */
-handleFileSelect(files) {
-  if (!files || files.length === 0) return;
+  /**
+   * 🔥 파일 선택 처리
+   */
+  handleFileSelect(files) {
+    if (!files || files.length === 0) return;
 
-  this.selectedUploadFiles = Array.from(files);
+    this.selectedUploadFiles = Array.from(files);
 
-  // 파일 목록 표시
-  const fileQueue = document.getElementById('fileQueue');
-  const fileList = document.getElementById('fileList');
-  const uploadBtn = document.getElementById('uploadBtn');
+    // 파일 목록 표시
+    const fileQueue = document.getElementById('fileQueue');
+    const fileList = document.getElementById('fileList');
+    const uploadBtn = document.getElementById('uploadBtn');
 
-  fileQueue.style.display = 'block';
+    fileQueue.style.display = 'block';
 
-  fileList.innerHTML = this.selectedUploadFiles.map((file, idx) => `
+    fileList.innerHTML = this.selectedUploadFiles.map((file, idx) => `
       <div class="file-item">
         <span class="file-icon">${this.getFileIcon(file.name)}</span>
         <span class="file-name">${file.name}</span>
@@ -1170,313 +1198,313 @@ handleFileSelect(files) {
       </div>
     `).join('');
 
-  // 업로드 버튼 활성화
-  uploadBtn.disabled = false;
-}
-
-/**
- * 🔥 파일 제거
- */
-removeFile(index) {
-  this.selectedUploadFiles.splice(index, 1);
-
-  if (this.selectedUploadFiles.length === 0) {
-    document.getElementById('fileQueue').style.display = 'none';
-    document.getElementById('uploadBtn').disabled = true;
-  } else {
-    this.handleFileSelect(this.selectedUploadFiles);
+    // 업로드 버튼 활성화
+    uploadBtn.disabled = false;
   }
-}
+
+  /**
+   * 🔥 파일 제거
+   */
+  removeFile(index) {
+    this.selectedUploadFiles.splice(index, 1);
+
+    if (this.selectedUploadFiles.length === 0) {
+      document.getElementById('fileQueue').style.display = 'none';
+      document.getElementById('uploadBtn').disabled = true;
+    } else {
+      this.handleFileSelect(this.selectedUploadFiles);
+    }
+  }
 
   /**
    * 🔥 업로드 시작
    */
   async startUpload() {
-  if (!this.selectedUploadFiles || this.selectedUploadFiles.length === 0) {
-    this.showError('업로드할 파일을 선택하세요.');
-    return;
-  }
-
-  const uploadBtn = document.getElementById('uploadBtn');
-  const progressContainer = document.getElementById('uploadProgress');
-  const progressBar = document.getElementById('progressBar');
-  const progressText = document.getElementById('progressText');
-
-  try {
-    // UI 비활성화
-    uploadBtn.disabled = true;
-    progressContainer.style.display = 'block';
-
-    // FormData 생성
-    const formData = new FormData();
-    this.selectedUploadFiles.forEach(file => {
-      formData.append('files', file);
-    });
-    formData.append('folder', this.currentPath);  // 🔥 현재 경로만 전달
-
-    console.log(`📤 업로드 시작: ${this.selectedUploadFiles.length}개 파일, 경로: ${this.currentPath}`);
-
-    // 업로드 요청
-    const response = await fetch('/api/s3/upload', {
-      method: 'POST',
-      body: formData
-    });
-
-    const data = await response.json();
-
-    if (!data.success) {
-      throw new Error(data.error || '업로드에 실패했습니다.');
+    if (!this.selectedUploadFiles || this.selectedUploadFiles.length === 0) {
+      this.showError('업로드할 파일을 선택하세요.');
+      return;
     }
 
-    // 진행바 100%
-    progressBar.style.width = '100%';
-    progressText.textContent = '100% - 완료!';
+    const uploadBtn = document.getElementById('uploadBtn');
+    const progressContainer = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
 
-    console.log(`✅ 업로드 성공:`, data);
+    try {
+      // UI 비활성화
+      uploadBtn.disabled = true;
+      progressContainer.style.display = 'block';
 
-    this.showSuccess(data.message || '파일 업로드가 완료되었습니다.');
+      // FormData 생성
+      const formData = new FormData();
+      this.selectedUploadFiles.forEach(file => {
+        formData.append('files', file);
+      });
+      formData.append('folder', this.currentPath);  // 🔥 현재 경로만 전달
 
-    // 모달 닫기 및 새로고침
-    setTimeout(() => {
-      this.closeUploadModal();
-      this.refresh();
-    }, 1000);
+      console.log(`📤 업로드 시작: ${this.selectedUploadFiles.length}개 파일, 경로: ${this.currentPath}`);
 
-  } catch (error) {
-    console.error('❌ 업로드 실패:', error);
-    this.showError(error.message || '업로드에 실패했습니다.');
+      // 업로드 요청
+      const response = await fetch('/api/s3/upload', {
+        method: 'POST',
+        body: formData
+      });
 
-    // UI 재활성화
-    uploadBtn.disabled = false;
-    progressContainer.style.display = 'none';
-  }
-}
+      const data = await response.json();
 
-/**
- * 🔥 업로드 모달 닫기
- */
-closeUploadModal() {
-  const modal = document.getElementById('uploadModal');
-  if (modal) {
-    modal.remove();
-  }
-  this.selectedUploadFiles = [];
-}
+      if (!data.success) {
+        throw new Error(data.error || '업로드에 실패했습니다.');
+      }
 
-/**
- * 파일 크기 포맷팅
- */
-formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-}
+      // 진행바 100%
+      progressBar.style.width = '100%';
+      progressText.textContent = '100% - 완료!';
 
-/**
- * 파일 아이콘 반환
- */
-getFileIcon(fileName) {
-  const ext = fileName.split('.').pop().toLowerCase();
-  const icons = {
-    'ent': '<img src="/resource/entry.png" alt="Entry" style="width:18px;height:18px;vertical-align:middle;">',
-    'sb3': '<img src="/resource/scratch.png" alt="Scratch" style="width:18px;height:18px;vertical-align:middle;">',
-    'sb2': '<img src="/resource/scratch.png" alt="Scratch" style="width:18px;height:18px;vertical-align:middle;">',
-    'png': '🖼️',
-    'jpg': '🖼️',
-    'jpeg': '🖼️',
-    'gif': '🖼️',
-    'webp': '🖼️',
-    'mp4': '🎬',
-    'pdf': '📄',
-    'zip': '📦',
-    'html': '🌐',
-    'js': '📜',
-    'json': '📋'
-  };
-  return icons[ext] || '📄';
-}
+      console.log(`✅ 업로드 성공:`, data);
 
-/**
- * 🔥 파일 선택 토글
- */
-toggleFileSelection(key) {
-  const index = this.selectedFiles.indexOf(key);
+      this.showSuccess(data.message || '파일 업로드가 완료되었습니다.');
 
-  if (index > -1) {
-    // 이미 선택됨 -> 제거
-    this.selectedFiles.splice(index, 1);
-  } else {
-    // 선택 안됨 -> 추가
-    this.selectedFiles.push(key);
+      // 모달 닫기 및 새로고침
+      setTimeout(() => {
+        this.closeUploadModal();
+        this.refresh();
+      }, 1000);
+
+    } catch (error) {
+      console.error('❌ 업로드 실패:', error);
+      this.showError(error.message || '업로드에 실패했습니다.');
+
+      // UI 재활성화
+      uploadBtn.disabled = false;
+      progressContainer.style.display = 'none';
+    }
   }
 
-  this.updateSelectedCount();
-  this.updateSelectAllCheckbox();
-
-  console.log(`📝 선택된 파일: ${this.selectedFiles.length}개`);
-}
-
-/**
- * 🔥 전체 선택 토글
- */
-toggleSelectAll(checkbox) {
-  const fileCheckboxes = document.querySelectorAll('.file-checkbox');
-
-  if (checkbox.checked) {
-    // 모두 선택
-    this.selectedFiles = [];
-    fileCheckboxes.forEach(cb => {
-      cb.checked = true;
-      this.selectedFiles.push(cb.dataset.key);
-    });
-  } else {
-    // 모두 해제
-    this.selectedFiles = [];
-    fileCheckboxes.forEach(cb => {
-      cb.checked = false;
-    });
+  /**
+   * 🔥 업로드 모달 닫기
+   */
+  closeUploadModal() {
+    const modal = document.getElementById('uploadModal');
+    if (modal) {
+      modal.remove();
+    }
+    this.selectedUploadFiles = [];
   }
 
-  this.updateSelectedCount();
-  console.log(`📝 전체 선택: ${this.selectedFiles.length}개`);
-}
-
-/**
- * 🔥 선택 수 업데이트
- */
-updateSelectedCount() {
-  const countSpan = document.getElementById('selectedCount');
-  const deleteBtn = document.getElementById('deleteSelectedBtn');
-
-  if (countSpan) {
-    countSpan.textContent = this.selectedFiles.length;
+  /**
+   * 파일 크기 포맷팅
+   */
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   }
 
-  if (deleteBtn) {
-    deleteBtn.disabled = this.selectedFiles.length === 0;
+  /**
+   * 파일 아이콘 반환
+   */
+  getFileIcon(fileName) {
+    const ext = fileName.split('.').pop().toLowerCase();
+    const icons = {
+      'ent': '<img src="/resource/entry.png" alt="Entry" style="width:18px;height:18px;vertical-align:middle;">',
+      'sb3': '<img src="/resource/scratch.png" alt="Scratch" style="width:18px;height:18px;vertical-align:middle;">',
+      'sb2': '<img src="/resource/scratch.png" alt="Scratch" style="width:18px;height:18px;vertical-align:middle;">',
+      'png': '🖼️',
+      'jpg': '🖼️',
+      'jpeg': '🖼️',
+      'gif': '🖼️',
+      'webp': '🖼️',
+      'mp4': '🎬',
+      'pdf': '📄',
+      'zip': '📦',
+      'html': '🌐',
+      'js': '📜',
+      'json': '📋'
+    };
+    return icons[ext] || '📄';
   }
-}
 
-/**
- * 🔥 전체 선택 체크박스 상태 업데이트
- */
-updateSelectAllCheckbox() {
-  const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-  const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+  /**
+   * 🔥 파일 선택 토글
+   */
+  toggleFileSelection(key) {
+    const index = this.selectedFiles.indexOf(key);
 
-  if (!selectAllCheckbox || fileCheckboxes.length === 0) return;
+    if (index > -1) {
+      // 이미 선택됨 -> 제거
+      this.selectedFiles.splice(index, 1);
+    } else {
+      // 선택 안됨 -> 추가
+      this.selectedFiles.push(key);
+    }
 
-  const allChecked = Array.from(fileCheckboxes).every(cb => cb.checked);
-  const someChecked = Array.from(fileCheckboxes).some(cb => cb.checked);
+    this.updateSelectedCount();
+    this.updateSelectAllCheckbox();
 
-  selectAllCheckbox.checked = allChecked;
-  selectAllCheckbox.indeterminate = someChecked && !allChecked;
-}
+    console.log(`📝 선택된 파일: ${this.selectedFiles.length}개`);
+  }
+
+  /**
+   * 🔥 전체 선택 토글
+   */
+  toggleSelectAll(checkbox) {
+    const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+
+    if (checkbox.checked) {
+      // 모두 선택
+      this.selectedFiles = [];
+      fileCheckboxes.forEach(cb => {
+        cb.checked = true;
+        this.selectedFiles.push(cb.dataset.key);
+      });
+    } else {
+      // 모두 해제
+      this.selectedFiles = [];
+      fileCheckboxes.forEach(cb => {
+        cb.checked = false;
+      });
+    }
+
+    this.updateSelectedCount();
+    console.log(`📝 전체 선택: ${this.selectedFiles.length}개`);
+  }
+
+  /**
+   * 🔥 선택 수 업데이트
+   */
+  updateSelectedCount() {
+    const countSpan = document.getElementById('selectedCount');
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+
+    if (countSpan) {
+      countSpan.textContent = this.selectedFiles.length;
+    }
+
+    if (deleteBtn) {
+      deleteBtn.disabled = this.selectedFiles.length === 0;
+    }
+  }
+
+  /**
+   * 🔥 전체 선택 체크박스 상태 업데이트
+   */
+  updateSelectAllCheckbox() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+
+    if (!selectAllCheckbox || fileCheckboxes.length === 0) return;
+
+    const allChecked = Array.from(fileCheckboxes).every(cb => cb.checked);
+    const someChecked = Array.from(fileCheckboxes).some(cb => cb.checked);
+
+    selectAllCheckbox.checked = allChecked;
+    selectAllCheckbox.indeterminate = someChecked && !allChecked;
+  }
 
   /**
    * 🔥 선택된 파일들 일괄 삭제
    */
   async deleteSelected() {
-  if (this.selectedFiles.length === 0) {
-    this.showError('삭제할 파일을 선택해주세요.');
-    return;
-  }
-
-  const confirmMsg = `선택한 ${this.selectedFiles.length}개 파일을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`;
-
-  if (!confirm(confirmMsg)) return;
-
-  try {
-    this.showLoading(true);
-
-    console.log(`🗑️ 일괄 삭제 시작: ${this.selectedFiles.length}개`);
-
-    const response = await fetch('/api/s3/delete-multiple', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ keys: this.selectedFiles })
-    });
-
-    const data = await response.json();
-
-    if (!data.success) {
-      throw new Error(data.error || '일괄 삭제에 실패했습니다.');
+    if (this.selectedFiles.length === 0) {
+      this.showError('삭제할 파일을 선택해주세요.');
+      return;
     }
 
-    console.log(`✅ 일괄 삭제 완료:`, data.stats);
+    const confirmMsg = `선택한 ${this.selectedFiles.length}개 파일을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`;
 
-    this.showSuccess(data.message || `${data.stats.deleted}개 파일 삭제 완료`);
+    if (!confirm(confirmMsg)) return;
 
-    // 선택 초기화 및 새로고침
-    this.selectedFiles = [];
-    this.updateSelectedCount();
-    this.refresh();
+    try {
+      this.showLoading(true);
 
-  } catch (error) {
-    console.error('❌ 일괄 삭제 실패:', error);
-    this.showError(error.message || '일괄 삭제에 실패했습니다.');
-  } finally {
-    this.showLoading(false);
+      console.log(`🗑️ 일괄 삭제 시작: ${this.selectedFiles.length}개`);
+
+      const response = await fetch('/api/s3/delete-multiple', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ keys: this.selectedFiles })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || '일괄 삭제에 실패했습니다.');
+      }
+
+      console.log(`✅ 일괄 삭제 완료:`, data.stats);
+
+      this.showSuccess(data.message || `${data.stats.deleted}개 파일 삭제 완료`);
+
+      // 선택 초기화 및 새로고침
+      this.selectedFiles = [];
+      this.updateSelectedCount();
+      this.refresh();
+
+    } catch (error) {
+      console.error('❌ 일괄 삭제 실패:', error);
+      this.showError(error.message || '일괄 삭제에 실패했습니다.');
+    } finally {
+      this.showLoading(false);
+    }
   }
-}
 
   /**
    * 🔥 Entry에서 파일 열기
    */
   async openInEntry(key) {
-  try {
-    console.log('🎨 Entry에서 열기:', key);
+    try {
+      console.log('🎨 Entry에서 열기:', key);
 
-    // 🔥 S3 직접 URL 생성 (NCP Asset URL 사용)
-    const s3Url = this.config.s3AssetUrl
-      ? `${this.config.s3AssetUrl}/${key}`
-      : `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${key}`;
+      // 🔥 S3 직접 URL 생성 (NCP Asset URL 사용)
+      const s3Url = this.config.s3AssetUrl
+        ? `${this.config.s3AssetUrl}/${key}`
+        : `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${key}`;
 
-    // 🔥 Entry 페이지 URL 생성 (s3Url 파라미터 사용)
-    const userID = this.config.userID || 'guest';
-    const userRole = this.config.userRole || 'student';
-    const entryUrl = `/entry_editor/?s3Url=${encodeURIComponent(s3Url)}&userID=${userID}&role=${userRole}`;
+      // 🔥 Entry 페이지 URL 생성 (s3Url 파라미터 사용)
+      const userID = this.config.userID || 'guest';
+      const userRole = this.config.userRole || 'student';
+      const entryUrl = `/entry_editor/?s3Url=${encodeURIComponent(s3Url)}&userID=${userID}&role=${userRole}`;
 
-    console.log('📂 Entry URL:', entryUrl);
-    window.open(entryUrl, '_blank');
+      console.log('📂 Entry URL:', entryUrl);
+      window.open(entryUrl, '_blank');
 
-    this.showSuccess('Entry에서 파일을 불러오고 있습니다...');
+      this.showSuccess('Entry에서 파일을 불러오고 있습니다...');
 
-  } catch (error) {
-    console.error('❌ Entry 열기 실패:', error);
-    this.showError('Entry에서 파일을 열 수 없습니다.');
+    } catch (error) {
+      console.error('❌ Entry 열기 실패:', error);
+      this.showError('Entry에서 파일을 열 수 없습니다.');
+    }
   }
-}
 
   /**
    * 🔥 Scratch에서 파일 열기
    */
   async openInScratch(key) {
-  try {
-    console.log('🐱 Scratch에서 열기:', key);
+    try {
+      console.log('🐱 Scratch에서 열기:', key);
 
-    // 🔥 S3 직접 URL 생성 (NCP Asset URL 사용)
-    const s3Url = this.config.s3AssetUrl
-      ? `${this.config.s3AssetUrl}/${key}`
-      : `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${key}`;
+      // 🔥 S3 직접 URL 생성 (NCP Asset URL 사용)
+      const s3Url = this.config.s3AssetUrl
+        ? `${this.config.s3AssetUrl}/${key}`
+        : `https://educodingnplaycontents.s3.ap-northeast-2.amazonaws.com/${key}`;
 
-    // 🔥 Scratch 페이지 URL 생성 (project_file 파라미터 사용)
-    const scratchUrl = `/scratch/?project_file=${encodeURIComponent(s3Url)}`;
+      // 🔥 Scratch 페이지 URL 생성 (project_file 파라미터 사용)
+      const scratchUrl = `/scratch/?project_file=${encodeURIComponent(s3Url)}`;
 
-    console.log('📂 Scratch URL:', scratchUrl);
-    window.open(scratchUrl, '_blank');
+      console.log('📂 Scratch URL:', scratchUrl);
+      window.open(scratchUrl, '_blank');
 
-    this.showSuccess('Scratch에서 파일을 불러오고 있습니다...');
+      this.showSuccess('Scratch에서 파일을 불러오고 있습니다...');
 
-  } catch (error) {
-    console.error('❌ Scratch 열기 실패:', error);
-    this.showError('Scratch에서 파일을 열 수 없습니다.');
+    } catch (error) {
+      console.error('❌ Scratch 열기 실패:', error);
+      this.showError('Scratch에서 파일을 열 수 없습니다.');
+    }
   }
-}
 }
 
 // Helper for Tree Loading
