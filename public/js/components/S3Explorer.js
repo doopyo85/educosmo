@@ -499,17 +499,17 @@ class S3Explorer {
    */
   highlightTreeNode(path) {
     // Remove old active
-    const oldActive = document.querySelector('.tree-content.active');
+    const oldActive = document.querySelector('.folder-item.active');
     if (oldActive) oldActive.classList.remove('active');
 
     // Find new active
-    const node = document.querySelector(`.tree - node[data - path="${path}"]`);
+    const node = document.querySelector(`.tree-node[data-path="${path}"]`);
     if (node) {
-      const content = node.querySelector('.tree-content');
+      const content = node.querySelector('.folder-item');
       if (content) content.classList.add('active');
 
-      // Ensure parents are expanded? 
-      // This is hard without full tree knowledge. 
+      // Ensure parents are expanded?
+      // This is hard without full tree knowledge.
       // Windows Explorer doesn't auto-expand deep unless you navigated there.
     }
   }
