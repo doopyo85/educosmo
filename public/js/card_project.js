@@ -28,6 +28,16 @@ class ProjectCardManager {
     }
 
     /**
+     * 🔥 URL 정규화: /COS/ -> /cos/, /SB3/ -> /sb3/ 등
+     */
+    normalizeUrl(url) {
+        if (!url) return '';
+        return url.replace(/\/([A-Z]+)\//g, (match, folder) => {
+            return '/' + folder.toLowerCase() + '/';
+        });
+    }
+
+    /**
      * Entry 파일 다운로드 (순수 다운로드만)
      */
     downloadEntryFile(projectUrl) {
@@ -1322,11 +1332,11 @@ class ProjectCardManager {
                 const problem = btn.getAttribute('data-problem');
                 const buttonType = btn.getAttribute('data-button-type');
                 const problems = btn.getAttribute('data-problems');
-                const projectUrl = btn.getAttribute('data-url');
-                const imgUrl = btn.getAttribute('data-img');
+                const projectUrl = this.normalizeUrl(btn.getAttribute('data-url'));  // 🔥 URL 정규화
+                const imgUrl = this.normalizeUrl(btn.getAttribute('data-img'));      // 🔥 URL 정규화
 
                 console.log('🎯 COS 문제 버튼 클릭:', {
-                    grade, sample, problem, buttonType, imgUrl
+                    grade, sample, problem, buttonType, imgUrl, projectUrl
                 });
 
                 // 🔥 Extension이 있으면 공식 사이트로 이동 (문제 이미지 사이드바 사용)
@@ -1348,7 +1358,7 @@ class ProjectCardManager {
                         userId: userId,
                         missionTitle: missionTitle,
                         openUrl: openUrl,
-                        problemImageUrl: imgUrl,  // 🔥 문제 이미지 URL 전달
+                        problemImageUrl: imgUrl,  // 🔥 문제 이미지 URL 전달 (정규화됨)
                         grade: grade,             // 🔥 COS 급수
                         sample: sample,           // 🔥 샘플 번호
                         problem: problem          // 🔥 문제 번호
@@ -1528,7 +1538,7 @@ class ProjectCardManager {
                 e.preventDefault();
                 e.stopPropagation();
 
-                const projectUrl = e.target.getAttribute('data-url');
+                const projectUrl = this.normalizeUrl(e.target.getAttribute('data-url'));  // 🔥 URL 정규화
                 if (!projectUrl) return;
 
                 const fileType = e.target.textContent.trim();
@@ -1536,7 +1546,7 @@ class ProjectCardManager {
                 const projectName = card?.querySelector('.project-card-title')?.textContent || 'COS 문제';
 
                 // 🔥 COS: data-img 속성이 있으면 Extension으로 에디터 열기
-                const imgUrl = e.target.getAttribute('data-img');
+                const imgUrl = this.normalizeUrl(e.target.getAttribute('data-img'));  // 🔥 URL 정규화
                 if (imgUrl) {
                     // COS 자격증 문제 - 프로젝트명에서 급수/샘플/문제번호 파싱
                     // 형식: "COS 1급 샘플1-01"
@@ -1559,7 +1569,7 @@ class ProjectCardManager {
                             userId: this.userID || 'guest',
                             missionTitle: missionTitle,
                             openUrl: openUrl,
-                            problemImageUrl: imgUrl,
+                            problemImageUrl: imgUrl,  // 🔥 정규화된 URL 전달
                             grade: grade,
                             sample: sample,
                             problem: problem
