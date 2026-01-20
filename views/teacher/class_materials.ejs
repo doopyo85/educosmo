@@ -124,6 +124,136 @@
             /* Align books to bottom of shelf */
         }
 
+        /* === Modal Styles === */
+        #bookModal {
+            z-index: 2000;
+            /* Ensure it's on top of everything */
+        }
+
+        .book-modal-content {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .book-modal-header {
+            background-color: #fff;
+            border-bottom: 1px solid #f1f3f5;
+            padding: 20px 24px;
+        }
+
+        .book-modal-title {
+            font-weight: 700;
+            color: var(--lib-text-primary);
+        }
+
+        .session-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .session-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid #f1f3f5;
+            transition: background-color 0.2s;
+            gap: 20px;
+        }
+
+        .session-item:last-child {
+            border-bottom: none;
+        }
+
+        .session-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .session-thumb {
+            width: 120px;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: #eee;
+        }
+
+        .session-info {
+            flex: 1;
+            min-width: 0;
+            /* Allow text truncation */
+        }
+
+        .session-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #343a40;
+            margin-bottom: 4px;
+        }
+
+        .session-topic {
+            font-size: 0.85rem;
+            color: #868e96;
+        }
+
+        .session-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 50%;
+            background-color: #fff;
+            transition: all 0.2s;
+            color: #495057;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f3f5;
+        }
+
+        .btn-action:hover:not(.disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-action.play-btn {
+            color: #e03131;
+            background-color: #fff5f5;
+            border-color: #ffc9c9;
+        }
+
+        .btn-action.play-btn:hover {
+            background-color: #e03131;
+            color: #fff;
+            border-color: #e03131;
+        }
+
+        .btn-action.doc-btn {
+            color: #1971c2;
+            background-color: #e7f5ff;
+            border-color: #a5d8ff;
+        }
+
+        .btn-action.doc-btn:hover {
+            background-color: #1971c2;
+            color: #fff;
+            border-color: #1971c2;
+        }
+
+        .btn-action.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #f8f9fa;
+            color: #adb5bd;
+        }
+
         /* === Book Item === */
         .book-item {
             position: relative;
@@ -483,8 +613,8 @@
                             }
                         }
 
-                        // Clean Topic
-                        // Sometimes topic is repeated or empty
+                        // Ensure topic is clean
+                        const topicText = session.topic || '';
 
                         const li = document.createElement('li');
                         li.className = 'session-item';
@@ -492,13 +622,17 @@
                          <img src="${thumbUrl}" class="session-thumb" alt="thumb" loading="lazy" referrerpolicy="no-referrer">
                          <div class="session-info">
                              <div class="session-title">${session.name}</div>
-                             <div class="session-topic">${session.topic || ''}</div>
+                             <div class="session-topic">${topicText}</div>
                          </div>
                          <div class="session-actions">
-                             <button class="btn-action ${hasVideo ? '' : 'disabled'}" onclick='openVideo(${sessionData})' title="영상 보기">
+                             <button class="btn-action play-btn ${hasVideo ? '' : 'disabled'}" 
+                                     onclick='openVideo(${sessionData})' 
+                                     title="영상 보기">
                                  <i class="bi bi-play-fill fs-4"></i>
                              </button>
-                             <button class="btn-action ${hasImages ? '' : 'disabled'}" onclick='openImages(${sessionData})' title="교안 보기">
+                             <button class="btn-action doc-btn ${hasImages ? '' : 'disabled'}" 
+                                     onclick='openImages(${sessionData})' 
+                                     title="교안 보기">
                                  <i class="bi bi-images"></i>
                              </button>
                          </div>
