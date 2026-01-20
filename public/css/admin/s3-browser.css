@@ -182,10 +182,9 @@
 ======================================== */
 .s3-browser-content {
   display: flex;
-  gap: 12px;
+  gap: 20px;
   align-items: flex-start;
   flex: 1;
-  height: calc(100vh - 180px);
 }
 
 /* ========================================
