@@ -44,15 +44,29 @@ class ProjectCardManager {
         // 🔥 팝업 URL 생성
         const popupUrl = `/cos-problem-popup?grade=${grade}&sample=${sample}&problem=${problem}&problems=${encodeURIComponent(problems)}`;
 
-        // 🔥 새 창으로 문제 이미지 팝업 열기 (cos-editor와 동일한 크기)
-        const popupWindow = window.open(popupUrl, `cosProblem-${grade}-${sample}`, 'width=800,height=900,scrollbars=yes,resizable=yes');
-
-        // 🔥 projectUrl이 공식 페이지 URL이고 openProjectTab이 true면 새 탭으로 열기
+        // 🔥 projectUrl이 공식 페이지 URL이고 openProjectTab이 true면 먼저 새 탭으로 열기
         if (openProjectTab && projectUrl) {
             if (projectUrl.includes('playentry.org') || projectUrl.includes('scratch.mit.edu')) {
-                console.log('✅ 문제 팝업과 함께 공식 페이지 새 탭으로 열기:', projectUrl);
+                console.log('✅ 공식 페이지 먼저 열기:', projectUrl);
                 window.open(projectUrl, '_blank');
+
+                // 🔥 약간의 딜레이 후 문제 팝업 열기 (팝업 차단 방지)
+                setTimeout(() => {
+                    const popupWindow = window.open(popupUrl, `cosProblem-${grade}-${sample}`, 'width=800,height=900,scrollbars=yes,resizable=yes');
+                    if (!popupWindow || popupWindow.closed || typeof popupWindow.closed == 'undefined') {
+                        console.warn('⚠️ 팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.');
+                        alert('문제 이미지 팝업이 차단되었습니다.\n브라우저 주소창 오른쪽의 팝업 차단 아이콘을 클릭하여 허용해주세요.');
+                    }
+                }, 100);
+                return;
             }
+        }
+
+        // 🔥 공식 페이지를 열지 않는 경우 (NCP URL 등) - 팝업만 열기
+        const popupWindow = window.open(popupUrl, `cosProblem-${grade}-${sample}`, 'width=800,height=900,scrollbars=yes,resizable=yes');
+        if (!popupWindow || popupWindow.closed || typeof popupWindow.closed == 'undefined') {
+            console.warn('⚠️ 팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.');
+            alert('문제 이미지 팝업이 차단되었습니다.\n브라우저 주소창 오른쪽의 팝업 차단 아이콘을 클릭하여 허용해주세요.');
         }
     }
 
