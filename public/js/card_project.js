@@ -114,7 +114,7 @@ class ProjectCardManager {
     /**
      * 🔥 COS 문제 모달 열기
      */
-    openCosProblemModal(grade, sample, problem, problems, projectUrl) {
+    openCosProblemModal(grade, sample, problem, problems, projectUrl, openProjectTab = false) {
         const modal = this.createCosProblemModal();
 
         // 현재 문제 정보 저장
@@ -148,6 +148,14 @@ class ProjectCardManager {
             const currentNum = parseInt(problem);
             prevBtn.disabled = currentNum <= 1;
             nextBtn.disabled = currentNum >= 10;
+        }
+
+        // 🔥 projectUrl이 공식 페이지 URL이고 openProjectTab이 true면 새 탭으로 열기
+        if (openProjectTab && projectUrl) {
+            if (projectUrl.includes('playentry.org') || projectUrl.includes('scratch.mit.edu')) {
+                console.log('✅ 문제 모달과 함께 공식 페이지 새 탭으로 열기:', projectUrl);
+                window.open(projectUrl, '_blank');
+            }
         }
 
         // 모달 표시
@@ -214,8 +222,7 @@ class ProjectCardManager {
             return;
         }
 
-        // 모달 닫기
-        this.closeCosProblemModal();
+        // 🔥 모달은 닫지 않고 새 탭으로만 열기 (문제를 계속 보면서 작업 가능)
 
         // playentry.org 링크면 직접 이동
         if (projectUrl.includes('playentry.org')) {
@@ -1559,9 +1566,9 @@ class ProjectCardManager {
                             problem: problem          // 🔥 문제 번호
                         });
                     } else {
-                        // 🔥 Extension 없으면 모달로 문제 표시
-                        console.log('📂 Extension 없음 - 문제 모달 표시');
-                        this.openCosProblemModal(grade, sample, problem, problems, projectUrl);
+                        // 🔥 Extension 없으면 모달로 문제 표시 + 동시에 새 탭으로 공식 페이지 열기
+                        console.log('📂 Extension 없음 - 문제 모달 표시 + 새 탭으로 공식 페이지 열기');
+                        this.openCosProblemModal(grade, sample, problem, problems, projectUrl, true);
                     }
                 } else if (projectUrl && projectUrl.includes('scratch.mit.edu')) {
                     // 🔥 Extension이 있으면 사이드바와 함께, 없으면 모달 표시
@@ -1584,9 +1591,9 @@ class ProjectCardManager {
                             problem: problem
                         });
                     } else {
-                        // 🔥 Extension 없으면 모달로 문제 표시
-                        console.log('📂 Extension 없음 - 문제 모달 표시');
-                        this.openCosProblemModal(grade, sample, problem, problems, projectUrl);
+                        // 🔥 Extension 없으면 모달로 문제 표시 + 동시에 새 탭으로 공식 페이지 열기
+                        console.log('📂 Extension 없음 - 문제 모달 표시 + 새 탭으로 공식 페이지 열기');
+                        this.openCosProblemModal(grade, sample, problem, problems, projectUrl, true);
                     }
                 } else {
                     // 🔥 기존 NCP URL인 경우 - Extension이 있으면 공식 사이트로 이동 (문제 이미지 사이드바 사용)
@@ -1614,9 +1621,9 @@ class ProjectCardManager {
                             problem: problem          // 🔥 문제 번호
                         });
                     } else {
-                        // 🔥 Extension 없으면 모달로 문제 표시
+                        // 🔥 Extension 없으면 모달로 문제 표시 (NCP는 공식 페이지 열지 않음)
                         console.log('📂 Extension 없음 - 문제 모달 표시');
-                        this.openCosProblemModal(grade, sample, problem, problems, projectUrl);
+                        this.openCosProblemModal(grade, sample, problem, problems, projectUrl, false);
                     }
                 }
 
@@ -1807,13 +1814,13 @@ class ProjectCardManager {
                                 problem: problem
                             });
                         } else if (match) {
-                            // 🔥 Extension 없으면 모달로 문제 표시 (문제 데이터는 card에서 추출 불가능하므로 단일 문제만 표시)
-                            console.log('📂 Extension 없음 - 문제 모달 표시');
+                            // 🔥 Extension 없으면 모달로 문제 표시 + 동시에 새 탭으로 공식 페이지 열기
+                            console.log('📂 Extension 없음 - 문제 모달 표시 + 새 탭으로 공식 페이지 열기');
                             const [, grade, sample, problem] = match;
                             // 단일 문제 데이터 생성
                             const singleProblem = {};
                             singleProblem[problem] = { img: imgUrl, solution: projectUrl };
-                            this.openCosProblemModal(grade, sample, problem, JSON.stringify(singleProblem), projectUrl);
+                            this.openCosProblemModal(grade, sample, problem, JSON.stringify(singleProblem), projectUrl, true);
                         } else {
                             // 파싱 실패 시 그냥 열기
                             window.open(projectUrl, '_blank');
@@ -1839,12 +1846,12 @@ class ProjectCardManager {
                                 problem: problem
                             });
                         } else if (match) {
-                            // 🔥 Extension 없으면 모달로 문제 표시
-                            console.log('📂 Extension 없음 - 문제 모달 표시');
+                            // 🔥 Extension 없으면 모달로 문제 표시 + 동시에 새 탭으로 공식 페이지 열기
+                            console.log('📂 Extension 없음 - 문제 모달 표시 + 새 탭으로 공식 페이지 열기');
                             const [, grade, sample, problem] = match;
                             const singleProblem = {};
                             singleProblem[problem] = { img: imgUrl, solution: projectUrl };
-                            this.openCosProblemModal(grade, sample, problem, JSON.stringify(singleProblem), projectUrl);
+                            this.openCosProblemModal(grade, sample, problem, JSON.stringify(singleProblem), projectUrl, true);
                         } else {
                             window.open(projectUrl, '_blank');
                         }
@@ -1872,12 +1879,12 @@ class ProjectCardManager {
                                 problem: problem
                             });
                         } else if (match) {
-                            // 🔥 Extension 없으면 모달로 문제 표시
+                            // 🔥 Extension 없으면 모달로 문제 표시 (NCP는 공식 페이지 열지 않음)
                             console.log('📂 Extension 없음 - 문제 모달 표시');
                             const [, grade, sample, problem] = match;
                             const singleProblem = {};
                             singleProblem[problem] = { img: imgUrl, solution: projectUrl };
-                            this.openCosProblemModal(grade, sample, problem, JSON.stringify(singleProblem), projectUrl);
+                            this.openCosProblemModal(grade, sample, problem, JSON.stringify(singleProblem), projectUrl, false);
                         } else {
                             // Extension 없으면 /cos-editor 페이지로 폴백
                             let cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
