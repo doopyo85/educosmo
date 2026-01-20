@@ -24,8 +24,12 @@ function transformS3UrlToNCP(url) {
 
   // NCP Direct URL → NCP Global Edge (CORS 지원)
   if (ncpDirectPattern.test(url)) {
-    const transformedUrl = url.replace(ncpDirectPattern, config.S3.ASSET_URL + '/');
-    console.log(`🔄 NCP Direct URL → Edge CDN 변환 (CORS): ${url.substring(0, 60)}...`);
+    // Edge CDN URL은 /educodingnplaycontents 경로를 포함해야 함
+    const transformedUrl = url.replace(
+      /https?:\/\/kr\.object\.ncloudstorage\.com/gi,
+      config.S3.ASSET_URL
+    );
+    console.log(`🔄 NCP Direct URL → Edge CDN 변환 (CORS): ${url.substring(0, 60)}... → ${transformedUrl.substring(0, 60)}...`);
     return transformedUrl;
   }
 
