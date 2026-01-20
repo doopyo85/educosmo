@@ -28,7 +28,12 @@
       "Bash(git pull:*)",
       "Bash(git stash:*)",
       "Bash(git push:*)",
-      "Bash(sudo systemctl status:*)"
+      "Bash(sudo systemctl status:*)",
+      "Bash(npm start)",
+      "Bash(timeout /t 5)",
+      "Bash(npm install:*)",
+      "Bash(PORT=3000 npm start)",
+      "Bash(npm run dev:*)"
     ]
   }
 }

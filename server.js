@@ -548,14 +548,22 @@ const routes = {
 app.use('/api/python-problems', authenticateUser, require('./routes/pythonProblemRouter'));
 // 🔥 Entry Editor 프록시 설정 (8070 포트)
 // /entry_editor 경로를 localhost:8070/ 으로 프록시
-app.use('/entry_editor', createProxyMiddleware({
+app.use('/entry_editor', authenticateUser, createProxyMiddleware({
   target: 'http://localhost:8070',
   changeOrigin: true,
   pathRewrite: {
     '^/entry_editor': '' // /entry_editor 경로 제거 후 전달
   },
   ws: true, // WebSocket 지원
-  logLevel: 'debug'
+  logLevel: 'debug',
+  onProxyReq: (proxyReq, req, res) => {
+    // 세션 정보를 헤더로 전달
+    if (req.session && req.session.userID) {
+      proxyReq.setHeader('X-User-ID', req.session.userID);
+      proxyReq.setHeader('X-User-Role', req.session.role || 'guest');
+      proxyReq.setHeader('X-Center-ID', req.session.centerID || '');
+    }
+  }
 }));
 
 // 라우터 설정
