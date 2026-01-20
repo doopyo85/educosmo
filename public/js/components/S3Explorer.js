@@ -382,53 +382,55 @@ class S3Explorer {
   }
 
   /**
-   * 🌳 트리 노드 생성 (DOM Element)
+   * 🌳 트리 노드 생성 (DOM Element) - Windows 탐색기 스타일
    */
   createTreeNode(folder) {
     const node = document.createElement('div');
     node.className = 'tree-node';
     node.dataset.path = folder.fullPath;
 
-    // Check if it has userName (Student Name)
-    let label = folder.name;
-    if (folder.userName) {
-      label = `<span class="fw-bold text-primary me-1">(${folder.userName})</span> ${folder.name}`;
-    }
+    // Wrapper for toggle + folder-item (한 줄 정렬)
+    const wrapper = document.createElement('div');
+    wrapper.className = 'folder-item-wrapper';
 
-    // Node Content
-    const content = document.createElement('div');
-    content.className = `folder-item ${this.currentPath === folder.fullPath ? 'active' : ''}`;
-    content.onclick = (e) => {
-      // Prevent toggle triggering select if we want distinct actions?
-      // Usually clicking name selects AND toggles if strictly hierarchy. 
-      // Windows Explorer: Single click selects (shows files), Double click toggles.
-      // Web: Click selects. Arrow toggles.
-      this.loadFolder(folder.fullPath, false);
-    };
-
-    // Toggle Button
+    // Toggle Button (왼쪽)
     const toggle = document.createElement('button');
     toggle.className = 'tree-toggle';
     toggle.innerHTML = '<i class="bi bi-chevron-right"></i>';
     toggle.onclick = (e) => {
-      e.stopPropagation(); // Don't select
+      e.stopPropagation();
       this.toggleTreeNode(node, folder.fullPath, toggle);
+    };
+
+    // Folder Item (오른쪽)
+    const content = document.createElement('div');
+    content.className = `folder-item ${this.currentPath === folder.fullPath ? 'active' : ''}`;
+    content.onclick = (e) => {
+      this.loadFolder(folder.fullPath, false);
     };
 
     // Icon
     const icon = document.createElement('i');
-    icon.className = 'bi bi-folder-fill text-warning me-2';
+    icon.className = 'bi bi-folder-fill folder-icon';
 
-    // Label Span
+    // Label Span (userName 포함)
     const span = document.createElement('span');
     span.className = 'tree-label';
-    span.innerHTML = label; // Allow HTML for student name styling
 
-    content.appendChild(toggle);
+    // userName이 있으면 인라인으로 표시
+    if (folder.userName) {
+      span.innerHTML = `<span class="user-badge">(${this.escapeHtml(folder.userName)})</span>${this.escapeHtml(folder.name)}`;
+    } else {
+      span.textContent = folder.name;
+    }
+
     content.appendChild(icon);
     content.appendChild(span);
 
-    node.appendChild(content);
+    wrapper.appendChild(toggle);
+    wrapper.appendChild(content);
+
+    node.appendChild(wrapper);
 
     // Children Container
     const childrenContainer = document.createElement('div');

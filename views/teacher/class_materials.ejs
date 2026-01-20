@@ -124,6 +124,202 @@
             /* Align books to bottom of shelf */
         }
 
+        /* === Split Player CSS === */
+        .modal-fullscreen .modal-content {
+            height: 100vh;
+            border-radius: 0;
+            background: #fff;
+        }
+
+        .split-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Left Video Section */
+        .video-section {
+            flex: 1;
+            /* 100% width initially, but flex-grow 1 implies it takes available space */
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            min-width: 0;
+            /* Fix flexbox overflow */
+        }
+
+        .video-container-wrapper {
+            width: 100%;
+            aspect-ratio: 16/9;
+            position: relative;
+            background: #000;
+        }
+
+        .video-container-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Custom Fullscreen Button Overlay */
+        .btn-vid-fs {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s;
+        }
+
+        .btn-vid-fs:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.1);
+        }
+
+        /* Right Content Section */
+        .content-section {
+            width: 420px;
+            /* Fixed width sidebar */
+            background: #fff;
+            border-left: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        /* Tabs */
+        .player-tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+
+        .player-tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            color: #868e96;
+            border-bottom: 2px solid transparent;
+            font-size: 0.95rem;
+        }
+
+        .player-tab-btn.active {
+            color: var(--lib-accent-color);
+            border-bottom-color: var(--lib-accent-color);
+            font-weight: 700;
+        }
+
+        /* Content Areas */
+        .player-tab-content {
+            flex: 1;
+            overflow-y: auto;
+            display: none;
+            background: #fdfdfd;
+        }
+
+        .player-tab-content.active {
+            display: block;
+        }
+
+        /* Playlist Items */
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f3f5;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .playlist-item:hover {
+            background: #f8f9fa;
+        }
+
+        .playlist-item.active {
+            background: #e7f5ff;
+            border-left: 4px solid #1971c2;
+        }
+
+        .pl-status {
+            margin-right: 12px;
+            color: #ced4da;
+            font-size: 1.1rem;
+        }
+
+        .playlist-item.active .pl-status {
+            color: #1971c2;
+        }
+
+        .playlist-item.has-video .pl-status {
+            color: #868e96;
+        }
+
+        /* Default video color */
+
+        .pl-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pl-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #495057;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .pl-sub {
+            font-size: 0.75rem;
+            color: #adb5bd;
+        }
+
+        /* Material / Notes */
+        .material-container {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .material-img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+
+        .notes-container {
+            padding: 20px;
+        }
+
+        .notes-area {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
         /* === Modal Styles === */
         #bookModal {
             z-index: 2000;
@@ -560,18 +756,68 @@
             </div>
         </div>
 
-        <!-- Video/Image Viewer Modal -->
-        <div class="modal fade" id="mediaViewerModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
-            <div class="modal-dialog modal-xl modal-dialog-centered">
-                <div class="modal-content bg-dark text-white border-0">
-                    <div class="modal-header border-bottom border-secondary">
-                        <h5 class="modal-title" id="mediaViewerTitle">미디어 뷰어</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+        <!-- Video/Image Viewer Modal (Split View) -->
+        <div class="modal fade" id="mediaViewerModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content">
+                    <!-- Simple Header -->
+                    <div class="modal-header border-bottom py-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-play-circle-fill text-danger fs-4"></i>
+                            <h5 class="modal-title fs-6 fw-bold" id="mediaViewerTitle">강의 뷰어</h5>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body p-0" id="mediaViewerBody"
-                        style="min-height: 500px; display: flex; align-items: center; justify-content: center; background: #000;">
-                        <!-- VideoFrame or Image Carousel -->
+
+                    <div class="modal-body p-0">
+                        <div class="split-container">
+                            <!-- Left: Video -->
+                            <div class="video-section" id="videoSection">
+                                <div class="video-container-wrapper">
+                                    <div id="videoIframeContainer"></div>
+                                    <!-- Custom Fullscreen Button -->
+                                    <button class="btn-vid-fs" id="btnVideoFs" onclick="toggleVideoFullscreen(event)"
+                                        title="전체화면" style="display:none;">
+                                        <i class="bi bi-arrows-fullscreen"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Right: Content -->
+                            <div class="content-section">
+                                <!-- Tabs -->
+                                <div class="player-tabs">
+                                    <button class="player-tab-btn active" onclick="switchPlayerTab('tab-list')">강의
+                                        목록</button>
+                                    <button class="player-tab-btn" onclick="switchPlayerTab('tab-material')">교안
+                                        보기</button>
+                                    <button class="player-tab-btn" onclick="switchPlayerTab('tab-notes')">노트</button>
+                                </div>
+
+                                <!-- Tab Content: List -->
+                                <div id="tab-list" class="player-tab-content active">
+                                    <div id="playerSessionList">
+                                        <!-- Dynamic List -->
+                                    </div>
+                                </div>
+
+                                <!-- Tab Content: Material -->
+                                <div id="tab-material" class="player-tab-content hiding-scrollbar">
+                                    <div id="materialContainer" class="material-container">
+                                        <p class="text-muted mt-5">등록된 교안 이미지가 없습니다.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Tab Content: Notes -->
+                                <div id="tab-notes" class="player-tab-content">
+                                    <div class="notes-container">
+                                        <p class="text-muted mb-2"><i class="bi bi-pencil-square me-1"></i> 강의 노트 (저장되지
+                                            않음)</p>
+                                        <textarea class="notes-area" placeholder="중요한 내용을 메모하세요..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -583,25 +829,28 @@
             const bookModal = new bootstrap.Modal(document.getElementById('bookModal'));
             const mediaViewerModal = new bootstrap.Modal(document.getElementById('mediaViewerModal'));
 
+            // State
+            let currentBookSessions = [];
+            let currentSessionIndex = 0;
+
             function openBookModal(el) {
                 const title = el.getAttribute('data-title');
-                const sessions = JSON.parse(el.getAttribute('data-sessions') || '[]');
+                // Store sessions globally for the player context
+                currentBookSessions = JSON.parse(el.getAttribute('data-sessions') || '[]');
 
                 document.getElementById('bookModalTitle').textContent = title;
                 const listContainer = document.getElementById('bookSessionList');
                 listContainer.innerHTML = '';
 
-                if (sessions.length === 0) {
+                if (currentBookSessions.length === 0) {
                     listContainer.innerHTML = '<li class="p-4 text-center text-muted">등록된 강의가 없습니다.</li>';
                 } else {
-                    sessions.forEach(session => {
-                        const sessionData = JSON.stringify(session).replace(/'/g, "&apos;");
-
+                    currentBookSessions.forEach((session, index) => {
                         let thumbUrl = session.thumbnail || '/resource/profiles/default.webp';
                         const hasVideo = !!session.videoUrl;
                         const hasImages = session.images && session.images.length > 0;
 
-                        // 🔴 Request 4: Use YouTube Thumbnail for Video items
+                        // YouTube Thumbnail Logic
                         if (hasVideo && (session.videoUrl.includes('youtube.com') || session.videoUrl.includes('youtu.be'))) {
                             try {
                                 const videoId = session.videoUrl.split('/').pop().split('?')[0];
@@ -618,6 +867,7 @@
 
                         const li = document.createElement('li');
                         li.className = 'session-item';
+                        // Pass index to openPlayer
                         li.innerHTML = `
                          <img src="${thumbUrl}" class="session-thumb" alt="thumb" loading="lazy" referrerpolicy="no-referrer">
                          <div class="session-info">
@@ -626,12 +876,12 @@
                          </div>
                          <div class="session-actions">
                              <button class="btn-action play-btn ${hasVideo ? '' : 'disabled'}" 
-                                     onclick='openVideo(${sessionData})' 
+                                     onclick='openPlayer(${index}, "video")' 
                                      title="영상 보기">
                                  <i class="bi bi-play-fill fs-4"></i>
                              </button>
                              <button class="btn-action doc-btn ${hasImages ? '' : 'disabled'}" 
-                                     onclick='openImages(${sessionData})' 
+                                     onclick='openPlayer(${index}, "material")' 
                                      title="교안 보기">
                                  <i class="bi bi-images"></i>
                              </button>
@@ -644,46 +894,127 @@
                 bookModal.show();
             }
 
-            function openVideo(session) {
-                const container = document.getElementById('mediaViewerBody');
-                const title = document.getElementById('mediaViewerTitle');
-                title.textContent = session.name + ' - 영상';
+            // --- Split Player Logic ---
 
-                let embedUrl = session.videoUrl;
-                if (session.videoUrl.includes('youtu.be') || session.videoUrl.includes('youtube.com')) {
-                    const videoId = session.videoUrl.split('/').pop().split('?')[0];
-                    embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+            function openPlayer(index, type = 'video') {
+                currentSessionIndex = index;
+                const session = currentBookSessions[index];
+                if (!session) return;
+
+                // 1. Set Title
+                document.getElementById('mediaViewerTitle').textContent = session.name;
+
+                // 2. Load Video (Left Panel)
+                const videoContainer = document.getElementById('videoIframeContainer');
+                const btnFs = document.getElementById('btnVideoFs');
+
+                if (session.videoUrl) {
+                    let embedUrl = session.videoUrl;
+                    if (session.videoUrl.includes('youtu.be') || session.videoUrl.includes('youtube.com')) {
+                        const videoId = session.videoUrl.split('/').pop().split('?')[0];
+                        embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+                    }
+                    videoContainer.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; fullscreen" allowfullscreen style="border:0;"></iframe>`;
+                    btnFs.style.display = 'flex'; // Show fullscreen button
+                } else {
+                    videoContainer.innerHTML = `<div class="d-flex align-items-center justify-content-center h-100 text-muted"><i class="bi bi-play-circle fs-1 me-2 opacity-50"></i><br>등록된 영상이 없습니다.</div>`;
+                    btnFs.style.display = 'none';
                 }
 
-                container.innerHTML = `
-                <div class="ratio ratio-16x9 w-100">
-                     <iframe src="${embedUrl}" allow="autoplay; fullscreen" allowfullscreen></iframe>
-                </div>
-            `;
+                // 3. Prepare Right Panel Tabs
+                updatePlayerList();       // Re-render list to show active item
+                updatePlayerMaterial();   // Load images for this session
+
+                // 4. Switch Tab based on 'type'
+                if (type === 'material') {
+                    switchPlayerTab('tab-material');
+                } else {
+                    // Default to list if opening video, or stay on current tab? 
+                    // Let's default to List for better context.
+                    switchPlayerTab('tab-list');
+                }
+
                 mediaViewerModal.show();
             }
 
-            function openImages(session) {
-                const container = document.getElementById('mediaViewerBody');
-                const title = document.getElementById('mediaViewerTitle');
-                title.textContent = session.name + ' - 교안';
+            // Render the Session List inside the Player
+            function updatePlayerList() {
+                const listContainer = document.getElementById('playerSessionList');
+                listContainer.innerHTML = '';
 
-                if (!session.images || session.images.length === 0) return;
+                currentBookSessions.forEach((session, idx) => {
+                    const isActive = idx === currentSessionIndex;
+                    const hasVideo = !!session.videoUrl;
+                    const topicText = session.topic ? `<span class="pl-sub"> - ${session.topic}</span>` : '';
 
-                const html = session.images.map(img => `
-                <img src="${img}" style="max-width: 100%; height: auto; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5);" loading="lazy" referrerpolicy="no-referrer">
-            `).join('');
+                    const div = document.createElement('div');
+                    div.className = `playlist-item ${isActive ? 'active' : ''} ${hasVideo ? 'has-video' : ''}`;
+                    div.onclick = () => openPlayer(idx, 'video'); // clicking item switches to it
 
-                container.innerHTML = `
-                <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; text-align: center;">
-                    ${html}
-                </div>
-            `;
-                mediaViewerModal.show();
+                    div.innerHTML = `
+                        <i class="bi ${isActive ? 'bi-play-circle-fill' : (hasVideo ? 'bi-play-circle' : 'bi-lock')} pl-status"></i>
+                        <div class="pl-info">
+                            <span class="pl-title">${session.name}</span>
+                            ${topicText}
+                        </div>
+                        <span style="font-size: 0.8rem; color: #ced4da;">${idx + 1}강</span>
+                    `;
+                    listContainer.appendChild(div);
+                });
             }
 
+            function updatePlayerMaterial() {
+                const container = document.getElementById('materialContainer');
+                const session = currentBookSessions[currentSessionIndex];
+
+                if (!session || !session.images || session.images.length === 0) {
+                    container.innerHTML = '<p class="text-muted mt-5">등록된 교안 이미지가 없습니다.</p>';
+                } else {
+                    const html = session.images.map(img => `
+                        <img src="${img}" class="material-img" loading="lazy" referrerpolicy="no-referrer">
+                    `).join('');
+                    container.innerHTML = html;
+                }
+            }
+
+            function switchPlayerTab(tabId) {
+                // Remove active classes
+                document.querySelectorAll('.player-tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.player-tab-content').forEach(content => content.classList.remove('active'));
+
+                // Add active classes
+                document.getElementById(tabId).classList.add('active');
+
+                // Find button to highlight (simple match via onclick attribute or order)
+                // Let's just find by text or order for simplicity in this generated code
+                const btns = document.querySelectorAll('.player-tab-btn');
+                if (tabId === 'tab-list') btns[0].classList.add('active');
+                if (tabId === 'tab-material') btns[1].classList.add('active');
+                if (tabId === 'tab-notes') btns[2].classList.add('active');
+            }
+
+            function toggleVideoFullscreen(e) {
+                e.stopPropagation();
+                const videoSection = document.getElementById('videoSection');
+
+                if (!document.fullscreenElement) {
+                    if (videoSection.requestFullscreen) {
+                        videoSection.requestFullscreen();
+                    } else if (videoSection.webkitRequestFullscreen) { /* Safari */
+                        videoSection.webkitRequestFullscreen();
+                    } else if (videoSection.msRequestFullscreen) { /* IE11 */
+                        videoSection.msRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            }
+
+            // Clear on close
             document.getElementById('mediaViewerModal').addEventListener('hidden.bs.modal', function () {
-                document.getElementById('mediaViewerBody').innerHTML = '';
+                document.getElementById('videoIframeContainer').innerHTML = '';
             });
         </script>
 </body>

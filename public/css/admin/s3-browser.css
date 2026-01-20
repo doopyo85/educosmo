@@ -267,6 +267,13 @@
 
 /* Fixed syntax error */
 
+/* Windows 탐색기 스타일 트리 구조 */
+.folder-item-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
 .folder-item {
   display: flex;
   align-items: center;
@@ -280,6 +287,8 @@
   margin-bottom: 1px;
   white-space: nowrap;
   overflow: hidden;
+  flex: 1;
+  min-width: 0;
 }
 
 .folder-item:hover {
@@ -349,6 +358,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* userName 배지 스타일 */
+.tree-label .user-badge {
+  display: inline;
+  font-weight: 600;
+  color: #1976d2;
+  margin-right: 4px;
+  font-size: 11px;
 }
 
 /* Removed Duplicate Blocks */

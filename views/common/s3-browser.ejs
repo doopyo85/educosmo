@@ -25,9 +25,10 @@
         <% if (role==='teacher' || role==='manager' ) { %>
             <!-- 🔥 Teacher Dashboard Style Override for S3 Browser -->
             <style>
-                /* 1. Use board-layout structure */
+                /* 1. Use board-layout structure - 1400px 이상 확장 */
                 .board-layout-container {
-                    max-width: 1400px;
+                    max-width: none;
+                    width: 100%;
                     margin: 20px auto;
                     display: flex;
                     gap: 20px;
@@ -134,13 +135,58 @@
                     height: auto !important;
                 }
 
-                /* Page header - board-layout과 동일한 패딩 */
+                /* Page header - 1400px 이상 확장 */
                 .s3-browser-header {
-                    max-width: 1400px;
+                    max-width: none;
+                    width: 100%;
                     margin: 0 auto 20px;
                     padding: 0 15px !important;
                     background: transparent !important;
                     border: none !important;
+                }
+
+                /* Windows 탐색기 스타일 트리 구조 */
+                .tree-node {
+                    margin-bottom: 0 !important;
+                }
+
+                .folder-item-wrapper {
+                    display: flex !important;
+                    align-items: center !important;
+                    width: 100% !important;
+                }
+
+                .tree-toggle {
+                    flex-shrink: 0 !important;
+                    margin-right: 4px !important;
+                }
+
+                .folder-item {
+                    flex: 1 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    min-width: 0 !important;
+                }
+
+                .folder-item .folder-icon {
+                    flex-shrink: 0 !important;
+                }
+
+                .folder-item .tree-label {
+                    flex: 1 !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
+                    white-space: nowrap !important;
+                    font-size: 13px !important;
+                }
+
+                /* userName 스타일 */
+                .tree-label .user-badge {
+                    display: inline !important;
+                    font-weight: 600 !important;
+                    color: #1976d2 !important;
+                    margin-right: 4px !important;
+                    font-size: 12px !important;
                 }
             </style>
             <% } %>
