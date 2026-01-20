@@ -2,6 +2,162 @@
    card_project.css (Unified Style)
    ============================================= */
 
+/* 🔥 COS 문제 팝업 모달 */
+.cos-problem-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.cos-problem-modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.cos-problem-modal-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cos-problem-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.cos-problem-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.cos-problem-modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #666;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.cos-problem-modal-close:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.cos-problem-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cos-problem-modal-image {
+  max-width: 100%;
+  max-height: calc(90vh - 180px);
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.cos-problem-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.cos-problem-modal-nav {
+  display: flex;
+  gap: 12px;
+}
+
+.cos-problem-modal-nav-btn {
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cos-problem-modal-nav-btn:hover:not(:disabled) {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.cos-problem-modal-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cos-problem-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.cos-problem-modal-action-btn {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cos-problem-modal-action-btn.primary {
+  background: #007bff;
+  color: white;
+}
+
+.cos-problem-modal-action-btn.primary:hover {
+  background: #0056b3;
+}
+
+.cos-problem-modal-action-btn.secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.cos-problem-modal-action-btn.secondary:hover {
+  background: #545b62;
+}
+
 /* 프로젝트 카드 그리드 - 4열 배치 */
 .project-card-grid {
   display: grid;
