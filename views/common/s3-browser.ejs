@@ -27,13 +27,13 @@
             <style>
                 /* 1. Use board-layout structure - 1400px 이상 확장 */
                 .board-layout-container {
-                    max-width: none;
-                    width: 100%;
-                    margin: 20px auto;
+                    max-width: none !important;
+                    width: 100% !important;
+                    margin: 20px 0 !important;
                     display: flex;
                     gap: 20px;
                     align-items: flex-start;
-                    padding: 0 15px;
+                    padding: 0 20px !important;
                 }
 
                 /* 2. S3 Wrapper - transparent wrapper */
@@ -137,10 +137,10 @@
 
                 /* Page header - 1400px 이상 확장 */
                 .s3-browser-header {
-                    max-width: none;
-                    width: 100%;
-                    margin: 0 auto 20px;
-                    padding: 0 15px !important;
+                    max-width: none !important;
+                    width: 100% !important;
+                    margin: 0 0 20px 0 !important;
+                    padding: 0 20px !important;
                     background: transparent !important;
                     border: none !important;
                 }
@@ -328,33 +328,7 @@
                         background: #f8f9fa;
                     }
 
-                    .s3-browser-header {
-                        background: #fff;
-                        padding: 20px;
-                        border-bottom: 1px solid #dee2e6;
-                        max-width: 1400px;
-                        margin: 0 auto;
-                    }
-
-                    .s3-browser-header h5 {
-                        font-size: 1.5rem;
-                        font-weight: 700;
-                        color: #212529;
-                        margin: 0;
-                    }
-
-                    .s3-browser-header .text-muted {
-                        color: #6c757d !important;
-                        font-size: 0.9rem;
-                    }
-
-                    .badge {
-                        font-size: 0.75rem;
-                        padding: 0.4em 0.8em;
-                        font-weight: 600;
-                        border-radius: 6px;
-                        letter-spacing: 0.3px;
-                    }
+                    /* Teacher/Manager용 추가 스타일 - 헤더가 이미 위에서 정의됨 */
                 </style>
 </body>
 
