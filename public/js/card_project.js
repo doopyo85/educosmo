@@ -1339,37 +1339,57 @@ class ProjectCardManager {
                     grade, sample, problem, buttonType, imgUrl, projectUrl
                 });
 
-                // 🔥 Extension이 있으면 공식 사이트로 이동 (문제 이미지 사이드바 사용)
-                if (window.extensionBridge) {
-                    const missionId = `cos-${grade}-${sample}-${problem}`;
-                    const missionTitle = `COS ${grade}급 샘플${sample}-${problem}번`;
-                    const userId = this.userID || 'guest';
+                // 🔥 projectUrl이 playentry.org 링크인지 확인
+                if (projectUrl && projectUrl.includes('playentry.org')) {
+                    // playentry.org URL로 직접 이동
+                    console.log('✅ Entry 공식 페이지로 직접 이동:', projectUrl);
+                    window.open(projectUrl, '_blank');
+                } else if (projectUrl && projectUrl.includes('scratch.mit.edu')) {
+                    // scratch.mit.edu URL로 직접 이동
+                    console.log('✅ Scratch 공식 페이지로 직접 이동:', projectUrl);
+                    window.open(projectUrl, '_blank');
+                } else {
+                    // 🔥 기존 NCP URL인 경우 - Extension이 있으면 공식 사이트로 이동 (문제 이미지 사이드바 사용)
+                    if (window.extensionBridge) {
+                        const missionId = `cos-${grade}-${sample}-${problem}`;
+                        const missionTitle = `COS ${grade}급 샘플${sample}-${problem}번`;
+                        const userId = this.userID || 'guest';
 
-                    // 플랫폼별 공식 URL 생성
-                    const openUrl = this.config.projectType === 'entry'
-                        ? `https://playentry.org/ws/new?type=normal&mode=block&lang=ko`
-                        : `https://scratch.mit.edu/projects/editor`;
+                        // 플랫폼별 공식 URL 생성
+                        const openUrl = this.config.projectType === 'entry'
+                            ? `https://playentry.org/ws/new?type=normal&mode=block&lang=ko`
+                            : `https://scratch.mit.edu/projects/editor`;
 
-                    console.log('✅ Extension 감지 - 공식 에디터로 이동 (문제 이미지 사이드바 포함)');
+                        console.log('✅ Extension 감지 - 공식 에디터로 이동 (문제 이미지 사이드바 포함)');
 
-                    const result = window.extensionBridge.openEditor({
-                        platform: this.config.projectType,
-                        missionId: missionId,
-                        userId: userId,
-                        missionTitle: missionTitle,
-                        openUrl: openUrl,
-                        problemImageUrl: imgUrl,  // 🔥 문제 이미지 URL 전달 (정규화됨)
-                        grade: grade,             // 🔥 COS 급수
-                        sample: sample,           // 🔥 샘플 번호
-                        problem: problem          // 🔥 문제 번호
-                    });
+                        const result = window.extensionBridge.openEditor({
+                            platform: this.config.projectType,
+                            missionId: missionId,
+                            userId: userId,
+                            missionTitle: missionTitle,
+                            openUrl: openUrl,
+                            problemImageUrl: imgUrl,  // 🔥 문제 이미지 URL 전달 (정규화됨)
+                            grade: grade,             // 🔥 COS 급수
+                            sample: sample,           // 🔥 샘플 번호
+                            problem: problem          // 🔥 문제 번호
+                        });
 
-                    if (result) {
-                        // Extension이 성공적으로 처리한 경우
-                        console.log('✅ Extension으로 공식 에디터 열기 성공');
+                        if (result) {
+                            // Extension이 성공적으로 처리한 경우
+                            console.log('✅ Extension으로 공식 에디터 열기 성공');
+                        } else {
+                            // Extension이 없거나 실패한 경우 - 내부 에디터로 폴백
+                            console.warn('⚠️ Extension 처리 실패 - 내부 에디터로 이동');
+                            const params = new URLSearchParams({
+                                platform: this.config.projectType,
+                                grade, sample, problem, buttonType, problems,
+                                projectUrl, imgUrl
+                            });
+                            window.open(`/cos-editor?${params.toString()}`, '_blank');
+                        }
                     } else {
-                        // Extension이 없거나 실패한 경우 - 내부 에디터로 폴백
-                        console.warn('⚠️ Extension 처리 실패 - 내부 에디터로 이동');
+                        // Extension이 없는 경우 - 기존대로 내부 에디터 사용
+                        console.log('📂 Extension 없음 - 내부 COS 에디터로 이동');
                         const params = new URLSearchParams({
                             platform: this.config.projectType,
                             grade, sample, problem, buttonType, problems,
@@ -1377,15 +1397,6 @@ class ProjectCardManager {
                         });
                         window.open(`/cos-editor?${params.toString()}`, '_blank');
                     }
-                } else {
-                    // Extension이 없는 경우 - 기존대로 내부 에디터 사용
-                    console.log('📂 Extension 없음 - 내부 COS 에디터로 이동');
-                    const params = new URLSearchParams({
-                        platform: this.config.projectType,
-                        grade, sample, problem, buttonType, problems,
-                        projectUrl, imgUrl
-                    });
-                    window.open(`/cos-editor?${params.toString()}`, '_blank');
                 }
 
                 // 학습 기록
@@ -1545,43 +1556,54 @@ class ProjectCardManager {
                 const card = e.target.closest('.project-card') || e.target.closest('.cos-td-btn');
                 const projectName = card?.querySelector('.project-card-title')?.textContent || 'COS 문제';
 
-                // 🔥 COS: data-img 속성이 있으면 Extension으로 에디터 열기
+                // 🔥 COS: data-img 속성이 있으면 COS 문제
                 const imgUrl = this.normalizeUrl(e.target.getAttribute('data-img'));  // 🔥 URL 정규화
                 if (imgUrl) {
-                    // COS 자격증 문제 - 프로젝트명에서 급수/샘플/문제번호 파싱
-                    // 형식: "COS 1급 샘플1-01"
-                    const projectNameAttr = e.target.getAttribute('data-project-name');
-                    const match = (projectNameAttr || projectName).match(/COS\s*(\d)급\s*샘플(\d)-(\d+)/i);
-
-                    if (match && window.extensionBridge) {
-                        const [, grade, sample, problem] = match;
-                        const missionId = `cos-${grade}-${sample}-${problem}`;
-                        const missionTitle = `COS ${grade}급 샘플${sample}-${problem}번`;
-
-                        // Extension으로 에디터 열기 (문제 이미지 사이드바 포함)
-                        const openUrl = this.config.projectType === 'entry'
-                            ? `https://playentry.org/ws/new?type=normal&mode=block&lang=ko`
-                            : `https://scratch.mit.edu/projects/editor`;
-
-                        window.extensionBridge.openEditor({
-                            platform: this.config.projectType,
-                            missionId: missionId,
-                            userId: this.userID || 'guest',
-                            missionTitle: missionTitle,
-                            openUrl: openUrl,
-                            problemImageUrl: imgUrl,  // 🔥 정규화된 URL 전달
-                            grade: grade,
-                            sample: sample,
-                            problem: problem
-                        });
+                    // 🔥 projectUrl이 playentry.org 링크인지 확인
+                    if (projectUrl && projectUrl.includes('playentry.org')) {
+                        // playentry.org URL로 직접 이동
+                        console.log('✅ Entry 공식 페이지로 직접 이동:', projectUrl);
+                        window.open(projectUrl, '_blank');
+                    } else if (projectUrl && projectUrl.includes('scratch.mit.edu')) {
+                        // scratch.mit.edu URL로 직접 이동
+                        console.log('✅ Scratch 공식 페이지로 직접 이동:', projectUrl);
+                        window.open(projectUrl, '_blank');
                     } else {
-                        // Extension 없으면 /cos-editor 페이지로 폴백
-                        let cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
-                        if (match) {
+                        // COS 자격증 문제 - 프로젝트명에서 급수/샘플/문제번호 파싱
+                        // 형식: "COS 1급 샘플1-01"
+                        const projectNameAttr = e.target.getAttribute('data-project-name');
+                        const match = (projectNameAttr || projectName).match(/COS\s*(\d)급\s*샘플(\d)-(\d+)/i);
+
+                        if (match && window.extensionBridge) {
                             const [, grade, sample, problem] = match;
-                            cosEditorUrl += `&grade=${grade}&sample=${sample}&problem=${problem}`;
+                            const missionId = `cos-${grade}-${sample}-${problem}`;
+                            const missionTitle = `COS ${grade}급 샘플${sample}-${problem}번`;
+
+                            // Extension으로 에디터 열기 (문제 이미지 사이드바 포함)
+                            const openUrl = this.config.projectType === 'entry'
+                                ? `https://playentry.org/ws/new?type=normal&mode=block&lang=ko`
+                                : `https://scratch.mit.edu/projects/editor`;
+
+                            window.extensionBridge.openEditor({
+                                platform: this.config.projectType,
+                                missionId: missionId,
+                                userId: this.userID || 'guest',
+                                missionTitle: missionTitle,
+                                openUrl: openUrl,
+                                problemImageUrl: imgUrl,  // 🔥 정규화된 URL 전달
+                                grade: grade,
+                                sample: sample,
+                                problem: problem
+                            });
+                        } else {
+                            // Extension 없으면 /cos-editor 페이지로 폴백
+                            let cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
+                            if (match) {
+                                const [, grade, sample, problem] = match;
+                                cosEditorUrl += `&grade=${grade}&sample=${sample}&problem=${problem}`;
+                            }
+                            window.open(cosEditorUrl, '_blank');
                         }
-                        window.open(cosEditorUrl, '_blank');
                     }
 
                     // 학습 기록
