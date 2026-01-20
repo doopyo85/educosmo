@@ -838,60 +838,13 @@
                 // Store sessions globally for the player context
                 currentBookSessions = JSON.parse(el.getAttribute('data-sessions') || '[]');
 
-                document.getElementById('bookModalTitle').textContent = title;
-                const listContainer = document.getElementById('bookSessionList');
-                listContainer.innerHTML = '';
-
                 if (currentBookSessions.length === 0) {
-                    listContainer.innerHTML = '<li class="p-4 text-center text-muted">등록된 강의가 없습니다.</li>';
-                } else {
-                    currentBookSessions.forEach((session, index) => {
-                        let thumbUrl = session.thumbnail || '/resource/profiles/default.webp';
-                        const hasVideo = !!session.videoUrl;
-                        const hasImages = session.images && session.images.length > 0;
-
-                        // YouTube Thumbnail Logic
-                        if (hasVideo && (session.videoUrl.includes('youtube.com') || session.videoUrl.includes('youtu.be'))) {
-                            try {
-                                const videoId = session.videoUrl.split('/').pop().split('?')[0];
-                                if (videoId) {
-                                    thumbUrl = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-                                }
-                            } catch (e) {
-                                console.warn('YouTube ID extraction failed', e);
-                            }
-                        }
-
-                        // Ensure topic is clean
-                        const topicText = session.topic || '';
-
-                        const li = document.createElement('li');
-                        li.className = 'session-item';
-                        // Pass index to openPlayer
-                        li.innerHTML = `
-                         <img src="${thumbUrl}" class="session-thumb" alt="thumb" loading="lazy" referrerpolicy="no-referrer">
-                         <div class="session-info">
-                             <div class="session-title">${session.name}</div>
-                             <div class="session-topic">${topicText}</div>
-                         </div>
-                         <div class="session-actions">
-                             <button class="btn-action play-btn ${hasVideo ? '' : 'disabled'}" 
-                                     onclick='openPlayer(${index}, "video")' 
-                                     title="영상 보기">
-                                 <i class="bi bi-play-fill fs-4"></i>
-                             </button>
-                             <button class="btn-action doc-btn ${hasImages ? '' : 'disabled'}" 
-                                     onclick='openPlayer(${index}, "material")' 
-                                     title="교안 보기">
-                                 <i class="bi bi-images"></i>
-                             </button>
-                         </div>
-                    `;
-                        listContainer.appendChild(li);
-                    });
+                    alert('등록된 강의가 없습니다.');
+                    return;
                 }
 
-                bookModal.show();
+                // Directly open the Split Player with the first lesson
+                openPlayer(0, 'video');
             }
 
             // --- Split Player Logic ---
