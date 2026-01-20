@@ -163,7 +163,7 @@ router.get('/class-materials/lessons', requireTeacher, async (req, res) => {
             };
         });
 
-        res.render('teacher/class_materials_lessons', {
+        res.render('teacher/class_materials', {
             // Main Tab Titles
             pageTitle: '교사 교육자료',
 
