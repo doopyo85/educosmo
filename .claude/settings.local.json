@@ -33,7 +33,8 @@
       "Bash(timeout /t 5)",
       "Bash(npm install:*)",
       "Bash(PORT=3000 npm start)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(node -e:*)"
     ]
   }
 }

@@ -634,19 +634,20 @@ router.get('/api/attendance/monthly', requireTeacher, async (req, res) => {
         }
 
         const query = `
-            SELECT 
-                u.id, 
-                u.name, 
-                DATE_FORMAT(ual.created_at, '%e') as day,
-                DATE_FORMAT(MIN(ual.created_at), '%H:%i') as time
+            SELECT
+                u.id,
+                u.name,
+                u.profile_image,
+                DAY(CONVERT_TZ(MIN(ual.created_at), '+00:00', '+09:00')) as day,
+                TIME_FORMAT(CONVERT_TZ(MIN(ual.created_at), '+00:00', '+09:00'), '%H:%i') as time
             FROM UserActivityLogs ual
             JOIN Users u ON ual.user_id = u.id
-            WHERE u.centerID = ? 
-              AND YEAR(ual.created_at) = ? 
-              AND MONTH(ual.created_at) = ?
+            WHERE u.centerID = ?
+              AND YEAR(CONVERT_TZ(ual.created_at, '+00:00', '+09:00')) = ?
+              AND MONTH(CONVERT_TZ(ual.created_at, '+00:00', '+09:00')) = ?
               AND u.role = 'student'
-            GROUP BY u.id, DATE(ual.created_at)
-            ORDER BY DATE(ual.created_at) ASC, MIN(ual.created_at) ASC
+            GROUP BY u.id, u.name, u.profile_image, DATE(CONVERT_TZ(ual.created_at, '+00:00', '+09:00'))
+            ORDER BY DATE(CONVERT_TZ(MIN(ual.created_at), '+00:00', '+09:00')) ASC, MIN(ual.created_at) ASC
         `;
 
         const attendanceData = await db.queryDatabase(query, [targetCenterId, year, month]);
