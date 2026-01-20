@@ -817,6 +817,53 @@ app.get('/extension-guide', (req, res) => {
   });
 });
 
+// 🔥 COS 문제 이미지 팝업 (여백 없이 전체 화면)
+app.get('/cos-problem-popup', (req, res) => {
+  const { grade, sample, problem, problems } = req.query;
+
+  if (!grade || !sample || !problem || !problems) {
+    return res.status(400).send('필수 파라미터가 없습니다. (grade, sample, problem, problems)');
+  }
+
+  // problems JSON 파싱
+  let problemsData = {};
+  try {
+    problemsData = JSON.parse(problems);
+  } catch (e) {
+    console.error('COS problems JSON 파싱 오류:', e);
+    return res.status(400).send('problems 데이터 파싱 오류');
+  }
+
+  // 🔥 URL 정규화: /COS/ -> /cos/, /ENT/ -> /ent/ 등
+  const normalizeUrl = (url) => {
+    if (!url) return '';
+    return url.replace(/\/([A-Z]+)\//g, (match, folder) => {
+      return '/' + folder.toLowerCase() + '/';
+    });
+  };
+
+  // problems JSON 내부 URL 정규화
+  if (problemsData) {
+    Object.keys(problemsData).forEach(key => {
+      if (problemsData[key].img) problemsData[key].img = normalizeUrl(problemsData[key].img);
+      if (problemsData[key].answer) problemsData[key].answer = normalizeUrl(problemsData[key].answer);
+      if (problemsData[key].solution) problemsData[key].solution = normalizeUrl(problemsData[key].solution);
+    });
+  }
+
+  // 현재 문제 데이터
+  const currentProblemData = problemsData[problem] || {};
+  const imgUrl = normalizeUrl(currentProblemData.img || '');
+
+  res.render('cos_problem_popup', {
+    grade,
+    sample,
+    problem,
+    problems: problemsData,
+    imgUrl
+  });
+});
+
 // 🔥 COS 자격증 문제풀이 에디터 (문제 이미지 + 에디터 분할 화면)
 app.get('/cos-editor', authenticateUser, (req, res) => {
   const { platform, grade, sample, problem, buttonType, problems, projectUrl, imgUrl } = req.query;

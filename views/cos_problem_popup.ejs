@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COS <%= grade %>급 샘플<%= sample %> - <%= parseInt(problem) %>번 문제</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #2c2c2c;
+        }
+
+        /* 상단 컨트롤 바 */
+        .control-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #343a40 0%, #1a1d20 100%);
+            color: white;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            z-index: 1000;
+            height: 50px;
+        }
+
+        .control-bar .title {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-bar .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: #495057;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: #ff6b35;
+            transform: scale(1.05);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        }
+
+        .nav-btn.primary:hover {
+            background: linear-gradient(135deg, #f7931e 0%, #ff6b35 100%);
+        }
+
+        /* 이미지 컨테이너 */
+        .image-container {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+        }
+
+        .problem-image {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="control-bar">
+        <div class="title">
+            <i class="bi bi-file-image"></i>
+            <span>COS <%= grade %>급 샘플<%= sample %> - <%= parseInt(problem) %>번 문제</span>
+        </div>
+        <div class="controls">
+            <button class="nav-btn" id="prevBtn" <%= parseInt(problem) <= 1 ? 'disabled' : '' %>>
+                <i class="bi bi-arrow-left"></i> 이전
+            </button>
+            <button class="nav-btn" id="nextBtn" <%= parseInt(problem) >= 10 ? 'disabled' : '' %>>
+                다음 <i class="bi bi-arrow-right"></i>
+            </button>
+            <button class="nav-btn primary" id="solutionBtn">
+                <i class="bi bi-box-arrow-up-right"></i> 풀이 열기
+            </button>
+        </div>
+    </div>
+
+    <div class="image-container">
+        <img src="<%= imgUrl %>" alt="COS <%= grade %>급 샘플<%= sample %> - <%= parseInt(problem) %>번 문제" class="problem-image">
+    </div>
+
+    <script>
+        // 서버에서 전달받은 데이터
+        const grade = '<%= grade %>';
+        const sample = '<%= sample %>';
+        let currentProblem = '<%= problem %>';
+        const problems = <%- JSON.stringify(problems) %>;
+
+        // 이전 문제
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            const prevNum = parseInt(currentProblem) - 1;
+            if (prevNum >= 1) {
+                navigateToProblem(prevNum.toString().padStart(2, '0'));
+            }
+        });
+
+        // 다음 문제
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            const nextNum = parseInt(currentProblem) + 1;
+            if (nextNum <= 10) {
+                navigateToProblem(nextNum.toString().padStart(2, '0'));
+            }
+        });
+
+        // 풀이 열기
+        document.getElementById('solutionBtn').addEventListener('click', function() {
+            const problemData = problems[currentProblem];
+            if (problemData && problemData.solution) {
+                window.open(problemData.solution, '_blank');
+            }
+        });
+
+        // 문제 이동
+        function navigateToProblem(problemNum) {
+            const newUrl = `/cos-problem-popup?grade=${grade}&sample=${sample}&problem=${problemNum}&problems=${encodeURIComponent(JSON.stringify(problems))}`;
+            window.location.href = newUrl;
+        }
+
+        // 키보드 단축키
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                document.getElementById('prevBtn').click();
+            } else if (e.key === 'ArrowRight') {
+                document.getElementById('nextBtn').click();
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                document.getElementById('solutionBtn').click();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -25,7 +25,6 @@ class ProjectCardManager {
         this.centerID = '';
         this.viewConfig = {};
         this.projectData = [];
-        this.cosProblemModal = null; // 🔥 COS 문제 모달 인스턴스
     }
 
     /**
@@ -39,208 +38,24 @@ class ProjectCardManager {
     }
 
     /**
-     * 🔥 COS 문제 팝업 모달 생성
-     */
-    createCosProblemModal() {
-        if (this.cosProblemModal) return this.cosProblemModal;
-
-        const modal = document.createElement('div');
-        modal.className = 'cos-problem-modal';
-        modal.innerHTML = `
-            <div class="cos-problem-modal-content">
-                <div class="cos-problem-modal-header">
-                    <h5 class="cos-problem-modal-title">COS 문제</h5>
-                    <button class="cos-problem-modal-close" aria-label="닫기">&times;</button>
-                </div>
-                <div class="cos-problem-modal-body">
-                    <img class="cos-problem-modal-image" src="" alt="문제 이미지">
-                </div>
-                <div class="cos-problem-modal-footer">
-                    <div class="cos-problem-modal-nav">
-                        <button class="cos-problem-modal-nav-btn" data-nav="prev">
-                            <i class="bi bi-arrow-left"></i> 이전 문제
-                        </button>
-                        <button class="cos-problem-modal-nav-btn" data-nav="next">
-                            다음 문제 <i class="bi bi-arrow-right"></i>
-                        </button>
-                    </div>
-                    <div class="cos-problem-modal-actions">
-                        <button class="cos-problem-modal-action-btn primary" data-action="open-solution">
-                            풀이 열기
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-
-        // 닫기 버튼
-        modal.querySelector('.cos-problem-modal-close').addEventListener('click', () => {
-            this.closeCosProblemModal();
-        });
-
-        // 배경 클릭 시 닫기
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                this.closeCosProblemModal();
-            }
-        });
-
-        // ESC 키로 닫기
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('active')) {
-                this.closeCosProblemModal();
-            }
-        });
-
-        // 네비게이션 버튼
-        modal.querySelectorAll('.cos-problem-modal-nav-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const direction = e.currentTarget.dataset.nav;
-                this.navigateCosProblem(direction);
-            });
-        });
-
-        // 풀이 열기 버튼
-        modal.querySelector('[data-action="open-solution"]').addEventListener('click', () => {
-            this.openCurrentCosSolution();
-        });
-
-        this.cosProblemModal = modal;
-        return modal;
-    }
-
-    /**
-     * 🔥 COS 문제 모달 열기
+     * 🔥 COS 문제 팝업 열기 (새 창으로)
      */
     openCosProblemModal(grade, sample, problem, problems, projectUrl, openProjectTab = false) {
-        const modal = this.createCosProblemModal();
+        // 🔥 팝업 URL 생성
+        const popupUrl = `/cos-problem-popup?grade=${grade}&sample=${sample}&problem=${problem}&problems=${encodeURIComponent(problems)}`;
 
-        // 현재 문제 정보 저장
-        modal.dataset.grade = grade;
-        modal.dataset.sample = sample;
-        modal.dataset.problem = problem;
-        modal.dataset.projectUrl = projectUrl;
-        modal.dataset.problems = problems;
-
-        // 문제 정보 파싱
-        let problemsData = {};
-        try {
-            problemsData = JSON.parse(problems);
-        } catch (e) {
-            console.error('문제 데이터 파싱 실패:', e);
-        }
-
-        // 이미지 및 타이틀 업데이트
-        const currentProblem = problemsData[problem];
-        if (currentProblem) {
-            const imgElement = modal.querySelector('.cos-problem-modal-image');
-            const titleElement = modal.querySelector('.cos-problem-modal-title');
-
-            imgElement.src = this.normalizeUrl(currentProblem.img || '');
-            titleElement.textContent = `COS ${grade}급 샘플${sample} - ${parseInt(problem)}번 문제`;
-
-            // 네비게이션 버튼 활성화/비활성화
-            const prevBtn = modal.querySelector('[data-nav="prev"]');
-            const nextBtn = modal.querySelector('[data-nav="next"]');
-
-            const currentNum = parseInt(problem);
-            prevBtn.disabled = currentNum <= 1;
-            nextBtn.disabled = currentNum >= 10;
-        }
+        // 🔥 새 창으로 문제 이미지 팝업 열기 (cos-editor와 동일한 크기)
+        const popupWindow = window.open(popupUrl, `cosProblem-${grade}-${sample}`, 'width=800,height=900,scrollbars=yes,resizable=yes');
 
         // 🔥 projectUrl이 공식 페이지 URL이고 openProjectTab이 true면 새 탭으로 열기
         if (openProjectTab && projectUrl) {
             if (projectUrl.includes('playentry.org') || projectUrl.includes('scratch.mit.edu')) {
-                console.log('✅ 문제 모달과 함께 공식 페이지 새 탭으로 열기:', projectUrl);
+                console.log('✅ 문제 팝업과 함께 공식 페이지 새 탭으로 열기:', projectUrl);
                 window.open(projectUrl, '_blank');
             }
         }
-
-        // 모달 표시
-        modal.classList.add('active');
     }
 
-    /**
-     * 🔥 COS 문제 모달 닫기
-     */
-    closeCosProblemModal() {
-        if (this.cosProblemModal) {
-            this.cosProblemModal.classList.remove('active');
-        }
-    }
-
-    /**
-     * 🔥 COS 문제 네비게이션
-     */
-    navigateCosProblem(direction) {
-        const modal = this.cosProblemModal;
-        if (!modal) return;
-
-        const currentProblem = parseInt(modal.dataset.problem);
-        let newProblem = currentProblem;
-
-        if (direction === 'prev' && currentProblem > 1) {
-            newProblem = currentProblem - 1;
-        } else if (direction === 'next' && currentProblem < 10) {
-            newProblem = currentProblem + 1;
-        }
-
-        if (newProblem !== currentProblem) {
-            const newProblemStr = newProblem.toString().padStart(2, '0');
-            const grade = modal.dataset.grade;
-            const sample = modal.dataset.sample;
-            const problems = modal.dataset.problems;
-
-            // 문제 데이터에서 새로운 문제의 projectUrl 가져오기
-            let problemsData = {};
-            try {
-                problemsData = JSON.parse(problems);
-            } catch (e) {
-                console.error('문제 데이터 파싱 실패:', e);
-            }
-
-            const newProblemData = problemsData[newProblemStr];
-            const newProjectUrl = newProblemData?.solution || '';
-
-            // 모달 다시 열기
-            this.openCosProblemModal(grade, sample, newProblemStr, problems, newProjectUrl);
-        }
-    }
-
-    /**
-     * 🔥 현재 COS 문제의 풀이 열기
-     */
-    openCurrentCosSolution() {
-        const modal = this.cosProblemModal;
-        if (!modal) return;
-
-        const projectUrl = modal.dataset.projectUrl;
-        if (!projectUrl) {
-            console.error('풀이 URL이 없습니다');
-            return;
-        }
-
-        // 🔥 모달은 닫지 않고 새 탭으로만 열기 (문제를 계속 보면서 작업 가능)
-
-        // playentry.org 링크면 직접 이동
-        if (projectUrl.includes('playentry.org')) {
-            console.log('✅ Entry 공식 페이지로 직접 이동:', projectUrl);
-            window.open(projectUrl, '_blank');
-        } else if (projectUrl.includes('scratch.mit.edu')) {
-            console.log('✅ Scratch 공식 페이지로 직접 이동:', projectUrl);
-            window.open(projectUrl, '_blank');
-        } else {
-            // NCP URL인 경우 기존 로직 사용
-            console.log('📂 내부 에디터로 이동:', projectUrl);
-            if (this.config.projectType === 'entry') {
-                this.loadProjectInEntryGUI(projectUrl);
-            } else if (this.config.projectType === 'scratch') {
-                this.loadProjectInScratchGUI(projectUrl);
-            }
-        }
-    }
 
     /**
      * Entry 파일 다운로드 (순수 다운로드만)
