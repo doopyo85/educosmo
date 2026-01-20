@@ -5,30 +5,31 @@ const { authenticateUser } = require('../../lib_login/authMiddleware');
 const { getSheetData } = require('../../lib_google/sheetService');
 const config = require('../../config');
 
-// 🔥 AWS S3 URL을 NCP Object Storage URL로 변환하는 헬퍼 함수
+// 🔥 AWS S3/NCP Direct URL을 NCP Global Edge URL로 변환하는 헬퍼 함수 (CORS 지원)
 function transformS3UrlToNCP(url) {
   if (!url || typeof url !== 'string') return url;
 
-  // AWS S3 패턴 감지 및 변환
-  // 예: https://educodingnplaycontents.s3.amazonaws.com/...
-  //  -> https://onag54aw13447.edge.naverncp.com/...
   // AWS S3 패턴
-  const awsS3Pattern = /https?:\/\/educodingnplaycontents\.s3\.amazonaws\.com\//gi;
-  // NCP Global Edge 패턴
-  const ncpEdgePattern = /https?:\/\/onag54aw13447\.edge\.naverncp\.com\//gi;
+  const awsS3Pattern = /https?:\/\/educodingnplaycontents\.s3[^\/]*\.amazonaws\.com\//gi;
 
+  // NCP Direct Object Storage 패턴
+  const ncpDirectPattern = /https?:\/\/kr\.object\.ncloudstorage\.com\/educodingnplaycontents\//gi;
+
+  // AWS S3 URL → NCP Global Edge (CORS 지원)
   if (awsS3Pattern.test(url)) {
-    const transformedUrl = url.replace(awsS3Pattern, config.S3.DIRECT_URL + '/');
+    const transformedUrl = url.replace(awsS3Pattern, config.S3.ASSET_URL + '/');
     console.log(`🔄 AWS S3 URL 변환: ${url.substring(0, 50)}... -> ${transformedUrl.substring(0, 50)}...`);
     return transformedUrl;
   }
 
-  if (ncpEdgePattern.test(url)) {
-    const transformedUrl = url.replace(ncpEdgePattern, config.S3.DIRECT_URL + '/');
-    console.log(`🔄 NCP Edge URL 변환: ${url.substring(0, 50)}... -> ${transformedUrl.substring(0, 50)}...`);
+  // NCP Direct URL → NCP Global Edge (CORS 지원)
+  if (ncpDirectPattern.test(url)) {
+    const transformedUrl = url.replace(ncpDirectPattern, config.S3.ASSET_URL + '/');
+    console.log(`🔄 NCP Direct URL → Edge CDN 변환 (CORS): ${url.substring(0, 60)}...`);
     return transformedUrl;
   }
 
+  // 이미 Edge CDN URL이면 그대로 반환
   return url;
 }
 
