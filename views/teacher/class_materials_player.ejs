@@ -111,9 +111,9 @@
 
         .shelf-row {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            /* Slightly smaller for dashboard usage */
-            gap: 30px;
+            /* User Request: 12 items per row */
+            grid-template-columns: repeat(12, 1fr);
+            gap: 12px;
             padding-bottom: 25px;
             border-bottom: 12px solid #e0d0b8;
             /* Wood Shelf Border */
