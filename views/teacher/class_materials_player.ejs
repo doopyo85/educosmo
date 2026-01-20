@@ -167,6 +167,10 @@
         }
 
         /* Custom Fullscreen Button Overlay */
+        #mediaViewerModal {
+            z-index: 9999;
+        }
+
         .btn-vid-fs {
             position: absolute;
             top: 20px;
@@ -471,8 +475,9 @@
         .book-cover {
             position: relative;
             width: 100%;
-            aspect-ratio: 1/1.414;
-            /* Standard A4/Book ratio */
+            /* Strict Aspect Ratio (A4) using padding hack for cross-browser consistency */
+            padding-top: 141.4%;
+            height: 0;
             /* User Request: Square, sharp corners "Magazine style" */
             border-radius: 2px;
             box-shadow:
@@ -497,9 +502,13 @@
             width: 4px;
             background: linear-gradient(to right, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
             z-index: 5;
+            pointer-events: none;
         }
 
         .book-cover img {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
