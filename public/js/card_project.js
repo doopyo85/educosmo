@@ -1655,35 +1655,17 @@ class ProjectCardManager {
                             window.open(projectUrl, '_blank');
                         }
                     } else if (projectUrl && projectUrl.includes('scratch.mit.edu')) {
-                        // 🔥 Extension이 있으면 사이드바와 함께, 없으면 모달 표시
-                        if (window.extensionBridge && window.extensionBridge.isExtensionInstalled && match) {
-                            const [, grade, sample, problem] = match;
-                            const missionId = `cos-${grade}-${sample}-${problem}`;
-                            const missionTitle = `COS ${grade}급 샘플${sample}-${problem}번`;
+                        // 🔥 [MODIFIED] Scratch: 무조건 8601 서버(내부 cos-editor) 사용 (Extension 여부 무관)
+                        console.log('📂 Scratch COS - 8601 서버(내부 에디터)로 이동 (Extension 건너뜀)');
 
-                            console.log('✅ Extension 감지 - 공식 에디터로 이동 (문제 이미지 사이드바 포함)');
+                        let cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
 
-                            window.extensionBridge.openEditor({
-                                platform: this.config.projectType,
-                                missionId: missionId,
-                                userId: this.userID || 'guest',
-                                missionTitle: missionTitle,
-                                openUrl: projectUrl,
-                                problemImageUrl: imgUrl,
-                                grade: grade,
-                                sample: sample,
-                                problem: problem
-                            });
-                        } else if (match) {
-                            // 🔥 Extension 없으면 모달로 문제 표시 + 동시에 새 탭으로 공식 페이지 열기
-                            console.log('📂 Extension 없음 - 문제 모달 표시 + 새 탭으로 공식 페이지 열기');
+                        if (match) {
                             const [, grade, sample, problem] = match;
-                            const singleProblem = {};
-                            singleProblem[problem] = { img: imgUrl, solution: projectUrl };
-                            this.openCosProblemModal(grade, sample, problem, JSON.stringify(singleProblem), projectUrl, true);
-                        } else {
-                            window.open(projectUrl, '_blank');
+                            cosEditorUrl += `&grade=${grade}&sample=${sample}&problem=${problem}`;
                         }
+
+                        window.open(cosEditorUrl, '_blank');
                     } else {
                         // 🔥 기존 NCP URL인 경우
                         if (match && window.extensionBridge && window.extensionBridge.isExtensionInstalled) {

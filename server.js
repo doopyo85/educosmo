@@ -805,7 +805,9 @@ app.get('/scratch_project', authenticateUser, checkPageAccess('/scratch_project'
 });
 
 app.get('/scratch', authenticateUser, (req, res) => {
-  res.redirect(config.SERVICES.SCRATCH);
+  const query = new URLSearchParams(req.query).toString();
+  const redirectUrl = query ? `${config.SERVICES.SCRATCH}/?${query}` : config.SERVICES.SCRATCH;
+  res.redirect(redirectUrl);
 });
 
 // 🔥 Extension Guide Page
