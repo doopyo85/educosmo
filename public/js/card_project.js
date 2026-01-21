@@ -1420,9 +1420,15 @@ class ProjectCardManager {
                             problem: problem
                         });
                     } else {
-                        // 🔥 Extension 없으면 모달로 문제 표시 + 동시에 새 탭으로 공식 페이지 열기
-                        console.log('📂 Extension 없음 - 문제 모달 표시 + 새 탭으로 공식 페이지 열기');
-                        this.openCosProblemModal(grade, sample, problem, problems, projectUrl, true);
+                        // Extension 없음: Scratch는 cos-editor, Entry는 팝업 + playentry.org
+                        if (this.config.projectType === 'scratch') {
+                            console.log('📂 Scratch - Extension 없음 - cos-editor로 이동');
+                            let cosEditorUrl = `/cos-editor?platform=scratch&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}&grade=${grade}&sample=${sample}&problem=${problem}&buttonType=${buttonType}&problems=${encodeURIComponent(problems)}`;
+                            window.open(cosEditorUrl, '_blank');
+                        } else {
+                            console.log('📂 Entry - Extension 없음 - 문제 팝업 + playentry.org 이동');
+                            this.openCosProblemModal(grade, sample, problem, problems, projectUrl, true);
+                        }
                     }
                 } else {
                     // 🔥 기존 NCP URL인 경우 - Extension이 있으면 공식 사이트로 이동 (문제 이미지 사이드바 사용)
@@ -1450,9 +1456,16 @@ class ProjectCardManager {
                             problem: problem          // 🔥 문제 번호
                         });
                     } else {
-                        // 🔥 Extension 없으면 모달로 문제 표시 (NCP는 공식 페이지 열지 않음)
-                        console.log('📂 Extension 없음 - 문제 모달 표시');
-                        this.openCosProblemModal(grade, sample, problem, problems, projectUrl, false);
+                        // Extension 없음: 플랫폼별 처리
+                        if (this.config.projectType === 'scratch') {
+                            console.log('📂 Scratch - Extension 없음 - cos-editor로 이동');
+                            let cosEditorUrl = `/cos-editor?platform=scratch&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}&grade=${grade}&sample=${sample}&problem=${problem}&buttonType=${buttonType}&problems=${encodeURIComponent(problems)}`;
+                            window.open(cosEditorUrl, '_blank');
+                        } else {
+                            console.log('📂 Entry - Extension 없음 - 문제 팝업 + playentry.org 이동');
+                            const newWorkspaceUrl = 'https://playentry.org/ws/new?type=normal&mode=block&lang=ko';
+                            this.openCosProblemModal(grade, sample, problem, problems, newWorkspaceUrl, true);
+                        }
                     }
                 }
 
@@ -1564,13 +1577,20 @@ class ProjectCardManager {
                         });
                         return;
                     } else {
-                        // Fallback for Entry (if no extension): use internal editor or download?
-                        // User said "Entry: continue to open web popup".
-                        // If extension misses, maybe just window.open(projectUrl) forcing download?
-                        // Or internal editor?
-                        // "falling back to the internal /cos-editor page" was logically the safe bet.
-                        const fallbackUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}&grade=${grade}&sample=${sample}&problem=${problem}&buttonType=${buttonType || 'solution'}&problems=${encodeURIComponent(problems)}`;
-                        window.open(fallbackUrl, '_blank');
+                        // 🔥 Entry - Extension 없음: 팝업으로 문제 이미지 + 새 탭으로 공식 페이지
+                        console.log('📂 Entry - Extension 없음 - 문제 팝업 + playentry.org 이동');
+
+                        // projectUrl이 playentry.org 공유 링크인지 확인
+                        const isPlayEntryUrl = projectUrl && projectUrl.includes('playentry.org');
+
+                        if (isPlayEntryUrl) {
+                            // 공유 프로젝트 링크가 있으면 그대로 사용
+                            this.openCosProblemModal(grade, sample, problem, problems, projectUrl, true);
+                        } else {
+                            // S3 ENT 파일인 경우 - 새 워크스페이스로 이동
+                            const newWorkspaceUrl = 'https://playentry.org/ws/new?type=normal&mode=block&lang=ko';
+                            this.openCosProblemModal(grade, sample, problem, problems, newWorkspaceUrl, true);
+                        }
                         return;
                     }
                 }
@@ -1722,15 +1742,16 @@ class ProjectCardManager {
                     const projectNameAttr = e.target.getAttribute('data-project-name');
                     const match = (projectNameAttr || projectName).match(/COS\s*(\d)급\s*샘플(\d)-(\d+)/i);
 
-                    // 🔥 projectUrl이 playentry.org 링크인지 확인
+                    // 🔥 projectUrl이 playentry.org 링크인지 확인 (Entry 전용)
                     if (projectUrl && projectUrl.includes('playentry.org')) {
-                        // 🔥 Extension이 있으면 사이드바와 함께, 없으면 모달 표시
+                        // Entry만 playentry.org URL을 가짐
                         if (window.extensionBridge && window.extensionBridge.isExtensionInstalled && match) {
+                            // Extension 있음: Extension으로 처리
                             const [, grade, sample, problem] = match;
                             const missionId = `cos-${grade}-${sample}-${problem}`;
                             const missionTitle = `COS ${grade}급 샘플${sample}-${problem}번`;
 
-                            console.log('✅ Extension 감지 - 공식 에디터로 이동 (문제 이미지 사이드바 포함)');
+                            console.log('✅ Entry - Extension 감지 - 공식 에디터로 이동 (문제 이미지 사이드바 포함)');
 
                             window.extensionBridge.openEditor({
                                 platform: this.config.projectType,
@@ -1738,16 +1759,15 @@ class ProjectCardManager {
                                 userId: this.userID || 'guest',
                                 missionTitle: missionTitle,
                                 openUrl: projectUrl,
-                                problemImageUrl: imgUrl,  // 🔥 정규화된 URL 전달
+                                problemImageUrl: imgUrl,
                                 grade: grade,
                                 sample: sample,
                                 problem: problem
                             });
                         } else if (match) {
-                            // 🔥 Extension 없으면 모달로 문제 표시 + 동시에 새 탭으로 공식 페이지 열기
-                            console.log('📂 Extension 없음 - 문제 모달 표시 + 새 탭으로 공식 페이지 열기');
+                            // Extension 없음: Entry는 팝업 + playentry.org
+                            console.log('📂 Entry - Extension 없음 - 문제 팝업 + playentry.org 이동');
                             const [, grade, sample, problem] = match;
-                            // 단일 문제 데이터 생성
                             const singleProblem = {};
                             singleProblem[problem] = { img: imgUrl, solution: projectUrl };
                             this.openCosProblemModal(grade, sample, problem, JSON.stringify(singleProblem), projectUrl, true);
@@ -1756,17 +1776,39 @@ class ProjectCardManager {
                             window.open(projectUrl, '_blank');
                         }
                     } else if (projectUrl && projectUrl.includes('scratch.mit.edu')) {
-                        // 🔥 [MODIFIED] Scratch: 무조건 8601 서버(내부 cos-editor) 사용 (Extension 여부 무관)
-                        console.log('📂 Scratch COS - 8601 서버(내부 에디터)로 이동 (Extension 건너뜀)');
-
-                        let cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
-
-                        if (match) {
+                        // 🔥 Scratch.mit.edu URL 처리
+                        if (window.extensionBridge && window.extensionBridge.isExtensionInstalled && match) {
+                            // Extension 있음: Extension으로 처리
                             const [, grade, sample, problem] = match;
-                            cosEditorUrl += `&grade=${grade}&sample=${sample}&problem=${problem}`;
-                        }
+                            const missionId = `cos-${grade}-${sample}-${problem}`;
+                            const missionTitle = `COS ${grade}급 샘플${sample}-${problem}번`;
 
-                        window.open(cosEditorUrl, '_blank');
+                            console.log('✅ Scratch - Extension 감지 - 공식 에디터로 이동 (문제 이미지 사이드바 포함)');
+
+                            window.extensionBridge.openEditor({
+                                platform: this.config.projectType,
+                                missionId: missionId,
+                                userId: this.userID || 'guest',
+                                missionTitle: missionTitle,
+                                openUrl: projectUrl,
+                                problemImageUrl: imgUrl,
+                                grade: grade,
+                                sample: sample,
+                                problem: problem
+                            });
+                        } else {
+                            // Extension 없음: Scratch는 cos-editor 사용
+                            console.log('📂 Scratch - Extension 없음 - cos-editor로 이동');
+
+                            let cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
+
+                            if (match) {
+                                const [, grade, sample, problem] = match;
+                                cosEditorUrl += `&grade=${grade}&sample=${sample}&problem=${problem}`;
+                            }
+
+                            window.open(cosEditorUrl, '_blank');
+                        }
                     } else {
                         // 🔥 기존 NCP URL인 경우
                         if (match && window.extensionBridge && window.extensionBridge.isExtensionInstalled) {
@@ -1791,20 +1833,32 @@ class ProjectCardManager {
                                 problem: problem
                             });
                         } else if (match) {
-                            // 🔥 Extension 없으면 모달로 문제 표시 (NCP는 공식 페이지 열지 않음)
-                            console.log('📂 Extension 없음 - 문제 모달 표시');
+                            // 🔥 Extension 없음 - 플랫폼별 처리
                             const [, grade, sample, problem] = match;
                             const singleProblem = {};
                             singleProblem[problem] = { img: imgUrl, solution: projectUrl };
-                            this.openCosProblemModal(grade, sample, problem, JSON.stringify(singleProblem), projectUrl, false);
-                        } else {
-                            // Extension 없으면 /cos-editor 페이지로 폴백
-                            let cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
-                            if (match) {
-                                const [, grade, sample, problem] = match;
+
+                            if (this.config.projectType === 'scratch') {
+                                // Scratch: cos-editor (내부 에디터)
+                                console.log('📂 Scratch - Extension 없음 - cos-editor로 이동');
+                                let cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
                                 cosEditorUrl += `&grade=${grade}&sample=${sample}&problem=${problem}`;
+                                window.open(cosEditorUrl, '_blank');
+                            } else if (this.config.projectType === 'entry') {
+                                // Entry: 팝업 + playentry.org
+                                console.log('📂 Entry - Extension 없음 - 문제 팝업 + playentry.org 이동');
+                                const newWorkspaceUrl = 'https://playentry.org/ws/new?type=normal&mode=block&lang=ko';
+                                this.openCosProblemModal(grade, sample, problem, JSON.stringify(singleProblem), newWorkspaceUrl, true);
                             }
-                            window.open(cosEditorUrl, '_blank');
+                        } else {
+                            // match 실패 시 플랫폼별 폴백
+                            if (this.config.projectType === 'scratch') {
+                                let cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
+                                window.open(cosEditorUrl, '_blank');
+                            } else if (this.config.projectType === 'entry') {
+                                const newWorkspaceUrl = 'https://playentry.org/ws/new?type=normal&mode=block&lang=ko';
+                                this.openCosProblemModal('', '', '', '{}', newWorkspaceUrl, true);
+                            }
                         }
                     }
 
