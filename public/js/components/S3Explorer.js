@@ -644,8 +644,15 @@ class S3Explorer {
         }
       }
 
+      // 🔥 Grid Checkbox (Visible on hover or checked)
+      let checkboxHtml = '';
+      if (this.config.enableDelete) {
+        checkboxHtml = `<input type="checkbox" class="grid-checkbox" data-key="${file.key}" onclick="event.stopPropagation(); window.s3Explorer.toggleFileSelection('${file.key}')">`;
+      }
+
       return `
       <div class="grid-item" title="${displayName}">
+          ${checkboxHtml}
           <div class="grid-preview" ${onClickEvent}>
             ${thumbnailHtml}
           </div>
