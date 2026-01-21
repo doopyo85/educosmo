@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COS <%= grade %>급 샘플<%= sample %> - <%= parseInt(problem) %>번 문제</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
     <style>
         * {
             margin: 0;
@@ -12,7 +14,8 @@
             box-sizing: border-box;
         }
 
-        html, body {
+        html,
+        body {
             width: 100%;
             height: 100%;
             overflow: hidden;
@@ -31,7 +34,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
             z-index: 1000;
             height: 50px;
         }
@@ -104,6 +107,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="control-bar">
         <div class="title">
@@ -111,10 +115,23 @@
             <span>COS <%= grade %>급 샘플<%= sample %> - <%= parseInt(problem) %>번 문제</span>
         </div>
         <div class="controls">
-            <button class="nav-btn" id="prevBtn" <%= parseInt(problem) <= 1 ? 'disabled' : '' %>>
+            <button class="nav-btn" id="zoomOut" title="축소 (-)">
+                <i class="bi bi-dash-lg"></i>
+            </button>
+            <span id="zoomDisplay" style="font-size: 13px; min-width: 45px; text-align: center;">100%</span>
+            <button class="nav-btn" id="zoomIn" title="확대 (+)">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+            <button class="nav-btn" id="zoomReset" title="원래대로 (0)" style="margin-right: 10px;">
+                <i class="bi bi-arrow-counterclockwise"></i>
+            </button>
+
+            <div style="width: 1px; height: 20px; background: #555; margin: 0 5px;"></div>
+
+            <button class="nav-btn" id="prevBtn" <%=parseInt(problem) <=1 ? 'disabled' : '' %>>
                 <i class="bi bi-arrow-left"></i> 이전
             </button>
-            <button class="nav-btn" id="nextBtn" <%= parseInt(problem) >= 10 ? 'disabled' : '' %>>
+            <button class="nav-btn" id="nextBtn" <%=parseInt(problem)>= 10 ? 'disabled' : '' %>>
                 다음 <i class="bi bi-arrow-right"></i>
             </button>
             <button class="nav-btn primary" id="solutionBtn">
@@ -124,7 +141,8 @@
     </div>
 
     <div class="image-container">
-        <img src="<%= imgUrl %>" alt="COS <%= grade %>급 샘플<%= sample %> - <%= parseInt(problem) %>번 문제" class="problem-image">
+        <img src="<%= imgUrl %>" alt="COS <%= grade %>급 샘플<%= sample %> - <%= parseInt(problem) %>번 문제"
+            class="problem-image">
     </div>
 
     <script>
@@ -132,10 +150,117 @@
         const grade = '<%= grade %>';
         const sample = '<%= sample %>';
         let currentProblem = '<%= problem %>';
-        const problems = <%- JSON.stringify(problems) %>;
+        const problems = <% - JSON.stringify(problems) %>;
+
+        // 줌 관련 변수
+        let scale = 1.0;
+        const MIN_SCALE = 0.5;
+        const MAX_SCALE = 5.0;
+        const imgContainer = document.querySelector('.image-container');
+        const img = document.querySelector('.problem-image');
+
+        // 초기 이미지 로드 후 기준 너비 설정
+        let baseWidth = 0;
+        img.onload = function () {
+            // 초기에는 컨테이너에 맞춤
+            baseWidth = img.naturalWidth;
+            // 만약 이미지가 컨테이너보다 크면, 컨테이너 너비를 기준으로 1.0 잡기 (반응형 대응)
+            // 여기서 1.0은 "현재 화면에 딱 맞는 크기"가 아니라 "원본 크기" 혹은 "화면 맞춤 크기"로 정의
+            // 사용자 요청: "글씨가 작게 보여서" -> 원본 크기 혹은 확대 필요.
+            // 기본적으로 max-width: 100%가 적용되어 있으므로 화면에 맞춰짐.
+            // 줌 시작 시 max-width 해제하고 width를 조절.
+
+            // 현재 렌더링된 너비를 기준으로 시작
+            baseWidth = img.width;
+        };
+
+        function updateZoom() {
+            if (scale === 1.0) {
+                img.style.width = '';
+                img.style.maxWidth = '100%';
+                // 초기화 시 다시 너비 측정 (반응형 리셋)
+                setTimeout(() => { baseWidth = img.width; }, 50);
+            } else {
+                img.style.maxWidth = 'none';
+                img.style.width = `${baseWidth * scale}px`;
+            }
+            updateZoomDisplay();
+        }
+
+        function updateZoomDisplay() {
+            const display = document.getElementById('zoomDisplay');
+            if (display) display.textContent = `${Math.round(scale * 100)}%`;
+        }
+
+        // 줌 버튼 이벤트
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            scale = Math.min(scale + 0.2, MAX_SCALE);
+            updateZoom();
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            scale = Math.max(scale - 0.2, MIN_SCALE);
+            updateZoom();
+        });
+
+        document.getElementById('zoomReset').addEventListener('click', () => {
+            // 1.0으로 리셋하되 화면에 맞춤 (onload 로직과 유사)
+            scale = 1.0;
+            updateZoom();
+        });
+
+        // 휠 줌 이벤트
+        imgContainer.addEventListener('wheel', (e) => {
+            if (e.ctrlKey || true) { // 항상 휠로 줌 동작 (사용자 요청)
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                const newScale = Math.min(Math.max(scale + delta, MIN_SCALE), MAX_SCALE);
+
+                if (newScale !== scale) {
+                    scale = newScale;
+                    updateZoom();
+                }
+            }
+        }, { passive: false });
+
+        // 마우스 드래그 스크롤 (옵션)
+        let isDragging = false;
+        let startX, startY, scrollLeft, scrollTop;
+
+        imgContainer.addEventListener('mousedown', (e) => {
+            if (scale > 1.0 || img.width > imgContainer.clientWidth || img.height > imgContainer.clientHeight) {
+                isDragging = true;
+                imgContainer.style.cursor = 'grabbing';
+                startX = e.pageX - imgContainer.offsetLeft;
+                startY = e.pageY - imgContainer.offsetTop;
+                scrollLeft = imgContainer.scrollLeft;
+                scrollTop = imgContainer.scrollTop;
+            }
+        });
+
+        imgContainer.addEventListener('mouseleave', () => {
+            isDragging = false;
+            imgContainer.style.cursor = 'default';
+        });
+
+        imgContainer.addEventListener('mouseup', () => {
+            isDragging = false;
+            imgContainer.style.cursor = 'default';
+        });
+
+        imgContainer.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - imgContainer.offsetLeft;
+            const y = e.pageY - imgContainer.offsetTop;
+            const walkX = (x - startX) * 1.5; // 드래그 속도 조절
+            const walkY = (y - startY) * 1.5;
+            imgContainer.scrollLeft = scrollLeft - walkX;
+            imgContainer.scrollTop = scrollTop - walkY;
+        });
 
         // 이전 문제
-        document.getElementById('prevBtn').addEventListener('click', function() {
+        document.getElementById('prevBtn').addEventListener('click', function () {
             const prevNum = parseInt(currentProblem) - 1;
             if (prevNum >= 1) {
                 navigateToProblem(prevNum.toString().padStart(2, '0'));
@@ -143,7 +268,7 @@
         });
 
         // 다음 문제
-        document.getElementById('nextBtn').addEventListener('click', function() {
+        document.getElementById('nextBtn').addEventListener('click', function () {
             const nextNum = parseInt(currentProblem) + 1;
             if (nextNum <= 10) {
                 navigateToProblem(nextNum.toString().padStart(2, '0'));
@@ -151,7 +276,7 @@
         });
 
         // 풀이 열기
-        document.getElementById('solutionBtn').addEventListener('click', function() {
+        document.getElementById('solutionBtn').addEventListener('click', function () {
             const problemData = problems[currentProblem];
             if (problemData && problemData.solution) {
                 window.open(problemData.solution, '_blank');
@@ -165,7 +290,7 @@
         }
 
         // 키보드 단축키
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'ArrowLeft') {
                 document.getElementById('prevBtn').click();
             } else if (e.key === 'ArrowRight') {
@@ -173,8 +298,15 @@
             } else if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 document.getElementById('solutionBtn').click();
+            } else if (e.key === '+' || e.key === '=') { // + 키
+                document.getElementById('zoomIn').click();
+            } else if (e.key === '-' || e.key === '_') { // - 키
+                document.getElementById('zoomOut').click();
+            } else if (e.key === '0') { // 0 키 (리셋)
+                document.getElementById('zoomReset').click();
             }
         });
     </script>
 </body>
+
 </html>
