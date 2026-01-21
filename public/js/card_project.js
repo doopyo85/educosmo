@@ -1475,7 +1475,108 @@ class ProjectCardManager {
                 return;
             }
 
-            // Scratch [기본] 버튼 처리
+            // 🔥 COS 테이블 버튼 클릭 (cos-problem-btn 클래스)
+            if (e.target.classList.contains('cos-problem-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const btn = e.target;
+                const grade = btn.getAttribute('data-grade');
+                const sample = btn.getAttribute('data-sample');
+                const problem = btn.getAttribute('data-problem');
+                const buttonType = btn.getAttribute('data-button-type'); // solution or answer
+                const problems = btn.getAttribute('data-problems');
+                const projectUrl = btn.getAttribute('data-url'); // solution/answer params -> projectUrl
+                // const projectUrl = this.normalizeUrl(btn.getAttribute('data-url')); // normalize needed?
+
+                // data-img gets the problem image
+                const imgUrl = this.normalizeUrl(btn.getAttribute('data-img'));
+
+                console.log('🎯 COS 문제 버튼 클릭:', {
+                    grade, sample, problem, buttonType, imgUrl, projectType: this.config.projectType
+                });
+
+                // 🔥 플랫폼별 분기
+                if (this.config.projectType === 'scratch') {
+                    // Scratch: 무조건 8601 서버(내부 cos-editor) 사용
+                    console.log('📂 Scratch COS - 8601 서버(내부 에디터)로 이동');
+
+                    let cosEditorUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}`;
+
+                    // 파라미터가 모두 있으면 추가
+                    if (grade && sample && problem) {
+                        cosEditorUrl += `&grade=${grade}&sample=${sample}&problem=${problem}`;
+                    }
+                    // problems 데이터도 필요하면 전달 (너무 길면 생략 가능하지만 view에서 필요할 수 있음)
+                    if (problems) {
+                        cosEditorUrl += `&problems=${encodeURIComponent(problems)}`;
+                    }
+
+                    // buttonType 전달
+                    cosEditorUrl += `&buttonType=${buttonType || 'solution'}`;
+
+                    window.open(cosEditorUrl, '_blank');
+                    return;
+
+                } else if (this.config.projectType === 'entry') {
+                    // Entry: Extension 우선 시도
+                    if (window.extensionBridge && window.extensionBridge.isExtensionInstalled) {
+                        const missionId = `cos-${grade}-${sample}-${problem}`;
+                        const missionTitle = `COS ${grade}급 샘플${sample}-${problem}번`;
+
+                        console.log('✅ Entry - Extension 감지 - 공식 에디터로 이동 (문제 이미지 사이드바 포함)');
+
+                        // Entry Extension 호출
+                        // data-url is typically the .ent file S3 URL.
+                        // Extension expects openUrl (S3 URL or playentry URL) ??
+                        // Usually for COS, data-url is the S3 .ent file URL.
+                        // Extension openEditor can handle S3 URL if implemented, or we need playentry URL.
+                        // But COS entries in DB usually link to S3 file.
+                        // Let's assume Extension handles it or we pass a generic 'new' URL with file load?
+                        // Wait, previous logic (Step 69) checked if projectUrl.includes('playentry.org').
+                        // If it's an S3 URL, does Extension load it?
+                        // According to lines 1544-1551 in Step 69, for 'entry-basic-btn', it passes openUrl.
+
+                        // However, for COS table, typically the 'solution' URL IS the .ent file on S3.
+                        // If so, `projectUrl` is s3Url.
+                        // Does extensionBridge load S3 files?
+                        // If not, we might need to rely on the fallback or download logic.
+                        // BUT, the user wants "Entry -> Extension (playentry.org popup)".
+                        // In educodingnplay (Step 21), the code was:
+                        // window.extensionBridge.openEditor({ ... openUrl: 'https://playentry.org/ws/new', ... }) ??
+                        // No, in Step 21 it was passing `projectUrl`.
+                        // If the user says "Entry -> continue to open web popup and navigate to official homepage",
+                        // and effectively they mean use the extension to open playentry.org workspace.
+
+                        // Let's pass the S3 URL. If the extension handles it (by downloading and loading), great.
+                        // If not, we might fall back.
+
+                        window.extensionBridge.openEditor({
+                            platform: 'entry',
+                            missionId: missionId,
+                            userId: this.userID || 'guest',
+                            missionTitle: missionTitle,
+                            openUrl: projectUrl, // S3 URL
+                            problemImageUrl: imgUrl,
+                            grade: grade,
+                            sample: sample,
+                            problem: problem
+                        });
+                        return;
+                    } else {
+                        // Fallback for Entry (if no extension): use internal editor or download?
+                        // User said "Entry: continue to open web popup".
+                        // If extension misses, maybe just window.open(projectUrl) forcing download?
+                        // Or internal editor?
+                        // "falling back to the internal /cos-editor page" was logically the safe bet.
+                        const fallbackUrl = `/cos-editor?platform=${this.config.projectType}&projectUrl=${encodeURIComponent(projectUrl)}&imgUrl=${encodeURIComponent(imgUrl)}&grade=${grade}&sample=${sample}&problem=${problem}&buttonType=${buttonType || 'solution'}&problems=${encodeURIComponent(problems)}`;
+                        window.open(fallbackUrl, '_blank');
+                        return;
+                    }
+                }
+            }
+
+            // Scratch [기본] 버튼 (기존 코드 시작)
             if (e.target.classList.contains('scratch-basic-btn')) {
                 e.preventDefault();
                 e.stopPropagation();
