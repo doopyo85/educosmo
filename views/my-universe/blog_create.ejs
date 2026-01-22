@@ -1,0 +1,88 @@
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-journal-text fs-1 text-primary"></i>
+                        <h3 class="fw-bold mt-2">나만의 블로그 만들기</h3>
+                        <p class="text-muted">My Universe 블로그를 개설하고 이야기를 시작해보세요.</p>
+                    </div>
+
+                    <form id="createBlogForm">
+                        <div class="mb-3">
+                            <label for="subdomain" class="form-label fw-bold">블로그 주소 (Subdomain)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="subdomain" name="subdomain"
+                                    placeholder="myblog" pattern="[a-z0-9]{4,20}" required>
+                                <span class="input-group-text bg-light text-muted">.pong2.app</span>
+                            </div>
+                            <div class="form-text">영문 소문자와 숫자, 4~20자</div>
+                            <div id="subdomainFeedback" class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label fw-bold">블로그 제목</label>
+                            <input type="text" class="form-control" id="title" name="title" placeholder="나의 코딩 여행기"
+                                required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label fw-bold">소개글</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                placeholder="블로그에 대한 간단한 소개를 적어주세요."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold">
+                                <i class="bi bi-sparkles"></i> 블로그 개설하기
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('createBlogForm');
+        const subdomainInput = document.getElementById('subdomain');
+
+        // Subdomain Validation
+        subdomainInput.addEventListener('input', () => {
+            subdomainInput.value = subdomainInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                subdomain: form.subdomain.value,
+                title: form.title.value,
+                description: form.description.value
+            };
+
+            try {
+                const res = await fetch('/api/myuniverse/blogs/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert('블로그가 성공적으로 개설되었습니다!');
+                    window.location.reload(); // Will redirect to the new blog via get('/blog') logic
+                } else {
+                    alert(data.error || '블로그 개설에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다.');
+            }
+        });
+    });
+</script>

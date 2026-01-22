@@ -56,9 +56,11 @@
                                         <%- include('./observatory') %>
                                             <% } else if (activeTab==='problems' ) { %>
                                                 <%- include('./problems') %>
-                                                    <% } else { %>
-                                                        <div class="alert alert-info">준비 중인 기능입니다.</div>
-                                                        <% } %>
+                                                    <% } else if (activeTab==='blog_create' ) { %>
+                                                        <%- include('./blog_create') %>
+                                                            <% } else { %>
+                                                                <div class="alert alert-info">준비 중인 기능입니다.</div>
+                                                                <% } %>
                 </div>
         </div>
 

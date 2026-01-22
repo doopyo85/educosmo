@@ -114,9 +114,8 @@
     <% let baseUrl='/my-universe' ; let isStudentView=false; /* Check if we are viewing another student's universe */ if
         (locals.student && locals.student.id && locals.student.userID !==locals.userID) {
         baseUrl='/my-universe/student/' + locals.student.id; isStudentView=true; } const currentTab=locals.activeTab
-        || '' ; const galleryUrl=baseUrl + '/gallery'; const
-        observatoryUrl=baseUrl + '/observatory' ; const timelineUrl=isStudentView ? baseUrl : (baseUrl + '/timeline' );
-        %>
+        || '' ; const galleryUrl=baseUrl + '/gallery' ; const observatoryUrl=baseUrl + '/observatory' ; const
+        timelineUrl=isStudentView ? baseUrl : (baseUrl + '/timeline' ); %>
 
         <div class="board-nav-group">
             <div class="board-sidebar-header">Menu</div>
@@ -148,8 +147,9 @@
                 <a class="board-category-item disabled" href="#" style="opacity: 0.5; cursor: default;">
                     <i class="bi bi-bar-chart-fill"></i> 대시보드
                 </a>
-                <a class="board-category-item disabled" href="#" style="opacity: 0.5; cursor: default;">
-                    <i class="bi bi-journal-text"></i> 블로그
+                <a class="board-category-item <%= currentTab === 'blog_create' ? 'active' : '' %>"
+                    href="<%= baseUrl + '/blog' %>">
+                    <i class="bi bi-journal-text"></i> 블로그 (Blog)
                 </a>
             </div>
         </div>

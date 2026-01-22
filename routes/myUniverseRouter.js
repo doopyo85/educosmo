@@ -510,6 +510,43 @@ router.get('/gallery', (req, res) => {
 });
 
 // ============================================
+// Blog Tab (Create or Redirect)
+// ============================================
+router.get('/blog', async (req, res) => {
+    if (!req.session.is_logined) {
+        return res.redirect('/auth/login');
+    }
+
+    try {
+        // Check if user already has a blog
+        const userId = req.session.userID;
+        const [user] = await db.queryDatabase('SELECT id FROM Users WHERE userID = ?', [userId]);
+        const [blog] = await db.queryDatabase('SELECT subdomain FROM user_blogs WHERE user_id = ?', [user.id]);
+
+        if (blog) {
+            // Redirect to their blog
+            // In PROD: return res.redirect(`https://${blog.subdomain}.pong2.app`);
+            // Safe redirect supporting both protocols
+            const protocol = req.secure ? 'https' : 'http';
+            return res.redirect(`${protocol}://${blog.subdomain}.pong2.app`);
+        }
+
+        // Render Create Page
+        res.render('my-universe/index', {
+            activeTab: 'blog_create',
+            userID: req.session.userID,
+            userRole: req.session.role,
+            is_logined: req.session.is_logined,
+            centerID: req.session.centerID
+        });
+
+    } catch (error) {
+        console.error('Blog Route Error:', error);
+        res.status(500).send('Server Error');
+    }
+});
+
+// ============================================
 // Observatory Tab
 // ============================================
 router.get('/observatory', (req, res) => {

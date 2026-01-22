@@ -302,7 +302,10 @@ app.use((req, res, next) => {
       target: 'http://localhost:3001',
       changeOrigin: false,
       ws: true,
-      logLevel: 'debug'
+      logLevel: 'debug',
+      onProxyReq: (proxyReq, req, res) => {
+        proxyReq.setHeader('Host', req.get('host'));
+      }
     })(req, res, next);
   }
   next();

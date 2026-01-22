@@ -14,7 +14,11 @@ async function initializePool() {
     console.log('DB_HOST:', process.env.DB_HOST);
     console.log('DB_USER:', process.env.DB_USER);
     console.log('DB_NAME:', process.env.DB_NAME);
+    console.log('DB_NAME:', process.env.DB_NAME);
     console.log('DB_PORT:', process.env.DB_PORT);
+    // 🔥 Debug: Check Password Validity
+    const dbPass = 'fq84cod3#@';
+    console.log(`DB_PASS Debug: Length=${dbPass.length}, StartsWith=${dbPass.substring(0, 2)}***`);
 
     try {
         pool = await mysql.createPool({
