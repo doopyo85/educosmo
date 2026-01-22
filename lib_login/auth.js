@@ -573,20 +573,94 @@ router.post('/register-center', async (req, res) => {
 
         const newCenterID = centerResult.insertId;
 
-        // 2. 사용자 생성
+        // 2. 센터 블로그 자동 생성
+        try {
+            // 센터명을 기반으로 서브도메인 생성 (영문/숫자만, 소문자, 4-20자)
+            let subdomain = centerName
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, '') // 영문, 숫자만 남김
+                .substring(0, 20); // 최대 20자
+
+            // 최소 4자 체크
+            if (subdomain.length < 4) {
+                subdomain = `center${newCenterID}`;
+            }
+
+            // 서브도메인 중복 체크 및 고유값 생성
+            let finalSubdomain = subdomain;
+            let counter = 1;
+            let isDuplicate = true;
+
+            while (isDuplicate) {
+                const [existingUserBlog] = await queryDatabase(
+                    'SELECT id FROM user_blogs WHERE subdomain = ?',
+                    [finalSubdomain]
+                );
+                const [existingCenterBlog] = await queryDatabase(
+                    'SELECT id FROM center_blogs WHERE subdomain = ?',
+                    [finalSubdomain]
+                );
+
+                if (!existingUserBlog && !existingCenterBlog) {
+                    isDuplicate = false;
+                } else {
+                    finalSubdomain = `${subdomain}${counter}`;
+                    counter++;
+                }
+            }
+
+            // center_blogs 테이블에 INSERT
+            await queryDatabase(
+                `INSERT INTO center_blogs
+                 (center_id, subdomain, title, description, theme, is_public, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+                [
+                    newCenterID,
+                    finalSubdomain,
+                    `${centerName} 클라우드`,
+                    `${centerName}의 학습 자료실`,
+                    'cloud',
+                    true
+                ]
+            );
+
+            console.log(`✅ 센터 블로그 자동 생성 완료: ${finalSubdomain}.pong2.app (센터 ID: ${newCenterID})`);
+
+        } catch (blogError) {
+            console.error('❌ 센터 블로그 자동 생성 실패:', blogError);
+            // 센터는 생성되었으므로 에러를 로그만 하고 계속 진행
+        }
+
+        // 3. 사용자 생성 (센터 관리자 권한)
         const hashedPassword = await bcrypt.hash(password, 10);
         await queryDatabase(`
-            INSERT INTO Users (userID, password, email, name, phone, role, centerID)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO Users (userID, password, email, name, phone, role, centerID, account_type, storage_limit_bytes, blog_post_limit)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'center_admin', 5368709120, 999999)
         `, [userID, hashedPassword, email, name, phone, role, newCenterID]);
 
-        // 3. CenterStorageUsage 초기화
+        console.log(`✅ 센터 관리자 계정 생성 완료: ${userID} (account_type: center_admin, 5GB)`);
+
+        // 4. CenterStorageUsage 초기화 (30GB)
         await queryDatabase(`
             INSERT INTO CenterStorageUsage (center_id, plan_type, storage_limit, total_usage, object_count)
-            VALUES (?, 'free', 10737418240, 0, 0)
+            VALUES (?, 'standard', 32212254720, 0, 0)
         `, [newCenterID]);
 
-        // 4. 가입 환영 이메일 발송
+        console.log(`✅ 센터 스토리지 초기화 완료: 30GB (standard)`);
+
+        // 5. center_subscriptions Trial 생성 (14일 무료 체험)
+        await queryDatabase(`
+            INSERT INTO center_subscriptions
+            (center_id, plan_type, status, storage_limit_bytes, student_limit, price_monthly, trial_ends_at, next_billing_date, created_at)
+            VALUES (?, 'standard', 'trial', 32212254720, NULL, 110000, DATE_ADD(NOW(), INTERVAL 14 DAY), DATE_ADD(NOW(), INTERVAL 14 DAY), NOW())
+        `, [newCenterID]);
+
+        const trialEndsAt = new Date();
+        trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+        console.log(`✅ Trial 구독 생성 완료: 14일 무료 체험 (만료일: ${trialEndsAt.toISOString().split('T')[0]})`);
+
+
+        // 6. 가입 환영 이메일 발송
         try {
             await sendCenterWelcomeEmail(email, centerName, userID);
         } catch (emailError) {
@@ -594,8 +668,8 @@ router.post('/register-center', async (req, res) => {
             // 이메일 실패해도 가입은 성공 처리
         }
 
-        // 5. Google Sheets에 센터 추가 (선택 사항 - 수동으로 관리할 수도 있음)
-        console.log(`새 센터 등록 완료: [${newCenterID}] ${centerName}`);
+        // 7. Google Sheets에 센터 추가 (선택 사항 - 수동으로 관리할 수도 있음)
+        console.log(`✅ 새 센터 등록 완료: [${newCenterID}] ${centerName}`);
 
         res.json({
             success: true,

@@ -35,7 +35,9 @@
       "Bash(PORT=3000 npm start)",
       "Bash(npm run dev:*)",
       "Bash(node -e:*)",
-      "Bash(npm run list:*)"
+      "Bash(npm run list:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)"
     ]
   }
 }

@@ -65,7 +65,7 @@ async function initMyUniversePart1() {
                 center_id INT NOT NULL,
                 code VARCHAR(8) UNIQUE NOT NULL,
                 max_uses INT DEFAULT NULL,
-                used_count INT DEFAULT 0,
+                current_uses INT DEFAULT 0 COMMENT 'Number of times this code has been used',
                 expires_at DATETIME,
                 created_by INT NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
