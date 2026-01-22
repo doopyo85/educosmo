@@ -280,7 +280,7 @@ const jupyterTarget = `http://${JUPYTER_HOST}:${JUPYTER_PORT}`;
 console.log(`Setting up Jupyter Proxy to: ${jupyterTarget} (Env: ${process.env.JUPYTER_HOST}:${process.env.JUPYTER_PORT})`);
 
 // 🔥 Blog Center Redirect Route
-app.get('/blog/:centerId', async (req, res) => {
+app.get('/center-blog/:centerId', async (req, res) => {
   const centerId = req.params.centerId;
   try {
     const [center] = await db.queryDatabase('SELECT subdomain FROM center_blogs WHERE center_id = ?', [centerId]);

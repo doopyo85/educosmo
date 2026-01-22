@@ -797,8 +797,12 @@ router.get('/manage', requireLogin, requireCenterAdmin, async (req, res) => {
         const [subscription] = await queryDatabase(subscriptionQuery, [centerID]);
 
         // 센터 정보
-        const centerQuery = `SELECT center_name, contact_email, contact_phone FROM Centers WHERE id = ?`;
+        const centerQuery = `SELECT center_name, contact_email, contact_phone, unique_code FROM Centers WHERE id = ?`;
         const [center] = await queryDatabase(centerQuery, [centerID]);
+
+        if (!center) {
+            return res.status(404).send('센터 정보를 찾을 수 없습니다.');
+        }
 
         // 결제 내역 (최근 10건)
         const paymentsQuery = `
@@ -816,33 +820,38 @@ router.get('/manage', requireLogin, requireCenterAdmin, async (req, res) => {
                 .manage-container {
                     max-width: 1200px;
                     margin: 0 auto;
-                    padding: 40px 20px;
+                    padding: 30px 20px;
                 }
                 .manage-header {
-                    margin-bottom: 40px;
+                    margin-bottom: 25px;
                 }
                 .manage-header h1 {
-                    font-size: 2.5em;
+                    font-size: 2em;
                     color: #333;
-                    margin-bottom: 10px;
+                    margin-bottom: 8px;
                 }
                 .subscription-card {
                     background: white;
-                    border-radius: 15px;
-                    padding: 30px;
-                    margin-bottom: 30px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                    transition: none;
+                }
+                .subscription-card:hover {
+                    transform: none;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                 }
                 .card-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    margin-bottom: 20px;
-                    padding-bottom: 15px;
+                    margin-bottom: 15px;
+                    padding-bottom: 12px;
                     border-bottom: 2px solid #f0f0f0;
                 }
                 .card-title {
-                    font-size: 1.5em;
+                    font-size: 1.3em;
                     font-weight: bold;
                     color: #333;
                 }
@@ -857,23 +866,28 @@ router.get('/manage', requireLogin, requireCenterAdmin, async (req, res) => {
                 .status-suspended { background: #f8d7da; color: #721c24; }
                 .info-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                    gap: 20px;
-                    margin: 20px 0;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 12px;
+                    margin: 15px 0;
                 }
                 .info-item {
-                    padding: 15px;
+                    padding: 12px;
                     background: #f8f9fa;
-                    border-radius: 10px;
+                    border-radius: 8px;
+                    transition: none;
+                }
+                .info-item:hover {
+                    transform: none;
+                    background: #f8f9fa;
                 }
                 .info-label {
-                    font-size: 0.9em;
+                    font-size: 0.85em;
                     color: #666;
-                    margin-bottom: 5px;
+                    margin-bottom: 4px;
                 }
                 .info-value {
-                    font-size: 1.2em;
-                    font-weight: bold;
+                    font-size: 1.1em;
+                    font-weight: 600;
                     color: #333;
                 }
                 .action-buttons {
@@ -906,22 +920,23 @@ router.get('/manage', requireLogin, requireCenterAdmin, async (req, res) => {
                     color: white;
                 }
                 .btn:hover {
-                    transform: translateY(-2px);
+                    opacity: 0.9;
                 }
                 .payments-table {
                     width: 100%;
                     border-collapse: collapse;
-                    margin-top: 20px;
+                    margin-top: 15px;
+                    font-size: 0.95em;
                 }
                 .payments-table th {
                     background: #f8f9fa;
-                    padding: 12px;
+                    padding: 10px;
                     text-align: left;
-                    font-weight: bold;
+                    font-weight: 600;
                     border-bottom: 2px solid #dee2e6;
                 }
                 .payments-table td {
-                    padding: 12px;
+                    padding: 10px;
                     border-bottom: 1px solid #dee2e6;
                 }
                 .payment-status {
@@ -1045,18 +1060,22 @@ router.get('/manage', requireLogin, requireCenterAdmin, async (req, res) => {
                         <div class="card-title">센터 정보</div>
                     </div>
 
-                    <div class="info-grid">
+                    <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
                         <div class="info-item">
                             <div class="info-label">센터명</div>
-                            <div class="info-value">${center.center_name}</div>
+                            <div class="info-value" style="font-size: 1.1em;">${center.center_name}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">센터코드</div>
+                            <div class="info-value" style="font-size: 1.1em; font-family: monospace;">${center.unique_code || '-'}</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">이메일</div>
-                            <div class="info-value">${center.contact_email || '-'}</div>
+                            <div class="info-value" style="font-size: 0.95em;">${center.contact_email || '-'}</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">연락처</div>
-                            <div class="info-value">${center.contact_phone || '-'}</div>
+                            <div class="info-value" style="font-size: 1.1em;">${center.contact_phone || '-'}</div>
                         </div>
                     </div>
                 </div>
