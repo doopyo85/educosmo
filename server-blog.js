@@ -49,11 +49,26 @@ app.use(express.urlencoded({ extended: true }));
 // Middleware: Resolve Blog Context from Subdomain
 app.use(async (req, res, next) => {
     const host = req.headers.host || '';
-    const subdomain = host.split('.')[0];
+    console.log(`[BlogServer] Request Host: ${host}, URL: ${req.url}`);
+    let subdomain = '';
+
+    // 1. Handle *.pong2.app (New Style: doopyo.pong2.app)
+    if (host.endsWith('pong2.app') && host !== 'pong2.app' && !host.startsWith('blog.')) {
+        subdomain = host.split('.')[0]; // doopyo
+    }
+    // 2. Handle *.blog.* (Old Style: doopyo.blog.pong2.app)
+    else if (host.includes('.blog.')) {
+        subdomain = host.split('.blog.')[0]; // doopyo
+    }
+    // 3. Handle blog.* Direct Access (Main Page)
+    else if (host.startsWith('blog.')) {
+        // Just show main page (no specific user context)
+    }
+
     const DOMAIN = 'pong2.app'; // Should come from config in prod
 
     // Filter out system subdomains
-    if (subdomain === 'www' || subdomain === 'api' || subdomain === 'localhost' || host === DOMAIN) {
+    if (!subdomain || subdomain === 'www' || subdomain === 'api' || subdomain === 'localhost' || host === DOMAIN) {
         return next();
     }
 

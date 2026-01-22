@@ -281,13 +281,26 @@ console.log(`Setting up Jupyter Proxy to: ${jupyterTarget} (Env: ${process.env.J
 
 // 🔥 Blog Server Proxy (Express로 라우팅 처리)
 // Apache/Nginx에서 3000번으로 모든 트래픽을 보내면 여기서 분기
+// 🔥 Blog Server Proxy (Express로 라우팅 처리)
+// Apache/Nginx에서 3000번으로 모든 트래픽을 보내면 여기서 분기
 app.use((req, res, next) => {
   const host = req.get('host') || '';
-  if (host.startsWith('blog.') || host.includes('blog.app.codingnplay.co.kr') || host.includes('blog.pong2.app')) {
+
+  // 1. 기존 blog.* 서브도메인 방식 Support
+  const isOldBlog = host.startsWith('blog.') || host.includes('blog.app.codingnplay.co.kr');
+
+  // 2. 새로운 *.pong2.app 방식 Support (doopyo.pong2.app)
+  // 단, www.pong2.app, pong2.app, api.pong2.app 등은 제외
+  const isNewBlog = host.endsWith('pong2.app') &&
+    !host.startsWith('www.') &&
+    host !== 'pong2.app' &&
+    !host.startsWith('api.');
+
+  if (isOldBlog || isNewBlog) {
     console.log(`Proxying blog request: ${host}${req.url} -> http://localhost:3001`);
     return createProxyMiddleware({
       target: 'http://localhost:3001',
-      changeOrigin: true,
+      changeOrigin: false,
       ws: true,
       logLevel: 'debug'
     })(req, res, next);
