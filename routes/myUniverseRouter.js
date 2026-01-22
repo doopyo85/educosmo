@@ -528,8 +528,8 @@ router.get('/blog', async (req, res) => {
             // Redirect to their blog
             // In PROD: return res.redirect(`https://${blog.subdomain}.pong2.app`);
             // Safe redirect supporting both protocols
-            const protocol = req.secure ? 'https' : 'http';
-            return res.redirect(`${protocol}://${blog.subdomain}.pong2.app`);
+            // [MODIFIED] Use internal proxy path to avoid cross-domain issues
+            return res.redirect(`/blog/${blog.subdomain}`);
         }
 
         // Render Create Page
