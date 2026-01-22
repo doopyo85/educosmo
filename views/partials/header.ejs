@@ -277,6 +277,17 @@
                                                                                             수정
                                                                                         </a>
                                                                                     </li>
+                                                                                    <% if (role === 'manager') { %>
+                                                                                    <li>
+                                                                                        <a class="dropdown-item"
+                                                                                            href="#"
+                                                                                            onclick="openCenterInfoModal(); return false;">
+                                                                                            <i
+                                                                                                class="bi bi-building me-2"></i>센터
+                                                                                            정보
+                                                                                        </a>
+                                                                                    </li>
+                                                                                    <% } %>
                                                                                     <li>
                                                                                         <a class="dropdown-item"
                                                                                             href="/extension-guide">
@@ -378,6 +389,102 @@
                         <button type="submit" class="btn btn-primary">저장</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 센터 정보 모달 (Manager Only) -->
+<div class="modal fade" id="centerInfoModal" tabindex="-1" aria-labelledby="centerInfoModalLabel" aria-hidden="true"
+    style="z-index: 10000;">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="centerInfoModalLabel">
+                    <i class="bi bi-building me-2"></i>센터 정보 관리
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 센터 기본 정보 -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>센터 기본 정보</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">센터명</label>
+                                <input type="text" class="form-control" id="centerName" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">담당자</label>
+                                <input type="text" class="form-control" id="centerContactName" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">담당자 이메일</label>
+                            <input type="email" class="form-control" id="centerContactEmail" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 구독 정보 -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-credit-card me-2"></i>구독 정보</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">플랜 타입</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="centerPlanType" readonly>
+                                    <span class="input-group-text" id="centerStatusBadge">
+                                        <span class="badge bg-success">활성</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">스토리지 용량</label>
+                                <input type="text" class="form-control" id="centerStorageLimit" readonly>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">구독 상태</label>
+                                <input type="text" class="form-control" id="centerSubscriptionStatus" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">다음 결제일</label>
+                                <input type="text" class="form-control" id="centerNextBilling" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 센터 코드 관리 -->
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-key me-2"></i>센터 초대 코드</h6>
+                        <button class="btn btn-sm btn-primary" onclick="generateNewCenterCode()">
+                            <i class="bi bi-plus-circle me-1"></i>새 코드 발급
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="inviteCodesContainer">
+                            <div class="text-center text-muted py-3">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">로딩 중...</span>
+                                </div>
+                                <p class="mb-0 mt-2">초대 코드를 불러오는 중...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
             </div>
         </div>
     </div>

@@ -341,3 +341,232 @@ function openMyProfile() {
         `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
     );
 }
+
+// 센터 정보 모달 열기 (Manager Only)
+function openCenterInfoModal() {
+    const modal = new bootstrap.Modal(document.getElementById('centerInfoModal'));
+    modal.show();
+    loadCenterInfo();
+}
+
+// 센터 정보 로드
+async function loadCenterInfo() {
+    try {
+        // 현재 사용자의 센터 ID 가져오기
+        const sessionRes = await fetch('/api/get-user-session', { credentials: 'include' });
+        const sessionData = await sessionRes.json();
+
+        if (!sessionData.centerID) {
+            alert('센터 정보를 찾을 수 없습니다.');
+            return;
+        }
+
+        const centerID = sessionData.centerID;
+
+        // 센터 정보 조회
+        const centerRes = await fetch(`/api/centers/${centerID}`, { credentials: 'include' });
+        const centerResult = await centerRes.json();
+
+        if (!centerResult.success) {
+            alert('센터 정보를 불러올 수 없습니다.');
+            return;
+        }
+
+        const center = centerResult.center;
+
+        // 센터 기본 정보 표시
+        document.getElementById('centerName').value = center.center_name || '';
+        document.getElementById('centerContactName').value = center.contact_name || '';
+        document.getElementById('centerContactEmail').value = center.contact_email || '';
+        document.getElementById('centerPlanType').value = center.plan_type || 'basic';
+        document.getElementById('centerStorageLimit').value = formatBytes(center.storage_limit_bytes || 0);
+
+        // 상태 배지
+        const statusBadge = document.getElementById('centerStatusBadge');
+        if (center.status === 'ACTIVE') {
+            statusBadge.innerHTML = '<span class="badge bg-success">활성</span>';
+        } else if (center.status === 'SUSPENDED') {
+            statusBadge.innerHTML = '<span class="badge bg-danger">정지</span>';
+        } else {
+            statusBadge.innerHTML = '<span class="badge bg-secondary">비활성</span>';
+        }
+
+        // 구독 정보 조회
+        try {
+            const subRes = await fetch(`/api/subscriptions/center/${centerID}`, { credentials: 'include' });
+            const subResult = await subRes.json();
+
+            if (subResult.success && subResult.subscription) {
+                const sub = subResult.subscription;
+                document.getElementById('centerSubscriptionStatus').value = sub.status === 'trial' ? '체험판' :
+                    sub.status === 'active' ? '정상' : '만료';
+                document.getElementById('centerNextBilling').value = sub.next_billing_date ?
+                    new Date(sub.next_billing_date).toLocaleDateString('ko-KR') : '-';
+            } else {
+                document.getElementById('centerSubscriptionStatus').value = '정보 없음';
+                document.getElementById('centerNextBilling').value = '-';
+            }
+        } catch (err) {
+            console.error('구독 정보 로드 실패:', err);
+            document.getElementById('centerSubscriptionStatus').value = '정보 없음';
+            document.getElementById('centerNextBilling').value = '-';
+        }
+
+        // 초대 코드 목록 로드
+        loadInviteCodes(centerID);
+
+    } catch (error) {
+        console.error('센터 정보 로드 실패:', error);
+        alert('센터 정보를 불러오는 중 오류가 발생했습니다.');
+    }
+}
+
+// 초대 코드 목록 로드
+async function loadInviteCodes(centerID) {
+    const container = document.getElementById('inviteCodesContainer');
+
+    try {
+        const res = await fetch(`/api/centers/${centerID}/invite-codes`, { credentials: 'include' });
+        const result = await res.json();
+
+        if (!result.success) {
+            container.innerHTML = '<p class="text-danger text-center">초대 코드를 불러올 수 없습니다.</p>';
+            return;
+        }
+
+        const codes = result.inviteCodes || [];
+
+        if (codes.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-3">
+                    <i class="bi bi-key" style="font-size: 2rem;"></i>
+                    <p class="mb-0 mt-2">발급된 초대 코드가 없습니다.</p>
+                    <small>새 코드 발급 버튼을 눌러 코드를 생성하세요.</small>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '<div class="list-group">';
+        codes.forEach(code => {
+            const isExpired = code.isExpired;
+            const isMaxedOut = code.isMaxedOut;
+            const isInvalid = isExpired || isMaxedOut;
+
+            html += `
+                <div class="list-group-item ${isInvalid ? 'bg-light' : ''}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 font-monospace fw-bold">${code.code}</h6>
+                            <small class="text-muted">
+                                ${code.current_uses || 0} / ${code.max_uses} 사용
+                                | 만료: ${new Date(code.expires_at).toLocaleDateString('ko-KR')}
+                            </small>
+                            ${isExpired ? '<span class="badge bg-danger ms-2">만료됨</span>' : ''}
+                            ${isMaxedOut ? '<span class="badge bg-warning ms-2">사용 완료</span>' : ''}
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="copyInviteCode('${code.code}')">
+                                <i class="bi bi-clipboard"></i> 복사
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteInviteCode(${centerID}, ${code.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('초대 코드 로드 실패:', error);
+        container.innerHTML = '<p class="text-danger text-center">초대 코드를 불러오는 중 오류가 발생했습니다.</p>';
+    }
+}
+
+// 새 센터 코드 발급
+async function generateNewCenterCode() {
+    try {
+        const sessionRes = await fetch('/api/get-user-session', { credentials: 'include' });
+        const sessionData = await sessionRes.json();
+
+        if (!sessionData.centerID) {
+            alert('센터 정보를 찾을 수 없습니다.');
+            return;
+        }
+
+        const centerID = sessionData.centerID;
+
+        const res = await fetch(`/api/centers/${centerID}/invite-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                expiresInDays: 30,
+                maxUses: 100
+            })
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+            alert(`새 초대 코드가 발급되었습니다: ${result.inviteCode.code}`);
+            loadInviteCodes(centerID);
+        } else {
+            alert('초대 코드 발급에 실패했습니다: ' + result.message);
+        }
+
+    } catch (error) {
+        console.error('초대 코드 발급 실패:', error);
+        alert('초대 코드 발급 중 오류가 발생했습니다.');
+    }
+}
+
+// 초대 코드 복사
+function copyInviteCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        alert(`초대 코드가 복사되었습니다: ${code}`);
+    }).catch(err => {
+        console.error('복사 실패:', err);
+        alert('복사에 실패했습니다.');
+    });
+}
+
+// 초대 코드 삭제
+async function deleteInviteCode(centerID, codeId) {
+    if (!confirm('이 초대 코드를 삭제하시겠습니까?')) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/centers/${centerID}/invite-codes/${codeId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+            alert('초대 코드가 삭제되었습니다.');
+            loadInviteCodes(centerID);
+        } else {
+            alert('초대 코드 삭제에 실패했습니다: ' + result.message);
+        }
+
+    } catch (error) {
+        console.error('초대 코드 삭제 실패:', error);
+        alert('초대 코드 삭제 중 오류가 발생했습니다.');
+    }
+}
+
+// 바이트를 읽기 쉬운 형식으로 변환
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
