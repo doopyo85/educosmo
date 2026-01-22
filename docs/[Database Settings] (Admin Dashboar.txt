@@ -1,0 +1,28 @@
+[Database Settings] (Admin Dashboard 및 Subscription 기능에 필수)
+
+DB_HOST: 데이터베이스 호스트 (예: localhost 또는 IP)
+DB_USER: 데이터베이스 사용자 이름
+DB_NAME: 데이터베이스 이름 (예: educosmo)
+DB_PORT: 데이터베이스 포트 (기본: 3306) (참고: DB 비밀번호는 현재 코드(lib_login/db.js)에 하드코딩 되어 있습니다.)
+[Server Settings]
+
+PORT: 서버 포트 (예: 3000)
+NODE_ENV: development 또는 production
+SERVICE_TYPE: main (기본값)
+BASE_URL: (예: https://app.cosmoedu.co.kr)
+[Redis Settings] (세션 관리용)
+
+REDIS_URL: (예: redis://localhost:6379)
+REDIS_PREFIX: (예: educosmo:sess:)
+EXPRESS_SESSION_SECRET: 세션 암호화 키
+[Object Storage (NCP/AWS)] (블로그 및 멀티미디어 업로드용)
+
+AWS_ACCESS_KEY_ID: NCP/AWS 액세스 키
+AWS_SECRET_ACCESS_KEY: NCP/AWS 시크릿 키
+AWS_REGION: (예: ap-northeast-2)
+BUCKET_NAME: (예: educodingnplaycontents)
+NCP_ENDPOINT: (예: https://kr.object.ncloudstorage.com)
+[Google API] (기존 기능 유지)
+
+GOOGLE_API_KEY: Google API Key
+SPREADSHEET_ID: Google Sheet ID
