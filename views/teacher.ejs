@@ -45,18 +45,15 @@
 
                 <!-- 수업 자료 (Submenu) -->
                 <div class="board-nav-group mb-2">
-                    <div class="board-category-item text-dark fw-bold"
-                        style="cursor: default; background: none;">
+                    <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">
                         <i class="bi bi-journal-text me-2"></i> 수업 자료
                     </div>
                     <div class="d-flex flex-column gap-1">
-                        <a href="/teacher/class-materials/lessons"
-                            class="board-category-item ps-5 py-2"
+                        <a href="/teacher/class-materials/lessons" class="board-category-item ps-5 py-2"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             교안 및 영상
                         </a>
-                        <a href="/teacher/class-materials/downloads"
-                            class="board-category-item ps-5 py-2"
+                        <a href="/teacher/class-materials/downloads" class="board-category-item ps-5 py-2"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             다운로드 폴더
                         </a>
@@ -65,23 +62,19 @@
 
                 <!-- 진로 진학 (Submenu) -->
                 <div class="board-nav-group mb-2">
-                    <div class="board-category-item text-dark fw-bold"
-                        style="cursor: default; background: none;">
+                    <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">
                         <i class="bi bi-signpost-split me-2"></i> 진로 진학
                     </div>
                     <div class="d-flex flex-column gap-1">
-                        <a href="/teacher/career-info/university"
-                            class="board-category-item ps-5 py-2"
+                        <a href="/teacher/career-info/university" class="board-category-item ps-5 py-2"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             대학정보
                         </a>
-                        <a href="/teacher/career-info/cutlines"
-                            class="board-category-item ps-5 py-2"
+                        <a href="/teacher/career-info/cutlines" class="board-category-item ps-5 py-2"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             입결라인
                         </a>
-                        <a href="/teacher/career-info/blog"
-                            class="board-category-item ps-5 py-2"
+                        <a href="/teacher/career-info/blog" class="board-category-item ps-5 py-2"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             블로그
                         </a>
@@ -90,33 +83,37 @@
 
                 <!-- 🔥 구독 상태 카드 -->
                 <% if (subscription) { %>
-                <div class="subscription-status-card mt-3 p-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white;">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div class="fw-bold"><i class="bi bi-star-fill me-2"></i>구독 상태</div>
-                        <span class="badge" style="background: rgba(255,255,255,0.3);">
-                            <% if (subscription.status === 'trial') { %>무료 체험<% } %>
-                            <% if (subscription.status === 'active') { %>활성<% } %>
-                            <% if (subscription.status === 'suspended') { %>일시정지<% } %>
-                            <% if (subscription.status === 'cancelled') { %>취소됨<% } %>
-                        </span>
+                    <div class="subscription-status-card mt-3 p-3"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="fw-bold"><i class="bi bi-star-fill me-2"></i>구독 상태</div>
+                            <span class="badge" style="background: rgba(255,255,255,0.3);">
+                                <% if (subscription.status==='trial' ) { %>무료 체험<% } %>
+                                        <% if (subscription.status==='active' ) { %>활성<% } %>
+                                                <% if (subscription.status==='suspended' ) { %>일시정지<% } %>
+                                                        <% if (subscription.status==='cancelled' ) { %>취소됨<% } %>
+                            </span>
+                        </div>
+                        <div class="small mb-2">
+                            <% if (subscription.plan_type==='trial' ) { %>Trial 플랜<% } %>
+                                    <% if (subscription.plan_type==='standard' ) { %>Standard 플랜<% } %>
+                                            <% if (subscription.plan_type==='professional' ) { %>Professional 플랜<% } %>
+                        </div>
+                        <div class="small opacity-75 mb-2">
+                            <% if (subscription.status==='trial' ) { %>
+                                체험 종료: <%= subscription.trial_ends_at ? new
+                                    Date(subscription.trial_ends_at).toLocaleDateString('ko-KR') : '-' %>
+                                    <% } else { %>
+                                        다음 결제: <%= subscription.next_billing_date ? new
+                                            Date(subscription.next_billing_date).toLocaleDateString('ko-KR') : '-' %>
+                                            <% } %>
+                        </div>
+                        <a href="/subscription/manage" class="btn btn-light btn-sm w-100 mt-2"
+                            style="font-weight: 600;">
+                            <i class="bi bi-gear me-1"></i>구독 관리
+                        </a>
                     </div>
-                    <div class="small mb-2">
-                        <% if (subscription.plan_type === 'trial') { %>Trial 플랜<% } %>
-                        <% if (subscription.plan_type === 'standard') { %>Standard 플랜<% } %>
-                        <% if (subscription.plan_type === 'professional') { %>Professional 플랜<% } %>
-                    </div>
-                    <div class="small opacity-75 mb-2">
-                        <% if (subscription.status === 'trial') { %>
-                            체험 종료: <%= subscription.trial_end_date ? new Date(subscription.trial_end_date).toLocaleDateString('ko-KR') : '-' %>
-                        <% } else { %>
-                            다음 결제: <%= subscription.next_billing_date ? new Date(subscription.next_billing_date).toLocaleDateString('ko-KR') : '-' %>
-                        <% } %>
-                    </div>
-                    <a href="/subscription/manage" class="btn btn-light btn-sm w-100 mt-2" style="font-weight: 600;">
-                        <i class="bi bi-gear me-1"></i>구독 관리
-                    </a>
-                </div>
-                <% } %>
+                    <% } %>
             </div>
 
             <!-- 메인 콘텐츠 영역 -->

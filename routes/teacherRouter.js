@@ -677,10 +677,9 @@ router.get('/', requireTeacher, async (req, res) => {
         let subscription = null;
         if (req.session.centerID) {
             const subscriptionQuery = `
-                SELECT id, plan_type, status, trial_end_date, subscription_start_date,
-                       subscription_end_date, next_billing_date
+                SELECT id, plan_type, status, trial_ends_at, next_billing_date
                 FROM center_subscriptions
-                WHERE centerID = ?
+                WHERE center_id = ?
                 ORDER BY created_at DESC
                 LIMIT 1
             `;
