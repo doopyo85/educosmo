@@ -313,12 +313,39 @@ router.get('/register', async (req, res) => {
 
         <!-- 탭 메뉴 -->
         <div class="tab-container">
-            <button class="tab active" onclick="switchTab('invite')">초대 코드로 가입</button>
-            <button class="tab" onclick="switchTab('general')">일반 가입</button>
+            <button class="tab active" onclick="switchTab('general')">일반 가입</button>
+            <button class="tab" onclick="switchTab('invite')">초대 코드로 가입</button>
         </div>
 
-        <!-- 탭 1: 초대 코드 가입 -->
-        <div id="invite-tab" class="tab-content active">
+        <!-- 탭 1: 일반 가입 -->
+        <div id="general-tab" class="tab-content active">
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">개인 학생으로 가입합니다</p>
+
+            <form id="generalRegisterForm">
+                <input class="login" type="text" name="userID" id="generalUserID" placeholder="아이디" required>
+                <input class="login" type="password" name="password" id="generalPassword" placeholder="비밀번호 (8자 이상)" required minlength="8">
+                <input class="login" type="password" name="passwordConfirm" id="generalPasswordConfirm" placeholder="비밀번호 확인" required>
+                <input class="login" type="email" name="email" id="generalEmail" placeholder="이메일" required>
+                <input class="login" type="text" name="name" id="generalName" placeholder="이름" required>
+                <input class="login" type="tel" name="phone" id="generalPhone" placeholder="전화번호 (선택)">
+
+                <div style="margin: 10px 0;">
+                    <input type="checkbox" id="generalPrivacyAgreement" required>
+                    <label for="generalPrivacyAgreement" style="font-size: 12px;">
+                        개인정보 취급방침에 동의합니다. <a href="#" id="generalPrivacyPolicyLink">자세히 보기</a>
+                    </label>
+                </div>
+
+                <input class="btn" type="submit" value="가입하기" style="width: 100%; padding: 10px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            </form>
+
+            <p style="text-align: center; margin-top: 15px;">
+                <a href="/auth/register-center" style="color: #2196F3; text-decoration: none;">센터를 개설하시나요?</a>
+            </p>
+        </div>
+
+        <!-- 탭 2: 초대 코드 가입 -->
+        <div id="invite-tab" class="tab-content">
             <p style="text-align: center; color: #666; margin-bottom: 30px;">학원/학교에서 받은 초대 코드를 입력하세요</p>
 
             <!-- Step 1: 초대 코드 입력 -->
@@ -362,33 +389,6 @@ router.get('/register', async (req, res) => {
                 <a href="/auth/register-center" style="color: #2196F3; text-decoration: none;">센터를 개설하시나요?</a>
             </p>
         </div>
-        </div>
-
-        <!-- 탭 2: 일반 가입 -->
-        <div id="general-tab" class="tab-content">
-            <p style="text-align: center; color: #666; margin-bottom: 30px;">개인 학생으로 가입합니다</p>
-
-            <form id="generalRegisterForm">
-                <input class="login" type="text" name="userID" id="generalUserID" placeholder="아이디" required>
-                <input class="login" type="password" name="password" id="generalPassword" placeholder="비밀번호 (8자 이상)" required minlength="8">
-                <input class="login" type="password" name="passwordConfirm" id="generalPasswordConfirm" placeholder="비밀번호 확인" required>
-                <input class="login" type="email" name="email" id="generalEmail" placeholder="이메일" required>
-                <input class="login" type="text" name="name" id="generalName" placeholder="이름" required>
-                <input class="login" type="tel" name="phone" id="generalPhone" placeholder="전화번호 (선택)">
-
-                <div style="margin: 10px 0;">
-                    <input type="checkbox" id="generalPrivacyAgreement" required>
-                    <label for="generalPrivacyAgreement" style="font-size: 12px;">
-                        개인정보 취급방침에 동의합니다. <a href="#" id="generalPrivacyPolicyLink">자세히 보기</a>
-                    </label>
-                </div>
-
-                <input class="btn" type="submit" value="가입하기" style="width: 100%; padding: 10px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            </form>
-
-            <p style="text-align: center; margin-top: 15px;">
-                <a href="/auth/register-center" style="color: #2196F3; text-decoration: none;">센터를 개설하시나요?</a>
-            </p>
         </div>
 
             <!-- 개인정보 처리방침 모달 추가 -->
