@@ -319,7 +319,13 @@ router.get('/register', async (req, res) => {
 
         <!-- 탭 1: 일반 가입 -->
         <div id="general-tab" class="tab-content active">
-            <p style="text-align: center; color: #666; margin-bottom: 30px;">개인 학생으로 가입합니다</p>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                <strong>개인 학생</strong>으로 가입합니다
+            </p>
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 20px; font-size: 13px; color: #666;">
+                📦 <strong>무료 계정:</strong> 512MB 스토리지, 블로그 포스트 10개<br>
+                💡 학원/학교 소속이라면 <strong>"초대 코드로 가입"</strong> 탭을 이용하세요
+            </div>
 
             <form id="generalRegisterForm">
                 <input class="login" type="text" name="userID" id="generalUserID" placeholder="아이디" required>
@@ -346,7 +352,13 @@ router.get('/register', async (req, res) => {
 
         <!-- 탭 2: 초대 코드 가입 -->
         <div id="invite-tab" class="tab-content">
-            <p style="text-align: center; color: #666; margin-bottom: 30px;">학원/학교에서 받은 초대 코드를 입력하세요</p>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                <strong>센터 소속 학생</strong>으로 가입합니다
+            </p>
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 20px; font-size: 13px; color: #666;">
+                🎓 학원/학교에서 받은 <strong>8자리 초대 코드</strong>를 입력하세요<br>
+                📚 센터의 스토리지 및 모든 기능을 이용할 수 있습니다
+            </div>
 
             <!-- Step 1: 초대 코드 입력 -->
             <div id="step1">
