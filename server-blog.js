@@ -119,8 +119,9 @@ app.get('/', async (req, res) => {
             FROM blog_posts 
             WHERE blog_id = ? AND blog_type = ? AND is_published = TRUE
             ORDER BY created_at DESC 
-            LIMIT ? OFFSET ?
-        `, [req.blog.id, req.blogType, limit, offset]);
+            ORDER BY created_at DESC 
+            LIMIT ${limit} OFFSET ${offset}
+        `, [req.blog.id, req.blogType]);
 
         const [countResult] = await queryDatabase(`
             SELECT COUNT(*) as total 
