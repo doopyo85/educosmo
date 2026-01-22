@@ -398,9 +398,9 @@ router.get('/timeline', async (req, res) => {
                     title COLLATE utf8mb4_unicode_ci as title, 
                     created_at, 
                     id, 
-                    excerpt COLLATE utf8mb4_unicode_ci as metadata 
-                FROM user_blog_posts 
-                WHERE user_id = ?
+                    LEFT(REGEXP_REPLACE(content, '<[^>]+>', ''), 100) COLLATE utf8mb4_unicode_ci as metadata 
+                FROM blog_posts 
+                WHERE author_id = ? AND blog_type = 'user' AND is_published = 1
 
                 UNION ALL
 
@@ -612,9 +612,9 @@ router.get('/student/:id', async (req, res) => {
                     title COLLATE utf8mb4_unicode_ci as title, 
                     created_at, 
                     id, 
-                    excerpt COLLATE utf8mb4_unicode_ci as metadata 
-                FROM user_blog_posts 
-                WHERE user_id = ?
+                    LEFT(REGEXP_REPLACE(content, '<[^>]+>', ''), 100) COLLATE utf8mb4_unicode_ci as metadata 
+                FROM blog_posts 
+                WHERE author_id = ? AND blog_type = 'user' AND is_published = 1
 
                 UNION ALL
 
