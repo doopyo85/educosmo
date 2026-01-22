@@ -279,6 +279,22 @@ const jupyterTarget = `http://${JUPYTER_HOST}:${JUPYTER_PORT}`;
 
 console.log(`Setting up Jupyter Proxy to: ${jupyterTarget} (Env: ${process.env.JUPYTER_HOST}:${process.env.JUPYTER_PORT})`);
 
+// 🔥 Blog Server Proxy (Express로 라우팅 처리)
+// Apache/Nginx에서 3000번으로 모든 트래픽을 보내면 여기서 분기
+app.use((req, res, next) => {
+  const host = req.get('host') || '';
+  if (host.startsWith('blog.') || host.includes('blog.app.codingnplay.co.kr') || host.includes('blog.pong2.app')) {
+    console.log(`Proxying blog request: ${host}${req.url} -> http://localhost:3001`);
+    return createProxyMiddleware({
+      target: 'http://localhost:3001',
+      changeOrigin: true,
+      ws: true,
+      logLevel: 'debug'
+    })(req, res, next);
+  }
+  next();
+});
+
 app.use('/jupyter', createProxyMiddleware({
   target: jupyterTarget,
   changeOrigin: true,

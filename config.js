@@ -140,6 +140,11 @@ const CORS = {
     // 🔥 Pong2 App
     'https://pong2.app',
     'https://www.pong2.app',
+    'https://blog.pong2.app', // Blog Domain
+
+    // 🔥 Blog Domains
+    'https://blog.app.codingnplay.co.kr',
+    'http://blog.app.codingnplay.co.kr',
 
     // 🔥 Server IP (Direct Access)
     'http://101.79.11.188',
@@ -255,7 +260,11 @@ const CSP = {
     "https://app.codingnplay.co.kr",
     "https://app.codingnplay.co.kr:6080",
     "http://app.codingnplay.co.kr:6080",
+    "https://app.codingnplay.co.kr:6080",
+    "http://app.codingnplay.co.kr:6080",
     "https://app.codingnplay.co.kr/report/",
+    "https://blog.app.codingnplay.co.kr", // Blog Frame
+    "https://blog.pong2.app", // Blog Frame
     // 🔥 cosmoedu 도메인들 추가
     "https://app.cosmoedu.co.kr:8070",
     "https://app.cosmoedu.co.kr:8080",
@@ -301,7 +310,9 @@ const SERVICES = {
   SCRATCH: `${BASE_URL}:8601`,
   ENTRY: `${BASE_URL}:8070`,
   APPINVENTOR: `${BASE_URL}:8888`,
+  APPINVENTOR: `${BASE_URL}:8888`,
   JUPYTER: `${BASE_URL}:8889`,
+  BLOG: `${BASE_URL}:3001`, // Blog Server
 };
 
 // 크론 작업 설정
