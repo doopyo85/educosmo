@@ -2,14 +2,9 @@ const { queryDatabase } = require('../lib_login/db');
 
 async function checkSchema() {
     try {
-        console.log('Checking columns for blog_posts in educodingnplay...');
-        const columns = await queryDatabase(`
-            SELECT COLUMN_NAME 
-            FROM INFORMATION_SCHEMA.COLUMNS 
-            WHERE TABLE_SCHEMA = 'educodingnplay' 
-            AND TABLE_NAME = 'blog_posts'
-        `);
-        console.log('Columns:', columns.map(c => c.COLUMN_NAME).join(', '));
+        console.log('Listing tables in educodingnplay...');
+        const tables = await queryDatabase("SHOW TABLES FROM educodingnplay");
+        console.log('Tables:', tables.map(t => Object.values(t)[0]).join(', '));
         process.exit(0);
     } catch (error) {
         console.error(error);

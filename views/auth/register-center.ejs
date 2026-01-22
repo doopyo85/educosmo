@@ -240,10 +240,6 @@
 </head>
 <body>
     <div class="container">
-        <div class="logo">
-            <img src="/resource/logo.png" alt="코딩앤플레이 로고">
-        </div>
-
         <h2>센터 가입</h2>
         <p class="subtitle">새로운 센터를 등록하고 학생들을 관리하세요</p>
 
@@ -260,7 +256,6 @@
         <!-- Step 1: Basic Info -->
         <form id="step1Form" class="step-form">
             <div class="form-group">
-                <label>아이디 <span class="required">*</span></label>
                 <div class="input-group">
                     <input type="text" name="userID" id="userID" placeholder="4~20자 영문, 숫자" required>
                     <button type="button" id="checkUserIDBtn">중복확인</button>
@@ -269,35 +264,29 @@
             </div>
 
             <div class="form-group">
-                <label>비밀번호 <span class="required">*</span></label>
                 <input type="password" name="password" id="password" placeholder="8자 이상" required>
             </div>
 
             <div class="form-group">
-                <label>비밀번호 확인 <span class="required">*</span></label>
                 <input type="password" name="passwordConfirm" id="passwordConfirm" placeholder="비밀번호 재입력" required>
                 <span id="passwordStatus" class="help-text"></span>
             </div>
 
             <div class="form-group">
-                <label>이름 <span class="required">*</span></label>
                 <input type="text" name="name" id="name" placeholder="홍길동" required>
             </div>
 
             <div class="form-group">
-                <label>이메일 <span class="required">*</span></label>
                 <input type="email" name="email" id="email" placeholder="example@domain.com" required>
                 <p class="help-text">비밀번호 찾기 및 알림 수신에 사용됩니다</p>
             </div>
 
             <div class="form-group">
-                <label>센터명 <span class="required">*</span></label>
                 <input type="text" name="centerName" id="centerName" placeholder="○○ 코딩학원" required>
                 <p class="help-text">등록하실 센터/학원/기관의 이름을 입력하세요</p>
             </div>
 
             <div class="form-group">
-                <label>역할 <span class="required">*</span></label>
                 <select name="role" id="role" required>
                     <option value="manager">센터장</option>
                     <option value="teacher">강사</option>
@@ -312,7 +301,6 @@
         <!-- Step 2: Phone Verification -->
         <form id="step2Form" class="step-form hidden">
             <div class="form-group">
-                <label>휴대폰 번호 <span class="required">*</span></label>
                 <div class="input-group">
                     <input type="tel" name="phone" id="phone" placeholder="010-1234-5678" required>
                     <button type="button" id="sendSMSBtn">인증번호 전송</button>
@@ -321,7 +309,6 @@
             </div>
 
             <div class="form-group hidden" id="verificationCodeGroup">
-                <label>인증번호 <span class="required">*</span></label>
                 <div class="input-group">
                     <input type="text" name="verificationCode" id="verificationCode" placeholder="6자리 숫자" maxlength="6">
                     <button type="button" id="verifyCodeBtn">인증 확인</button>

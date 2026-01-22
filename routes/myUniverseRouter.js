@@ -395,12 +395,13 @@ router.get('/timeline', async (req, res) => {
                 -- 2. Blog Posts
                 SELECT 
                     'blog' as type, 
-                    title COLLATE utf8mb4_unicode_ci as title, 
-                    created_at, 
-                    id, 
-                    LEFT(REGEXP_REPLACE(content, '<[^>]+>', ''), 100) COLLATE utf8mb4_unicode_ci as metadata 
-                FROM blog_posts 
-                WHERE author_id = ? AND blog_type = 'user' AND is_published = 1
+                    bp.title COLLATE utf8mb4_unicode_ci as title, 
+                    bp.created_at, 
+                    bp.id, 
+                    bp.excerpt COLLATE utf8mb4_unicode_ci as metadata 
+                FROM blog_posts bp
+                JOIN user_blogs ub ON bp.blog_id = ub.id AND bp.blog_type = 'user'
+                WHERE ub.user_id = ? AND bp.is_published = 1
 
                 UNION ALL
 
@@ -611,12 +612,13 @@ router.get('/student/:id', async (req, res) => {
                 -- 2. Blog Posts
                 SELECT 
                     'blog' as type, 
-                    title COLLATE utf8mb4_unicode_ci as title, 
-                    created_at, 
-                    id, 
-                    LEFT(REGEXP_REPLACE(content, '<[^>]+>', ''), 100) COLLATE utf8mb4_unicode_ci as metadata 
-                FROM blog_posts 
-                WHERE author_id = ? AND blog_type = 'user' AND is_published = 1
+                    bp.title COLLATE utf8mb4_unicode_ci as title, 
+                    bp.created_at, 
+                    bp.id, 
+                    bp.excerpt COLLATE utf8mb4_unicode_ci as metadata 
+                FROM blog_posts bp
+                JOIN user_blogs ub ON bp.blog_id = ub.id AND bp.blog_type = 'user'
+                WHERE ub.user_id = ? AND bp.is_published = 1
 
                 UNION ALL
 

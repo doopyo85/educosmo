@@ -75,7 +75,7 @@ router.get('/login', (req, res) => {
         <input class="btn" type="submit" value="로그인">
       </form>
       <p class="register-link">
-        계정이 없으신가요? <a href="/auth/register">학생 가입</a> / <a href="/auth/register-center">센터 개설</a>
+        계정이 없으신가요? <a href="/auth/register">회원가입</a> / <a href="/auth/register-center">교사가입</a>
       </p>
 
       <script>
@@ -284,16 +284,10 @@ router.get('/register', async (req, res) => {
     const title = '회원 가입';
 
     const html = template.HTML(title, `
-        <div style="margin-bottom: 20px;">
-            <a href="/auth/login" style="color: #666; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center;">
-                ← 로그인으로 돌아가기
-            </a>
-        </div>
-
         <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">회원 가입</h2>
 
         <form id="registerForm">
-            <input class="login" type="text" name="inviteCode" id="inviteCode" placeholder="센터 코드 (학원/학교에서 받은 센터 코드를 입력하세요) *" required style="text-transform: uppercase;">
+            <input class="login" type="text" name="inviteCode" id="inviteCode" placeholder="센터 코드 (학원/학교에서 받은 센터 코드를 입력) *" required style="text-transform: uppercase;">
             <input type="hidden" name="centerID" id="centerID">
 
             <input class="login" type="text" name="userID" id="userID" placeholder="아이디 *" required>
@@ -313,6 +307,12 @@ router.get('/register', async (req, res) => {
 
             <input class="btn" type="submit" value="가입하기" style="width: 100%; padding: 10px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
         </form>
+
+        <div style="text-align: center; margin-top: 15px;">
+            <a href="/auth/login" style="color: #666; text-decoration: none; font-size: 14px;">
+                ← 로그인으로 돌아가기
+            </a>
+        </div>
 
         <!-- 개인정보 처리방침 모달 추가 -->
             <div id="privacyModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); z-index: 1000;">
