@@ -13,10 +13,11 @@
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    z-index: 1100 !important; /* 높은 z-index 값 */
+    z-index: 9999 !important; /* 높은 z-index 값 */
     border-bottom: 1px solid #dee2e6 !important; /* 🔥 실선 강제 표시 */
     box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; /* 🔥 그림자 강제 표시 */
     margin: 0 !important;
+    overflow: visible !important; /* 드롭다운 잘림 방지 */
 }
 
 /* 🔥 추가: navbar-light 클래스 강화 */
