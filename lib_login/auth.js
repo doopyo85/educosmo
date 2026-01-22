@@ -270,16 +270,59 @@ router.post('/login_process', async (req, res) => {
     }
 });
 
-// 회원가입 페이지 렌더링 (학생 초대 코드 가입)
+// 회원가입 페이지 렌더링 (학생 가입 - 탭 방식)
 router.get('/register', async (req, res) => {
     const title = '학생 가입';
 
     const html = template.HTML(title, `
-        <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">센터 초대 코드로 가입</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 30px;">학원/학교에서 받은 초대 코드를 입력하세요</p>
+        <style>
+            .tab-container {
+                display: flex;
+                margin-bottom: 30px;
+                border-bottom: 2px solid #eee;
+            }
+            .tab {
+                flex: 1;
+                padding: 12px;
+                text-align: center;
+                cursor: pointer;
+                background: transparent;
+                border: none;
+                font-size: 14px;
+                font-weight: 500;
+                color: #666;
+                transition: all 0.3s;
+            }
+            .tab:hover {
+                color: #000;
+            }
+            .tab.active {
+                color: #000;
+                border-bottom: 3px solid #000;
+                margin-bottom: -2px;
+            }
+            .tab-content {
+                display: none;
+            }
+            .tab-content.active {
+                display: block;
+            }
+        </style>
 
-        <!-- Step 1: 초대 코드 입력 -->
-        <div id="step1">
+        <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">학생 가입</h2>
+
+        <!-- 탭 메뉴 -->
+        <div class="tab-container">
+            <button class="tab active" onclick="switchTab('invite')">초대 코드로 가입</button>
+            <button class="tab" onclick="switchTab('general')">일반 가입</button>
+        </div>
+
+        <!-- 탭 1: 초대 코드 가입 -->
+        <div id="invite-tab" class="tab-content active">
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">학원/학교에서 받은 초대 코드를 입력하세요</p>
+
+            <!-- Step 1: 초대 코드 입력 -->
+            <div id="step1">
             <form id="codeVerifyForm">
                 <input class="login" type="text" name="inviteCode" id="inviteCode" placeholder="초대 코드 (8자리)" maxlength="8" required style="text-transform: uppercase;">
                 <button type="submit" class="btn" style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">코드 확인</button>
@@ -309,6 +352,34 @@ router.get('/register', async (req, res) => {
                     <input type="checkbox" id="privacyAgreement" required>
                     <label for="privacyAgreement" style="font-size: 12px;">
                         개인정보 취급방침에 동의합니다. <a href="#" id="privacyPolicyLink">자세히 보기</a>
+                    </label>
+                </div>
+
+                <input class="btn" type="submit" value="가입하기" style="width: 100%; padding: 10px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            </form>
+
+            <p style="text-align: center; margin-top: 15px;">
+                <a href="/auth/register-center" style="color: #2196F3; text-decoration: none;">센터를 개설하시나요?</a>
+            </p>
+        </div>
+        </div>
+
+        <!-- 탭 2: 일반 가입 -->
+        <div id="general-tab" class="tab-content">
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">개인 학생으로 가입합니다</p>
+
+            <form id="generalRegisterForm">
+                <input class="login" type="text" name="userID" id="generalUserID" placeholder="아이디" required>
+                <input class="login" type="password" name="password" id="generalPassword" placeholder="비밀번호 (8자 이상)" required minlength="8">
+                <input class="login" type="password" name="passwordConfirm" id="generalPasswordConfirm" placeholder="비밀번호 확인" required>
+                <input class="login" type="email" name="email" id="generalEmail" placeholder="이메일" required>
+                <input class="login" type="text" name="name" id="generalName" placeholder="이름" required>
+                <input class="login" type="tel" name="phone" id="generalPhone" placeholder="전화번호 (선택)">
+
+                <div style="margin: 10px 0;">
+                    <input type="checkbox" id="generalPrivacyAgreement" required>
+                    <label for="generalPrivacyAgreement" style="font-size: 12px;">
+                        개인정보 취급방침에 동의합니다. <a href="#" id="generalPrivacyPolicyLink">자세히 보기</a>
                     </label>
                 </div>
 
@@ -362,6 +433,17 @@ router.get('/register', async (req, res) => {
                 </div>
             </div>
             <script>
+                // 탭 전환 함수
+                function switchTab(tabName) {
+                    // 모든 탭과 컨텐츠 비활성화
+                    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+                    // 선택된 탭과 컨텐츠 활성화
+                    document.querySelector('.tab-container .tab:nth-child(' + (tabName === 'invite' ? '1' : '2') + ')').classList.add('active');
+                    document.getElementById(tabName + '-tab').classList.add('active');
+                }
+
                 // Step 1: 초대 코드 확인
                 document.getElementById('codeVerifyForm').addEventListener('submit', async function(event) {
                     event.preventDefault();
@@ -449,15 +531,70 @@ router.get('/register', async (req, res) => {
                     }
                 });
 
+                // 일반 가입 제출
+                document.getElementById('generalRegisterForm').addEventListener('submit', async function(event) {
+                    event.preventDefault();
+
+                    if (!document.getElementById('generalPrivacyAgreement').checked) {
+                        alert('개인정보 취급방침에 동의해야 합니다.');
+                        return;
+                    }
+
+                    const password = document.getElementById('generalPassword').value;
+                    const passwordConfirm = document.getElementById('generalPasswordConfirm').value;
+
+                    if (password !== passwordConfirm) {
+                        alert('비밀번호가 일치하지 않습니다.');
+                        return;
+                    }
+
+                    const formData = new FormData(this);
+                    const data = Object.fromEntries(formData.entries());
+                    delete data.passwordConfirm;
+                    data.role = 'student'; // 역할을 학생으로 고정
+
+                    const submitBtn = this.querySelector('input[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.value = '가입 처리 중...';
+
+                    try {
+                        const response = await fetch('/auth/register-general', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+
+                        if (result.error) {
+                            alert(result.error);
+                            submitBtn.disabled = false;
+                            submitBtn.value = '가입하기';
+                        } else {
+                            alert(result.message);
+                            window.location.href = '/auth/login';
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('회원가입 중 오류가 발생했습니다.');
+                        submitBtn.disabled = false;
+                        submitBtn.value = '가입하기';
+                    }
+                });
+
                 // 개인정보 처리방침 모달 관련 스크립트
                 const modal = document.getElementById('privacyModal');
                 const privacyLink = document.getElementById('privacyPolicyLink');
+                const generalPrivacyLink = document.getElementById('generalPrivacyPolicyLink');
                 const closeBtn = document.getElementsByClassName('close')[0];
 
-                privacyLink.onclick = function(e) {
+                function openModal(e) {
                     e.preventDefault();
                     modal.style.display = 'block';
                 }
+
+                if (privacyLink) privacyLink.onclick = openModal;
+                if (generalPrivacyLink) generalPrivacyLink.onclick = openModal;
 
                 closeBtn.onclick = function() {
                     modal.style.display = 'none';
@@ -567,6 +704,69 @@ router.post('/register', async (req, res) => {
 
     } catch (error) {
         console.error('Registration error:', error);
+        res.status(500).json({ error: '회원가입 중 오류가 발생했습니다.' });
+    }
+});
+
+// 일반 학생 가입 처리 (초대 코드 없이)
+router.post('/register-general', async (req, res) => {
+    try {
+        const { userID, password, email, name, phone, role } = req.body;
+
+        // 필수 필드 검증
+        if (!userID || userID.trim() === '') {
+            return res.status(400).json({ error: '아이디를 입력해주세요.' });
+        }
+
+        if (!password || password.length < 8) {
+            return res.status(400).json({ error: '비밀번호는 8자 이상이어야 합니다.' });
+        }
+
+        if (!name || name.trim() === '') {
+            return res.status(400).json({ error: '이름을 입력해주세요.' });
+        }
+
+        if (!email || email.trim() === '') {
+            return res.status(400).json({ error: '이메일을 입력해주세요.' });
+        }
+
+        // userID 중복 체크
+        const checkDuplicateQuery = 'SELECT id FROM Users WHERE userID = ?';
+        const existingUser = await queryDatabase(checkDuplicateQuery, [userID]);
+
+        if (existingUser.length > 0) {
+            return res.status(400).json({ error: '이미 사용 중인 아이디입니다.' });
+        }
+
+        // 이메일 중복 체크
+        const checkEmailQuery = 'SELECT id FROM Users WHERE email = ?';
+        const existingEmail = await queryDatabase(checkEmailQuery, [email]);
+
+        if (existingEmail.length > 0) {
+            return res.status(400).json({ error: '이미 사용 중인 이메일입니다.' });
+        }
+
+        // 비밀번호 해싱
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 사용자 생성 (account_type='free', role='student')
+        const insertUserQuery = `
+            INSERT INTO Users (userID, password, email, name, phone, role, account_type, storage_limit_bytes, blog_post_limit)
+            VALUES (?, ?, ?, ?, ?, 'student', 'free', 536870912, 10)
+        `;
+        const userValues = [userID, hashedPassword, email, name, phone || null];
+
+        await queryDatabase(insertUserQuery, userValues);
+
+        console.log(`✅ 일반 학생 가입 완료: ${userID} (account_type: free, 512MB)`);
+
+        res.status(201).json({
+            message: '회원가입이 완료되었습니다. 로그인해주세요.',
+            success: true
+        });
+
+    } catch (error) {
+        console.error('General registration error:', error);
         res.status(500).json({ error: '회원가입 중 오류가 발생했습니다.' });
     }
 });

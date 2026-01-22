@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f5f5f5;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -25,9 +25,10 @@
             background: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             max-width: 600px;
             width: 100%;
+            border: 1px solid #e0e0e0;
         }
 
         .logo {
@@ -73,13 +74,13 @@
         }
 
         .step.active {
-            background: #667eea;
+            background: #000;
             color: white;
             font-weight: bold;
         }
 
         .step.completed {
-            background: #4CAF50;
+            background: #666;
             color: white;
         }
 
@@ -114,7 +115,7 @@
 
         input:focus, select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #000;
         }
 
         .input-group {
@@ -128,7 +129,7 @@
 
         .input-group button {
             padding: 12px 20px;
-            background: #667eea;
+            background: #000;
             color: white;
             border: none;
             border-radius: 5px;
@@ -138,7 +139,7 @@
         }
 
         .input-group button:hover {
-            background: #5568d3;
+            background: #333;
         }
 
         .input-group button:disabled {
@@ -173,7 +174,7 @@
         .btn-primary {
             width: 100%;
             padding: 15px;
-            background: #667eea;
+            background: #000;
             color: white;
             border: none;
             border-radius: 5px;
@@ -184,7 +185,7 @@
         }
 
         .btn-primary:hover {
-            background: #5568d3;
+            background: #333;
         }
 
         .btn-primary:disabled {
@@ -199,7 +200,7 @@
         }
 
         .back-link a {
-            color: #667eea;
+            color: #666;
             text-decoration: none;
         }
 
