@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>센터 구독 만료 - 코딩앤플레이</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Malgun Gothic', sans-serif;
+        }
+        .suspended-container {
+            max-width: 700px;
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+        h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .features {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        .features h3 {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        .available {
+            color: #4caf50;
+        }
+        .locked {
+            color: #ff6b6b;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 10px;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 10px;
+            margin: 10px 5px;
+        }
+        .contact {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="suspended-container">
+        <div class="icon">🔒</div>
+        <h1>센터 구독이 만료되었습니다</h1>
+        <p class="message">
+            Trial 기간이 종료되어 일부 기능 사용이 제한됩니다.<br>
+            Standard 플랜을 구독하시면 모든 기능을 다시 이용하실 수 있습니다.
+        </p>
+
+        <div class="features">
+            <h3><i class="bi bi-check-circle-fill available"></i> 계속 사용 가능한 기능</h3>
+            <ul class="feature-list">
+                <li><span class="available">✓</span> 커뮤니티 (아지트, 광장, 갤러리)</li>
+                <li><span class="available">✓</span> 포트폴리오 (작품 공유)</li>
+                <li><span class="available">✓</span> 개인 블로그</li>
+            </ul>
+        </div>
+
+        <div class="features">
+            <h3><i class="bi bi-lock-fill locked"></i> 제한된 기능</h3>
+            <ul class="feature-list">
+                <li><span class="locked">✕</span> Portal (학습 자료)</li>
+                <li><span class="locked">✕</span> Entry/Scratch/Python IDE</li>
+                <li><span class="locked">✕</span> CT 문제 은행</li>
+                <li><span class="locked">✕</span> 센터 클라우드보드</li>
+                <li><span class="locked">✕</span> Teacher Dashboard</li>
+            </ul>
+        </div>
+
+        <div style="margin: 40px 0;">
+            <a href="/subscription/plans" class="btn btn-primary">
+                <i class="bi bi-star-fill"></i> 구독 플랜 선택하기
+            </a>
+            <a href="/" class="btn btn-secondary">
+                <i class="bi bi-house-fill"></i> 홈으로 돌아가기
+            </a>
+        </div>
+
+        <div class="contact">
+            <strong><i class="bi bi-question-circle"></i> 프랜차이즈 가맹점이신가요?</strong><br>
+            Professional 플랜 (1년 무료)을 신청하실 수 있습니다.<br>
+            <strong>문의: 070-4337-4337</strong>
+        </div>
+    </div>
+</body>
+</html>

@@ -584,7 +584,8 @@ const routes = {
   'python': require('./routes/pythonRouter'),
   'template': require('./routes/templateRouter'),
   'gallery': require('./routes/galleryRouter'),  // 🔥 갤러리 공유 시스템
-  's3': require('./routes/s3Router')  // 🔥 통합 S3 브라우저
+  's3': require('./routes/s3Router'),  // 🔥 통합 S3 브라우저
+  'subscription': require('./routes/subscriptionRouter')  // 🔥 센터 구독 관리
 };
 
 // 🔥 Python 문제은행 API 라우터
@@ -801,6 +802,16 @@ app.use(checkUnderConstruction);
 // 🔥 Education Access Denied Page (MyUniverse 통합 플랜 Phase 1)
 app.get('/education-access-denied', authenticateUser, (req, res) => {
   res.render('education-access-denied', {
+    userID: req.session.userID,
+    role: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID
+  });
+});
+
+// 🔥 Center Suspended Page (Phase 3 - Trial 만료)
+app.get('/center-suspended', authenticateUser, (req, res) => {
+  res.render('center-suspended', {
     userID: req.session.userID,
     role: req.session.role,
     is_logined: req.session.is_logined,
@@ -1157,6 +1168,10 @@ if (isMain) {
   });
 
   console.log('✅ 통합 일일 정리 Cron 등록 완료 (매일 새벽 2시)');
+
+  // 🔥 Trial 만료 처리 Cron Job (Phase 3)
+  const { startTrialExpiryCron } = require('./lib_cron/trialExpiryCron');
+  startTrialExpiryCron();
 }
 
 app.get('/api/ws/proxy/:port', (req, res) => {

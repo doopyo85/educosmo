@@ -671,13 +671,39 @@ router.get('/api/attendance/monthly', requireTeacher, async (req, res) => {
 // ============================================
 
 // 메인 교사 페이지
-router.get('/', requireTeacher, (req, res) => {
-    res.render('teacher', {
-        userID: req.session.userID,
-        role: req.session.role,
-        is_logined: req.session.is_logined,
-        centerID: req.session.centerID
-    });
+router.get('/', requireTeacher, async (req, res) => {
+    try {
+        // 센터 구독 정보 조회
+        let subscription = null;
+        if (req.session.centerID) {
+            const subscriptionQuery = `
+                SELECT id, plan_type, status, trial_end_date, subscription_start_date,
+                       subscription_end_date, next_billing_date
+                FROM center_subscriptions
+                WHERE centerID = ?
+                ORDER BY created_at DESC
+                LIMIT 1
+            `;
+            [subscription] = await queryDatabase(subscriptionQuery, [req.session.centerID]);
+        }
+
+        res.render('teacher', {
+            userID: req.session.userID,
+            role: req.session.role,
+            is_logined: req.session.is_logined,
+            centerID: req.session.centerID,
+            subscription: subscription  // 구독 정보 전달
+        });
+    } catch (error) {
+        console.error('Error loading teacher dashboard:', error);
+        res.render('teacher', {
+            userID: req.session.userID,
+            role: req.session.role,
+            is_logined: req.session.is_logined,
+            centerID: req.session.centerID,
+            subscription: null
+        });
+    }
 });
 
 // 학생 관리 페이지 (Redirect to default)

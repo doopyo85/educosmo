@@ -75,7 +75,10 @@ router.get('/login', (req, res) => {
         <input class="btn" type="submit" value="로그인">
       </form>
       <p class="register-link">
-        계정이 없으신가요? <a href="/auth/register">회원가입</a>
+        계정이 없으신가요? <a href="/auth/register">학생 가입</a>
+      </p>
+      <p class="register-link" style="margin-top: 10px; font-size: 0.9em;">
+        센터를 개설하시나요? <a href="/auth/register-center">센터 개설하기</a>
       </p>
 
       <script>
@@ -267,39 +270,41 @@ router.post('/login_process', async (req, res) => {
     }
 });
 
-// 회원가입 페이지 렌더링
+// 회원가입 페이지 렌더링 (학생 초대 코드 가입)
 router.get('/register', async (req, res) => {
-    const title = '회원가입';
+    const title = '학생 가입';
 
-    try {
-        const centers = await fetchCentersFromSheet();
-        const centerOptions = centers
-            .map(([id, name]) => `<option value="${id}">${name}</option>`)
-            .join('');
+    const html = template.HTML(title, `
+        <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">센터 초대 코드로 가입</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">학원/학교에서 받은 초대 코드를 입력하세요</p>
 
-        const html = template.HTML(title, `
-            <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">회원정보를 입력하세요</h2>
+        <!-- Step 1: 초대 코드 입력 -->
+        <div id="step1">
+            <form id="codeVerifyForm">
+                <input class="login" type="text" name="inviteCode" id="inviteCode" placeholder="초대 코드 (8자리)" maxlength="8" required style="text-transform: uppercase;">
+                <button type="submit" class="btn" style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">코드 확인</button>
+            </form>
+        </div>
+
+        <!-- Step 2: 회원정보 입력 (코드 확인 후 표시) -->
+        <div id="step2" style="display: none;">
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <p style="margin: 0; font-size: 14px;">
+                    <strong>센터:</strong> <span id="centerName"></span>
+                </p>
+            </div>
+
             <form id="registerForm">
+                <input type="hidden" name="inviteCode" id="inviteCodeHidden">
+                <input type="hidden" name="centerID" id="centerID">
+
                 <input class="login" type="text" name="userID" id="userID" placeholder="아이디" required>
-                <input class="login" type="password" name="password" placeholder="비밀번호" required>
-                <input class="login" type="email" name="email" placeholder="이메일">
-                <input class="login" type="text" name="name" placeholder="이름" required>
-                <input class="login" type="tel" name="phone" placeholder="전화번호">
-                <input class="login" type="date" name="birthdate" placeholder="생년월일">
+                <input class="login" type="password" name="password" id="password" placeholder="비밀번호 (8자 이상)" required minlength="8">
+                <input class="login" type="password" name="passwordConfirm" id="passwordConfirm" placeholder="비밀번호 확인" required>
+                <input class="login" type="email" name="email" id="email" placeholder="이메일">
+                <input class="login" type="text" name="name" id="name" placeholder="이름" required>
+                <input class="login" type="tel" name="phone" id="phone" placeholder="전화번호 (선택)">
 
-                <select class="login" name="role" required>
-                    <option value="student">학생</option>
-                    <option value="teacher">강사</option>
-                    <option value="manager">센터장</option>
-                    <option value="kinder">유치원</option>
-                    <option value="school">학교(기관)</option>
-                </select>
-
-                <select class="login" name="centerID" required>
-                    <option value="">센터를 선택하세요</option>
-                    ${centerOptions}
-                </select>
-                
                 <div style="margin: 10px 0;">
                     <input type="checkbox" id="privacyAgreement" required>
                     <label for="privacyAgreement" style="font-size: 12px;">
@@ -309,6 +314,11 @@ router.get('/register', async (req, res) => {
 
                 <input class="btn" type="submit" value="가입하기" style="width: 100%; padding: 10px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
             </form>
+
+            <p style="text-align: center; margin-top: 15px;">
+                <a href="/auth/register-center" style="color: #2196F3; text-decoration: none;">센터를 개설하시나요?</a>
+            </p>
+        </div>
 
             <!-- 개인정보 처리방침 모달 추가 -->
             <div id="privacyModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); z-index: 1000;">
@@ -352,7 +362,54 @@ router.get('/register', async (req, res) => {
                 </div>
             </div>
             <script>
-                document.getElementById('registerForm').addEventListener('submit', function(event) {
+                // Step 1: 초대 코드 확인
+                document.getElementById('codeVerifyForm').addEventListener('submit', async function(event) {
+                    event.preventDefault();
+
+                    const inviteCode = document.getElementById('inviteCode').value.trim();
+                    const submitBtn = this.querySelector('button[type="submit"]');
+
+                    if (inviteCode.length !== 8) {
+                        alert('초대 코드는 8자리여야 합니다.');
+                        return;
+                    }
+
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '확인 중...';
+
+                    try {
+                        const response = await fetch('/auth/api/verify-invite-code', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ inviteCode })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.error) {
+                            alert(data.error);
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = '코드 확인';
+                            return;
+                        }
+
+                        // 성공: Step 2 표시
+                        document.getElementById('centerName').textContent = data.centerName;
+                        document.getElementById('inviteCodeHidden').value = inviteCode;
+                        document.getElementById('centerID').value = data.centerID;
+                        document.getElementById('step1').style.display = 'none';
+                        document.getElementById('step2').style.display = 'block';
+
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('초대 코드 확인 중 오류가 발생했습니다.');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '코드 확인';
+                    }
+                });
+
+                // Step 2: 회원가입 제출
+                document.getElementById('registerForm').addEventListener('submit', async function(event) {
                     event.preventDefault();
 
                     if (!document.getElementById('privacyAgreement').checked) {
@@ -362,28 +419,37 @@ router.get('/register', async (req, res) => {
 
                     const formData = new FormData(this);
                     const data = Object.fromEntries(formData.entries());
+                    const submitBtn = this.querySelector('button[type="submit"]');
 
-                    fetch('/auth/register', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data),
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.error) {
-                            alert(data.error);
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '가입 처리 중...';
+
+                    try {
+                        const response = await fetch('/auth/register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+
+                        if (result.error) {
+                            alert(result.error);
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = '가입하기';
                         } else {
-                            alert(data.message);
+                            alert(result.message);
                             window.location.href = '/auth/login';
                         }
-                    })
-                    .catch((error) => {
+                    } catch (error) {
                         console.error('Error:', error);
                         alert('회원가입 중 오류가 발생했습니다.');
-                    });
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '가입하기';
+                    }
                 });
-            
-                // 개인정보 처리방침 모달 관련 스크립트 추가
+
+                // 개인정보 처리방침 모달 관련 스크립트
                 const modal = document.getElementById('privacyModal');
                 const privacyLink = document.getElementById('privacyPolicyLink');
                 const closeBtn = document.getElementsByClassName('close')[0];
@@ -411,15 +477,30 @@ router.get('/register', async (req, res) => {
     }
 });
 
-// 회원가입 처리
-// 회원가입 처리 - 중복 체크 로직 추가
+// 회원가입 처리 (초대 코드 기반 학생 가입)
 router.post('/register', async (req, res) => {
     try {
-        const { userID, password, email, name, phone, birthdate, role, centerID } = req.body;
+        const { userID, password, email, name, inviteCode, centerID } = req.body;
 
-        // userID 유효성 검사
+        // 필수 필드 검증
         if (!userID || userID.trim() === '') {
             return res.status(400).json({ error: '아이디를 입력해주세요.' });
+        }
+
+        if (!password || password.length < 8) {
+            return res.status(400).json({ error: '비밀번호는 8자 이상이어야 합니다.' });
+        }
+
+        if (!name || name.trim() === '') {
+            return res.status(400).json({ error: '이름을 입력해주세요.' });
+        }
+
+        if (!inviteCode || inviteCode.trim().length !== 8) {
+            return res.status(400).json({ error: '유효하지 않은 초대 코드입니다.' });
+        }
+
+        if (!centerID) {
+            return res.status(400).json({ error: '센터 정보가 없습니다.' });
         }
 
         // userID 중복 체크
@@ -440,25 +521,114 @@ router.post('/register', async (req, res) => {
             }
         }
 
-        const allowedRoles = Object.values(Roles);
-        if (!allowedRoles.includes(role)) {
-            return res.status(400).json({ error: '유효하지 않은 역할입니다.' });
+        // 초대 코드 재검증 (최종 확인)
+        const codeQuery = `
+            SELECT id, centerID, max_uses, used_count, expires_at
+            FROM center_invite_codes
+            WHERE code = ? AND is_active = 1 AND centerID = ?
+        `;
+        const codeResult = await queryDatabase(codeQuery, [inviteCode, centerID]);
+
+        if (codeResult.length === 0) {
+            return res.status(404).json({ error: '유효하지 않은 초대 코드입니다.' });
         }
 
+        const inviteCodeData = codeResult[0];
+
+        // 만료 및 사용 횟수 재확인
+        if (inviteCodeData.expires_at && new Date(inviteCodeData.expires_at) < new Date()) {
+            return res.status(400).json({ error: '만료된 초대 코드입니다.' });
+        }
+
+        if (inviteCodeData.max_uses && inviteCodeData.used_count >= inviteCodeData.max_uses) {
+            return res.status(400).json({ error: '사용 가능 횟수를 초과한 초대 코드입니다.' });
+        }
+
+        // 비밀번호 해싱
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // 빈 문자열인 경우 null로 변환 (DATE 타입 오류 방지)
-        const finalBirthdate = (birthdate && birthdate.trim() !== '') ? birthdate : null;
+        // 사용자 생성 (account_type='center_student', role='student')
+        const insertUserQuery = `
+            INSERT INTO Users (userID, password, email, name, role, centerID, account_type)
+            VALUES (?, ?, ?, ?, 'student', ?, 'center_student')
+        `;
+        const userValues = [userID, hashedPassword, email || null, name, centerID];
 
-        const query = `INSERT INTO Users (userID, password, email, name, phone, birthdate, role, centerID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-        const values = [userID, hashedPassword, email, name, phone, finalBirthdate, role, centerID];
+        await queryDatabase(insertUserQuery, userValues);
 
-        await queryDatabase(query, values);
+        // 초대 코드 사용 횟수 증가
+        const updateCodeQuery = `
+            UPDATE center_invite_codes
+            SET used_count = used_count + 1
+            WHERE id = ?
+        `;
+        await queryDatabase(updateCodeQuery, [inviteCodeData.id]);
 
-        res.status(201).json({ message: '회원가입이 완료되었습니다.' });
+        res.status(201).json({
+            message: '회원가입이 완료되었습니다. 로그인해주세요.',
+            success: true
+        });
+
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({ error: '회원가입 중 오류가 발생했습니다.' });
+    }
+});
+
+// ========================================
+// 학생 초대 코드 확인 API
+// ========================================
+
+// 초대 코드 검증 API
+router.post('/api/verify-invite-code', async (req, res) => {
+    try {
+        const { inviteCode } = req.body;
+
+        if (!inviteCode || inviteCode.trim().length !== 8) {
+            return res.status(400).json({ error: '유효하지 않은 초대 코드입니다.' });
+        }
+
+        // 초대 코드 조회
+        const codeQuery = `
+            SELECT cic.id, cic.centerID, cic.code, cic.max_uses, cic.used_count, cic.expires_at,
+                   c.center_name, c.status as center_status
+            FROM center_invite_codes cic
+            LEFT JOIN Centers c ON cic.centerID = c.id
+            WHERE cic.code = ? AND cic.is_active = 1
+        `;
+        const codeResult = await queryDatabase(codeQuery, [inviteCode]);
+
+        if (codeResult.length === 0) {
+            return res.status(404).json({ error: '존재하지 않거나 비활성화된 초대 코드입니다.' });
+        }
+
+        const inviteCodeData = codeResult[0];
+
+        // 센터 상태 확인
+        if (inviteCodeData.center_status !== 'ACTIVE') {
+            return res.status(403).json({ error: '현재 이용이 중지된 센터입니다.' });
+        }
+
+        // 만료 확인
+        if (inviteCodeData.expires_at && new Date(inviteCodeData.expires_at) < new Date()) {
+            return res.status(400).json({ error: '만료된 초대 코드입니다.' });
+        }
+
+        // 사용 횟수 확인
+        if (inviteCodeData.max_uses && inviteCodeData.used_count >= inviteCodeData.max_uses) {
+            return res.status(400).json({ error: '사용 가능 횟수를 초과한 초대 코드입니다.' });
+        }
+
+        // 성공 응답
+        res.json({
+            success: true,
+            centerID: inviteCodeData.centerID,
+            centerName: inviteCodeData.center_name
+        });
+
+    } catch (error) {
+        console.error('Error verifying invite code:', error);
+        res.status(500).json({ error: '초대 코드 확인 중 오류가 발생했습니다.' });
     }
 });
 

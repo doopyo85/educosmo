@@ -197,8 +197,215 @@ ${centerName} 센터 가입이 완료되었습니다.
   return await sendEmail(email, subject, htmlBody, textBody);
 }
 
+/**
+ * Trial 만료 7일 전 알림 이메일
+ * @param {string} email - 센터 관리자 이메일
+ * @param {string} centerName - 센터명
+ * @param {string} contactName - 담당자명
+ * @param {string} trialEndDate - Trial 만료일
+ */
+async function sendTrialExpiryReminderEmail(email, centerName, contactName, trialEndDate) {
+  const subject = `[코딩앤플레이] ${centerName} - Trial 만료 7일 전 안내`;
+
+  const formattedDate = new Date(trialEndDate).toLocaleDateString('ko-KR');
+
+  const htmlBody = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .notice { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .plan-card { background: white; border: 2px solid #667eea; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .plan-price { font-size: 2em; color: #667eea; font-weight: bold; }
+        .btn { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 10px 5px; }
+        .footer { text-align: center; color: #999; font-size: 0.9em; margin-top: 30px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>⏰ Trial 만료 안내</h1>
+          <p>무료 체험 기간이 곧 종료됩니다</p>
+        </div>
+        <div class="content">
+          <p>안녕하세요, <strong>${contactName}</strong>님</p>
+          <p><strong>${centerName}</strong>의 무료 체험 기간이 <strong>7일 후 종료</strong>됩니다.</p>
+
+          <div class="notice">
+            <strong>⚠️ 중요 안내</strong><br>
+            Trial 만료일: <strong>${formattedDate}</strong><br>
+            만료 후에는 교육 콘텐츠 접근이 제한됩니다.
+          </div>
+
+          <div class="info-box">
+            <h3>📌 Trial 만료 후 변경 사항</h3>
+            <ul>
+              <li>✅ 커뮤니티 기능은 계속 사용 가능</li>
+              <li>❌ Portal (학습 자료) 접근 제한</li>
+              <li>❌ Entry/Scratch/Python IDE 사용 제한</li>
+              <li>❌ CT 문제 은행 접근 제한</li>
+              <li>❌ 센터 클라우드보드 접근 제한</li>
+            </ul>
+          </div>
+
+          <div class="plan-card">
+            <h3>💎 Standard 플랜으로 계속 이용하세요</h3>
+            <div class="plan-price">₩110,000 <span style="font-size: 0.4em; color: #666;">/월</span></div>
+            <ul style="margin: 20px 0;">
+              <li>모든 교육 콘텐츠 무제한 접근</li>
+              <li>센터 공동 저장소 30GB</li>
+              <li>학생 수 무제한</li>
+              <li>Teacher Dashboard</li>
+              <li>학생 진도 추적 및 과제 관리</li>
+            </ul>
+            <div style="text-align: center;">
+              <a href="https://app.codingnplay.co.kr/subscription/plans" class="btn">플랜 선택하기</a>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="https://app.codingnplay.co.kr/auth/login" class="btn" style="background: #6c757d;">로그인하기</a>
+          </div>
+
+          <div class="footer">
+            <p>문의: 070-4337-4337 | codingnplay@cosmoedu.co.kr</p>
+            <p>© 2026 코딩앤플레이. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const textBody = `
+[코딩앤플레이] Trial 만료 안내
+
+안녕하세요, ${contactName}님
+
+${centerName}의 무료 체험 기간이 7일 후 종료됩니다.
+
+Trial 만료일: ${formattedDate}
+
+Standard 플랜 (₩110,000/월)으로 계속 이용하세요.
+플랜 선택: https://app.codingnplay.co.kr/subscription/plans
+
+문의: 070-4337-4337
+© 2026 코딩앤플레이
+  `;
+
+  return await sendEmail(email, subject, htmlBody, textBody);
+}
+
+/**
+ * Trial 만료 이메일
+ * @param {string} email - 센터 관리자 이메일
+ * @param {string} centerName - 센터명
+ * @param {string} contactName - 담당자명
+ */
+async function sendTrialExpiredEmail(email, centerName, contactName) {
+  const subject = `[코딩앤플레이] ${centerName} - Trial 만료 안내`;
+
+  const htmlBody = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .alert { background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0; border-radius: 4px; color: #721c24; }
+        .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .plan-card { background: white; border: 2px solid #667eea; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .btn { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 10px 5px; }
+        .footer { text-align: center; color: #999; font-size: 0.9em; margin-top: 30px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🔒 Trial 만료</h1>
+          <p>무료 체험 기간이 종료되었습니다</p>
+        </div>
+        <div class="content">
+          <p>안녕하세요, <strong>${contactName}</strong>님</p>
+          <p><strong>${centerName}</strong>의 무료 체험 기간이 종료되었습니다.</p>
+
+          <div class="alert">
+            <strong>⚠️ 서비스 이용 제한</strong><br>
+            Trial 만료로 인해 일부 기능 사용이 제한됩니다.
+          </div>
+
+          <div class="info-box">
+            <h3>📌 현재 상태</h3>
+            <ul>
+              <li>✅ 커뮤니티 기능은 계속 사용 가능</li>
+              <li>❌ 교육 콘텐츠 접근 제한</li>
+              <li>❌ 센터 관리 기능 제한</li>
+            </ul>
+          </div>
+
+          <div class="plan-card">
+            <h3>💎 Standard 플랜 구독으로 모든 기능 이용</h3>
+            <div style="font-size: 2em; color: #667eea; font-weight: bold; margin: 20px 0;">
+              ₩110,000 <span style="font-size: 0.4em; color: #666;">/월</span>
+            </div>
+            <ul style="margin: 20px 0;">
+              <li>모든 교육 콘텐츠 무제한 접근</li>
+              <li>센터 공동 저장소 30GB</li>
+              <li>학생 수 무제한</li>
+              <li>Teacher Dashboard 및 학생 관리</li>
+            </ul>
+            <div style="text-align: center;">
+              <a href="https://app.codingnplay.co.kr/subscription/plans" class="btn">지금 구독하기</a>
+            </div>
+          </div>
+
+          <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <strong>💡 프랜차이즈 가맹점이신가요?</strong><br>
+            Professional 플랜 (1년 무료)을 신청하실 수 있습니다.<br>
+            문의: 070-4337-4337
+          </div>
+
+          <div class="footer">
+            <p>문의: 070-4337-4337 | codingnplay@cosmoedu.co.kr</p>
+            <p>© 2026 코딩앤플레이. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const textBody = `
+[코딩앤플레이] Trial 만료 안내
+
+안녕하세요, ${contactName}님
+
+${centerName}의 무료 체험 기간이 종료되었습니다.
+
+Standard 플랜 (₩110,000/월)을 구독하시면 모든 기능을 계속 이용하실 수 있습니다.
+
+지금 구독: https://app.codingnplay.co.kr/subscription/plans
+
+문의: 070-4337-4337
+© 2026 코딩앤플레이
+  `;
+
+  return await sendEmail(email, subject, htmlBody, textBody);
+}
+
 module.exports = {
   sendEmail,
   sendVerificationEmail,
-  sendCenterWelcomeEmail
+  sendCenterWelcomeEmail,
+  sendTrialExpiryReminderEmail,
+  sendTrialExpiredEmail
 };

@@ -49,8 +49,44 @@ function requireEducationAccess(req, res, next) {
   }
 }
 
-function checkAccess(req, res, next) {
+async function checkAccess(req, res, next) {
   const accountType = req.session.account_type;
+
+  // 🔥 Phase 3: 센터 상태 확인 (center_student, center_admin만 해당)
+  if (accountType === 'center_student' || accountType === 'center_admin') {
+    const centerID = req.session.centerID;
+
+    if (centerID) {
+      try {
+        const [center] = await queryDatabase(
+          'SELECT status FROM Centers WHERE id = ?',
+          [centerID]
+        );
+
+        // 센터가 SUSPENDED 상태면 교육 콘텐츠 차단
+        if (center && center.status === 'SUSPENDED') {
+          if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+            return res.status(403).json({
+              success: false,
+              error: 'CENTER_SUSPENDED',
+              message: '센터 구독이 만료되어 교육 콘텐츠 이용이 제한됩니다.',
+              accountType: accountType,
+              callToAction: {
+                text: '구독 갱신하기',
+                url: '/subscription/plans',
+                description: 'Standard 플랜을 구독하시면 모든 기능을 다시 이용하실 수 있습니다.'
+              }
+            });
+          } else {
+            return res.redirect('/center-suspended');
+          }
+        }
+      } catch (error) {
+        console.error('[AccessControl] 센터 상태 조회 오류:', error);
+        // DB 오류 시에도 일단 진행 (fallback)
+      }
+    }
+  }
 
   // Pong2 무료 계정은 교육 콘텐츠 차단
   if (accountType === 'pong2') {

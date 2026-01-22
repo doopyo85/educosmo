@@ -1,0 +1,1181 @@
+# 센터개설 및 결제모듈 구현계획
+
+**작성일**: 2026-01-22
+**버전**: 1.0
+**목적**: Pong2 무료 계정 vs 센터 유료 계정 분리 및 센터 개설/결제 시스템 구현
+
+---
+
+## 🎯 1. 핵심 요구사항 정리
+
+### 1.1 도메인 분리 전략
+
+| 도메인 | 용도 | 회원가입 경로 | 계정 타입 |
+|--------|------|---------------|-----------|
+| **pong2.app** | Pong2 무료 계정 전용 | Pong2 프론트엔드 자체 회원가입 (API: POST /api/pong2/auth/signup) | account_type='pong2' |
+| **app.codingnplay.co.kr** | 센터 계정 전용 | 학생 회원가입 / 센터 개설 | account_type='center_student' 또는 'center_admin' |
+
+**중요**: Pong2는 별도 프론트엔드 프로젝트(`C:\Users\User\Documents\pioneer\pong2`)로 분리되어 있으며, 백엔드 API는 educosmo에서 `/api/pong2/*` 경로로 제공합니다.
+
+### 1.2 계정 타입별 특징
+
+#### Pong2 계정 (무료) - pong2.app
+
+```
+✅ 제공 기능:
+- 커뮤니티 (아지트, 광장, 갤러리)
+- 포트폴리오 (작품 공유)
+- PongTube (교육 영상 시청)
+- 개인 블로그 (StarDiary) - 월 10개 게시글 제한
+
+❌ 차단 기능:
+- Portal (학습 자료)
+- CT 문제 은행
+- Entry/Scratch/Python IDE
+- Judge0 채점 시스템
+- 교육 콘텐츠 전체
+
+💰 요금: 무료
+📦 저장소: 500MB
+📝 블로그: 월 10개 게시글
+⏰ 데이터 보관: 6개월 미접속 시 삭제
+
+🔧 기술 스택:
+- 프론트엔드: 순수 HTML/CSS/JS (별도 저장소: C:\Users\User\Documents\pioneer\pong2)
+- 백엔드 API: educosmo의 /api/pong2/* 경로
+- 회원가입: POST /api/pong2/auth/signup (pong2 프론트엔드에서 처리)
+- 인증: JWT Bearer Token
+```
+
+#### 센터 계정 (유료) - app.codingnplay.co.kr
+
+**센터 학생 (center_student)**
+```
+✅ 제공 기능:
+- Pong2 계정 전체 기능
+- 교육 콘텐츠 전체 접근
+- 센터 클라우드보드 (과제 제출)
+- 무제한 블로그 게시글
+- 센터 공동 저장소 30GB 사용
+
+💰 요금: 센터 구독료에 포함
+📦 저장소: 개인 2GB + 센터 30GB 공유
+📝 블로그: 무제한
+⏰ 데이터 보관: 무기한
+```
+
+**센터 관리자 (center_admin)**
+```
+✅ 추가 기능:
+- Teacher Dashboard (학생 관리)
+- 학생 진도 추적
+- 과제 관리
+- 센터 클라우드보드 관리
+- 초대 코드 생성
+- 센터 통계/분석
+
+💰 요금: 월 ₩110,000 (Standard 플랜)
+📦 저장소: 개인 5GB + 센터 30GB 공유
+📝 블로그: 무제한
+⏰ 데이터 보관: 무기한
+```
+
+### 1.3 센터 개설 프로세스 요구사항
+
+**센터 개설은 반드시 문자 인증이 필요합니다.**
+
+```
+[Step 1] 센터 정보 입력
+    ↓
+[Step 2] SMS 본인 인증 (필수)
+    ↓
+[Step 3] 14일 무료 체험 시작
+    ↓
+[Step 4] 센터 자동 초기화
+    - Centers 테이블 생성
+    - center_blogs 자동 생성
+    - center_subscriptions Trial 생성
+    - Users (account_type='center_admin')
+    - CenterStorageUsage (30GB)
+    ↓
+[Step 5] 14일 체험 종료 전 결제 유도
+```
+
+---
+
+## 📊 2. 현재 구현 상태 분석
+
+### 2.1 ✅ 이미 구현된 것들
+
+#### 2.1.1 데이터베이스 스키마
+
+```sql
+-- Users 테이블에 account_type 존재
+Users.account_type ENUM('pong2', 'center_student', 'center_admin')
+Users.storage_limit_bytes BIGINT (500MB/2GB/5GB)
+Users.blog_post_limit INT (10/999999)
+
+-- Centers 테이블 완성
+Centers.id, center_name, contact_phone, contact_email, status
+Centers.plan_type, storage_limit_bytes, subscription_expiry
+
+-- center_subscriptions 완성
+center_subscriptions.plan_type ENUM('standard', 'premium')
+center_subscriptions.status ENUM('trial', 'active', 'suspended', 'cancelled')
+center_subscriptions.trial_ends_at, next_billing_date
+
+-- center_invite_codes 완성
+center_invite_codes.code VARCHAR(8)
+center_invite_codes.max_uses, current_uses, expires_at
+```
+
+#### 2.1.2 센터 가입 시스템 ✅
+
+**파일**: `lib_login/auth.js` (Line 525-660)
+
+```javascript
+// 센터 가입 페이지
+GET /auth/register-center
+
+// 센터 가입 처리 (SMS 인증 필수)
+POST /auth/register-center
+  - SMS 인증 확인 (필수)
+  - Centers 생성
+  - center_blogs 자동 생성
+  - center_subscriptions Trial 생성 (14일)
+  - Users (account_type='center_admin')
+  - CenterStorageUsage (30GB)
+```
+
+**SMS 인증 시스템**: `lib_auth/smsService.js`, `lib_auth/verificationService.js`
+- NCP SMS 연동 완료
+- 6자리 인증 코드 발송/검증
+- 10분 유효 기간
+
+#### 2.1.3 권한 제어 미들웨어 ✅
+
+**파일**: `lib_login/accessControl.js`
+
+```javascript
+// Pong2 계정의 교육 콘텐츠 접근 차단
+requireEducationAccess(req, res, next)
+  → account_type='pong2' → 403 차단
+
+// 센터 회원만 접근 가능
+requireCenterUser(req, res, next)
+  → account_type='center_student' or 'center_admin' → 허용
+
+// 센터 관리자만 접근 가능
+requireCenterAdmin(req, res, next)
+  → account_type='center_admin' → 허용
+```
+
+#### 2.1.4 센터 관리 API ✅
+
+**파일**: `routes/api/centerRouter.js`
+
+```javascript
+// 초대 코드 생성
+POST /api/centers/:id/invite-code
+
+// 학생 초대 코드로 가입
+POST /api/centers/join
+  → account_type='center_student' 자동 설정
+  → storage_limit_bytes=2GB
+
+// 센터 통계
+GET /api/centers/:id/stats
+
+// 학생 목록
+GET /api/centers/:id/users
+
+// 센터 블로그 정보
+GET /api/centers/:id/blog
+```
+
+### 2.2 ❌ 구현되지 않은 것들
+
+#### 2.2.1 결제 시스템
+
+- [ ] Toss Payments 연동
+- [ ] 결제 페이지 (`/subscription/checkout`)
+- [ ] 플랜 선택 페이지 (`/subscription/plans`)
+- [ ] 결제 성공/실패 콜백 처리
+- [ ] 정기 결제 자동 갱신
+
+#### 2.2.2 회원가입 페이지 분리
+
+**현재 상태 (✅ 이미 분리됨)**:
+```
+✅ Pong2 가입 (pong2.app)
+  - 위치: 별도 프론트엔드 프로젝트 (C:\Users\User\Documents\pioneer\pong2)
+  - API: POST /api/pong2/auth/signup
+  - 테이블: Pong2Users (별도 테이블 사용)
+  - 특징: JWT 기반 인증, 간편 가입 (email, password, nickname)
+
+✅ 센터 개설 (app.codingnplay.co.kr)
+  - 위치: GET /auth/register-center
+  - API: POST /auth/register-center
+  - 테이블: Users (account_type='center_admin')
+  - 특징: SMS 인증 필수, Trial 14일 자동 생성
+```
+
+**현재 문제점**:
+```
+❌ educosmo의 GET /auth/register
+  → 센터, 킨더, 기관 모든 형태 선택 가능
+  → account_type 설정 없음 (기본값 'pong2'로 생성됨)
+  → 이 경로는 사실상 사용되지 않아야 함 (Pong2는 별도 프론트엔드, 센터는 /auth/register-center)
+```
+
+**필요한 개선**:
+```
+app.codingnplay.co.kr/auth/register → 학생 초대 코드 가입으로 용도 변경
+  → 센터 초대 코드 입력 필수
+  → account_type='center_student' 자동 설정
+  → 해당 센터에 자동 배정
+
+또는 이 경로를 /auth/join-center로 변경하고 /auth/register는 비활성화
+```
+
+#### 2.2.3 Trial 만료 처리
+
+- [ ] Cron Job으로 매일 Trial 만료 체크
+- [ ] Trial 만료 7일 전 이메일 알림
+- [ ] Trial 만료 시 status='suspended'
+- [ ] Trial 만료 후 교육 콘텐츠 차단
+
+#### 2.2.4 구독 관리 UI
+
+- [ ] 센터 관리자 구독 현황 페이지
+- [ ] 다음 결제일 표시
+- [ ] 플랜 업그레이드/다운그레이드
+- [ ] 구독 취소 기능
+
+---
+
+## 🚀 3. 구현 계획
+
+### Phase 1: 회원가입 페이지 정리 및 학생 초대 코드 가입 구현 (1주)
+
+#### 3.1.1 현재 상태 확인
+
+**✅ Pong2 가입 (이미 분리됨)**:
+- 위치: 별도 프론트엔드 (pong2.app)
+- API: POST /api/pong2/auth/signup
+- 테이블: Pong2Users
+- 인증: JWT
+- **수정 불필요** (이미 완전히 분리되어 작동 중)
+
+**✅ 센터 개설 (이미 구현됨)**:
+- 위치: GET /auth/register-center
+- API: POST /auth/register-center
+- SMS 인증 포함
+- Trial 자동 생성
+- **수정 불필요** (이미 완벽히 구현됨)
+
+#### 3.1.2 educosmo의 GET /auth/register 용도 변경
+
+**파일**: `lib_login/auth.js` - GET /auth/register (Line 271-319)
+
+**현재 문제**:
+- 센터, 킨더, 기관 등 모든 role 선택 가능
+- account_type 설정 없음 → 기본값 'pong2'로 생성
+- Pong2는 별도 프론트엔드에서 처리하므로 이 경로는 사실상 불필요
+
+**수정 방안 A: 학생 초대 코드 가입으로 변경 (추천)**:
+```javascript
+router.get('/auth/register', async (req, res) => {
+  const title = '학생 가입';
+
+  const html = template.HTML(title, `
+    <h2>센터 초대 코드로 가입</h2>
+    <p>학원/학교에서 받은 초대 코드를 입력하세요</p>
+    <form id="registerForm">
+      <input type="text" name="inviteCode" placeholder="초대 코드 (8자리)" maxlength="8" required>
+      <button type="button" onclick="verifyCode()">코드 확인</button>
+
+      <div id="userForm" style="display:none">
+        <p>센터: <span id="centerName"></span></p>
+        <input type="text" name="userID" placeholder="아이디" required>
+        <input type="password" name="password" placeholder="비밀번호" required>
+        <input type="email" name="email" placeholder="이메일">
+        <input type="text" name="name" placeholder="이름" required>
+        <input type="submit" value="가입하기">
+      </div>
+    </form>
+    <p><a href="/auth/register-center">센터 개설하기</a></p>
+  `);
+
+  res.send(html);
+});
+```
+
+**수정 방안 B: 경로 자체를 비활성화**:
+```javascript
+// /auth/register를 /auth/join-center로 리다이렉트
+router.get('/auth/register', (req, res) => {
+  res.redirect('/auth/join-center');
+});
+```
+
+#### 3.1.3 학생 초대 코드 가입 로직 구현
+
+**파일**: `lib_login/auth.js` - 신규 API 추가
+
+```javascript
+// 초대 코드 확인 API (신규)
+router.post('/auth/api/verify-invite-code', async (req, res) => {
+  const title = '센터 가입';
+
+  const html = template.HTML(title, `
+    <h2>센터 초대 코드로 가입</h2>
+    <form id="joinCenterForm">
+      <!-- Step 1: 센터 코드 입력 -->
+      <div id="step1">
+        <input type="text" name="inviteCode" placeholder="초대 코드 (8자리)" maxlength="8" required>
+        <button type="button" onclick="verifyCode()">코드 확인</button>
+      </div>
+
+      <!-- Step 2: 회원 정보 입력 (코드 확인 후 표시) -->
+      <div id="step2" style="display:none">
+        <p>센터: <span id="centerName"></span></p>
+        <input type="text" name="userID" placeholder="아이디" required>
+        <input type="password" name="password" placeholder="비밀번호" required>
+        <input type="email" name="email" placeholder="이메일">
+        <input type="text" name="name" placeholder="이름" required>
+        <input type="submit" value="가입하기">
+      </div>
+    </form>
+  `);
+
+  res.send(html);
+});
+
+// 초대 코드 확인 API
+router.post('/auth/api/verify-invite-code', async (req, res) => {
+  const { code } = req.body;
+
+  const inviteCode = await queryDatabase(`
+    SELECT ci.*, c.center_name
+    FROM center_invite_codes ci
+    JOIN Centers c ON ci.center_id = c.id
+    WHERE ci.code = ?
+      AND (ci.max_uses IS NULL OR ci.current_uses < ci.max_uses)
+      AND (ci.expires_at IS NULL OR ci.expires_at > NOW())
+  `, [code]);
+
+  if (inviteCode.length === 0) {
+    return res.status(404).json({ success: false, message: '유효하지 않은 초대 코드입니다.' });
+  }
+
+  res.json({
+    success: true,
+    centerName: inviteCode[0].center_name,
+    centerId: inviteCode[0].center_id
+  });
+});
+
+// 초대 코드로 회원가입 처리
+router.post('/auth/join-center', async (req, res) => {
+  const { inviteCode, userID, password, email, name } = req.body;
+
+  // 1. 초대 코드 재확인
+  const [code] = await queryDatabase(`
+    SELECT center_id FROM center_invite_codes
+    WHERE code = ? AND (max_uses IS NULL OR current_uses < max_uses)
+  `, [inviteCode]);
+
+  if (!code) {
+    return res.status(400).json({ error: '유효하지 않은 초대 코드입니다.' });
+  }
+
+  // 2. 사용자 생성 (account_type='center_student')
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  await queryDatabase(`
+    INSERT INTO Users
+    (userID, password, email, name, centerID, role, account_type, storage_limit_bytes, blog_post_limit)
+    VALUES (?, ?, ?, ?, ?, 'student', 'center_student', 2147483648, 999999)
+  `, [userID, hashedPassword, email, name, code.center_id]);
+
+  // 3. 초대 코드 사용 횟수 증가
+  await queryDatabase(`
+    UPDATE center_invite_codes
+    SET current_uses = current_uses + 1
+    WHERE code = ?
+  `, [inviteCode]);
+
+  res.json({ success: true, message: '가입이 완료되었습니다.' });
+});
+```
+
+#### 3.1.4 로그인 페이지 링크 수정
+
+**파일**: `lib_login/auth.js` - GET /auth/login (Line 78)
+
+**현재**:
+```html
+<a href="/auth/register">회원가입</a>
+```
+
+**수정 후**:
+```html
+<a href="/auth/register">센터 학생 가입</a> |
+<a href="/auth/register-center">센터 개설</a>
+```
+
+**참고**: Pong2 가입은 별도 프론트엔드(pong2.app)에서 처리하므로 이 로그인 페이지에 링크 불필요
+
+---
+
+### Phase 2: 결제 시스템 구현 (2주)
+
+#### 3.2.1 Toss Payments 연동 준비
+
+**환경 변수 추가** (`.env`):
+```bash
+# Toss Payments
+TOSS_CLIENT_KEY=test_ck_...  # 개발용
+TOSS_SECRET_KEY=test_sk_...  # 개발용
+TOSS_SUCCESS_URL=https://app.codingnplay.co.kr/subscription/success
+TOSS_FAIL_URL=https://app.codingnplay.co.kr/subscription/fail
+```
+
+**npm 패키지 설치**:
+```bash
+npm install @tosspayments/payment-sdk
+```
+
+#### 3.2.2 플랜 선택 페이지
+
+**파일**: `routes/subscriptionRouter.js` (신규 생성)
+
+```javascript
+const express = require('express');
+const router = express.Router();
+const { authenticateUser } = require('../lib_login/authMiddleware');
+const { requireCenterAdmin } = require('../lib_login/accessControl');
+const { queryDatabase } = require('../lib_login/db');
+
+// 플랜 선택 페이지
+router.get('/plans', authenticateUser, requireCenterAdmin, async (req, res) => {
+  const centerId = req.session.centerID;
+
+  // 현재 센터 구독 정보 조회
+  const [subscription] = await queryDatabase(`
+    SELECT plan_type, status, trial_ends_at, next_billing_date, storage_limit_bytes
+    FROM center_subscriptions
+    WHERE center_id = ?
+  `, [centerId]);
+
+  res.render('subscription/plans', {
+    currentPlan: subscription || { plan_type: 'trial', status: 'trial' },
+    plans: {
+      standard: {
+        name: 'Standard',
+        price: 110000,
+        storage: '30GB',
+        students: '무제한',
+        features: [
+          '교육 콘텐츠 전체 접근',
+          '센터 클라우드보드',
+          '학생 진도 관리',
+          'Teacher Dashboard',
+          '초대 코드 무제한'
+        ]
+      },
+      premium: {
+        name: 'Premium',
+        price: 220000,
+        storage: '100GB',
+        students: '무제한',
+        features: [
+          'Standard 플랜 전체 기능',
+          '화이트라벨',
+          '커스텀 도메인',
+          'API 접근',
+          '1:1 기술 지원'
+        ]
+      }
+    }
+  });
+});
+```
+
+**파일**: `views/subscription/plans.ejs` (신규 생성)
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>플랜 선택</title>
+  <link rel="stylesheet" href="/css/subscription.css">
+</head>
+<body>
+  <div class="plans-container">
+    <h1>센터 구독 플랜</h1>
+
+    <% if (currentPlan.status === 'trial') { %>
+    <div class="trial-notice">
+      🎉 14일 무료 체험 중입니다!
+      <br>체험 종료일: <%= new Date(currentPlan.trial_ends_at).toLocaleDateString() %>
+    </div>
+    <% } %>
+
+    <div class="plan-cards">
+      <!-- Standard Plan -->
+      <div class="plan-card">
+        <h2>Standard</h2>
+        <div class="price">₩110,000<span>/월</span></div>
+        <ul class="features">
+          <li>✅ 교육 콘텐츠 전체 접근</li>
+          <li>✅ 센터 클라우드보드</li>
+          <li>✅ 학생 진도 관리</li>
+          <li>✅ 30GB 저장소</li>
+          <li>✅ 학생 수 무제한</li>
+        </ul>
+        <button class="subscribe-btn" onclick="subscribe('standard')">
+          <%= currentPlan.plan_type === 'standard' ? '현재 플랜' : '구독하기' %>
+        </button>
+      </div>
+
+      <!-- Premium Plan -->
+      <div class="plan-card premium">
+        <div class="badge">추천</div>
+        <h2>Premium</h2>
+        <div class="price">₩220,000<span>/월</span></div>
+        <ul class="features">
+          <li>✅ Standard 전체 기능</li>
+          <li>✅ 100GB 저장소</li>
+          <li>✅ 화이트라벨</li>
+          <li>✅ API 접근</li>
+          <li>✅ 1:1 기술 지원</li>
+        </ul>
+        <button class="subscribe-btn" onclick="subscribe('premium')">
+          <%= currentPlan.plan_type === 'premium' ? '현재 플랜' : '업그레이드' %>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function subscribe(planType) {
+      location.href = `/subscription/checkout?plan=${planType}`;
+    }
+  </script>
+</body>
+</html>
+```
+
+#### 3.2.3 결제 페이지
+
+**파일**: `routes/subscriptionRouter.js` - 추가
+
+```javascript
+// 결제 페이지
+router.get('/checkout', authenticateUser, requireCenterAdmin, async (req, res) => {
+  const planType = req.query.plan;
+  const centerId = req.session.centerID;
+  const userID = req.session.userID;
+
+  if (!['standard', 'premium'].includes(planType)) {
+    return res.status(400).send('잘못된 플랜입니다.');
+  }
+
+  const plans = {
+    standard: { price: 110000, name: 'Standard' },
+    premium: { price: 220000, name: 'Premium' }
+  };
+
+  const plan = plans[planType];
+
+  // 주문 ID 생성 (planType_centerID_timestamp)
+  const orderId = `${planType}_${centerId}_${Date.now()}`;
+  const orderName = `센터 구독 - ${plan.name}`;
+
+  res.render('subscription/checkout', {
+    planType,
+    planName: plan.name,
+    amount: plan.price,
+    orderId,
+    orderName,
+    customerEmail: req.session.email,
+    customerName: req.session.name,
+    tossClientKey: process.env.TOSS_CLIENT_KEY
+  });
+});
+```
+
+**파일**: `views/subscription/checkout.ejs` (신규 생성)
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>결제하기</title>
+  <script src="https://js.tosspayments.com/v1/payment"></script>
+</head>
+<body>
+  <div class="checkout-container">
+    <h1>결제 정보</h1>
+
+    <div class="order-summary">
+      <h3>주문 내용</h3>
+      <p>플랜: <%= planName %></p>
+      <p>금액: ₩<%= amount.toLocaleString() %></p>
+      <p>주기: 매월 자동 결제</p>
+    </div>
+
+    <button id="payment-button">결제하기</button>
+  </div>
+
+  <script>
+    const clientKey = '<%= tossClientKey %>';
+    const tossPayments = TossPayments(clientKey);
+
+    document.getElementById('payment-button').addEventListener('click', function() {
+      tossPayments.requestPayment('카드', {
+        amount: <%= amount %>,
+        orderId: '<%= orderId %>',
+        orderName: '<%= orderName %>',
+        customerName: '<%= customerName %>',
+        customerEmail: '<%= customerEmail %>',
+        successUrl: '<%= process.env.TOSS_SUCCESS_URL %>',
+        failUrl: '<%= process.env.TOSS_FAIL_URL %>'
+      });
+    });
+  </script>
+</body>
+</html>
+```
+
+#### 3.2.4 결제 성공/실패 콜백
+
+**파일**: `routes/subscriptionRouter.js` - 추가
+
+```javascript
+// 결제 성공 콜백
+router.get('/success', authenticateUser, async (req, res) => {
+  const { paymentKey, orderId, amount } = req.query;
+  const centerId = req.session.centerID;
+
+  try {
+    // Toss Payments API로 결제 승인
+    const response = await fetch('https://api.tosspayments.com/v1/payments/confirm', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${Buffer.from(process.env.TOSS_SECRET_KEY + ':').toString('base64')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ paymentKey, orderId, amount })
+    });
+
+    const payment = await response.json();
+
+    if (payment.status === 'DONE') {
+      // orderId에서 planType 추출 (예: standard_123_1234567890)
+      const planType = orderId.split('_')[0];
+
+      // 다음 결제일 계산 (1개월 후)
+      const nextBillingDate = new Date();
+      nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+
+      // center_subscriptions 업데이트
+      await queryDatabase(`
+        UPDATE center_subscriptions
+        SET plan_type = ?,
+            status = 'active',
+            storage_limit_bytes = ?,
+            price_monthly = ?,
+            next_billing_date = ?,
+            trial_ends_at = NULL
+        WHERE center_id = ?
+      `, [
+        planType,
+        planType === 'premium' ? 107374182400 : 32212254720,  // 100GB or 30GB
+        parseInt(amount),
+        nextBillingDate,
+        centerId
+      ]);
+
+      // Payments 테이블에 기록
+      await queryDatabase(`
+        INSERT INTO Payments
+        (centerID, product_name, payment_date, expiry_date, amount, status, payment_key)
+        VALUES (?, ?, NOW(), ?, ?, 'completed', ?)
+      `, [centerId, `센터 구독 - ${planType}`, nextBillingDate, amount, paymentKey]);
+
+      res.render('subscription/success', {
+        planType,
+        amount,
+        nextBillingDate: nextBillingDate.toLocaleDateString()
+      });
+    } else {
+      throw new Error('결제 승인 실패');
+    }
+  } catch (error) {
+    console.error('결제 처리 오류:', error);
+    res.redirect(`/subscription/fail?message=${encodeURIComponent('결제 처리 중 오류가 발생했습니다.')}`);
+  }
+});
+
+// 결제 실패 콜백
+router.get('/fail', (req, res) => {
+  const { code, message } = req.query;
+  res.render('subscription/failure', { code, message });
+});
+
+module.exports = router;
+```
+
+**app.js에 라우터 등록**:
+```javascript
+const subscriptionRouter = require('./routes/subscriptionRouter');
+app.use('/subscription', subscriptionRouter);
+```
+
+---
+
+### Phase 3: Trial 만료 처리 (1주)
+
+#### 3.3.1 Cron Job 생성
+
+**파일**: `lib_cron/trialChecker.js` (신규 생성)
+
+```javascript
+const cron = require('node-cron');
+const { queryDatabase } = require('../lib_login/db');
+const emailService = require('../lib_auth/emailService');
+
+/**
+ * 매일 자정에 Trial 만료 체크
+ */
+function startTrialChecker() {
+  // 매일 00:00 실행
+  cron.schedule('0 0 * * *', async () => {
+    console.log('🔍 Trial 만료 체크 시작:', new Date().toISOString());
+
+    try {
+      // 1. 오늘 만료되는 Trial 찾기
+      const expiredTrials = await queryDatabase(`
+        SELECT cs.id, cs.center_id, cs.trial_ends_at, c.center_name, c.contact_email
+        FROM center_subscriptions cs
+        JOIN Centers c ON cs.center_id = c.id
+        WHERE cs.status = 'trial'
+          AND DATE(cs.trial_ends_at) = CURDATE()
+      `);
+
+      for (const trial of expiredTrials) {
+        // status를 'suspended'로 변경
+        await queryDatabase(`
+          UPDATE center_subscriptions
+          SET status = 'suspended'
+          WHERE id = ?
+        `, [trial.id]);
+
+        console.log(`❌ Trial 만료: ${trial.center_name} (ID: ${trial.center_id})`);
+
+        // 만료 이메일 발송
+        await emailService.sendTrialExpiredEmail(
+          trial.contact_email,
+          trial.center_name
+        );
+      }
+
+      // 2. 7일 후 만료 예정 Trial 찾기 (알림)
+      const upcomingExpiry = await queryDatabase(`
+        SELECT cs.id, cs.center_id, cs.trial_ends_at, c.center_name, c.contact_email
+        FROM center_subscriptions cs
+        JOIN Centers c ON cs.center_id = c.id
+        WHERE cs.status = 'trial'
+          AND DATE(cs.trial_ends_at) = DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+      `);
+
+      for (const trial of upcomingExpiry) {
+        // 7일 전 알림 이메일
+        await emailService.sendTrialExpiryReminderEmail(
+          trial.contact_email,
+          trial.center_name,
+          trial.trial_ends_at
+        );
+
+        console.log(`⚠️ Trial 7일 전 알림: ${trial.center_name}`);
+      }
+
+      console.log(`✅ Trial 체크 완료: 만료 ${expiredTrials.length}건, 알림 ${upcomingExpiry.length}건`);
+
+    } catch (error) {
+      console.error('❌ Trial 체크 오류:', error);
+    }
+  });
+
+  console.log('✅ Trial 체커 시작됨 (매일 00:00 실행)');
+}
+
+module.exports = { startTrialChecker };
+```
+
+**app.js에 Cron 등록**:
+```javascript
+const { startTrialChecker } = require('./lib_cron/trialChecker');
+
+// 서버 시작 시 Cron Job 실행
+startTrialChecker();
+```
+
+#### 3.3.2 Trial 만료 이메일 템플릿
+
+**파일**: `lib_auth/emailService.js` - 함수 추가
+
+```javascript
+/**
+ * Trial 만료 이메일 발송
+ */
+async function sendTrialExpiredEmail(email, centerName) {
+  const subject = `[코딩앤플레이] ${centerName} 무료 체험 종료 안내`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>무료 체험이 종료되었습니다</h2>
+
+      <p><strong>${centerName}</strong> 센터의 14일 무료 체험 기간이 종료되었습니다.</p>
+
+      <div style="background: #fff3cd; padding: 20px; border-radius: 5px; margin: 20px 0;">
+        <h3>⚠️ 현재 상태</h3>
+        <ul>
+          <li>교육 콘텐츠 접근이 제한되었습니다.</li>
+          <li>학생들은 로그인은 가능하나 학습 자료를 이용할 수 없습니다.</li>
+          <li>데이터는 안전하게 보관되고 있습니다.</li>
+        </ul>
+      </div>
+
+      <p>
+        <strong>서비스를 계속 이용하시려면</strong> 아래 버튼을 클릭하여 결제를 완료해주세요.
+      </p>
+
+      <a href="https://app.codingnplay.co.kr/subscription/plans"
+         style="display: inline-block; padding: 15px 30px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">
+        지금 구독하기
+      </a>
+
+      <hr style="margin: 30px 0;">
+
+      <h3>Standard 플랜 - 월 ₩110,000</h3>
+      <ul>
+        <li>✅ 교육 콘텐츠 전체 접근</li>
+        <li>✅ 센터 클라우드보드</li>
+        <li>✅ 학생 진도 관리</li>
+        <li>✅ 30GB 저장소</li>
+        <li>✅ 학생 수 무제한</li>
+      </ul>
+
+      <p style="color: #666; font-size: 12px;">
+        문의사항이 있으시면 support@codingnplay.co.kr로 연락주세요.
+      </p>
+    </div>
+  `;
+
+  return await sendEmail(email, subject, html);
+}
+
+/**
+ * Trial 7일 전 알림 이메일
+ */
+async function sendTrialExpiryReminderEmail(email, centerName, expiryDate) {
+  const subject = `[코딩앤플레이] ${centerName} 무료 체험 7일 남았습니다`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>무료 체험 종료가 7일 남았습니다</h2>
+
+      <p><strong>${centerName}</strong> 센터의 무료 체험이 곧 종료됩니다.</p>
+
+      <div style="background: #e3f2fd; padding: 20px; border-radius: 5px; margin: 20px 0;">
+        <h3>📅 종료 예정일</h3>
+        <p style="font-size: 18px; font-weight: bold;">
+          ${new Date(expiryDate).toLocaleDateString('ko-KR')}
+        </p>
+      </div>
+
+      <p>
+        서비스를 계속 이용하시려면 아래 버튼을 클릭하여 구독을 시작해주세요.
+      </p>
+
+      <a href="https://app.codingnplay.co.kr/subscription/plans"
+         style="display: inline-block; padding: 15px 30px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">
+        구독하기
+      </a>
+
+      <p style="color: #666;">
+        체험 기간이 종료되면 교육 콘텐츠 접근이 제한됩니다.<br>
+        데이터는 안전하게 보관되며, 구독 후 즉시 복구됩니다.
+      </p>
+    </div>
+  `;
+
+  return await sendEmail(email, subject, html);
+}
+
+module.exports = {
+  sendEmail,
+  sendVerificationEmail,
+  sendCenterWelcomeEmail,
+  sendTrialExpiredEmail,
+  sendTrialExpiryReminderEmail
+};
+```
+
+---
+
+## 📋 4. 전체 구현 체크리스트
+
+### Phase 1: 회원가입 페이지 정리 및 학생 초대 코드 가입 구현 (1주)
+
+- [✅] **Pong2 가입 (이미 완료)**
+  - [✅] 별도 프론트엔드(pong2.app)에서 처리
+  - [✅] API: POST /api/pong2/auth/signup
+  - [✅] 테이블: Pong2Users (별도)
+  - [✅] 인증: JWT Bearer Token
+  - **수정 불필요**
+
+- [ ] **educosmo GET /auth/register 용도 변경**
+  - [ ] `lib_login/auth.js:271` GET /auth/register - 학생 초대 코드 가입으로 변경
+  - [ ] 초대 코드 입력 → 센터 확인 → 회원정보 입력 UI
+  - [ ] 또는 /auth/join-center로 경로 변경
+
+- [ ] **학생 초대 코드 가입 API 신규 생성**
+  - [ ] POST /auth/api/verify-invite-code - 코드 확인 API
+  - [ ] POST /auth/register 또는 POST /auth/join-center - account_type='center_student' 자동 설정
+
+- [✅] **센터 개설 페이지 (이미 완료)**
+  - [✅] GET /auth/register-center
+  - [✅] POST /auth/register-center (SMS 인증 포함)
+  - [✅] account_type='center_admin' 자동 설정
+  - [✅] Trial 14일 자동 생성
+  - **수정 불필요**
+
+- [ ] **로그인 페이지 링크 수정**
+  - [ ] `lib_login/auth.js:78` - "센터 학생 가입" | "센터 개설" 링크 추가
+
+- [ ] **테스트**
+  - [✅] Pong2 가입 → Pong2Users 테이블 확인 (이미 작동 중)
+  - [ ] 학생 가입 → account_type='center_student' 확인
+  - [✅] 센터 개설 → account_type='center_admin' + Trial 확인 (이미 작동 중)
+
+### Phase 2: 결제 시스템 구현 (2주)
+
+- [ ] **Toss Payments 연동**
+  - [ ] .env에 TOSS_CLIENT_KEY, TOSS_SECRET_KEY 추가
+  - [ ] npm install @tosspayments/payment-sdk
+  - [ ] Toss Payments 개발자 센터에서 API Key 발급
+
+- [ ] **라우터 생성**
+  - [ ] `routes/subscriptionRouter.js` 생성
+  - [ ] GET /subscription/plans - 플랜 선택 페이지
+  - [ ] GET /subscription/checkout - 결제 페이지
+  - [ ] GET /subscription/success - 결제 성공 콜백
+  - [ ] GET /subscription/fail - 결제 실패 콜백
+
+- [ ] **뷰 생성**
+  - [ ] `views/subscription/plans.ejs`
+  - [ ] `views/subscription/checkout.ejs`
+  - [ ] `views/subscription/success.ejs`
+  - [ ] `views/subscription/failure.ejs`
+
+- [ ] **CSS 스타일**
+  - [ ] `public/css/subscription.css` 생성
+
+- [ ] **테스트**
+  - [ ] Sandbox 환경에서 카드 결제 테스트
+  - [ ] 결제 성공 시 center_subscriptions 업데이트 확인
+  - [ ] Payments 테이블 기록 확인
+
+### Phase 3: Trial 만료 처리 (1주)
+
+- [ ] **Cron Job 생성**
+  - [ ] `lib_cron/trialChecker.js` 생성
+  - [ ] 매일 00:00 Trial 만료 체크
+  - [ ] Trial 만료 시 status='suspended'
+  - [ ] 7일 전 알림 이메일 발송
+
+- [ ] **이메일 템플릿**
+  - [ ] `lib_auth/emailService.js`에 함수 추가
+  - [ ] sendTrialExpiredEmail()
+  - [ ] sendTrialExpiryReminderEmail()
+
+- [ ] **app.js 등록**
+  - [ ] startTrialChecker() 호출
+
+- [ ] **테스트**
+  - [ ] Trial 만료일 수동 변경 후 Cron 실행
+  - [ ] 이메일 발송 확인
+  - [ ] status='suspended' 확인
+
+### Phase 4: 구독 관리 UI (1주)
+
+- [ ] **센터 관리자 대시보드**
+  - [ ] GET /center/subscription - 구독 현황 페이지
+  - [ ] 다음 결제일, 플랜, 사용 중인 저장소 표시
+  - [ ] 플랜 업그레이드 버튼
+
+- [ ] **테스트 & 배포**
+  - [ ] 전체 기능 통합 테스트
+  - [ ] 코딩앤플레이 프랜차이즈 50개 Professional 무료 제공
+  - [ ] 프로덕션 배포
+
+---
+
+## 🎯 5. 우선순위 작업 (이번 주)
+
+### Day 1-2: educosmo 회원가입 페이지 용도 변경
+
+```bash
+# ✅ Pong2 가입은 이미 별도 프론트엔드에서 처리 중 - 수정 불필요
+# ✅ 센터 개설은 이미 완벽히 구현됨 (/auth/register-center) - 수정 불필요
+
+# 1. GET /auth/register를 학생 초대 코드 가입으로 변경
+# 파일: lib_login/auth.js:271
+
+# 2. 로그인 페이지 링크 수정 (Pong2 링크 제거, 학생 가입 추가)
+# 파일: lib_login/auth.js:78
+```
+
+### Day 3-4: 학생 초대 코드 가입 API 구현
+
+```bash
+# 1. POST /auth/api/verify-invite-code API 추가
+# 2. POST /auth/register 수정 (초대 코드 기반 회원가입)
+#    - account_type='center_student' 자동 설정
+#    - storage_limit_bytes=2GB
+#    - blog_post_limit=999999
+# 파일: lib_login/auth.js (660줄 이후 추가)
+```
+
+### Day 5-7: 결제 시스템 기본 구조
+
+```bash
+# 1. Toss Payments 개발자 등록 및 API Key 발급
+# 2. routes/subscriptionRouter.js 생성
+# 3. views/subscription/plans.ejs 생성
+# 4. 플랜 선택 페이지 테스트
+```
+
+---
+
+## 📊 6. 예상 일정 및 리소스
+
+| Week | Phase | 작업 내용 | 산출물 | 담당 |
+|------|-------|-----------|--------|------|
+| 1주차 | Phase 1 | 회원가입 페이지 분리 | auth.js 수정 + 신규 라우트 | 백엔드 |
+| 2-3주차 | Phase 2 | 결제 시스템 구현 | subscriptionRouter.js + 뷰 4개 | 백엔드 + 프론트 |
+| 4주차 | Phase 3 | Trial 만료 처리 | trialChecker.js + 이메일 템플릿 | 백엔드 |
+| 5주차 | Phase 4 | 구독 관리 UI + 테스트 | 센터 대시보드 + 통합 테스트 | 풀스택 |
+
+**총 소요 기간**: 5주 (1.25개월)
+
+---
+
+## 🚀 7. 배포 전략
+
+### 7.1 개발 환경 테스트
+
+```bash
+# 로컬 환경
+NODE_ENV=development npm start
+
+# 테스트 시나리오:
+1. Pong2 가입 → 교육 콘텐츠 접근 → 403 확인
+2. 학생 초대 코드 가입 → 교육 콘텐츠 접근 → 200 OK
+3. 센터 개설 → SMS 인증 → Trial 생성 확인
+4. 결제 (Sandbox) → 구독 활성화 확인
+```
+
+### 7.2 스테이징 배포
+
+```bash
+# NCP 스테이징 서버
+git checkout staging
+git merge main
+pm2 restart educosmo-staging
+
+# 베타 테스트:
+# - 코딩앤플레이 프랜차이즈 3개 센터
+# - 2주 모니터링
+```
+
+### 7.3 프로덕션 배포 (점진적)
+
+```bash
+# Step 1: 프랜차이즈 50개 Professional 무료 제공
+UPDATE center_subscriptions
+SET plan_type = 'standard',
+    status = 'active',
+    price_monthly = 0,
+    next_billing_date = '2027-12-31'
+WHERE center_id IN (SELECT id FROM Centers WHERE center_name LIKE '%코딩앤플레이%');
+
+# Step 2: 일반 학원 오픈 (2주 후)
+# /subscription/plans 페이지 공개
+
+# Step 3: Toss Payments Production 모드 (1개월 후)
+# .env 변경: test_ck_... → live_ck_...
+```
+
+---
+
+## 📞 8. 문의 및 지원
+
+**개발팀 연락처**:
+- 이메일: dev@codingnplay.co.kr
+- 전화: 070-4337-4337
+
+**Toss Payments 지원**:
+- 개발자 센터: https://developers.tosspayments.com
+- 고객센터: 1544-7772
+
+**문서 버전**: 1.0
+**최종 업데이트**: 2026-01-22
+**다음 리뷰**: Phase 1 완료 후
+
+---
+
+## 📌 9. 핵심 요약
+
+### 현재 상태 (2026-01-22)
+
+✅ **구현 완료**:
+- account_type 구분 (pong2, center_student, center_admin)
+- **Pong2 가입** (별도 프론트엔드 pong2.app에서 완전히 분리 운영 중)
+- 센터 개설 (SMS 인증 포함)
+- Trial 자동 생성 (14일)
+- 권한 제어 미들웨어 (requireEducationAccess, requireCenterUser)
+- 센터 관리 API (초대 코드, 학생 관리)
+
+❌ **구현 필요**:
+- educosmo의 GET /auth/register 용도 변경 (학생 초대 코드 가입)
+- 학생 초대 코드 가입 API (POST /auth/api/verify-invite-code)
+- Toss Payments 결제 연동
+- Trial 만료 Cron Job
+- 구독 관리 UI
+
+### 핵심 차별화
+
+```
+Pong2 (pong2.app):
+  → 무료, 커뮤니티 전용, 교육 콘텐츠 차단
+  → 별도 프론트엔드 프로젝트 (JWT 인증)
+  → 회원가입: pong2.app 자체 UI에서 처리
+
+센터 (app.codingnplay.co.kr):
+  → 유료 (₩110,000/월), 교육 콘텐츠 전체, 센터 관리 기능
+  → educosmo 프로젝트 (Session 인증)
+  → 회원가입: /auth/register (학생), /auth/register-center (센터 개설)
+```
+
+### 다음 단계
+
+1. **이번 주**: Phase 1 (회원가입 페이지 분리)
+2. **다음 주**: Phase 2 시작 (Toss Payments 연동)
+3. **1개월 후**: 프로덕션 배포
+
