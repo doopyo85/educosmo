@@ -20,7 +20,7 @@ async function initializePool() {
         pool = await mysql.createPool({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
-            password: 'fq84cod3#@',
+            password: process.env.DB_PASS || 'fq84cod3#@',
             database: process.env.DB_NAME,
             port: process.env.DB_PORT,
             connectionLimit: 10,

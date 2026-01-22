@@ -59,6 +59,20 @@ module.exports = {
         SERVICE_TYPE: 'appinventor'
       },
       kill_timeout: 10000
+    },
+    {
+      name: 'blog-server',
+      script: './server-blog.js',
+      cwd: '/var/www/html',
+      instances: 1,
+      exec_mode: 'fork',
+      watch: false,
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3001,
+        SERVICE_TYPE: 'blog'
+      },
+      kill_timeout: 10000
     }
   ]
 };
