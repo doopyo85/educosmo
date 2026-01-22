@@ -148,6 +148,20 @@ function requireCenterUser(req, res, next) {
 }
 
 /**
+ * 로그인 필수 체크
+ */
+function requireLogin(req, res, next) {
+  if (!req.session?.is_logined) {
+    return res.status(401).json({
+      success: false,
+      error: 'AUTHENTICATION_REQUIRED',
+      message: '로그인이 필요합니다.'
+    });
+  }
+  next();
+}
+
+/**
  * 센터 관리자 권한 체크
  * center_admin만 접근 가능
  */
@@ -420,11 +434,10 @@ async function checkSubscriptionStatus(req, res, next) {
 
 
 module.exports = {
+  requireLogin,
   requireEducationAccess,
   requireCenterUser,
   requireCenterAdmin,
-  checkStorageQuota,
-  checkBlogPostLimit,
   checkStorageQuota,
   checkBlogPostLimit,
   getAccountFeatures,
