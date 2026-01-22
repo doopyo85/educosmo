@@ -423,5 +423,327 @@ router.post('/api/upload-csv/:tableName', checkAdminRole, upload.single('csvFile
 // 🔥 중복 제거: /s3/browser 사용 (s3Router.js)
 // Admin은 /s3/browser 또는 /s3/student-files 사용
 
+// ========================================
+// 구독 관리 API (Phase 4)
+// ========================================
+
+/**
+ * POST /admin/api/subscriptions/:centerId/cancel
+ * 구독 취소 (Admin 전용)
+ * - status를 'cancelled'로 변경
+ * - 다음 결제일까지는 서비스 이용 가능
+ * - 다음 결제일에 자동으로 'suspended' 처리됨
+ */
+router.post('/api/subscriptions/:centerId/cancel', checkAdminRole, async (req, res) => {
+  try {
+    const { centerId } = req.params;
+    const { reason } = req.body; // 취소 사유 (선택사항)
+
+    // 현재 구독 조회
+    const [subscription] = await db.queryDatabase(`
+      SELECT id, status, plan_type, next_billing_date
+      FROM center_subscriptions
+      WHERE center_id = ?
+      ORDER BY created_at DESC
+      LIMIT 1
+    `, [centerId]);
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        error: '구독 정보를 찾을 수 없습니다.'
+      });
+    }
+
+    // 이미 취소된 구독
+    if (subscription.status === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        error: '이미 취소된 구독입니다.'
+      });
+    }
+
+    // 이미 만료된 구독
+    if (subscription.status === 'suspended') {
+      return res.status(400).json({
+        success: false,
+        error: '이미 만료된 구독입니다.'
+      });
+    }
+
+    // 구독 취소 처리
+    await db.queryDatabase(`
+      UPDATE center_subscriptions
+      SET
+        status = 'cancelled',
+        updated_at = NOW()
+      WHERE id = ?
+    `, [subscription.id]);
+
+    console.log(`[Admin] Subscription cancelled: Center ${centerId}, Reason: ${reason || 'N/A'}`);
+
+    res.json({
+      success: true,
+      message: '구독이 취소되었습니다.',
+      data: {
+        centerId: parseInt(centerId),
+        status: 'cancelled',
+        nextBillingDate: subscription.next_billing_date,
+        note: '다음 결제일까지 서비스를 계속 이용할 수 있습니다.'
+      }
+    });
+
+  } catch (error) {
+    console.error('Cancel subscription error:', error);
+    res.status(500).json({
+      success: false,
+      error: '구독 취소 처리 중 오류가 발생했습니다.'
+    });
+  }
+});
+
+/**
+ * POST /admin/api/subscriptions/:centerId/resume
+ * 구독 재개 (Admin 전용)
+ * - status를 'active'로 변경
+ * - 자동 갱신 재시작
+ * - suspended 상태인 경우 즉시 활성화
+ */
+router.post('/api/subscriptions/:centerId/resume', checkAdminRole, async (req, res) => {
+  try {
+    const { centerId } = req.params;
+
+    // 현재 구독 조회
+    const [subscription] = await db.queryDatabase(`
+      SELECT
+        cs.id,
+        cs.status,
+        cs.plan_type,
+        cs.next_billing_date,
+        c.center_name
+      FROM center_subscriptions cs
+      INNER JOIN Centers c ON cs.center_id = c.id
+      WHERE cs.center_id = ?
+      ORDER BY cs.created_at DESC
+      LIMIT 1
+    `, [centerId]);
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        error: '구독 정보를 찾을 수 없습니다.'
+      });
+    }
+
+    // 이미 활성 구독
+    if (subscription.status === 'active') {
+      return res.status(400).json({
+        success: false,
+        error: '이미 활성화된 구독입니다.'
+      });
+    }
+
+    // 다음 결제일 계산
+    let nextBillingDate = subscription.next_billing_date;
+
+    // suspended 상태인 경우 즉시 갱신
+    if (subscription.status === 'suspended') {
+      const renewalDays = subscription.plan_type === 'premium' ? 365 : 30;
+      const today = new Date();
+      nextBillingDate = new Date(today.setDate(today.getDate() + renewalDays))
+        .toISOString().split('T')[0];
+    }
+
+    // 구독 재개 처리
+    await db.queryDatabase(`
+      UPDATE center_subscriptions
+      SET
+        status = 'active',
+        next_billing_date = ?,
+        updated_at = NOW()
+      WHERE id = ?
+    `, [nextBillingDate, subscription.id]);
+
+    // Centers 테이블도 ACTIVE로 변경
+    await db.queryDatabase(`
+      UPDATE Centers
+      SET status = 'ACTIVE'
+      WHERE id = ?
+    `, [centerId]);
+
+    console.log(`[Admin] Subscription resumed: Center ${centerId}, Next billing: ${nextBillingDate}`);
+
+    res.json({
+      success: true,
+      message: '구독이 재개되었습니다.',
+      data: {
+        centerId: parseInt(centerId),
+        centerName: subscription.center_name,
+        status: 'active',
+        planType: subscription.plan_type,
+        nextBillingDate: nextBillingDate
+      }
+    });
+
+  } catch (error) {
+    console.error('Resume subscription error:', error);
+    res.status(500).json({
+      success: false,
+      error: '구독 재개 처리 중 오류가 발생했습니다.'
+    });
+  }
+});
+
+/**
+ * PUT /admin/api/subscriptions/:centerId/plan
+ * 플랜 변경 (Admin 전용)
+ * - standard <-> premium 전환
+ */
+router.put('/api/subscriptions/:centerId/plan', checkAdminRole, async (req, res) => {
+  try {
+    const { centerId } = req.params;
+    const { planType } = req.body;
+
+    // 유효한 플랜 타입 확인
+    const validPlans = ['standard', 'premium'];
+    if (!validPlans.includes(planType)) {
+      return res.status(400).json({
+        success: false,
+        error: '유효하지 않은 플랜 타입입니다. (standard, premium만 가능)'
+      });
+    }
+
+    // 현재 구독 조회
+    const [subscription] = await db.queryDatabase(`
+      SELECT id, plan_type, status
+      FROM center_subscriptions
+      WHERE center_id = ?
+      ORDER BY created_at DESC
+      LIMIT 1
+    `, [centerId]);
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        error: '구독 정보를 찾을 수 없습니다.'
+      });
+    }
+
+    // 플랜 설정값
+    const planConfigs = {
+      standard: {
+        storageBytes: 32212254720,  // 30GB
+        priceMonthly: 110000,
+        renewalDays: 30
+      },
+      premium: {
+        storageBytes: 107374182400, // 100GB
+        priceMonthly: 0,
+        renewalDays: 365
+      }
+    };
+
+    const config = planConfigs[planType];
+
+    // 플랜 변경
+    await db.queryDatabase(`
+      UPDATE center_subscriptions
+      SET
+        plan_type = ?,
+        storage_limit_bytes = ?,
+        price_monthly = ?,
+        updated_at = NOW()
+      WHERE id = ?
+    `, [planType, config.storageBytes, config.priceMonthly, subscription.id]);
+
+    // Centers 테이블도 업데이트
+    const centerPlanType = planType === 'premium' ? 'premium' : 'basic';
+    await db.queryDatabase(`
+      UPDATE Centers
+      SET
+        plan_type = ?,
+        storage_limit_bytes = ?
+      WHERE id = ?
+    `, [centerPlanType, config.storageBytes, centerId]);
+
+    console.log(`[Admin] Plan changed: Center ${centerId}, New plan: ${planType}`);
+
+    res.json({
+      success: true,
+      message: '플랜이 변경되었습니다.',
+      data: {
+        centerId: parseInt(centerId),
+        planType: planType,
+        storageGB: Math.round(config.storageBytes / 1073741824),
+        priceMonthly: config.priceMonthly
+      }
+    });
+
+  } catch (error) {
+    console.error('Change plan error:', error);
+    res.status(500).json({
+      success: false,
+      error: '플랜 변경 처리 중 오류가 발생했습니다.'
+    });
+  }
+});
+
+/**
+ * GET /admin/api/subscriptions/:centerId
+ * 구독 상세 정보 조회 (Admin 전용)
+ */
+router.get('/api/subscriptions/:centerId', checkAdminRole, async (req, res) => {
+  try {
+    const { centerId } = req.params;
+
+    const [subscription] = await db.queryDatabase(`
+      SELECT
+        cs.id,
+        cs.center_id,
+        cs.plan_type,
+        cs.status,
+        cs.storage_limit_bytes,
+        cs.price_monthly,
+        cs.next_billing_date,
+        cs.trial_ends_at,
+        cs.created_at,
+        cs.updated_at,
+        c.center_name,
+        c.status as center_status,
+        c.contact_email
+      FROM center_subscriptions cs
+      INNER JOIN Centers c ON cs.center_id = c.id
+      WHERE cs.center_id = ?
+      ORDER BY cs.created_at DESC
+      LIMIT 1
+    `, [centerId]);
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        error: '구독 정보를 찾을 수 없습니다.'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...subscription,
+        storageGB: Math.round(subscription.storage_limit_bytes / 1073741824),
+        daysUntilRenewal: subscription.next_billing_date
+          ? Math.ceil((new Date(subscription.next_billing_date) - new Date()) / (1000 * 60 * 60 * 24))
+          : null
+      }
+    });
+
+  } catch (error) {
+    console.error('Get subscription error:', error);
+    res.status(500).json({
+      success: false,
+      error: '구독 정보 조회 중 오류가 발생했습니다.'
+    });
+  }
+});
+
 
 module.exports = router;

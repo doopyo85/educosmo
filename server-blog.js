@@ -136,10 +136,14 @@ app.get('/', async (req, res) => {
 
         const template = req.blogType === 'user' ? 'blog/user_theme_galaxy' : 'blog/center_theme_board';
 
+        // Sidebar Data
+        const sidebarPosts = await getSidebarData(req.blog.id, req.blogType);
+
         res.render(template, {
             blog: req.blog,
             owner: req.blogOwner,
             posts: posts,
+            sidebarPosts: sidebarPosts, // Pass sidebar data
             pagination: { page, totalPages },
             user: req.session // Current logged in user (visitor)
         });
@@ -173,10 +177,13 @@ app.get('/p/:slug', async (req, res) => {
 
         // Check if template exists, fallback to home or generic
         // For now rendering basic
+        const sidebarPosts = await getSidebarData(req.blog.id, req.blogType);
+
         res.render(template, {
             blog: req.blog,
             owner: req.blogOwner,
             post: post,
+            sidebarPosts: sidebarPosts, // Pass sidebar data
             user: req.session
         });
 
@@ -219,6 +226,23 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit for blog images
 });
 
+// Helper: Get Sidebar Data (Recent Posts)
+async function getSidebarData(blogId, blogType) {
+    try {
+        const posts = await queryDatabase(`
+            SELECT id, title, slug, created_at 
+            FROM blog_posts 
+            WHERE blog_id = ? AND blog_type = ? AND is_published = TRUE
+            ORDER BY created_at DESC 
+            LIMIT 20
+        `, [blogId, blogType]);
+        return posts;
+    } catch (error) {
+        console.error('Sidebar data fetch error:', error);
+        return [];
+    }
+}
+
 // POST /upload/image - For Editor.js
 
 app.post('/upload/image', isOwner, upload.single('image'), (req, res) => {
@@ -237,10 +261,12 @@ app.post('/upload/image', isOwner, upload.single('image'), (req, res) => {
 });
 
 // GET /write - Show Editor
-app.get('/write', isOwner, (req, res) => {
+app.get('/write', isOwner, async (req, res) => {
+    const sidebarPosts = await getSidebarData(req.blog.id, req.blogType);
     res.render('blog/write', {
         blog: req.blog,
         owner: req.blogOwner,
+        sidebarPosts: sidebarPosts, // Pass sidebar data
         user: req.session
     });
 });

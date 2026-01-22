@@ -114,3 +114,51 @@
     cursor: pointer;
 }
 
+/* ===== 센터 정보 모달 스타일 ===== */
+/* 드롭다운 아이템 호버 애니메이션 제거 및 화이트 톤 */
+.dropdown-item {
+    transition: none !important;
+    transform: none !important;
+}
+
+.dropdown-item:hover {
+    background-color: #f3f4f6 !important;
+    transform: none !important;
+}
+
+.dropdown-item:active {
+    background-color: #e5e7eb !important;
+}
+
+/* 센터 정보 모달 input 필드 스타일 */
+#centerInfoModal .form-control:read-only {
+    background-color: #f9fafb !important;
+    border-color: #e5e7eb !important;
+    color: #374151 !important;
+}
+
+/* 센터 코드 리스트 스타일 */
+#centerInfoModal .list-group-item {
+    border: 1px solid #e5e7eb !important;
+    background-color: white !important;
+    margin-bottom: 8px !important;
+    border-radius: 6px !important;
+}
+
+#centerInfoModal .list-group-item.bg-light {
+    background-color: #f9fafb !important;
+}
+
+/* 버튼 호버 효과 (화이트 톤) */
+#centerInfoModal .btn-outline-primary:hover {
+    background-color: #6366f1 !important;
+    color: white !important;
+    border-color: #6366f1 !important;
+}
+
+#centerInfoModal .btn-outline-danger:hover {
+    background-color: #ef4444 !important;
+    color: white !important;
+    border-color: #ef4444 !important;
+}
+

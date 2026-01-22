@@ -378,7 +378,18 @@ async function loadCenterInfo() {
         document.getElementById('centerName').value = center.center_name || '';
         document.getElementById('centerContactName').value = center.contact_name || '';
         document.getElementById('centerContactEmail').value = center.contact_email || '';
-        document.getElementById('centerPlanType').value = center.plan_type || 'basic';
+
+        // 플랜 타입 표시 (사용자 친화적 이름)
+        const planNames = {
+            'trial': 'Trial (무료 체험)',
+            'basic': 'Basic',
+            'standard': 'Standard',
+            'premium': 'Professional',
+            'free': 'Free'
+        };
+        document.getElementById('centerPlanType').value = planNames[center.plan_type] || center.plan_type;
+
+        // 스토리지 용량
         document.getElementById('centerStorageLimit').value = formatBytes(center.storage_limit_bytes || 0);
 
         // 상태 배지
@@ -391,15 +402,24 @@ async function loadCenterInfo() {
             statusBadge.innerHTML = '<span class="badge bg-secondary">비활성</span>';
         }
 
-        // 구독 정보 조회
+        // 구독 정보 조회 (center_subscriptions 테이블)
         try {
-            const subRes = await fetch(`/api/subscriptions/center/${centerID}`, { credentials: 'include' });
+            const subRes = await fetch(`/api/centers/${centerID}/subscription`, { credentials: 'include' });
             const subResult = await subRes.json();
 
             if (subResult.success && subResult.subscription) {
                 const sub = subResult.subscription;
-                document.getElementById('centerSubscriptionStatus').value = sub.status === 'trial' ? '체험판' :
-                    sub.status === 'active' ? '정상' : '만료';
+
+                // 구독 상태 표시
+                const statusNames = {
+                    'trial': '무료 체험',
+                    'active': '활성',
+                    'cancelled': '취소됨',
+                    'suspended': '만료'
+                };
+                document.getElementById('centerSubscriptionStatus').value = statusNames[sub.status] || sub.status;
+
+                // 다음 결제일
                 document.getElementById('centerNextBilling').value = sub.next_billing_date ?
                     new Date(sub.next_billing_date).toLocaleDateString('ko-KR') : '-';
             } else {

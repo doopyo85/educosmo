@@ -44,74 +44,85 @@
 </head>
 
 <body>
-    <header class="galaxy-header text-center">
-        <h1 class="galaxy-title">
-            <%= blog.title %>
-        </h1>
-        <p class="lead">
-            <%= blog.description %>
-        </p>
-        <% if (user && user.is_logined) { %>
-            <p>Welcome, <%= user.userID %>
-            </p>
-            <% } %>
-    </header>
+    <div class="galaxy-layout">
+        <!-- Sidebar -->
+        <%- include('includes/galaxy_sidebar') %>
 
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-8 mx-auto">
-                <% if (posts.length===0) { %>
-                    <div class="alert alert-dark text-center" style="background-color: #161b22; border-color: #30363d;">
-                        <p class="mb-0">아직 작성된 글이 없습니다. 🌌</p>
-                    </div>
-                    <% } else { %>
-                        <div class="d-flex flex-column gap-4">
-                            <% posts.forEach(post=> { %>
-                                <div class="card post-card">
-                                    <% if (post.thumbnail_url) { %>
-                                        <img src="<%= post.thumbnail_url %>" class="card-img-top"
-                                            alt="<%= post.title %>" style="height: 200px; object-fit: cover;">
-                                        <% } %>
-                                            <div class="card-body">
-                                                <h2 class="h4 card-title text-white">
-                                                    <a href="/p/<%= post.slug %>"
-                                                        class="text-decoration-none text-white stretched-link">
-                                                        <%= post.title %>
-                                                    </a>
-                                                </h2>
-                                                <p class="card-text text-muted mb-2">
-                                                    <%= post.excerpt || '내용 미리보기가 없습니다.' %>
-                                                </p>
-                                                <div
-                                                    class="d-flex justify-content-between align-items-center text-muted small">
-                                                    <span>
-                                                        <%= new Date(post.created_at).toLocaleDateString() %>
-                                                    </span>
-                                                    <span>👀 <%= post.view_count %></span>
-                                                </div>
-                                            </div>
+            <!-- Main Content -->
+            <div class="main-content">
+                <header class="galaxy-header text-center" style="padding-top: 4rem;">
+                    <h1 class="galaxy-title">
+                        <%= blog.title %>
+                    </h1>
+                    <p class="lead">
+                        <%= blog.description %>
+                    </p>
+                    <% if (user && user.is_logined) { %>
+                        <!-- <p>Welcome, <%= user.userID %></p> -->
+                        <% } %>
+                </header>
+
+                <div class="container mt-5 pb-5">
+                    <div class="row">
+                        <div class="col-md-9 mx-auto">
+                            <% if (posts.length===0) { %>
+                                <div class="alert alert-dark text-center"
+                                    style="background-color: #161b22; border-color: #30363d;">
+                                    <p class="mb-0">아직 작성된 글이 없습니다. 🌌</p>
                                 </div>
-                                <% }); %>
-                        </div>
+                                <% } else { %>
+                                    <div class="d-flex flex-column gap-3">
+                                        <h3 class="mb-3" style="font-size: 1.2rem; color: #8b949e;">Recent Posts</h3>
+                                        <% posts.forEach(post=> { %>
+                                            <div class="card post-card">
+                                                <% if (post.thumbnail_url) { %>
+                                                    <img src="<%= post.thumbnail_url %>" class="card-img-top"
+                                                        alt="<%= post.title %>"
+                                                        style="height: 180px; object-fit: cover;">
+                                                    <% } %>
+                                                        <div class="card-body">
+                                                            <h2 class="h5 card-title text-white">
+                                                                <a href="/p/<%= post.slug %>"
+                                                                    class="text-decoration-none text-white stretched-link">
+                                                                    <%= post.title %>
+                                                                </a>
+                                                            </h2>
+                                                            <p class="card-text text-muted mb-2 small">
+                                                                <%= post.excerpt || '내용 미리보기가 없습니다.' %>
+                                                            </p>
+                                                            <div
+                                                                class="d-flex justify-content-between align-items-center text-muted small">
+                                                                <span>
+                                                                    <%= new Date(post.created_at).toLocaleDateString()
+                                                                        %>
+                                                                </span>
+                                                                <span>👀 <%= post.view_count %></span>
+                                                            </div>
+                                                        </div>
+                                            </div>
+                                            <% }); %>
+                                    </div>
 
-                        <!-- Pagination -->
-                        <% if (pagination.totalPages> 1) { %>
-                            <nav aria-label="Page navigation" class="mt-5">
-                                <ul class="pagination justify-content-center pagination-dark">
-                                    <% for(let i=1; i <=pagination.totalPages; i++) { %>
-                                        <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
-                                            <a class="page-link" href="?page=<%= i %>"
-                                                style="<%= pagination.page === i ? 'background-color: #a78bfa; border-color: #a78bfa;' : 'background-color: #161b22; border-color: #30363d; color: #c9d1d9;' %>">
-                                                <%= i %>
-                                            </a>
-                                        </li>
+                                    <!-- Pagination -->
+                                    <% if (pagination.totalPages> 1) { %>
+                                        <nav aria-label="Page navigation" class="mt-5">
+                                            <ul class="pagination justify-content-center pagination-dark">
+                                                <% for(let i=1; i <=pagination.totalPages; i++) { %>
+                                                    <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
+                                                        <a class="page-link" href="?page=<%= i %>"
+                                                            style="<%= pagination.page === i ? 'background-color: #a78bfa; border-color: #a78bfa;' : 'background-color: #161b22; border-color: #30363d; color: #c9d1d9;' %>">
+                                                            <%= i %>
+                                                        </a>
+                                                    </li>
+                                                    <% } %>
+                                            </ul>
+                                        </nav>
                                         <% } %>
-                                </ul>
-                            </nav>
-                            <% } %>
-                                <% } %>
+                                            <% } %>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
     </div>
 </body>
 

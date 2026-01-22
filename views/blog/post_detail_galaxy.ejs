@@ -84,36 +84,44 @@
 </head>
 
 <body>
-    <header class="header">
-        <h1><a href="/">
-                <%= blog.title %>
-            </a></h1>
-    </header>
+    <div class="galaxy-layout">
+        <!-- Sidebar -->
+        <%- include('includes/galaxy_sidebar') %>
 
-    <div class="container">
-        <article class="post">
-            <div class="post-header">
-                <h1 class="post-title">
-                    <%= post.title %>
-                </h1>
-                <div class="post-meta">
-                    <span>
-                        <%= new Date(post.created_at).toLocaleDateString() %>
-                    </span> ·
-                    <span>조회 <%= post.view_count %></span>
+            <!-- Main Content -->
+            <div class="main-content">
+                <header class="header">
+                    <h1><a href="/">
+                            <%= blog.title %>
+                        </a></h1>
+                </header>
+
+                <div class="container">
+                    <article class="post">
+                        <div class="post-header">
+                            <h1 class="post-title">
+                                <%= post.title %>
+                            </h1>
+                            <div class="post-meta">
+                                <span>
+                                    <%= new Date(post.created_at).toLocaleDateString() %>
+                                </span> ·
+                                <span>조회 <%= post.view_count %></span>
+                            </div>
+                        </div>
+
+                        <div class="post-content">
+                            <div id="editorjs"></div>
+                        </div>
+                    </article>
                 </div>
-            </div>
 
-            <div class="post-content">
-                <div id="editorjs"></div>
+                <footer class="footer">
+                    <p>&copy; <%= new Date().getFullYear() %>
+                            <%= blog.title %>. Powered by MyUniverse.</p>
+                </footer>
             </div>
-        </article>
     </div>
-
-    <footer class="footer">
-        <p>&copy; <%= new Date().getFullYear() %>
-                <%= blog.title %>. Powered by MyUniverse.</p>
-    </footer>
 
     <!-- Editor.js & Plugins -->
     <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>

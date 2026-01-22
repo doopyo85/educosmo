@@ -22,24 +22,35 @@ router.get('/', authenticateUser, checkAdminRole, async (req, res) => {
   try {
     const { status, search, page = 1, limit = 20 } = req.query;
 
-    let query = 'SELECT * FROM Centers WHERE 1=1';
+    let query = `
+      SELECT
+        c.*,
+        cs.plan_type as subscription_plan,
+        cs.status as subscription_status,
+        cs.next_billing_date,
+        cs.price_monthly,
+        cs.trial_ends_at
+      FROM Centers c
+      LEFT JOIN center_subscriptions cs ON c.id = cs.center_id
+      WHERE 1=1
+    `;
     const params = [];
 
     // 상태 필터링
     if (status) {
-      query += ' AND status = ?';
+      query += ' AND c.status = ?';
       params.push(status);
     }
 
     // 검색 필터링
     if (search) {
-      query += ' AND (center_name LIKE ? OR contact_name LIKE ? OR contact_email LIKE ?)';
+      query += ' AND (c.center_name LIKE ? OR c.contact_name LIKE ? OR c.contact_email LIKE ?)';
       const searchPattern = `%${search}%`;
       params.push(searchPattern, searchPattern, searchPattern);
     }
 
     // 정렬
-    query += ' ORDER BY created_at DESC';
+    query += ' ORDER BY c.created_at DESC';
 
     // 페이지네이션
     const offset = (page - 1) * limit;
@@ -156,6 +167,73 @@ router.get('/:id', authenticateUser, async (req, res) => {
     res.status(500).json({
       success: false,
       message: '센터 정보 조회에 실패했습니다.',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/centers/:id/subscription
+ * 특정 센터의 구독 정보 조회
+ */
+router.get('/:id/subscription', authenticateUser, async (req, res) => {
+  try {
+    const centerId = req.params.id;
+    const userRole = req.session.role;
+    const userId = req.session.userID;
+
+    // admin이 아니면 본인 센터만 조회 가능
+    if (userRole !== 'admin') {
+      const [user] = await queryDatabase(
+        'SELECT centerID FROM Users WHERE userID = ?',
+        [userId]
+      );
+
+      if (!user || user.centerID !== parseInt(centerId)) {
+        return res.status(403).json({
+          success: false,
+          message: '접근 권한이 없습니다.'
+        });
+      }
+    }
+
+    // 구독 정보 조회
+    const [subscription] = await queryDatabase(`
+      SELECT
+        id,
+        center_id,
+        plan_type,
+        status,
+        storage_limit_bytes,
+        student_limit,
+        price_monthly,
+        next_billing_date,
+        payment_method,
+        trial_ends_at,
+        created_at
+      FROM center_subscriptions
+      WHERE center_id = ?
+      ORDER BY created_at DESC
+      LIMIT 1
+    `, [centerId]);
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: '구독 정보를 찾을 수 없습니다.'
+      });
+    }
+
+    res.json({
+      success: true,
+      subscription
+    });
+
+  } catch (error) {
+    console.error('구독 정보 조회 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '구독 정보 조회에 실패했습니다.',
       error: error.message
     });
   }

@@ -560,6 +560,9 @@
                         <button class="btn btn-sm btn-outline-apple" onclick="event.stopPropagation(); viewUsers(${center.id})">
                             <i class="bi bi-people"></i> 사용자
                         </button>
+                        <button class="btn btn-sm btn-outline-apple" onclick="event.stopPropagation(); manageSubscription(${center.id}, '${center.subscription_status || 'active'}')">
+                            <i class="bi bi-credit-card"></i> 구독
+                        </button>
                     </div>
                 </div>
             `;
@@ -714,6 +717,221 @@
         // 사용자 목록 보기
         function viewUsers(centerId) {
             window.location.href = `/admin/users?centerId=${centerId}`;
+        }
+
+        // 구독 관리
+        async function manageSubscription(centerId, currentStatus) {
+            try {
+                // 구독 상세 정보 조회
+                const response = await fetch(`/admin/api/subscriptions/${centerId}`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    alert('구독 정보를 불러오는데 실패했습니다.');
+                    return;
+                }
+
+                const subscription = result.data;
+                const statusText = {
+                    'trial': '무료 체험',
+                    'active': '활성',
+                    'cancelled': '취소됨',
+                    'suspended': '만료'
+                }[subscription.status] || subscription.status;
+
+                const planText = {
+                    'standard': 'Standard (₩110,000/월)',
+                    'premium': 'Professional (무료)',
+                    'trial': 'Trial (무료 체험)'
+                }[subscription.plan_type] || subscription.plan_type;
+
+                // 액션 버튼 HTML
+                let actionButtons = '';
+                if (subscription.status === 'active') {
+                    actionButtons = `
+                        <button class="btn btn-danger" onclick="cancelSubscription(${centerId})">
+                            <i class="bi bi-x-circle"></i> 구독 취소
+                        </button>
+                    `;
+                } else if (subscription.status === 'cancelled' || subscription.status === 'suspended') {
+                    actionButtons = `
+                        <button class="btn btn-success" onclick="resumeSubscription(${centerId})">
+                            <i class="bi bi-check-circle"></i> 구독 재개
+                        </button>
+                    `;
+                }
+
+                // 플랜 변경 버튼
+                const planChangeButtons = `
+                    <div class="mt-3">
+                        <h6>플랜 변경</h6>
+                        <div class="btn-group">
+                            <button class="btn btn-sm ${subscription.plan_type === 'standard' ? 'btn-primary' : 'btn-outline-primary'}"
+                                    onclick="changePlan(${centerId}, 'standard')"
+                                    ${subscription.plan_type === 'standard' ? 'disabled' : ''}>
+                                Standard
+                            </button>
+                            <button class="btn btn-sm ${subscription.plan_type === 'premium' ? 'btn-primary' : 'btn-outline-primary'}"
+                                    onclick="changePlan(${centerId}, 'premium')"
+                                    ${subscription.plan_type === 'premium' ? 'disabled' : ''}>
+                                Professional
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // 모달 내용 구성
+                const modalContent = `
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">센터명</label>
+                            <div>${subscription.center_name}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">상태</label>
+                            <div>
+                                <span class="badge ${subscription.status === 'active' ? 'bg-success' :
+                                    subscription.status === 'cancelled' ? 'bg-warning' :
+                                        subscription.status === 'suspended' ? 'bg-danger' : 'bg-secondary'}">
+                                    ${statusText}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">플랜</label>
+                            <div>${planText}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">저장소</label>
+                            <div>${subscription.storageGB}GB</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">월 이용료</label>
+                            <div>₩${subscription.price_monthly.toLocaleString()}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">다음 결제일</label>
+                            <div>${subscription.next_billing_date ?
+                        new Date(subscription.next_billing_date).toLocaleDateString('ko-KR') +
+                        ` (${subscription.daysUntilRenewal}일 후)` : 'N/A'}</div>
+                        </div>
+                        ${subscription.trial_ends_at ? `
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">체험 종료일</label>
+                                <div>${new Date(subscription.trial_ends_at).toLocaleDateString('ko-KR')}</div>
+                            </div>
+                        ` : ''}
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold">생성일</label>
+                            <div>${new Date(subscription.created_at).toLocaleString('ko-KR')}</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            ${actionButtons}
+                        </div>
+                        ${planChangeButtons}
+                    </div>
+                `;
+
+                // 모달 표시
+                document.getElementById('detailCenterName').textContent = '구독 관리: ' + subscription.center_name;
+                document.getElementById('detailContent').innerHTML = modalContent;
+                new bootstrap.Modal(document.getElementById('detailModal')).show();
+
+            } catch (error) {
+                console.error('구독 관리 오류:', error);
+                alert('구독 정보를 불러오는데 실패했습니다.');
+            }
+        }
+
+        // 구독 취소
+        async function cancelSubscription(centerId) {
+            if (!confirm('정말 이 센터의 구독을 취소하시겠습니까?\n다음 결제일까지 서비스를 계속 이용할 수 있습니다.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/api/subscriptions/${centerId}/cancel`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: 'Admin manual cancellation' })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('구독이 취소되었습니다.');
+                    bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+                    loadCenters(); // 목록 새로고침
+                } else {
+                    alert('구독 취소 실패: ' + result.error);
+                }
+            } catch (error) {
+                console.error('구독 취소 오류:', error);
+                alert('구독 취소 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 구독 재개
+        async function resumeSubscription(centerId) {
+            if (!confirm('이 센터의 구독을 재개하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/api/subscriptions/${centerId}/resume`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('구독이 재개되었습니다.\n다음 결제일: ' + new Date(result.data.nextBillingDate).toLocaleDateString('ko-KR'));
+                    bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+                    loadCenters(); // 목록 새로고침
+                } else {
+                    alert('구독 재개 실패: ' + result.error);
+                }
+            } catch (error) {
+                console.error('구독 재개 오류:', error);
+                alert('구독 재개 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 플랜 변경
+        async function changePlan(centerId, newPlanType) {
+            const planNames = {
+                'standard': 'Standard (₩110,000/월)',
+                'premium': 'Professional (무료)'
+            };
+
+            if (!confirm(`플랜을 ${planNames[newPlanType]}로 변경하시겠습니까?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/api/subscriptions/${centerId}/plan`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ planType: newPlanType })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`플랜이 ${planNames[newPlanType]}로 변경되었습니다.\n저장소: ${result.data.storageGB}GB`);
+                    bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+                    loadCenters(); // 목록 새로고침
+                } else {
+                    alert('플랜 변경 실패: ' + result.error);
+                }
+            } catch (error) {
+                console.error('플랜 변경 오류:', error);
+                alert('플랜 변경 중 오류가 발생했습니다.');
+            }
         }
 
         // Debounce 함수

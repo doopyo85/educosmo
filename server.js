@@ -1195,6 +1195,10 @@ if (isMain) {
   // 🔥 Trial 만료 처리 Cron Job (Phase 3)
   const { startTrialExpiryCron } = require('./lib_cron/trialExpiryCron');
   startTrialExpiryCron();
+
+  // 🔥 구독 자동 갱신 Cron Job (Phase 4)
+  const { startSubscriptionRenewalCron } = require('./lib_cron/subscriptionRenewalCron');
+  startSubscriptionRenewalCron();
 }
 
 app.get('/api/ws/proxy/:port', (req, res) => {
