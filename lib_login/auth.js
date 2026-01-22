@@ -279,45 +279,11 @@ router.post('/login_process', async (req, res) => {
     }
 });
 
-// 회원가입 페이지 렌더링 (학생 가입 - 탭 방식)
+// 회원가입 페이지 렌더링 (센터 소속 학생 가입)
 router.get('/register', async (req, res) => {
     const title = '학생 가입';
 
     const html = template.HTML(title, `
-        <style>
-            .tab-container {
-                display: flex;
-                margin-bottom: 30px;
-                border-bottom: 2px solid #eee;
-            }
-            .tab {
-                flex: 1;
-                padding: 12px;
-                text-align: center;
-                cursor: pointer;
-                background: transparent;
-                border: none;
-                font-size: 14px;
-                font-weight: 500;
-                color: #666;
-                transition: all 0.3s;
-            }
-            .tab:hover {
-                color: #000;
-            }
-            .tab.active {
-                color: #000;
-                border-bottom: 3px solid #000;
-                margin-bottom: -2px;
-            }
-            .tab-content {
-                display: none;
-            }
-            .tab-content.active {
-                display: block;
-            }
-        </style>
-
         <div style="margin-bottom: 20px;">
             <a href="/auth/login" style="color: #666; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center;">
                 ← 로그인으로 돌아가기
@@ -326,52 +292,15 @@ router.get('/register', async (req, res) => {
 
         <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">학생 가입</h2>
 
-        <!-- 탭 메뉴 -->
-        <div class="tab-container">
-            <button class="tab active" onclick="switchTab('general')">일반 가입</button>
-            <button class="tab" onclick="switchTab('invite')">초대 코드로 가입</button>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">
+            <strong>센터 소속 학생</strong>으로 가입합니다
+        </p>
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 20px; font-size: 13px; color: #666;">
+            🎓 학원/학교에서 받은 <strong>센터 코드</strong>를 입력하세요<br>
+            📚 센터의 스토리지 및 모든 기능을 이용할 수 있습니다
         </div>
 
-        <!-- 탭 1: 일반 가입 -->
-        <div id="general-tab" class="tab-content active">
-            <p style="text-align: center; color: #666; margin-bottom: 20px;">
-                <strong>개인 학생</strong>으로 가입합니다
-            </p>
-            <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 20px; font-size: 13px; color: #666;">
-                📦 <strong>무료 계정:</strong> 512MB 스토리지, 블로그 포스트 10개<br>
-                💡 학원/학교 소속이라면 <strong>"초대 코드로 가입"</strong> 탭을 이용하세요
-            </div>
-
-            <form id="generalRegisterForm">
-                <input class="login" type="text" name="userID" id="generalUserID" placeholder="아이디" required>
-                <input class="login" type="password" name="password" id="generalPassword" placeholder="비밀번호 (8자 이상)" required minlength="8">
-                <input class="login" type="password" name="passwordConfirm" id="generalPasswordConfirm" placeholder="비밀번호 확인" required>
-                <input class="login" type="email" name="email" id="generalEmail" placeholder="이메일" required>
-                <input class="login" type="text" name="name" id="generalName" placeholder="이름" required>
-                <input class="login" type="tel" name="phone" id="generalPhone" placeholder="전화번호 (선택)">
-
-                <div style="margin: 10px 0;">
-                    <input type="checkbox" id="generalPrivacyAgreement" required>
-                    <label for="generalPrivacyAgreement" style="font-size: 12px;">
-                        개인정보 취급방침에 동의합니다. <a href="#" id="generalPrivacyPolicyLink">자세히 보기</a>
-                    </label>
-                </div>
-
-                <input class="btn" type="submit" value="가입하기" style="width: 100%; padding: 10px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            </form>
-        </div>
-
-        <!-- 탭 2: 초대 코드 가입 -->
-        <div id="invite-tab" class="tab-content">
-            <p style="text-align: center; color: #666; margin-bottom: 20px;">
-                <strong>센터 소속 학생</strong>으로 가입합니다
-            </p>
-            <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 20px; font-size: 13px; color: #666;">
-                🎓 학원/학교에서 받은 <strong>센터 코드</strong>를 입력하세요<br>
-                📚 센터의 스토리지 및 모든 기능을 이용할 수 있습니다
-            </div>
-
-            <form id="registerForm">
+        <form id="registerForm">
                 <input class="login" type="text" name="inviteCode" id="inviteCode" placeholder="센터 코드" required style="text-transform: uppercase;">
                 <input type="hidden" name="centerID" id="centerID">
 
@@ -390,10 +319,9 @@ router.get('/register', async (req, res) => {
                 </div>
 
                 <input class="btn" type="submit" value="가입하기" style="width: 100%; padding: 10px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            </form>
-        </div>
+        </form>
 
-            <!-- 개인정보 처리방침 모달 추가 -->
+        <!-- 개인정보 처리방침 모달 추가 -->
             <div id="privacyModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); z-index: 1000;">
                 <div class="modal-content" style="background-color: white; margin: 15% auto; padding: 20px; width: 70%; max-width: 600px; border-radius: 5px; position: relative;">
                     <span class="close" style="position: absolute; right: 10px; top: 5px; font-size: 24px; cursor: pointer;">&times;</span>
@@ -435,18 +363,7 @@ router.get('/register', async (req, res) => {
                 </div>
             </div>
             <script>
-                // 탭 전환 함수
-                function switchTab(tabName) {
-                    // 모든 탭과 컨텐츠 비활성화
-                    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-                    // 선택된 탭과 컨텐츠 활성화
-                    document.querySelector('.tab-container .tab:nth-child(' + (tabName === 'general' ? '1' : '2') + ')').classList.add('active');
-                    document.getElementById(tabName + '-tab').classList.add('active');
-                }
-
-                // 센터 소속 학생 가입 (invite-tab)
+                // 센터 소속 학생 가입
                 document.getElementById('registerForm').addEventListener('submit', async function(event) {
                     event.preventDefault();
 
@@ -516,64 +433,9 @@ router.get('/register', async (req, res) => {
                     }
                 });
 
-                // 일반 가입 제출
-                document.getElementById('generalRegisterForm').addEventListener('submit', async function(event) {
-                    event.preventDefault();
-
-                    if (!document.getElementById('generalPrivacyAgreement').checked) {
-                        alert('개인정보 취급방침에 동의해야 합니다.');
-                        return;
-                    }
-
-                    const password = document.getElementById('generalPassword').value;
-                    const passwordConfirm = document.getElementById('generalPasswordConfirm').value;
-
-                    if (password !== passwordConfirm) {
-                        alert('비밀번호가 일치하지 않습니다.');
-                        return;
-                    }
-
-                    const formData = new FormData(this);
-                    const data = Object.fromEntries(formData.entries());
-                    delete data.passwordConfirm;
-                    data.role = 'student'; // 역할을 학생으로 고정
-
-                    const submitBtn = this.querySelector('input[type="submit"]');
-                    submitBtn.disabled = true;
-                    submitBtn.value = '가입 처리 중...';
-
-                    try {
-                        const response = await fetch('/auth/register-general', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(data)
-                        });
-
-                        const result = await response.json();
-
-                        if (result.error) {
-                            alert(result.error);
-                            submitBtn.disabled = false;
-                            submitBtn.value = '가입하기';
-                        } else {
-                            alert(result.message);
-                            // 로그인 페이지로 이동하면서 사용자 정보 전달
-                            const userID = data.userID;
-                            const password = data.password;
-                            window.location.href = \`/auth/login?userID=\${encodeURIComponent(userID)}&password=\${encodeURIComponent(password)}\`;
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert('회원가입 중 오류가 발생했습니다.');
-                        submitBtn.disabled = false;
-                        submitBtn.value = '가입하기';
-                    }
-                });
-
                 // 개인정보 처리방침 모달 관련 스크립트
                 const modal = document.getElementById('privacyModal');
                 const privacyLink = document.getElementById('privacyPolicyLink');
-                const generalPrivacyLink = document.getElementById('generalPrivacyPolicyLink');
                 const closeBtn = document.getElementsByClassName('close')[0];
 
                 function openModal(e) {
@@ -582,7 +444,6 @@ router.get('/register', async (req, res) => {
                 }
 
                 if (privacyLink) privacyLink.onclick = openModal;
-                if (generalPrivacyLink) generalPrivacyLink.onclick = openModal;
 
                 closeBtn.onclick = function() {
                     modal.style.display = 'none';
