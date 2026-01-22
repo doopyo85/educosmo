@@ -43,6 +43,22 @@
                     </div>
                 </div>
 
+                <!-- 센터 블로그 (Center Blog) -->
+                <div class="board-nav-group mb-2">
+                    <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">
+                        <i class="bi bi-broadcast me-2"></i> 커뮤니티
+                    </div>
+                    <div class="d-flex flex-column gap-1">
+                        <% if (user && user.centerID) { %>
+                            <a href="/blog/<%= user.centerID %>" target="_blank" class="board-category-item ps-5 py-2"
+                                style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                                센터 블로그
+                                <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.7em;"></i>
+                            </a>
+                            <% } %>
+                    </div>
+                </div>
+
                 <!-- 수업 자료 (Submenu) -->
                 <div class="board-nav-group mb-2">
                     <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">

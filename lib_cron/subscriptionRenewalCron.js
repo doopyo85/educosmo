@@ -12,8 +12,8 @@
  */
 
 const cron = require('node-cron');
-const { queryDatabase } = require('../lib/database_conns/queryDatabase');
-const { sendEmail } = require('../lib/email');
+const { queryDatabase } = require('../lib_login/db');
+const { sendEmail } = require('../lib_login/email');
 
 /**
  * 구독 자동 갱신 처리

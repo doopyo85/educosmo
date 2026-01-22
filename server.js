@@ -279,6 +279,32 @@ const jupyterTarget = `http://${JUPYTER_HOST}:${JUPYTER_PORT}`;
 
 console.log(`Setting up Jupyter Proxy to: ${jupyterTarget} (Env: ${process.env.JUPYTER_HOST}:${process.env.JUPYTER_PORT})`);
 
+// 🔥 Blog Center Redirect Route
+app.get('/blog/:centerId', async (req, res) => {
+  const centerId = req.params.centerId;
+  try {
+    const [center] = await db.queryDatabase('SELECT subdomain FROM center_blogs WHERE center_id = ?', [centerId]);
+
+    if (center && center.subdomain) {
+      // Redirect to subdomain
+      const protocol = req.protocol;
+      const host = req.get('host'); // e.g. localhost:3000 or pong2.app
+
+      // Determine base domain (remove subdomains if any, or just use config)
+      const baseDomain = host.split('.').slice(-2).join('.'); // simple approximation or use config
+      // For localhost dev:
+      const targetHost = host.includes('localhost') ? `${center.subdomain}.blog.localhost:3001` : `${center.subdomain}.blog.${host}`;
+
+      return res.redirect(`http://${targetHost}`);
+    } else {
+      return res.status(404).send('Center blog not found or not initialized.');
+    }
+  } catch (error) {
+    console.error('Blog redirect error:', error);
+    res.status(500).send('Server Error');
+  }
+});
+
 // 🔥 Blog Server Proxy (Express로 라우팅 처리)
 // Apache/Nginx에서 3000번으로 모든 트래픽을 보내면 여기서 분기
 

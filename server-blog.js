@@ -199,13 +199,28 @@ app.get('/p/:slug', async (req, res) => {
 // ==========================================
 
 // Helper: Check if current user is owner
+// Helper: Check permission (Owner or Center Admin)
 function isOwner(req, res, next) {
-    if (req.session && req.session.user && req.blogOwner) {
+    // 1. User Blog Owner Check
+    if (req.blogType === 'user' && req.session && req.session.user && req.blogOwner) {
         const visitorId = req.session.id || (req.session.user && req.session.user.id);
         if (visitorId == req.blogOwner.id) {
             return next();
         }
     }
+
+    // 2. Center Blog Admin/Teacher Check
+    if (req.blogType === 'center' && req.session && req.session.is_logined) {
+        // Check if user belongs to this center
+        if (req.session.centerID == req.blog.center_id) {
+            // Check roles
+            const role = req.session.role;
+            if (role === 'manager' || role === 'teacher' || role === 'admin') {
+                return next();
+            }
+        }
+    }
+
     res.status(403).send('Forbidden: Access denied');
 }
 
