@@ -10,7 +10,7 @@
  */
 
 const cron = require('node-cron');
-const { queryDatabase } = require('../lib/db');
+const { queryDatabase } = require('../lib_login/db');
 const { sendTrialExpiryReminderEmail, sendTrialExpiredEmail } = require('../lib_auth/emailService');
 
 // ========================================
