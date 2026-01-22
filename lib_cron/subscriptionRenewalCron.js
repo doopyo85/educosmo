@@ -13,7 +13,7 @@
 
 const cron = require('node-cron');
 const { queryDatabase } = require('../lib_login/db');
-const { sendEmail } = require('../lib_login/email');
+const { sendEmail } = require('../lib_auth/emailService');
 
 /**
  * 구독 자동 갱신 처리
