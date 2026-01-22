@@ -6,6 +6,9 @@ const redis = require('redis');
 const path = require('path');
 const config = require('./config');
 const { queryDatabase } = require('./lib_login/db');
+const multer = require('multer');
+const multerS3 = require('multer-s3');
+const { s3Client, BUCKET_NAME, generateMultimediaKey } = require('./lib_board/s3Utils');
 
 const app = express();
 const PORT = process.env.BLOG_PORT || 3001;
@@ -183,25 +186,55 @@ app.get('/p/:slug', async (req, res) => {
     }
 });
 
+
 // ==========================================
 // Write Routes (Owner Only)
 // ==========================================
 
 // Helper: Check if current user is owner
 function isOwner(req, res, next) {
-    // req.user is populated by session (visitor info)
-    // req.blogOwner is the owner of the current blog context
     if (req.session && req.session.user && req.blogOwner) {
-        // Check ID match (req.session.user.id vs req.blogOwner.id)
-        // Adjust based on your session structure: session.id or session.user.id
         const visitorId = req.session.id || (req.session.user && req.session.user.id);
-
         if (visitorId == req.blogOwner.id) {
             return next();
         }
     }
     res.status(403).send('Forbidden: Access denied');
 }
+
+// Image Upload Configuration for Editor.js
+const upload = multer({
+    storage: multerS3({
+        s3: s3Client,
+        bucket: BUCKET_NAME,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        acl: 'public-read',
+        key: function (req, file, cb) {
+            const ext = path.extname(file.originalname);
+            const context = 'blog';
+            const key = generateMultimediaKey(context, ext, false); // Direct to perm for simplicity in blog for now
+            cb(null, key);
+        }
+    }),
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit for blog images
+});
+
+// POST /upload/image - For Editor.js
+
+app.post('/upload/image', isOwner, upload.single('image'), (req, res) => {
+    if (req.file) {
+        // Editor.js expects this format
+        res.json({
+            success: 1,
+            file: {
+                url: req.file.location,
+                // specific fields if needed
+            }
+        });
+    } else {
+        res.json({ success: 0, message: 'Upload failed' });
+    }
+});
 
 // GET /write - Show Editor
 app.get('/write', isOwner, (req, res) => {
@@ -215,26 +248,31 @@ app.get('/write', isOwner, (req, res) => {
 // POST /write - Save Post
 app.post('/write', isOwner, async (req, res) => {
     try {
-        const { title, content, excerpt, thumbnail_url } = req.body;
+        const { title, content, content_json, excerpt, thumbnail_url } = req.body;
 
-        if (!title || !content) {
-            return res.status(400).send('Title and Content are required');
+        if (!title) {
+            return res.status(400).send('Title is required');
         }
 
         // Generate Slug (simple)
         const slug = Math.random().toString(36).substring(2, 10); // temporary random slug
 
+        // content might be empty if only using blocks, generate a backup or use empty string
+        const htmlContent = content || '';
+        const jsonContent = content_json ? JSON.stringify(content_json) : null;
+
         await queryDatabase(`
             INSERT INTO blog_posts 
-            (blog_id, blog_type, title, slug, content, excerpt, thumbnail_url, is_published, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
+            (blog_id, blog_type, title, slug, content, content_json, excerpt, thumbnail_url, is_published, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
         `, [
             req.blog.id,
             req.blogType,
             title,
             slug,
-            content,
-            excerpt || content.substring(0, 100),
+            htmlContent,
+            jsonContent,
+            excerpt || (htmlContent.substring(0, 100)),
             thumbnail_url || null
         ]);
 

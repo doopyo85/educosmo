@@ -105,13 +105,7 @@
             </div>
 
             <div class="post-content">
-                <!-- Content Rendering (Needs HTML sanitization in real implementation) -->
-                <% if (post.content_json) { %>
-                    <!-- Simplified Rendering for JSON -->
-                    <%- JSON.stringify(post.content_json) %>
-                        <% } else { %>
-                            <p>내용이 없습니다.</p>
-                            <% } %>
+                <div id="editorjs"></div>
             </div>
         </article>
     </div>
@@ -120,6 +114,44 @@
         <p>&copy; <%= new Date().getFullYear() %>
                 <%= blog.title %>. Powered by MyUniverse.</p>
     </footer>
+
+    <!-- Editor.js & Plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/list@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/checklist@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/image@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/raw@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/code@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/embed@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/marker@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/inline-code@latest"></script>
+
+    <script>
+        // Render Editor.js in Read-Only Mode
+        const contentData = <% - post.content_json ? JSON.stringify(post.content_json) : '{}' %>;
+
+        const editor = new EditorJS({
+            holder: 'editorjs',
+            readOnly: true,
+            tools: {
+                header: Header,
+                list: List,
+                checklist: Checklist,
+                image: ImageTool,
+                quote: Quote,
+                code: CodeTool,
+                embed: Embed,
+                marker: Marker,
+                inlineCode: InlineCode,
+            },
+            data: contentData,
+            onReady: () => {
+                console.log('Editor.js is ready to work!');
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -72,9 +72,46 @@
             <%= new Date(post.created_at).toLocaleDateString() %>
         </div>
         <div class="content">
-            <%- post.content_json ? JSON.stringify(post.content_json) : '내용 없음' %>
+            <div id="editorjs"></div>
         </div>
     </div>
+
+    <!-- Editor.js & Plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/list@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/checklist@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/image@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/raw@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/code@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/embed@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/marker@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/inline-code@latest"></script>
+
+    <script>
+        const contentData = <% - post.content_json ? JSON.stringify(post.content_json) : '{}' %>;
+
+        const editor = new EditorJS({
+            holder: 'editorjs',
+            readOnly: true,
+            tools: {
+                header: Header,
+                list: List,
+                checklist: Checklist,
+                image: ImageTool,
+                quote: Quote,
+                code: CodeTool,
+                embed: Embed,
+                marker: Marker,
+                inlineCode: InlineCode,
+            },
+            data: contentData,
+            onReady: () => {
+                console.log('Editor.js (Board Theme) is ready!');
+            }
+        });
+    </script>
 </body>
 
 </html>

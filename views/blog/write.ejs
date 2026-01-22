@@ -12,6 +12,8 @@
             background-color: #191919;
             color: #d3d3d3;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+            overflow-y: scroll;
+            /* 항상 스크롤바 표시 */
         }
 
         .editor-container {
@@ -28,28 +30,121 @@
             color: white;
             font-size: 42px;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             outline: none;
+            padding: 0;
+            line-height: 1.2;
         }
 
         .title-input::placeholder {
             color: #555;
         }
 
-        .content-textarea {
-            width: 100%;
-            min-height: 60vh;
-            background: transparent;
-            border: none;
+        /* Editor.js Styles Overrides for Dark Mode */
+        .codex-editor {
             color: #d3d3d3;
-            font-size: 18px;
-            line-height: 1.6;
-            resize: none;
-            outline: none;
         }
 
-        .content-textarea::placeholder {
-            color: #555;
+        .ce-block__content {
+            max-width: 100%;
+        }
+
+        .ce-toolbar__content {
+            max-width: 100%;
+        }
+
+        /* Block text color */
+        .ce-paragraph {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: #fff;
+        }
+
+        .ce-header {
+            color: #fff;
+            font-weight: bold;
+            padding-bottom: 0.5em !important;
+        }
+
+        /* Toolbar and Popups */
+        .ce-toolbar__plus,
+        .ce-toolbar__settings-btn {
+            color: #888;
+            background-color: transparent;
+        }
+
+        .ce-toolbar__plus:hover,
+        .ce-toolbar__settings-btn:hover {
+            color: #fff;
+            background-color: #333;
+        }
+
+        .ce-popover {
+            background-color: #252525;
+            border: 1px solid #444;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .ce-popover__item:hover {
+            background-color: #333;
+        }
+
+        .ce-popover__item-icon {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .ce-popover__item-label {
+            color: #ddd;
+        }
+
+        .ce-inline-toolbar {
+            background-color: #252525;
+            border: 1px solid #444;
+            color: #fff;
+        }
+
+        .ce-inline-tool {
+            color: #ddd;
+        }
+
+        .ce-inline-tool:hover {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .ce-inline-tool--active {
+            color: #5b9bf8;
+        }
+
+        .ce-conversion-toolbar {
+            background-color: #252525;
+            border: 1px solid #444;
+        }
+
+        .ce-conversion-tool:hover {
+            background-color: #333;
+        }
+
+        .ce-conversion-tool__icon {
+            background-color: #333;
+        }
+
+        /* Image Tool Override */
+        .image-tool__image-picture {
+            border-radius: 4px;
+        }
+
+        .image-tool__caption {
+            color: #888;
         }
 
         .action-bar {
@@ -58,6 +153,7 @@
             right: 20px;
             display: flex;
             gap: 10px;
+            z-index: 100;
         }
 
         .btn-save {
@@ -67,6 +163,12 @@
             padding: 8px 16px;
             font-weight: 600;
             border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-save:hover {
+            background-color: #f0f0f0;
         }
 
         .btn-cancel {
@@ -74,8 +176,53 @@
             color: #888;
             border: none;
             padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-cancel:hover {
+            color: #fff;
+        }
+
+        /* Checklist */
+        .cdx-checklist__item--checked .cdx-checklist__item-text {
+            color: #666;
+            text-decoration: line-through;
+        }
+
+        .cdx-checklist__item-checkbox {
+            border-color: #666;
+            background-color: transparent;
+        }
+
+        .cdx-checklist__item-checkbox-check {
+            background-color: #5b9bf8;
+            border-color: #5b9bf8;
+        }
+
+        /* Code Box */
+        .ce-code__textarea {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            border: 1px solid #444;
         }
     </style>
+
+    <!-- Editor.js Core -->
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+
+    <!-- Tools -->
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/list@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/checklist@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/image@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/raw@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/code@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/embed@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/marker@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/inline-code@latest"></script>
+
 </head>
 
 <body>
@@ -86,13 +233,85 @@
 
     <div class="editor-container">
         <input type="text" id="postTitle" class="title-input" placeholder="제목 없음" autocomplete="off">
-        <textarea id="postContent" class="content-textarea" placeholder="내용을 입력하세요..." spellcheck="false"></textarea>
+        <div id="editorjs"></div>
     </div>
 
     <script>
+        const editor = new EditorJS({
+            holder: 'editorjs',
+            placeholder: '이곳을 클릭하여 내용을 입력하세요. ("/"를 눌러 메뉴 호출)',
+
+            tools: {
+                header: {
+                    class: Header,
+                    inlineToolbar: true,
+                    config: {
+                        placeholder: 'Heading',
+                        levels: [1, 2, 3],
+                        defaultLevel: 1
+                    }
+                },
+                list: {
+                    class: List,
+                    inlineToolbar: true,
+                    config: {
+                        defaultStyle: 'unordered'
+                    }
+                },
+                checklist: {
+                    class: Checklist,
+                    inlineToolbar: true,
+                },
+                image: {
+                    class: ImageTool,
+                    config: {
+                        endpoints: {
+                            byFile: '/upload/image', // Backend upload endpoint
+                        },
+                        field: 'image',
+                        types: 'image/*',
+                    }
+                },
+                quote: {
+                    class: Quote,
+                    inlineToolbar: true,
+                    config: {
+                        quotePlaceholder: '인용문을 입력하세요',
+                        captionPlaceholder: '저자',
+                    },
+                },
+                code: CodeTool,
+                embed: {
+                    class: Embed,
+                    inlineToolbar: true,
+                    config: {
+                        services: {
+                            youtube: true,
+                            coub: true,
+                            imgur: true
+                        }
+                    }
+                },
+                marker: {
+                    class: Marker,
+                    shortcut: 'CMD+SHIFT+M',
+                },
+                inlineCode: {
+                    class: InlineCode,
+                    shortcut: 'CMD+SHIFT+C',
+                },
+            },
+
+            data: {}, // Initial Data (Empty for new post)
+
+            onChange: (api, event) => {
+                // Auto-save or draft logic could go here
+                console.log('Now I know that Editor\'s content changed!');
+            }
+        });
+
         async function savePost() {
             const title = document.getElementById('postTitle').value;
-            const content = document.getElementById('postContent').value;
 
             if (!title) {
                 alert('제목을 입력해주세요.');
@@ -100,10 +319,37 @@
             }
 
             try {
+                // Get JSON data from Editor.js
+                const savedData = await editor.save();
+
+                // Helper to extract plain text for excerpt
+                let plainText = '';
+                if (savedData.blocks && savedData.blocks.length > 0) {
+                    // Simple extraction from paragraphs and headers
+                    plainText = savedData.blocks
+                        .filter(block => ['paragraph', 'header'].includes(block.type))
+                        .map(block => block.data.text)
+                        .join(' ')
+                        .substring(0, 200);
+                }
+
+                // First image validation for thumbnail (optional)
+                let thumbnail_url = null;
+                const imageBlock = savedData.blocks.find(block => block.type === 'image');
+                if (imageBlock && imageBlock.data && imageBlock.data.file) {
+                    thumbnail_url = imageBlock.data.file.url;
+                }
+
                 const response = await fetch('/write', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, content })
+                    body: JSON.stringify({
+                        title,
+                        content_json: savedData, // Save the structural data
+                        content: plainText,      // Legacy HTML content for old views/excerpts
+                        excerpt: plainText,
+                        thumbnail_url: thumbnail_url
+                    })
                 });
 
                 const result = await response.json();
@@ -114,16 +360,9 @@
                 }
             } catch (error) {
                 console.error(error);
-                alert('오류가 발생했습니다.');
+                alert('저장 중 오류가 발생했습니다.');
             }
         }
-
-        // Auto resize textarea
-        const textarea = document.getElementById('postContent');
-        textarea.addEventListener('input', function () {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
     </script>
 </body>
 
