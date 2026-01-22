@@ -404,6 +404,7 @@ router.get('/timeline', async (req, res) => {
 
                 UNION ALL
 
+                /*
                 -- 3. Badges
                 SELECT 
                     'badge' as type, 
@@ -415,6 +416,7 @@ router.get('/timeline', async (req, res) => {
                 WHERE user_id = ?
 
                 UNION ALL
+                */
 
                 -- 4. User Activity Logs
                 SELECT 
@@ -618,6 +620,7 @@ router.get('/student/:id', async (req, res) => {
 
                 UNION ALL
 
+                /*
                 -- 3. Badges
                 SELECT 
                     'badge' as type, 
@@ -629,6 +632,7 @@ router.get('/student/:id', async (req, res) => {
                 WHERE user_id = ?
 
                 UNION ALL
+                */
 
                 -- 4. User Activity Logs
                 SELECT 
