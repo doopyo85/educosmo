@@ -442,7 +442,7 @@ router.get('/register', async (req, res) => {
                     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
                     // 선택된 탭과 컨텐츠 활성화
-                    document.querySelector('.tab-container .tab:nth-child(' + (tabName === 'invite' ? '1' : '2') + ')').classList.add('active');
+                    document.querySelector('.tab-container .tab:nth-child(' + (tabName === 'general' ? '1' : '2') + ')').classList.add('active');
                     document.getElementById(tabName + '-tab').classList.add('active');
                 }
 
