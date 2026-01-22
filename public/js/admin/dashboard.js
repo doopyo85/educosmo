@@ -34,8 +34,10 @@ function updateDashboardStats(data) {
         const elements = {
             'totalUsers': data.totalStats.total_users || 0,
             'studentCount': data.totalStats.student_count || 0,
-            'teacherCount': data.totalStats.teacher_count || 0, // Updated to Teacher
-            'activeCenters': data.totalStats.active_centers || 0
+            'teacherCount': data.totalStats.teacher_count || 0,
+            'activeCenters': data.totalStats.active_centers || 0,
+            // If you added IDs for these in dashboard.ejs, map them here:
+            // 'activeSubscriptions': data.totalStats.active_subscriptions || 0
         };
 
         Object.entries(elements).forEach(([id, value]) => {
@@ -150,6 +152,9 @@ async function loadCenterStats() {
                 <td>${center.student_count || 0}</td>
                 <td>${center.manager_count || 0}</td>
                 <td>${center.teacher_count || 0}</td>
+                <td>
+                    ${center.subscription_plan ? `<span class="badge bg-info">${center.subscription_plan}</span>` : '-'}
+                </td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="showCenterDetails(${center.centerID})">
                         상세보기

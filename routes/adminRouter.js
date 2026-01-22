@@ -8,7 +8,7 @@ const { hasAccess } = require('../lib_login/permissions');
 const permissions = require('../lib_login/permissions.json');
 const multer = require('multer');
 const Papa = require('papaparse');
-const { authenticateUser } = require('../lib_login/authMiddleware');
+
 const upload = multer({ dest: 'uploads/temp/' });
 
 // 안전한 날짜 처리 함수
@@ -150,13 +150,12 @@ router.get('/api/users', checkAdminRole, async (req, res) => {
 // 센터 목록 조회 API (Dropdown용)
 router.get('/api/centers', checkAdminRole, async (req, res) => {
   try {
-    try {
-      const centers = await db.queryDatabase('SELECT id, center_name as name FROM Centers WHERE status = "ACTIVE"');
-      res.json({ success: true, centers });
-    } catch (error) {
-      res.status(500).json({ success: false, error: error.message });
-    }
-  });
+    const centers = await db.queryDatabase('SELECT id, center_name as name FROM Centers WHERE status = "ACTIVE"');
+    res.json({ success: true, centers });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // 사용자 센터 변경 API
 router.put('/api/users/:userId/center', checkAdminRole, async (req, res) => {
@@ -237,11 +236,13 @@ router.get('/api/stats', checkAdminRole, async (req, res) => {
                 COUNT(*) as total_users,
                 COUNT(CASE WHEN u.role = 'student' THEN 1 END) as student_count,
                 COUNT(CASE WHEN u.role = 'manager' THEN 1 END) as manager_count,
-                COUNT(CASE WHEN u.role = 'teacher' THEN 1 END) as teacher_count
+                COUNT(CASE WHEN u.role = 'teacher' THEN 1 END) as teacher_count,
+                MAX(cs.plan_type) as subscription_plan
             FROM Users u
             LEFT JOIN Centers c ON u.centerID = c.id
+            LEFT JOIN center_subscriptions cs ON c.id = cs.center_id AND cs.status = 'active'
             WHERE u.centerID IS NOT NULL
-            GROUP BY u.centerID, c.center_name
+            GROUP BY u.centerID, c.center_name, cs.plan_type
         `;
 
     const centerStats = await db.queryDatabase(centerQuery);
