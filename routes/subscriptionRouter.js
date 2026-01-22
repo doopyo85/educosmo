@@ -7,8 +7,8 @@
 
 const express = require('express');
 const router = express.Router();
-const template = require('../lib/template.js');
-const { queryDatabase } = require('../lib/db');
+const template = require('../lib_login/template.js');
+const { queryDatabase } = require('../lib_login/db');
 const { requireLogin, requireCenterAdmin } = require('../lib_login/accessControl');
 
 // ========================================
