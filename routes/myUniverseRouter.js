@@ -1134,4 +1134,56 @@ router.get('/observatory', async (req, res) => {
 });
 
 
+
+// ============================================
+// Teacher View: Student Blog (Redirect)
+// ============================================
+router.get('/student/:id/blog', async (req, res) => {
+    try {
+        const studentId = req.params.id;
+        const teacherRole = req.session.role;
+        const teacherCenterId = req.session.centerID;
+
+        // Teacher/Admin check
+        if (!['teacher', 'manager', 'admin'].includes(teacherRole)) {
+            return res.status(403).send('권한이 없습니다.');
+        }
+
+        const [student] = await db.queryDatabase(
+            'SELECT * FROM Users WHERE id = ? AND role = "student"',
+            [studentId]
+        );
+
+        if (!student) {
+            return res.status(404).send('학생을 찾을 수 없습니다.');
+        }
+
+        // Center check
+        if (teacherRole !== 'admin' && student.centerID !== teacherCenterId) {
+            return res.status(403).send('다른 센터 학생입니다.');
+        }
+
+        // Check for blog
+        const [blog] = await db.queryDatabase('SELECT subdomain FROM user_blogs WHERE user_id = ?', [student.id]);
+
+        if (blog) {
+            const protocol = req.secure ? 'https' : 'http';
+            return res.redirect(`${protocol}://${blog.subdomain}.pong2.app`);
+        }
+
+        // No blog found
+        res.send(`
+            <script>
+                alert('해당 학생은 아직 블로그를 개설하지 않았습니다.');
+                window.location.href = '/my-universe/student/${studentId}';
+            </script>
+        `);
+
+    } catch (error) {
+        console.error('Student Blog Route Error:', error);
+        res.status(500).send('Error accessing student blog');
+    }
+});
+
+
 module.exports = router;
