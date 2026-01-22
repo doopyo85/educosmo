@@ -281,8 +281,31 @@ console.log(`Setting up Jupyter Proxy to: ${jupyterTarget} (Env: ${process.env.J
 
 // 🔥 Blog Server Proxy (Express로 라우팅 처리)
 // Apache/Nginx에서 3000번으로 모든 트래픽을 보내면 여기서 분기
-// 🔥 Blog Server Proxy (Express로 라우팅 처리)
-// Apache/Nginx에서 3000번으로 모든 트래픽을 보내면 여기서 분기
+
+// 0. 🔥 내부 접근 경로 지원: /blog/{userid} -> {userid}.pong2.app 로 프록시
+app.use('/blog', (req, res, next) => {
+  const match = req.url.match(/^\/([^\/]+)(.*)/);
+  if (match) {
+    const subdomain = match[1]; // minho
+    const restPath = match[2] || '/'; // /p/slug
+
+    console.log(`Proxying internal blog request: /blog/${subdomain}${restPath} -> http://localhost:3001 (Host: ${subdomain}.pong2.app)`);
+
+    return createProxyMiddleware({
+      target: 'http://localhost:3001',
+      changeOrigin: true,
+      pathRewrite: {
+        [`^/blog/${subdomain}`]: '',
+        [`^/${subdomain}`]: ''
+      },
+      onProxyReq: (proxyReq) => {
+        proxyReq.setHeader('Host', `${subdomain}.pong2.app`);
+      }
+    })(req, res, next);
+  }
+  next();
+});
+
 app.use((req, res, next) => {
   const host = req.get('host') || '';
 
