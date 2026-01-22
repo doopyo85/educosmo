@@ -11,6 +11,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
+        DB_NAME: 'educodingnplay',
         SERVICE_TYPE: 'main',
         JUPYTER_HOST: '127.0.0.1',
         JUPYTER_PORT: 8000,
@@ -70,6 +71,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3001,
+        DB_NAME: 'educodingnplay',
         SERVICE_TYPE: 'blog'
       },
       kill_timeout: 10000
