@@ -284,66 +284,38 @@ router.get('/register', async (req, res) => {
     const title = '학생 가입';
 
     const html = template.HTML(title, `
-        <div style="margin-bottom: 15px;">
+        <div style="margin-bottom: 20px;">
             <a href="/auth/login" style="color: #666; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center;">
                 ← 로그인으로 돌아가기
             </a>
         </div>
 
-        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 400px; margin: 0 auto;">
-            <h2 style="text-align: center; font-size: 20px; margin-bottom: 25px;">학생 가입</h2>
+        <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">학생 가입</h2>
 
-            <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 20px; font-size: 13px; color: #666;">
-                🎓 학원/학교에서 받은 <strong>센터 코드</strong>를 입력하세요
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 20px; font-size: 13px; color: #666;">
+            🎓 학원/학교에서 받은 <strong>센터 코드</strong>를 입력하세요
+        </div>
+
+        <form id="registerForm">
+            <input class="login" type="text" name="inviteCode" id="inviteCode" placeholder="* 센터 코드" required style="text-transform: uppercase;">
+            <input type="hidden" name="centerID" id="centerID">
+
+            <input class="login" type="text" name="userID" id="userID" placeholder="* 아이디" required>
+            <input class="login" type="password" name="password" id="password" placeholder="* 비밀번호 (8자 이상)" required minlength="8">
+            <input class="login" type="password" name="passwordConfirm" id="passwordConfirm" placeholder="* 비밀번호 확인" required>
+            <input class="login" type="text" name="name" id="name" placeholder="* 이름" required>
+            <input class="login" type="email" name="email" id="email" placeholder="이메일 (선택)">
+            <input class="login" type="tel" name="phone" id="phone" placeholder="전화번호 (선택)">
+
+            <div style="margin: 10px 0;">
+                <input type="checkbox" id="privacyAgreement" required>
+                <label for="privacyAgreement" style="font-size: 12px;">
+                    개인정보 취급방침에 동의합니다. <a href="#" id="privacyPolicyLink">자세히 보기</a>
+                </label>
             </div>
 
-            <form id="registerForm">
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #333;">센터 코드 <span style="color: #e74c3c;">*</span></label>
-                    <input class="login" type="text" name="inviteCode" id="inviteCode" placeholder="센터 코드" required style="text-transform: uppercase;">
-                    <input type="hidden" name="centerID" id="centerID">
-                </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #333;">아이디 <span style="color: #e74c3c;">*</span></label>
-                    <input class="login" type="text" name="userID" id="userID" placeholder="아이디" required>
-                </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #333;">비밀번호 <span style="color: #e74c3c;">*</span></label>
-                    <input class="login" type="password" name="password" id="password" placeholder="비밀번호 (8자 이상)" required minlength="8">
-                </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #333;">비밀번호 확인 <span style="color: #e74c3c;">*</span></label>
-                    <input class="login" type="password" name="passwordConfirm" id="passwordConfirm" placeholder="비밀번호 확인" required>
-                </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #333;">이름 <span style="color: #e74c3c;">*</span></label>
-                    <input class="login" type="text" name="name" id="name" placeholder="이름" required>
-                </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #333;">이메일 (선택)</label>
-                    <input class="login" type="email" name="email" id="email" placeholder="이메일">
-                </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #333;">전화번호 (선택)</label>
-                    <input class="login" type="tel" name="phone" id="phone" placeholder="전화번호">
-                </div>
-
-                <div style="margin: 15px 0;">
-                    <input type="checkbox" id="privacyAgreement" required>
-                    <label for="privacyAgreement" style="font-size: 12px;">
-                        개인정보 취급방침에 동의합니다. <a href="#" id="privacyPolicyLink">자세히 보기</a>
-                    </label>
-                </div>
-
-                <input class="btn" type="submit" value="가입하기" style="width: 100%; padding: 12px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 15px;">
-            </form>
-        </div>
+            <input class="btn" type="submit" value="가입하기" style="width: 100%; padding: 10px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        </form>
 
         <!-- 개인정보 처리방침 모달 추가 -->
             <div id="privacyModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); z-index: 1000;">
