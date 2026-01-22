@@ -11,7 +11,7 @@
 | 구분 | 내용 |
 | :--- | :--- |
 | **Frontend** | Netlify (정적 호스팅) |
-| **Backend** | AWS EC2 (Express.js) |
+| **Backend** | NCP Server (Express.js) |
 | **API Base URL** | `https://app.codingnplay.co.kr/api/pong2` |
 | **Protocol** | HTTPS, CORS 허용 (`pong2.app`) |
 

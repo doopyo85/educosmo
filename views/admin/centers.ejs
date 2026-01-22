@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <%- include('../partials/header') %>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/board-layout.css">
+    <style>
+        body {
+            background-color: #f5f5f7;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #1d1d1f;
+        }
+
+        .board-layout-container {
+            max-width: none !important;
+            width: 100%;
+            margin: 0 !important;
+            padding: 20px 40px;
+            gap: 30px;
+        }
+
+        .board-sidebar {
+            width: 260px;
+            min-width: 260px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            border: none;
+            box-shadow: none;
+            background: transparent;
+        }
+
+        .board-sidebar-header {
+            background: transparent;
+            color: #86868b;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 10px 15px;
+            font-weight: 600;
+        }
+
+        .board-category-item {
+            border-radius: 12px !important;
+            margin-bottom: 4px;
+            padding: 10px 16px;
+            color: #424245;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            border: none !important;
+            cursor: pointer;
+        }
+
+        .board-category-item:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+            color: #1d1d1f;
+        }
+
+        .board-category-item.active {
+            background-color: #0071e3 !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+        }
+
+        .board-main-content {
+            flex: 1;
+            max-width: none !important;
+            border: none;
+            box-shadow: none;
+            background: transparent;
+            padding: 0;
+        }
+
+        .page-header-bar {
+            margin-bottom: 24px;
+            padding: 24px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin: 0;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+        }
+
+        .btn-apple {
+            background-color: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-apple:hover {
+            background-color: #0077ed;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+        }
+
+        .btn-outline-apple {
+            background-color: transparent;
+            color: #0071e3;
+            border: 1px solid #0071e3;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-apple:hover {
+            background-color: #0071e3;
+            color: white;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #0071e3;
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+        }
+
+        .center-card {
+            background: #f5f5f7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .center-card:hover {
+            background: #ebebed;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .center-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 8px;
+        }
+
+        .center-info {
+            color: #86868b;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .badge-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-active {
+            background-color: #34c759;
+            color: white;
+        }
+
+        .badge-inactive {
+            background-color: #ff9500;
+            color: white;
+        }
+
+        .badge-suspended {
+            background-color: #ff3b30;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f5f5f7;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0071e3;
+        }
+
+        .stat-label {
+            color: #86868b;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        .modal-apple {
+            border-radius: 16px;
+            border: none;
+        }
+
+        .modal-apple .modal-header {
+            border-bottom: 1px solid #f5f5f7;
+            padding: 20px 24px;
+        }
+
+        .modal-apple .modal-body {
+            padding: 24px;
+        }
+
+        .modal-apple .modal-footer {
+            border-top: 1px solid #f5f5f7;
+            padding: 16px 24px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #1d1d1f;
+            margin-bottom: 8px;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            padding: 10px 16px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0071e3;
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #86868b;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="board-layout-container">
+        <!-- Sidebar -->
+        <aside class="board-sidebar">
+            <div class="board-sidebar-header">
+                <i class="bi bi-gear-fill me-2"></i>관리자 메뉴
+            </div>
+            <nav class="board-nav-group">
+                <a href="/admin/dashboard" class="board-category-item">
+                    <i class="bi bi-speedometer2 me-2"></i>대시보드
+                </a>
+                <a href="/admin/centers" class="board-category-item active">
+                    <i class="bi bi-building me-2"></i>센터 관리
+                </a>
+                <a href="/admin/users" class="board-category-item">
+                    <i class="bi bi-people me-2"></i>사용자 관리
+                </a>
+                <a href="/admin/sql-manager" class="board-category-item">
+                    <i class="bi bi-database me-2"></i>SQL 관리
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="board-main-content">
+            <!-- Page Header -->
+            <div class="page-header-bar">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="page-title">
+                        <i class="bi bi-building me-2"></i>센터 관리
+                    </h1>
+                    <button class="btn btn-apple" onclick="showCreateModal()">
+                        <i class="bi bi-plus-lg me-2"></i>새 센터 추가
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="content-section">
+                <div class="search-bar">
+                    <input type="text" class="search-input" id="searchInput" placeholder="센터명, 담당자, 이메일로 검색...">
+                    <select class="form-select" id="statusFilter" style="width: 200px;">
+                        <option value="">전체 상태</option>
+                        <option value="ACTIVE">활성</option>
+                        <option value="INACTIVE">비활성</option>
+                        <option value="SUSPENDED">일시정지</option>
+                    </select>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="stats-grid" id="statsContainer">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalCenters">-</div>
+                        <div class="stat-label">전체 센터</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="activeCenters">-</div>
+                        <div class="stat-label">활성 센터</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalUsers">-</div>
+                        <div class="stat-label">전체 사용자</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Centers List -->
+            <div class="content-section">
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">로딩 중...</span>
+                    </div>
+                </div>
+
+                <div id="centersList"></div>
+
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="bi bi-building"></i>
+                    <p>센터가 없습니다.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create/Edit Center Modal -->
+    <div class="modal fade" id="centerModal" tabindex="-1">
+        <div class="modal-dialog modal-apple">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">새 센터 추가</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="centerForm">
+                        <input type="hidden" id="centerId">
+
+                        <div class="mb-3">
+                            <label for="centerName" class="form-label">센터명 *</label>
+                            <input type="text" class="form-control" id="centerName" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contactName" class="form-label">담당자명 *</label>
+                            <input type="text" class="form-control" id="contactName" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contactEmail" class="form-label">담당자 이메일 *</label>
+                            <input type="email" class="form-control" id="contactEmail" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="planType" class="form-label">요금제</label>
+                                <select class="form-select" id="planType">
+                                    <option value="free">Free</option>
+                                    <option value="basic" selected>Basic</option>
+                                    <option value="premium">Premium</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">상태</label>
+                                <select class="form-select" id="status">
+                                    <option value="ACTIVE" selected>활성</option>
+                                    <option value="INACTIVE">비활성</option>
+                                    <option value="SUSPENDED">일시정지</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="storageLimit" class="form-label">스토리지 제한 (GB)</label>
+                            <input type="number" class="form-control" id="storageLimit" value="30" min="1">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-apple" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-apple" onclick="saveCenter()">저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Detail Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-apple">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailCenterName"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="detailContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-apple" data-bs-dismiss="modal">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 1;
+        let currentSearch = '';
+        let currentStatus = '';
+
+        // 페이지 로드 시 센터 목록 불러오기
+        document.addEventListener('DOMContentLoaded', function () {
+            loadCenters();
+            loadStats();
+
+            // 검색 이벤트
+            document.getElementById('searchInput').addEventListener('input', debounce(function (e) {
+                currentSearch = e.target.value;
+                currentPage = 1;
+                loadCenters();
+            }, 500));
+
+            // 상태 필터 이벤트
+            document.getElementById('statusFilter').addEventListener('change', function (e) {
+                currentStatus = e.target.value;
+                currentPage = 1;
+                loadCenters();
+            });
+        });
+
+        // 센터 목록 불러오기
+        async function loadCenters() {
+            const spinner = document.getElementById('loadingSpinner');
+            const listContainer = document.getElementById('centersList');
+            const emptyState = document.getElementById('emptyState');
+
+            spinner.style.display = 'block';
+            listContainer.innerHTML = '';
+            emptyState.style.display = 'none';
+
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: 20
+                });
+
+                if (currentSearch) params.append('search', currentSearch);
+                if (currentStatus) params.append('status', currentStatus);
+
+                const response = await fetch(`/api/centers?${params}`);
+                const data = await response.json();
+
+                if (data.success && data.centers.length > 0) {
+                    listContainer.innerHTML = data.centers.map(center => createCenterCard(center)).join('');
+                } else {
+                    emptyState.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('센터 목록 불러오기 오류:', error);
+                alert('센터 목록을 불러오는데 실패했습니다.');
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }
+
+        // 센터 카드 HTML 생성
+        function createCenterCard(center) {
+            const statusBadge = {
+                'ACTIVE': 'badge-active',
+                'INACTIVE': 'badge-inactive',
+                'SUSPENDED': 'badge-suspended'
+            }[center.status] || 'badge-inactive';
+
+            const statusText = {
+                'ACTIVE': '활성',
+                'INACTIVE': '비활성',
+                'SUSPENDED': '일시정지'
+            }[center.status] || center.status;
+
+            const storageGB = (center.storage_limit_bytes / (1024 * 1024 * 1024)).toFixed(0);
+            const createdDate = new Date(center.created_at).toLocaleDateString('ko-KR');
+
+            return `
+                <div class="center-card" onclick="showDetail(${center.id})">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="center-name">${center.center_name}</div>
+                        <span class="badge-status ${statusBadge}">${statusText}</span>
+                    </div>
+                    <div class="center-info">
+                        <i class="bi bi-person me-1"></i>${center.contact_name} |
+                        <i class="bi bi-envelope me-1"></i>${center.contact_email}
+                    </div>
+                    <div class="center-info">
+                        <i class="bi bi-tag me-1"></i>${center.plan_type.toUpperCase()} |
+                        <i class="bi bi-hdd me-1"></i>${storageGB}GB |
+                        <i class="bi bi-calendar me-1"></i>${createdDate}
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-apple" onclick="event.stopPropagation(); editCenter(${center.id})">
+                            <i class="bi bi-pencil"></i> 수정
+                        </button>
+                        <button class="btn btn-sm btn-outline-apple" onclick="event.stopPropagation(); viewUsers(${center.id})">
+                            <i class="bi bi-people"></i> 사용자
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 통계 불러오기
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/centers');
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('totalCenters').textContent = data.pagination.total;
+
+                    const activeCenters = data.centers.filter(c => c.status === 'ACTIVE').length;
+                    document.getElementById('activeCenters').textContent = activeCenters;
+
+                    // 전체 사용자 수는 별도 API 호출 필요 (임시로 0)
+                    document.getElementById('totalUsers').textContent = '0';
+                }
+            } catch (error) {
+                console.error('통계 불러오기 오류:', error);
+            }
+        }
+
+        // 새 센터 추가 모달 표시
+        function showCreateModal() {
+            document.getElementById('modalTitle').textContent = '새 센터 추가';
+            document.getElementById('centerForm').reset();
+            document.getElementById('centerId').value = '';
+            new bootstrap.Modal(document.getElementById('centerModal')).show();
+        }
+
+        // 센터 수정
+        async function editCenter(centerId) {
+            try {
+                const response = await fetch(`/api/centers/${centerId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const center = data.center;
+                    document.getElementById('modalTitle').textContent = '센터 수정';
+                    document.getElementById('centerId').value = center.id;
+                    document.getElementById('centerName').value = center.center_name;
+                    document.getElementById('contactName').value = center.contact_name;
+                    document.getElementById('contactEmail').value = center.contact_email;
+                    document.getElementById('planType').value = center.plan_type;
+                    document.getElementById('status').value = center.status;
+                    document.getElementById('storageLimit').value = (center.storage_limit_bytes / (1024 * 1024 * 1024)).toFixed(0);
+
+                    new bootstrap.Modal(document.getElementById('centerModal')).show();
+                }
+            } catch (error) {
+                console.error('센터 정보 불러오기 오류:', error);
+                alert('센터 정보를 불러오는데 실패했습니다.');
+            }
+        }
+
+        // 센터 저장
+        async function saveCenter() {
+            const centerId = document.getElementById('centerId').value;
+            const storageGB = parseInt(document.getElementById('storageLimit').value);
+
+            const centerData = {
+                center_name: document.getElementById('centerName').value,
+                contact_name: document.getElementById('contactName').value,
+                contact_email: document.getElementById('contactEmail').value,
+                plan_type: document.getElementById('planType').value,
+                status: document.getElementById('status').value,
+                storage_limit_bytes: storageGB * 1024 * 1024 * 1024
+            };
+
+            try {
+                const url = centerId ? `/api/centers/${centerId}` : '/api/centers';
+                const method = centerId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(centerData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    bootstrap.Modal.getInstance(document.getElementById('centerModal')).hide();
+                    loadCenters();
+                    loadStats();
+                } else {
+                    alert(data.message || '저장에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('센터 저장 오류:', error);
+                alert('센터 저장에 실패했습니다.');
+            }
+        }
+
+        // 센터 상세 보기
+        async function showDetail(centerId) {
+            try {
+                const [centerRes, statsRes] = await Promise.all([
+                    fetch(`/api/centers/${centerId}`),
+                    fetch(`/api/centers/${centerId}/stats`)
+                ]);
+
+                const centerData = await centerRes.json();
+                const statsData = await statsRes.json();
+
+                if (centerData.success && statsData.success) {
+                    const center = centerData.center;
+                    const stats = statsData.stats;
+
+                    document.getElementById('detailCenterName').textContent = center.center_name;
+                    document.getElementById('detailContent').innerHTML = `
+                        <div class="mb-4">
+                            <h6>기본 정보</h6>
+                            <p><strong>담당자:</strong> ${center.contact_name}</p>
+                            <p><strong>이메일:</strong> ${center.contact_email}</p>
+                            <p><strong>요금제:</strong> ${center.plan_type.toUpperCase()}</p>
+                            <p><strong>상태:</strong> ${center.status}</p>
+                        </div>
+                        <div class="mb-4">
+                            <h6>통계</h6>
+                            <p><strong>전체 사용자:</strong> ${stats.totalUsers}명</p>
+                            <p><strong>활성 구독:</strong> ${stats.activeSubscriptions}명</p>
+                            <p><strong>스토리지 사용량:</strong> ${stats.storage.percentage.toFixed(2)}%</p>
+                            <p><strong>최근 30일 활동:</strong> ${stats.recentActivityCount}회</p>
+                        </div>
+                    `;
+
+                    new bootstrap.Modal(document.getElementById('detailModal')).show();
+                }
+            } catch (error) {
+                console.error('센터 상세 정보 불러오기 오류:', error);
+                alert('센터 정보를 불러오는데 실패했습니다.');
+            }
+        }
+
+        // 사용자 목록 보기
+        function viewUsers(centerId) {
+            window.location.href = `/admin/users?centerId=${centerId}`;
+        }
+
+        // Debounce 함수
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+
+</html>

@@ -10,7 +10,7 @@
 ### 2.1 서버 환경
 | 구분 | 내용 |
 |------|------|
-| **호스팅** | AWS EC2 (Ubuntu) |
+| **호스팅** | NCP Server (Ubuntu) |
 | **서버** | Node.js + Express.js |
 | **프로세스 관리** | PM2 |
 | **API Base URL** | `https://app.codingnplay.co.kr/api/pong2` |

@@ -1,15 +1,15 @@
 project: educodingnplay
-db: rds db
-hosting: aws ec2, apache, ubuntu
-저장소: s3
-alb(로드밸런서)로 https를 적용중으로, 서버내부에서는 http로 소통
+db: ncp cloud db (mysql)
+hosting: ncp server, ubuntu
+저장소: ncp object storage
+load balancer로 https를 적용중으로, 서버내부에서는 http로 소통
 
 [port 설정 및 인바운드 규칙]
 포트	역할	비고
 22	SSH 접속	전체 오픈 상태, 보안상 위험 ⚠️
-80	HTTP 웹서버 (Apache)	ALB에서 리디렉션 용도, 외부 오픈
+80	HTTP 웹서버 (Apache)	LB에서 리디렉션 용도, 외부 오픈
 443	HTTPS (Docker-Portfolio)	SSL 인증서 적용됨 ✅
-3306	RDS MySQL DB	외부 오픈 상태, 접근 IP 제한 필요 ⚠️
+3306	Privated DB/Cloud DB	외부 오픈 상태, 접근 IP 제한 필요 ⚠️
 8601	Scratch GUI 서버	HTTPS 적용됨 ✅
 8000	Jupyternotebook	내부용, 현재 인증서 없음
 8080	Entry 서버	외부 오픈 상태 ⚠️

@@ -1,5 +1,6 @@
 // lib_login/authMiddleware.js
 const { hasPageAccess } = require('./permissions');
+const { hasResourcePermission } = require('./resourcePermissions'); // 🔥 Resource Permission 추가
 const { queryDatabase } = require('./db');
 const jwt = require('jsonwebtoken'); // 🔥 JWT 추가
 const { JWT } = require('../config'); // 🔥 Config 추가
@@ -238,10 +239,54 @@ function checkPageAccess(requiredPage) {
   };
 }
 
+/**
+ * Middleware to check resource permissions
+ * Usage: router.post('/', checkResourcePermission('center:create'), (req, res) => ...)
+ */
+function checkResourcePermission(action) {
+  return async (req, res, next) => {
+    if (!req.session?.is_logined) {
+      return handleUnauthorized(req, res, '오랜 시간동안 접속하지 않아 로그아웃되었습니다.');
+    }
+
+    try {
+      const { queryDatabase } = require('./db');
+      // Get fresh user data including account_type and centerID
+      const [user] = await queryDatabase(
+        'SELECT id, userID, role, centerID, account_type FROM Users WHERE userID = ?',
+        [req.session.userID]
+      );
+
+      if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+      }
+
+      // For owner checks, we might need to fetch the specific resource.
+      // This generic middleware works best for static permission checks.
+      // For dynamic "owner" checks, controllers should call `hasResourcePermission` manually with the resource object.
+
+      if (!hasResourcePermission(user, action)) {
+        return res.status(403).json({
+          error: 'PERMISSION_DENIED',
+          message: `You do not have permission to perform: ${action}`
+        });
+      }
+
+      // Save fresh user data to request for controller use
+      req.user = user;
+      next();
+    } catch (error) {
+      console.error('Resource permission check error:', error);
+      return res.status(500).json({ error: 'Server error check permissions' });
+    }
+  };
+}
+
 module.exports = {
   authenticateUser,
   checkPageAccess,
   checkRole,
   checkAdminRole,
+  checkResourcePermission, // 🔥 Export new middleware
   handleUnauthorized // 필요한 경우 외부에서 직접 사용할 수 있도록 내보냄
 };

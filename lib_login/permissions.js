@@ -219,6 +219,249 @@ function debugPermissions() {
     }
 }
 
+/**
+ * 역할 계층 구조 (Phase 2 추가)
+ * admin > kinder/school > manager > student/parent
+ */
+const ROLE_HIERARCHY = {
+    admin: 100,
+    kinder: 50,
+    school: 50,
+    manager: 30,
+    teacher: 30,
+    student: 10,
+    parent: 10
+};
+
+/**
+ * 리소스별 권한 매트릭스 (Phase 2 추가)
+ * 각 역할이 수행할 수 있는 작업 정의
+ */
+const RESOURCE_PERMISSIONS = {
+    // 센터 관리 권한
+    'center:create': ['admin'],
+    'center:read': ['admin', 'kinder', 'school', 'manager'],
+    'center:update': ['admin', 'kinder', 'school'],
+    'center:delete': ['admin'],
+    'center:invite_code': ['admin'],
+    'center:stats': ['admin', 'kinder', 'school', 'manager'],
+
+    // 사용자 관리 권한
+    'user:create': ['admin', 'kinder', 'school', 'manager'],
+    'user:read': ['admin', 'kinder', 'school', 'manager', 'student', 'parent'],
+    'user:update': ['admin', 'kinder', 'school', 'manager'],
+    'user:delete': ['admin', 'kinder', 'school'],
+    'user:move_center': ['admin'],
+    'user:change_role': ['admin', 'kinder', 'school'],
+
+    // 콘텐츠 관리 권한
+    'content:create': ['admin', 'kinder', 'school', 'manager', 'teacher', 'student'],
+    'content:read': ['admin', 'kinder', 'school', 'manager', 'teacher', 'student', 'parent'],
+    'content:update_own': ['admin', 'kinder', 'school', 'manager', 'teacher', 'student'],
+    'content:update_any': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+    'content:delete_own': ['admin', 'kinder', 'school', 'manager', 'teacher', 'student'],
+    'content:delete_any': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+    'content:publish': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+
+    // 수업 관리 권한
+    'class:create': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+    'class:read': ['admin', 'kinder', 'school', 'manager', 'teacher', 'student', 'parent'],
+    'class:update': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+    'class:delete': ['admin', 'kinder', 'school'],
+    'class:assign_students': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+
+    // 과제 관리 권한
+    'assignment:create': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+    'assignment:read': ['admin', 'kinder', 'school', 'manager', 'teacher', 'student', 'parent'],
+    'assignment:update': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+    'assignment:delete': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+    'assignment:submit': ['student'],
+    'assignment:grade': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+
+    // 보고서 권한
+    'report:view_all': ['admin', 'kinder', 'school'],
+    'report:view_center': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+    'report:view_own': ['student', 'parent'],
+    'report:export': ['admin', 'kinder', 'school', 'manager', 'teacher'],
+
+    // 결제 관련 권한
+    'payment:view': ['admin', 'kinder', 'school', 'parent'],
+    'payment:manage': ['admin'],
+
+    // 통계 권한
+    'stats:view_all': ['admin'],
+    'stats:view_center': ['admin', 'kinder', 'school', 'manager'],
+    'stats:view_own': ['student', 'parent']
+};
+
+/**
+ * 특정 역할이 특정 리소스 권한을 가지고 있는지 확인
+ * @param {string} role - 사용자 역할
+ * @param {string} permission - 확인할 권한
+ * @returns {boolean}
+ */
+function hasResourcePermission(role, permission) {
+    if (!role || !permission) return false;
+
+    // admin은 모든 권한 보유
+    if (role === 'admin') return true;
+
+    const allowedRoles = RESOURCE_PERMISSIONS[permission];
+    if (!allowedRoles) return false;
+
+    return allowedRoles.includes(role);
+}
+
+/**
+ * 여러 권한 중 하나라도 있는지 확인
+ * @param {string} role - 사용자 역할
+ * @param {string[]} permissions - 확인할 권한 배열
+ * @returns {boolean}
+ */
+function hasAnyResourcePermission(role, permissions) {
+    if (!role || !permissions || !Array.isArray(permissions)) return false;
+    return permissions.some(permission => hasResourcePermission(role, permission));
+}
+
+/**
+ * 모든 권한을 가지고 있는지 확인
+ * @param {string} role - 사용자 역할
+ * @param {string[]} permissions - 확인할 권한 배열
+ * @returns {boolean}
+ */
+function hasAllResourcePermissions(role, permissions) {
+    if (!role || !permissions || !Array.isArray(permissions)) return false;
+    return permissions.every(permission => hasResourcePermission(role, permission));
+}
+
+/**
+ * 역할 비교 (role1이 role2보다 높은 권한인지)
+ * @param {string} role1 - 비교할 역할 1
+ * @param {string} role2 - 비교할 역할 2
+ * @returns {boolean}
+ */
+function isHigherRole(role1, role2) {
+    const level1 = ROLE_HIERARCHY[role1] || 0;
+    const level2 = ROLE_HIERARCHY[role2] || 0;
+    return level1 > level2;
+}
+
+/**
+ * 역할이 동등한지 확인
+ * @param {string} role1 - 비교할 역할 1
+ * @param {string} role2 - 비교할 역할 2
+ * @returns {boolean}
+ */
+function isEqualRole(role1, role2) {
+    const level1 = ROLE_HIERARCHY[role1] || 0;
+    const level2 = ROLE_HIERARCHY[role2] || 0;
+    return level1 === level2;
+}
+
+/**
+ * 역할이 동등하거나 높은지 확인
+ * @param {string} role1 - 비교할 역할 1
+ * @param {string} role2 - 비교할 역할 2
+ * @returns {boolean}
+ */
+function isHigherOrEqualRole(role1, role2) {
+    return isHigherRole(role1, role2) || isEqualRole(role1, role2);
+}
+
+/**
+ * 리소스 소유권 확인 (센터 내에서)
+ * @param {number} userId - 사용자 ID
+ * @param {number} resourceOwnerId - 리소스 소유자 ID
+ * @param {string} userRole - 사용자 역할
+ * @returns {boolean}
+ */
+function canAccessResource(userId, resourceOwnerId, userRole) {
+    // 본인 리소스는 항상 접근 가능
+    if (userId === resourceOwnerId) return true;
+
+    // admin, kinder, school, manager, teacher는 같은 센터 내 모든 리소스 접근 가능
+    if (['admin', 'kinder', 'school', 'manager', 'teacher'].includes(userRole)) return true;
+
+    return false;
+}
+
+/**
+ * 센터 관리자인지 확인
+ * @param {string} role - 사용자 역할
+ * @returns {boolean}
+ */
+function isCenterAdmin(role) {
+    return ['kinder', 'school'].includes(role);
+}
+
+/**
+ * 센터 매니저 이상인지 확인
+ * @param {string} role - 사용자 역할
+ * @returns {boolean}
+ */
+function isCenterManager(role) {
+    return ['admin', 'kinder', 'school', 'manager', 'teacher'].includes(role);
+}
+
+/**
+ * 역할별 리소스 권한 목록 반환
+ * @param {string} role - 사용자 역할
+ * @returns {string[]}
+ */
+function getRoleResourcePermissions(role) {
+    if (role === 'admin') {
+        return Object.keys(RESOURCE_PERMISSIONS);
+    }
+
+    return Object.keys(RESOURCE_PERMISSIONS).filter(permission =>
+        hasResourcePermission(role, permission)
+    );
+}
+
+/**
+ * 역할 변경 가능 여부 확인
+ * @param {string} currentRole - 현재 사용자의 역할
+ * @param {string} targetCurrentRole - 대상 사용자의 현재 역할
+ * @param {string} targetNewRole - 대상 사용자의 새 역할
+ * @returns {boolean}
+ */
+function canChangeRole(currentRole, targetCurrentRole, targetNewRole) {
+    // admin은 모든 역할 변경 가능
+    if (currentRole === 'admin') return true;
+
+    // kinder/school은 manager, teacher, student, parent 역할 변경 가능
+    if (['kinder', 'school'].includes(currentRole)) {
+        const allowedTargetRoles = ['manager', 'teacher', 'student', 'parent'];
+        return allowedTargetRoles.includes(targetCurrentRole) &&
+               allowedTargetRoles.includes(targetNewRole);
+    }
+
+    return false;
+}
+
+/**
+ * 센터 내 사용자 관리 가능 여부 확인
+ * @param {string} managerRole - 관리자 역할
+ * @param {string} targetRole - 대상 사용자 역할
+ * @returns {boolean}
+ */
+function canManageUserInCenter(managerRole, targetRole) {
+    // admin은 모든 사용자 관리 가능
+    if (managerRole === 'admin') return true;
+
+    // kinder/school은 manager, teacher, student, parent 관리 가능
+    if (['kinder', 'school'].includes(managerRole)) {
+        return ['manager', 'teacher', 'student', 'parent'].includes(targetRole);
+    }
+
+    // manager/teacher는 student, parent 관리 가능
+    if (['manager', 'teacher'].includes(managerRole)) {
+        return ['student', 'parent'].includes(targetRole);
+    }
+
+    return false;
+}
+
 module.exports = {
     ACCESS_POLICIES,
     updatePermissionCache,
@@ -226,5 +469,20 @@ module.exports = {
     hasFeatureAccess,
     hasAccess,
     getAccessiblePages,
-    debugPermissions
+    debugPermissions,
+    // Phase 2 추가
+    ROLE_HIERARCHY,
+    RESOURCE_PERMISSIONS,
+    hasResourcePermission,
+    hasAnyResourcePermission,
+    hasAllResourcePermissions,
+    isHigherRole,
+    isEqualRole,
+    isHigherOrEqualRole,
+    canAccessResource,
+    isCenterAdmin,
+    isCenterManager,
+    getRoleResourcePermissions,
+    canChangeRole,
+    canManageUserInCenter
 };

@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>센터 관리 - EduCosmo</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            color: #333;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input, .search-bar select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-bar input {
+            flex: 1;
+        }
+
+        .centers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .center-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: box-shadow 0.3s;
+        }
+
+        .center-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .center-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .center-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 5px 0;
+        }
+
+        .center-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-suspended {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .center-info {
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            color: #666;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .plan-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .plan-free {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+
+        .plan-basic {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+
+        .plan-premium {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+
+        .center-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .center-actions button {
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state img {
+            max-width: 200px;
+            margin-bottom: 20px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background-color: #f8f9fa;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .invite-code-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .invite-code-list {
+            margin-top: 15px;
+        }
+
+        .invite-code-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .invite-code {
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .code-expired {
+            color: #dc3545;
+        }
+
+        .code-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>센터 관리</h1>
+            <button class="btn btn-primary" onclick="openCreateCenterModal()">+ 새 센터 만들기</button>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="센터명, 담당자명, 이메일로 검색..." onkeyup="handleSearch()">
+            <select id="statusFilter" onchange="handleSearch()">
+                <option value="">전체 상태</option>
+                <option value="ACTIVE">활성</option>
+                <option value="INACTIVE">비활성</option>
+                <option value="SUSPENDED">정지</option>
+            </select>
+        </div>
+
+        <div id="centersContainer" class="centers-grid">
+            <div class="loading">로딩 중...</div>
+        </div>
+
+        <div id="pagination" class="pagination"></div>
+    </div>
+
+    <!-- 센터 생성/수정 모달 -->
+    <div id="centerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">새 센터 만들기</h2>
+                <button class="close-btn" onclick="closeCenterModal()">&times;</button>
+            </div>
+            <form id="centerForm" onsubmit="handleCenterSubmit(event)">
+                <input type="hidden" id="centerId">
+
+                <div class="form-group">
+                    <label for="centerName">센터명 *</label>
+                    <input type="text" id="centerName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="contactName">담당자명 *</label>
+                    <input type="text" id="contactName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="contactEmail">담당자 이메일 *</label>
+                    <input type="email" id="contactEmail" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="planType">요금제</label>
+                    <select id="planType">
+                        <option value="free">Free (무료)</option>
+                        <option value="basic" selected>Basic (기본)</option>
+                        <option value="premium">Premium (프리미엄)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="storageLimit">저장 공간 제한 (GB)</label>
+                    <input type="number" id="storageLimit" value="30" min="1">
+                    <small>기본 30GB</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="centerStatus">상태</label>
+                    <select id="centerStatus">
+                        <option value="ACTIVE" selected>활성</option>
+                        <option value="INACTIVE">비활성</option>
+                        <option value="SUSPENDED">정지</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCenterModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 초대 코드 모달 -->
+    <div id="inviteCodeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>초대 코드 관리</h2>
+                <button class="close-btn" onclick="closeInviteCodeModal()">&times;</button>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom: 15px;">새 초대 코드 생성</h3>
+                <form id="inviteCodeForm" onsubmit="handleCreateInviteCode(event)">
+                    <input type="hidden" id="inviteCodeCenterId">
+
+                    <div class="form-group">
+                        <label for="expiresInDays">유효 기간 (일)</label>
+                        <input type="number" id="expiresInDays" value="7" min="1" max="365">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxUses">최대 사용 횟수</label>
+                        <input type="number" id="maxUses" value="100" min="1">
+                    </div>
+
+                    <button type="submit" class="btn btn-success" style="width: 100%;">초대 코드 생성</button>
+                </form>
+
+                <div class="invite-code-section">
+                    <h3 style="margin-bottom: 15px;">활성 초대 코드</h3>
+                    <div id="inviteCodeList" class="invite-code-list">
+                        <div class="loading">로딩 중...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let searchTimer;
+
+        // 페이지 로드 시 센터 목록 불러오기
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCenters();
+        });
+
+        // 센터 목록 불러오기
+        async function loadCenters(page = 1) {
+            try {
+                const searchInput = document.getElementById('searchInput').value;
+                const statusFilter = document.getElementById('statusFilter').value;
+
+                let url = `/api/centers?page=${page}&limit=12`;
+                if (searchInput) url += `&search=${encodeURIComponent(searchInput)}`;
+                if (statusFilter) url += `&status=${statusFilter}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    displayCenters(data.centers);
+                    currentPage = data.pagination.page;
+                    totalPages = data.pagination.totalPages;
+                    renderPagination();
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                console.error('센터 목록 불러오기 오류:', error);
+                showAlert('센터 목록을 불러올 수 없습니다.', 'error');
+            }
+        }
+
+        // 센터 목록 표시
+        function displayCenters(centers) {
+            const container = document.getElementById('centersContainer');
+
+            if (centers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p style="font-size: 18px; margin-bottom: 10px;">등록된 센터가 없습니다</p>
+                        <p style="font-size: 14px;">새 센터를 만들어 시작하세요</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = centers.map(center => `
+                <div class="center-card">
+                    <div class="center-card-header">
+                        <div>
+                            <h3 class="center-name">${escapeHtml(center.center_name)}</h3>
+                            <span class="plan-badge plan-${center.plan_type}">${getPlanName(center.plan_type)}</span>
+                        </div>
+                        <span class="center-status status-${center.status.toLowerCase()}">${getStatusName(center.status)}</span>
+                    </div>
+
+                    <div class="center-info">
+                        <div class="info-row">
+                            <span class="info-label">담당자:</span>
+                            <span class="info-value">${escapeHtml(center.contact_name)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">이메일:</span>
+                            <span class="info-value">${escapeHtml(center.contact_email)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">저장 공간:</span>
+                            <span class="info-value">${formatBytes(center.storage_limit_bytes)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">생성일:</span>
+                            <span class="info-value">${formatDate(center.created_at)}</span>
+                        </div>
+                    </div>
+
+                    <div class="center-actions">
+                        <button class="btn btn-primary" onclick="openInviteCodeModal(${center.id})">초대 코드</button>
+                        <button class="btn btn-secondary" onclick="editCenter(${center.id})">수정</button>
+                        <button class="btn btn-danger" onclick="deleteCenter(${center.id})">삭제</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 검색 핸들러
+        function handleSearch() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                loadCenters(1);
+            }, 500);
+        }
+
+        // 페이지네이션 렌더링
+        function renderPagination() {
+            const container = document.getElementById('pagination');
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button onclick="loadCenters(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>이전</button>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `<button class="${i === currentPage ? 'active' : ''}" onclick="loadCenters(${i})">${i}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<span>...</span>`;
+                }
+            }
+
+            html += `
+                <button onclick="loadCenters(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>다음</button>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // 센터 생성 모달 열기
+        function openCreateCenterModal() {
+            document.getElementById('modalTitle').textContent = '새 센터 만들기';
+            document.getElementById('centerForm').reset();
+            document.getElementById('centerId').value = '';
+            document.getElementById('centerModal').classList.add('active');
+        }
+
+        // 센터 수정 모달 열기
+        async function editCenter(centerId) {
+            try {
+                const response = await fetch(`/api/centers/${centerId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const center = data.center;
+                    document.getElementById('modalTitle').textContent = '센터 수정';
+                    document.getElementById('centerId').value = center.id;
+                    document.getElementById('centerName').value = center.center_name;
+                    document.getElementById('contactName').value = center.contact_name;
+                    document.getElementById('contactEmail').value = center.contact_email;
+                    document.getElementById('planType').value = center.plan_type;
+                    document.getElementById('storageLimit').value = Math.round(center.storage_limit_bytes / (1024 * 1024 * 1024));
+                    document.getElementById('centerStatus').value = center.status;
+                    document.getElementById('centerModal').classList.add('active');
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                console.error('센터 정보 불러오기 오류:', error);
+                showAlert('센터 정보를 불러올 수 없습니다.', 'error');
+            }
+        }
+
+        // 센터 생성/수정 제출
+        async function handleCenterSubmit(event) {
+            event.preventDefault();
+
+            const centerId = document.getElementById('centerId').value;
+            const centerData = {
+                center_name: document.getElementById('centerName').value,
+                contact_name: document.getElementById('contactName').value,
+                contact_email: document.getElementById('contactEmail').value,
+                plan_type: document.getElementById('planType').value,
+                storage_limit_bytes: parseInt(document.getElementById('storageLimit').value) * 1024 * 1024 * 1024,
+                status: document.getElementById('centerStatus').value
+            };
+
+            try {
+                const url = centerId ? `/api/centers/${centerId}` : '/api/centers';
+                const method = centerId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(centerData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert(centerId ? '센터가 수정되었습니다.' : '센터가 생성되었습니다.', 'success');
+                    closeCenterModal();
+                    loadCenters(currentPage);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                console.error('센터 저장 오류:', error);
+                showAlert('센터 저장에 실패했습니다.', 'error');
+            }
+        }
+
+        // 센터 삭제
+        async function deleteCenter(centerId) {
+            if (!confirm('정말 이 센터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/centers/${centerId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('센터가 비활성화되었습니다.', 'success');
+                    loadCenters(currentPage);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                console.error('센터 삭제 오류:', error);
+                showAlert('센터 삭제에 실패했습니다.', 'error');
+            }
+        }
+
+        // 초대 코드 모달 열기
+        function openInviteCodeModal(centerId) {
+            document.getElementById('inviteCodeCenterId').value = centerId;
+            document.getElementById('inviteCodeModal').classList.add('active');
+            loadInviteCodes(centerId);
+        }
+
+        // 초대 코드 목록 불러오기
+        async function loadInviteCodes(centerId) {
+            try {
+                const response = await fetch(`/api/centers/${centerId}/invite-codes`);
+                const data = await response.json();
+
+                const container = document.getElementById('inviteCodeList');
+
+                if (data.success && data.inviteCodes.length > 0) {
+                    container.innerHTML = data.inviteCodes.map(code => `
+                        <div class="invite-code-item">
+                            <div>
+                                <div class="invite-code ${code.isExpired || code.isMaxedOut ? 'code-expired' : ''}">${code.code}</div>
+                                <div class="code-info">
+                                    만료: ${formatDate(code.expires_at)} |
+                                    사용: ${code.current_uses}/${code.max_uses} |
+                                    생성: ${code.created_by_username || 'Unknown'}
+                                    ${code.isExpired ? ' (만료됨)' : ''}
+                                    ${code.isMaxedOut ? ' (사용 완료)' : ''}
+                                </div>
+                            </div>
+                            <button class="btn btn-danger btn-sm" onclick="deleteInviteCode(${centerId}, ${code.id})">삭제</button>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p style="text-align: center; color: #666;">생성된 초대 코드가 없습니다</p>';
+                }
+            } catch (error) {
+                console.error('초대 코드 불러오기 오류:', error);
+                document.getElementById('inviteCodeList').innerHTML = '<p style="text-align: center; color: #dc3545;">초대 코드를 불러올 수 없습니다</p>';
+            }
+        }
+
+        // 초대 코드 생성
+        async function handleCreateInviteCode(event) {
+            event.preventDefault();
+
+            const centerId = document.getElementById('inviteCodeCenterId').value;
+            const codeData = {
+                expiresInDays: parseInt(document.getElementById('expiresInDays').value),
+                maxUses: parseInt(document.getElementById('maxUses').value)
+            };
+
+            try {
+                const response = await fetch(`/api/centers/${centerId}/invite-code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(codeData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert(`초대 코드가 생성되었습니다: ${data.inviteCode.code}`, 'success');
+                    loadInviteCodes(centerId);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                console.error('초대 코드 생성 오류:', error);
+                showAlert('초대 코드 생성에 실패했습니다.', 'error');
+            }
+        }
+
+        // 초대 코드 삭제
+        async function deleteInviteCode(centerId, codeId) {
+            if (!confirm('이 초대 코드를 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/centers/${centerId}/invite-codes/${codeId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('초대 코드가 삭제되었습니다.', 'success');
+                    loadInviteCodes(centerId);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                console.error('초대 코드 삭제 오류:', error);
+                showAlert('초대 코드 삭제에 실패했습니다.', 'error');
+            }
+        }
+
+        // 모달 닫기
+        function closeCenterModal() {
+            document.getElementById('centerModal').classList.remove('active');
+        }
+
+        function closeInviteCodeModal() {
+            document.getElementById('inviteCodeModal').classList.remove('active');
+        }
+
+        // 알림 표시
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // 유틸리티 함수
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatBytes(bytes) {
+            const gb = bytes / (1024 * 1024 * 1024);
+            return `${gb.toFixed(1)} GB`;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        }
+
+        function getPlanName(planType) {
+            const plans = { free: 'Free', basic: 'Basic', premium: 'Premium' };
+            return plans[planType] || planType;
+        }
+
+        function getStatusName(status) {
+            const statuses = { ACTIVE: '활성', INACTIVE: '비활성', SUSPENDED: '정지' };
+            return statuses[status] || status;
+        }
+    </script>
+</body>
+</html>

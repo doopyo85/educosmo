@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../lib_login/db');
-const { getSheetData } = require('../server');
+const { authenticateUser } = require('../lib_login/authMiddleware');
 const fs = require('fs');
 const path = require('path');
 const { hasAccess } = require('../lib_login/permissions');
@@ -72,6 +72,20 @@ router.get('/', checkAdminRole, async (req, res) => {
   }
 });
 
+// 센터 관리 페이지 렌더링
+router.get('/centers', checkAdminRole, async (req, res) => {
+  try {
+    res.render('admin/centers', {
+      userID: req.session.userID,
+      is_logined: req.session.is_logined,
+      role: req.session.role
+    });
+  } catch (error) {
+    console.error('Centers page render error:', error);
+    res.status(500).send('센터 관리 페이지 로드 실패');
+  }
+});
+
 // 권한 설정 저장
 router.post('/api/permissions', checkAdminRole, async (req, res) => {
   try {
@@ -100,15 +114,14 @@ router.get('/api/users', checkAdminRole, async (req, res) => {
   try {
     console.log('Fetching users list...');
 
-    const centerData = await getSheetData('센터목록!A2:C');
-    const centerMap = new Map(centerData.map(row => [row[0].toString(), row[1]]));
-
     const usersQuery = `
             SELECT 
-                id, userID, email, name, phone, 
-                birthdate, role, created_at, centerID
-            FROM Users
-            ORDER BY created_at DESC
+                u.id, u.userID, u.email, u.name, u.phone, 
+                u.birthdate, u.role, u.created_at, u.centerID,
+                c.center_name as centerName
+            FROM Users u
+            LEFT JOIN Centers c ON u.centerID = c.id
+            ORDER BY u.created_at DESC
         `;
 
     const users = await db.queryDatabase(usersQuery);
@@ -117,7 +130,6 @@ router.get('/api/users', checkAdminRole, async (req, res) => {
     const usersWithDetails = users.map((user, index) => ({
       no: index + 1,
       ...user,
-      centerName: user.centerID ? centerMap.get(user.centerID.toString()) || '미지정' : '-',
       birthdate: safeFormatDate(user.birthdate)
     }));
 
@@ -138,17 +150,13 @@ router.get('/api/users', checkAdminRole, async (req, res) => {
 // 센터 목록 조회 API (Dropdown용)
 router.get('/api/centers', checkAdminRole, async (req, res) => {
   try {
-    const centerData = await getSheetData('센터목록!A2:C');
-    // A: ID, B: Name (Assuming layout from other endpoints)
-    const centers = centerData.map(row => ({
-      id: row[0],
-      name: row[1]
-    }));
-    res.json({ success: true, centers });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+    try {
+      const centers = await db.queryDatabase('SELECT id, center_name as name FROM Centers WHERE status = "ACTIVE"');
+      res.json({ success: true, centers });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
 
 // 사용자 센터 변경 API
 router.put('/api/users/:userId/center', checkAdminRole, async (req, res) => {
@@ -209,11 +217,6 @@ router.get('/api/stats', checkAdminRole, async (req, res) => {
   try {
     console.log('Session:', req.session);
 
-    const centerData = await getSheetData('센터목록!A2:B');
-    const centerMap = new Map(centerData.map(row => [row[0].toString(), row[1]]));
-
-    console.log('Center data:', centerData);
-
     const statsQuery = `
             SELECT 
                 COUNT(*) as total_users,
@@ -226,26 +229,22 @@ router.get('/api/stats', checkAdminRole, async (req, res) => {
         `;
 
     const [stats] = await db.queryDatabase(statsQuery);
-    console.log('Basic stats:', stats);
 
     const centerQuery = `
             SELECT 
-                centerID,
+                u.centerID,
+                c.center_name as centerName,
                 COUNT(*) as total_users,
-                COUNT(CASE WHEN role = 'student' THEN 1 END) as student_count,
-                COUNT(CASE WHEN role = 'manager' THEN 1 END) as manager_count,
-                COUNT(CASE WHEN role = 'teacher' THEN 1 END) as teacher_count
-            FROM Users
-            WHERE centerID IS NOT NULL
-            GROUP BY centerID
+                COUNT(CASE WHEN u.role = 'student' THEN 1 END) as student_count,
+                COUNT(CASE WHEN u.role = 'manager' THEN 1 END) as manager_count,
+                COUNT(CASE WHEN u.role = 'teacher' THEN 1 END) as teacher_count
+            FROM Users u
+            LEFT JOIN Centers c ON u.centerID = c.id
+            WHERE u.centerID IS NOT NULL
+            GROUP BY u.centerID, c.center_name
         `;
 
     const centerStats = await db.queryDatabase(centerQuery);
-
-    const centerStatsWithNames = centerStats.map(stat => ({
-      ...stat,
-      centerName: centerMap.get(stat.centerID.toString()) || '미지정'
-    }));
 
     res.json({
       success: true,
@@ -257,7 +256,7 @@ router.get('/api/stats', checkAdminRole, async (req, res) => {
           teacher_count: stats.teacher_count || 0,
           active_centers: stats.active_centers || 0
         },
-        centerStats: centerStatsWithNames || []
+        centerStats: centerStats || []
       }
     });
   } catch (error) {

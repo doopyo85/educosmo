@@ -1640,6 +1640,15 @@ try {
   console.error('❌ ScratchRouter 로드 실패:', error);
 }
 
+// 🔥 센터 관리 API 라우터 등록
+try {
+  const centerRouter = require('./api/centerRouter');
+  router.use('/centers', centerRouter);
+  console.log('✅ CenterRouter 등록 완료');
+} catch (error) {
+  console.error('❌ CenterRouter 로드 실패:', error);
+}
+
 // 🔥 Entry 스토리지 API 라우터 등록 (스크래치와 동일한 패턴)
 try {
   const entryStorageRouter = require('./api/entryStorageRouter');

@@ -23,6 +23,7 @@ const db = require('./lib_login/db');
 const { updatePermissionCache } = require('./lib_login/permissions');
 const { checkPageAccess, checkRole, checkAdminRole } = require('./lib_login/authMiddleware');
 const { logUserActivity, logMenuAccess, logLearningActivity } = require('./lib_login/logging');
+const { requireEducationAccess, requireCenterUser, requireCenterAdmin, checkStorageQuota, checkBlogPostLimit } = require('./lib_login/accessControl');
 
 // 🔥 Initialize Gallery DB Tables
 const initGalleryDB = require('./tools/init_gallery_db');
@@ -493,10 +494,20 @@ app.get('/api/cleanup-nuguri-temp', async (req, res) => {
 
 // API 라우터 등록
 app.use('/api', require('./routes/apiRouter'));
+// 🔥 Phase 3: 멀티미디어 업로드 시스템 (Board/Blog 공용)
+app.use('/api/board/files', require('./routes/api/boardFileRouter'));
+
 app.use('/api/board', require('./routes/api/boardApiRouter'));
 // app.use('/api/jupyter', require('./routes/api/jupyterRouter')); // 🔥 Handled by apiRouter
 app.use('/api', require('./routes/api/observatoryRouter')); // 🔥 Observatory API
 // app.use('/api/pong2', require('./routes/api/pong2Router')); // 🔥 Moved to apiRouter.js
+app.use('/api/myuniverse', require('./routes/api/myUniverseApiRouter')); // 🔥 New Blog Management API
+
+// 🔥 Phase 2: 센터 관리 및 권한 관리 API 라우터
+app.use('/api/centers', authenticateUser, require('./routes/api/centerRouter'));
+app.use('/api/permissions', authenticateUser, require('./routes/api/permissionRouter'));
+app.use('/api/subscriptions', authenticateUser, require('./routes/api/subscriptionRouter')); // 🔥 Phase 4
+
 
 // 🔥 콘텐츠 프록시 라우터 (CORS 우회용)
 app.use('/proxy/content', require('./routes/api/contentProxyRouter'));
@@ -545,10 +556,10 @@ const routes = {
 };
 
 // 🔥 Python 문제은행 API 라우터
-app.use('/api/python-problems', authenticateUser, require('./routes/pythonProblemRouter'));
+app.use('/api/python-problems', authenticateUser, requireEducationAccess, require('./routes/pythonProblemRouter'));
 // 🔥 Entry Editor 프록시 설정 (8070 포트)
 // /entry_editor 경로를 localhost:8070/ 으로 프록시
-app.use('/entry_editor', authenticateUser, createProxyMiddleware({
+app.use('/entry_editor', authenticateUser, requireEducationAccess, createProxyMiddleware({
   target: 'http://localhost:8070',
   changeOrigin: true,
   pathRewrite: {
@@ -573,7 +584,7 @@ const ttsRouter = require('./routes/api/ttsRouter');
 app.use('/api', authenticateUser, ttsRouter);
 
 if (isMain || SERVICE_TYPE === 'entry') {
-  app.use('/entry', authenticateUser, entryRouter);
+  app.use('/entry', authenticateUser, requireEducationAccess, entryRouter);
 }
 
 const entDebugRouter = require('./routes/api/debug/entDebugRouter');
@@ -603,6 +614,9 @@ Object.entries(routes).forEach(([path, router]) => {
 
   if (path === 'auth') {
     app.use(`/${path}`, router);
+  } else if (['python', 'machinelearning', 'appinventor'].includes(path)) {
+    // 교육 콘텐츠 라우터는 requireEducationAccess 적용
+    app.use(`/${path}`, authenticateUser, requireEducationAccess, router);
   } else {
     app.use(`/${path}`, authenticateUser, router);
   }
@@ -752,8 +766,18 @@ function checkUnderConstruction(req, res, next) {
 
 app.use(checkUnderConstruction);
 
+// 🔥 Education Access Denied Page (MyUniverse 통합 플랜 Phase 1)
+app.get('/education-access-denied', authenticateUser, (req, res) => {
+  res.render('education-access-denied', {
+    userID: req.session.userID,
+    role: req.session.role,
+    is_logined: req.session.is_logined,
+    centerID: req.session.centerID
+  });
+});
+
 // 🔥 Observatory 3D Dashboard Route (Moved here to ensure session exists)
-app.get('/observatory', authenticateUser, checkPageAccess('/observatory'), (req, res) => {
+app.get('/observatory', authenticateUser, requireEducationAccess, checkPageAccess('/observatory'), (req, res) => {
   res.render('observatory', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -762,7 +786,7 @@ app.get('/observatory', authenticateUser, checkPageAccess('/observatory'), (req,
   });
 });
 
-app.get('/entry_project', authenticateUser, checkPageAccess('/entry_project'), (req, res) => {
+app.get('/entry_project', authenticateUser, requireEducationAccess, checkPageAccess('/entry_project'), (req, res) => {
   res.render('entry_project', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -774,7 +798,7 @@ app.get('/entry_project', authenticateUser, checkPageAccess('/entry_project'), (
 });
 
 // 🔥 Pyodide 테스트 페이지 (/pythontest)
-app.get('/pythontest', authenticateUser, checkPageAccess('/python_project'), (req, res) => {
+app.get('/pythontest', authenticateUser, requireEducationAccess, checkPageAccess('/python_project'), (req, res) => {
   res.render('template', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -786,7 +810,7 @@ app.get('/pythontest', authenticateUser, checkPageAccess('/python_project'), (re
   });
 });
 
-app.get('/computer', authenticateUser, checkPageAccess('/computer'), (req, res) => {
+app.get('/computer', authenticateUser, requireEducationAccess, checkPageAccess('/computer'), (req, res) => {
   res.render('computer', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -795,7 +819,7 @@ app.get('/computer', authenticateUser, checkPageAccess('/computer'), (req, res) 
   });
 });
 
-app.get('/scratch_project', authenticateUser, checkPageAccess('/scratch_project'), (req, res) => {
+app.get('/scratch_project', authenticateUser, requireEducationAccess, checkPageAccess('/scratch_project'), (req, res) => {
   res.render('scratch_project', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -931,7 +955,7 @@ app.get('/cos-editor', authenticateUser, (req, res) => {
   });
 });
 
-app.get('/appinventor_project', authenticateUser, checkPageAccess('/appinventor_project'), (req, res) => {
+app.get('/appinventor_project', authenticateUser, requireEducationAccess, checkPageAccess('/appinventor_project'), (req, res) => {
   res.render('appinventor_project', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -940,7 +964,7 @@ app.get('/appinventor_project', authenticateUser, checkPageAccess('/appinventor_
   });
 });
 
-app.get('/machinelearning', authenticateUser, checkPageAccess('/machinelearning'), (req, res) => {
+app.get('/machinelearning', authenticateUser, requireEducationAccess, checkPageAccess('/machinelearning'), (req, res) => {
   res.render('machinelearning', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -949,7 +973,7 @@ app.get('/machinelearning', authenticateUser, checkPageAccess('/machinelearning'
   });
 });
 
-app.get('/python_project', authenticateUser, checkPageAccess('/python_project'), (req, res) => {
+app.get('/python_project', authenticateUser, requireEducationAccess, checkPageAccess('/python_project'), (req, res) => {
   res.render('template', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -959,7 +983,7 @@ app.get('/python_project', authenticateUser, checkPageAccess('/python_project'),
   });
 });
 
-app.get('/algorithm', authenticateUser, checkPageAccess('/algorithm'), (req, res) => {
+app.get('/algorithm', authenticateUser, requireEducationAccess, checkPageAccess('/algorithm'), (req, res) => {
   res.render('template', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -969,7 +993,7 @@ app.get('/algorithm', authenticateUser, checkPageAccess('/algorithm'), (req, res
   });
 });
 
-app.get('/certification', authenticateUser, checkPageAccess('/certification'), (req, res) => {
+app.get('/certification', authenticateUser, requireEducationAccess, checkPageAccess('/certification'), (req, res) => {
   res.render('template', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -979,7 +1003,7 @@ app.get('/certification', authenticateUser, checkPageAccess('/certification'), (
   });
 });
 
-app.get('/aiMath', authenticateUser, checkPageAccess('/aiMath'), (req, res) => {
+app.get('/aiMath', authenticateUser, requireEducationAccess, checkPageAccess('/aiMath'), (req, res) => {
   res.render('template', {
     userID: req.session.userID,
     userRole: req.session.role,
@@ -989,7 +1013,7 @@ app.get('/aiMath', authenticateUser, checkPageAccess('/aiMath'), (req, res) => {
   });
 });
 
-app.get('/dataAnalysis', authenticateUser, checkPageAccess('/dataAnalysis'), (req, res) => {
+app.get('/dataAnalysis', authenticateUser, requireEducationAccess, checkPageAccess('/dataAnalysis'), (req, res) => {
   res.render('template', {
     userID: req.session.userID,
     userRole: req.session.role,

@@ -344,7 +344,7 @@ function checkWritePermission(userRole, category) {
 - **MySQL**: 데이터베이스
 - **EJS**: 템플릿 엔진
 - **multer**: 파일 업로드 (준비)
-- **AWS S3**: 파일 저장 (준비)
+- **NCP Object Storage**: 파일 저장 (준비)
 
 ### 프론트엔드
 - **Bootstrap 5.3.3**: UI 프레임워크

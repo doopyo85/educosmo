@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= post.title %> - <%= blog.title || blog.display_name %>
+    </title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #f4f5f7;
+            color: #333;
+            margin: 0;
+        }
+
+        header {
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .title {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .date {
+            color: #888;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+
+        .content {
+            min-height: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <a href="/" class="logo">
+            <%= blog.title || blog.display_name %>
+        </a>
+    </header>
+    <div class="main">
+        <h1 class="title">
+            <%= post.title %>
+        </h1>
+        <div class="date">
+            <%= new Date(post.created_at).toLocaleDateString() %>
+        </div>
+        <div class="content">
+            <%- post.content_json ? JSON.stringify(post.content_json) : '내용 없음' %>
+        </div>
+    </div>
+</body>
+
+</html>

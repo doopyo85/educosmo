@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= blog.display_name %>
+    </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .board-header {
+            background-color: #ffffff;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .board-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1a1a1a;
+        }
+
+        .board-container {
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .board-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.2s;
+        }
+
+        .board-card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="board-header">
+        <div class="board-title">
+            <% if (blog.logo_url) { %>
+                <img src="<%= blog.logo_url %>" alt="Logo" height="30" class="me-2">
+                <% } %>
+                    <%= blog.display_name %>
+        </div>
+        <div>
+            <% if (user && user.is_logined) { %>
+                <span class="badge bg-primary">
+                    <%= user.userID %>
+                </span>
+                <% } else { %>
+                    <a href="https://pong2.app/auth/login" class="btn btn-outline-primary btn-sm">Login</a>
+                    <% } %>
+        </div>
+    </header>
+
+    <div class="board-container">
+        <!-- Padlet Style Cards -->
+        <div class="board-card">
+            <h5>Welcome to Center Board</h5>
+            <p>
+                <%= blog.description %>
+            </p>
+        </div>
+
+        <div class="board-card">
+            <h5>Class Materials</h5>
+            <p>Uploads will appear here.</p>
+        </div>
+    </div>
+
+    <!-- Upload Modal Trigger (If Admin/Teacher) -->
+    <% if (user && (user.role==='admin' || user.role==='teacher' )) { %>
+        <div class="position-fixed bottom-0 end-0 p-4">
+            <button class="btn btn-primary rounded-circle p-3 shadow-lg">
+                <i class="bi bi-plus-lg">+</i>
+            </button>
+        </div>
+        <% } %>
+</body>
+
+</html>

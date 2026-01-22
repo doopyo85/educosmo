@@ -290,6 +290,25 @@ function generateAttachmentKey(extension, isTemp = false) {
 }
 
 /**
+ * 블로그/센터 파일 키 생성
+ */
+function generateMultimediaKey(type, extension, isTemp = false) {
+    const uuid = uuidv4();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+
+    // type: 'blog' or 'center'
+    const prefix = type === 'blog' ? 'blog' : 'center';
+
+    if (isTemp) {
+        return `${prefix}/temp/${uuid}${extension}`;
+    } else {
+        return `${prefix}/${year}/${month}/${uuid}${extension}`;
+    }
+}
+
+/**
  * 임시 파일을 정식 파일로 이동
  */
 async function moveFromTempToPermanent(tempKey) {
@@ -305,6 +324,14 @@ async function moveFromTempToPermanent(tempKey) {
             const filename = path.basename(tempKey);
             const ext = path.extname(filename);
             permanentKey = generateAttachmentKey(ext, false);
+        } else if (tempKey.includes('/blog/temp/')) {
+            const filename = path.basename(tempKey);
+            const ext = path.extname(filename);
+            permanentKey = generateMultimediaKey('blog', ext, false);
+        } else if (tempKey.includes('/center/temp/')) {
+            const filename = path.basename(tempKey);
+            const ext = path.extname(filename);
+            permanentKey = generateMultimediaKey('center', ext, false);
         } else {
             throw new Error('올바르지 않은 임시 파일 경로입니다.');
         }
@@ -491,5 +518,7 @@ module.exports = {
     checkFileExists,
     // 🔥 새로 추가된 함수들
     processContentImages,
-    processAttachmentFiles
+    processContentImages,
+    processAttachmentFiles,
+    generateMultimediaKey
 };

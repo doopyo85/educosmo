@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>센터 가입 - EduCosmo</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 90%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            color: #333;
+        }
+
+        .header p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .code-input {
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            font-size: 18px !important;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-message.active {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+
+        .success-message h2 {
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+
+        .success-message p {
+            color: #666;
+            margin: 0 0 20px 0;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+
+        .info-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .info-box ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>센터 가입</h1>
+            <p>초대 코드를 입력하여 센터에 가입하세요</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div id="joinForm">
+            <div class="info-box">
+                <h3>초대 코드란?</h3>
+                <ul>
+                    <li>센터 관리자로부터 받은 8자리 코드입니다</li>
+                    <li>코드를 입력하면 해당 센터에 가입됩니다</li>
+                    <li>하나의 센터에만 가입할 수 있습니다</li>
+                </ul>
+            </div>
+
+            <form onsubmit="handleJoin(event)">
+                <div class="form-group">
+                    <label for="inviteCode">초대 코드</label>
+                    <input
+                        type="text"
+                        id="inviteCode"
+                        class="code-input"
+                        placeholder="예: ABC12345"
+                        maxlength="8"
+                        pattern="[A-Za-z0-9]{8}"
+                        required
+                    >
+                    <small>8자리 영문/숫자 조합을 입력하세요</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    가입하기
+                </button>
+            </form>
+
+            <div class="back-link">
+                <a href="/">홈으로 돌아가기</a>
+            </div>
+        </div>
+
+        <div id="loadingMessage" class="loading">
+            <p>처리 중입니다...</p>
+        </div>
+
+        <div id="successMessage" class="success-message">
+            <div class="success-icon">✓</div>
+            <h2>센터 가입 완료!</h2>
+            <p id="centerName"></p>
+            <button class="btn btn-primary" onclick="goToHome()">시작하기</button>
+        </div>
+    </div>
+
+    <script>
+        // 페이지 로드 시 로그인 확인
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/auth/me');
+                const data = await response.json();
+
+                if (!data.success) {
+                    // 로그인되지 않은 경우
+                    showAlert('로그인이 필요합니다. 로그인 페이지로 이동합니다.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 2000);
+                    return;
+                }
+
+                // 이미 센터에 가입된 경우
+                if (data.user.centerID) {
+                    showAlert('이미 센터에 가입되어 있습니다.', 'info');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('사용자 정보 확인 오류:', error);
+                showAlert('로그인 상태를 확인할 수 없습니다.', 'error');
+            }
+        });
+
+        // 센터 가입 처리
+        async function handleJoin(event) {
+            event.preventDefault();
+
+            const inviteCode = document.getElementById('inviteCode').value.trim().toUpperCase();
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (inviteCode.length !== 8) {
+                showAlert('초대 코드는 8자리여야 합니다.', 'error');
+                return;
+            }
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = '처리 중...';
+
+                const response = await fetch('/api/centers/join', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ inviteCode })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 센터 정보 가져오기
+                    const centerResponse = await fetch(`/api/centers/${data.centerId}`);
+                    const centerData = await centerResponse.json();
+
+                    if (centerData.success) {
+                        showSuccess(centerData.center.center_name);
+                    } else {
+                        showSuccess('센터');
+                    }
+                } else {
+                    showAlert(data.message, 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '가입하기';
+                }
+            } catch (error) {
+                console.error('센터 가입 오류:', error);
+                showAlert('센터 가입에 실패했습니다. 다시 시도해주세요.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '가입하기';
+            }
+        }
+
+        // 성공 메시지 표시
+        function showSuccess(centerName) {
+            document.getElementById('joinForm').style.display = 'none';
+            document.getElementById('centerName').textContent = `${centerName}에 가입되었습니다`;
+            document.getElementById('successMessage').classList.add('active');
+        }
+
+        // 홈으로 이동
+        function goToHome() {
+            window.location.href = '/';
+        }
+
+        // 알림 표시
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // 입력 시 자동으로 대문자로 변환
+        document.getElementById('inviteCode').addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    </script>
+</body>
+</html>

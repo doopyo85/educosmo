@@ -1,0 +1,310 @@
+📋 노션+패들렛 스타일 멀티미디어 업로드 시스템 설계 계획서
+1. 현재 시스템 분석
+1.1 현재 게시판 파일 업로드 구조
+이미지 업로더: imageRouter.js를 통해 CKEditor에서 업로드
+첨부파일 업로더: attachmentRouter.js를 통해 별도 업로드
+S3 경로:
+이미지: images/temp/{uuid}.jpg (임시) → images/{date}/{uuid}.jpg (정식)
+첨부파일: attachments/temp/{uuid} (임시) → attachments/{date}/{uuid} (정식)
+문제점:
+사용자별 폴더 구조 없음
+임시 파일이 서버 메모리에 저장됨 (multer memory storage)
+저장 버튼을 눌러야만 NCP Object Storage로 영구화
+1.2 참고할 Educosmo의 S3 구조
+educodingnplaycontents/
+└── users/
+    └── {userID}/
+        ├── scratch/
+        │   ├── projects/{projectName}_{timestamp}.sb3
+        │   └── autosave/{projectName}_{timestamp}.sb3
+        ├── entry/
+        │   ├── projects/{projectName}_{timestamp}.ent
+        │   └── autosave/{projectName}_{timestamp}.ent
+        └── jupyter/
+            └── {userID}.ipynb
+
+2. 목표 시스템 설계
+2.1 핵심 요구사항
+임시 파일도 NCP Object Storage에 저장: 서버 메모리 부담 감소
+사용자별 폴더 구조: users/{userID}/board/ 아래에 모든 파일 저장
+다양한 파일 타입 지원: 이미지, MP3, 동영상, PDF, 링크 미리보기, 일반 파일
+드래그 앤 드롭 업로드: 노션처럼 편리한 UX
+저장 버튼 클릭 시 영구화: 임시 파일 → 정식 파일로 이동
+3. NCP Object Storage 폴더 구조 설계
+3.1 제안하는 폴더 구조
+educodingnplaycontents/         # NCP Object Storage 버킷
+└── users/                       # 사용자 폴더 (신규)
+    └── {userID}/                # 사용자별 루트 폴더
+        └── board/               # 게시판 파일들
+            ├── temp/            # 임시 파일 (작성 중)
+            │   ├── images/
+            │   │   └── {uuid}_20260121_123456.jpg
+            │   ├── audio/
+            │   │   └── {uuid}_20260121_123456.mp3
+            │   ├── video/
+            │   │   └── {uuid}_20260121_123456.mp4
+            │   ├── documents/
+            │   │   └── {uuid}_20260121_123456.pdf
+            │   └── files/
+            │       └── {uuid}_20260121_123456.zip
+            │
+            └── posts/           # 정식 파일 (게시글 저장 후)
+                └── {postID}/    # 게시글별로 폴더 분리
+                    ├── images/
+                    │   └── {uuid}_20260121_123456.jpg
+                    ├── audio/
+                    │   └── {uuid}_20260121_123456.mp3
+                    ├── video/
+                    │   └── {uuid}_20260121_123456.mp4
+                    ├── documents/
+                    │   └── {uuid}_20260121_123456.pdf
+                    └── files/
+                        └── {uuid}_20260121_123456.zip
+
+3.2 파일명 규칙
+형식: {uuid}_{YYYYMMDD}_{HHMMSS}.{ext}
+예시: a3f2c9d1-4e5f-6789-abcd-ef0123456789_20260121_143022.jpg
+장점:
+UUID로 충돌 방지
+타임스탬프로 정렬 가능
+확장자 보존
+4. 파일 저장 흐름 설계
+4.1 업로드 단계별 프로세스
+[1단계: 파일 업로드 (작성 중)]
+사용자가 파일 드래그 앤 드롭 또는 선택
+    ↓
+multer가 메모리에 임시 저장
+    ↓
+NCP Object Storage에 즉시 업로드
+경로: users/{userID}/board/temp/{fileType}/{uuid}_{timestamp}.ext
+    ↓
+DB의 board_temp_files 테이블에 기록
+- user_id
+- temp_key (S3 경로)
+- original_name
+- file_size
+- file_type
+- created_at (TTL용)
+    ↓
+프론트엔드에 URL 반환
+에디터에서 임시 URL로 미리보기
+
+---
+
+[2단계: 게시글 저장 버튼 클릭]
+사용자가 "저장" 버튼 클릭
+    ↓
+백엔드에서 processContentImages() 함수 호출
+- HTML 파싱하여 temp 경로 이미지 추출
+- 첨부파일 목록에서 temp 경로 파일 추출
+    ↓
+S3에서 파일 복사 (CopyObject)
+temp → posts/{postID}/{fileType}/
+    ↓
+DB 업데이트
+- board_posts 테이블: content의 URL 교체
+- board_attachments 테이블: 정식 경로로 업데이트
+- board_temp_files 테이블: is_permanent = true
+    ↓
+temp 폴더의 원본 파일 삭제 (선택사항)
+
+4.2 TTL (Time To Live) 관리
+임시 파일 자동 삭제 정책
+
+임시 파일은 24시간 후 자동 삭제
+Cron Job으로 매일 자정 실행
+board_temp_files 테이블에서 created_at < NOW() - INTERVAL 24 HOUR 조회
+해당 파일들 S3에서 삭제
+5. 데이터베이스 스키마 설계
+5.1 신규 테이블: board_temp_files
+CREATE TABLE board_temp_files (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL COMMENT 'Users.id (FK)',
+    temp_key VARCHAR(500) NOT NULL COMMENT 'S3 임시 경로',
+    original_name VARCHAR(255) NOT NULL COMMENT '원본 파일명',
+    file_size BIGINT NOT NULL COMMENT '파일 크기 (bytes)',
+    file_type VARCHAR(100) NOT NULL COMMENT 'MIME type',
+    file_category ENUM('image', 'audio', 'video', 'document', 'file') NOT NULL,
+    s3_url VARCHAR(500) NOT NULL COMMENT 'NCP CDN URL',
+    is_permanent BOOLEAN DEFAULT FALSE COMMENT '영구화 여부',
+    post_id INT NULL COMMENT '영구화 후 게시글 ID (board_posts.id)',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP GENERATED ALWAYS AS (created_at + INTERVAL 24 HOUR) STORED,
+    
+    INDEX idx_user_temp (user_id, is_permanent),
+    INDEX idx_expires (expires_at),
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES board_posts(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+5.2 기존 테이블 수정: board_attachments
+ALTER TABLE board_attachments
+ADD COLUMN file_category ENUM('image', 'audio', 'video', 'document', 'file') DEFAULT 'file' AFTER file_type,
+ADD COLUMN temp_file_id INT NULL COMMENT 'board_temp_files.id 참조' AFTER file_category,
+ADD FOREIGN KEY (temp_file_id) REFERENCES board_temp_files(id) ON DELETE SET NULL;
+
+6. API 엔드포인트 설계
+6.1 신규 API: 통합 파일 업로드
+POST /api/board/files/upload
+Content-Type: multipart/form-data
+
+Body:
+- files: File[] (최대 10개, 각 50MB)
+- category: 'image' | 'audio' | 'video' | 'document' | 'file'
+
+Response:
+{
+  "success": true,
+  "files": [
+    {
+      "tempId": 123,
+      "tempKey": "users/john123/board/temp/images/abc123_20260121_143022.jpg",
+      "url": "https://onag54aw13447.edge.naverncp.com/users/john123/board/temp/images/abc123.jpg",
+      "originalName": "내사진.jpg",
+      "size": 1024000,
+      "type": "image/jpeg",
+      "category": "image",
+      "expiresAt": "2026-01-22T14:30:22Z"
+    }
+  ]
+}
+
+6.2 신규 API: 파일 영구화
+POST /api/board/files/finalize
+Content-Type: application/json
+
+Body:
+{
+  "postId": 456,
+  "tempFileIds": [123, 124, 125],
+  "content": "<p>게시글 내용 with <img src='...temp...'></p>"
+}
+
+Response:
+{
+  "success": true,
+  "finalizedFiles": [
+    {
+      "id": 123,
+      "oldKey": "users/john123/board/temp/images/abc123.jpg",
+      "newKey": "users/john123/board/posts/456/images/abc123.jpg",
+      "newUrl": "https://onag54aw13447.edge.naverncp.com/users/john123/board/posts/456/images/abc123.jpg"
+    }
+  ],
+  "updatedContent": "<p>게시글 내용 with <img src='...posts/456...'></p>"
+}
+
+7. 용량 관리 통합
+7.1 quotaChecker 연동
+// 임시 파일 업로드 시
+const quotaCheck = await canUpload(user.id, user.centerID, fileSize);
+if (!quotaCheck.allowed) {
+    return res.status(413).json({ error: '용량 초과' });
+}
+
+// 즉시 사용량 증가 (임시 파일도 용량에 포함)
+await increaseUsage(user.id, user.centerID, fileSize, 'board_temp');
+
+// 영구화 시 (이미 증가된 용량이므로 변경 없음)
+// recordFile()로 UserFiles 테이블에 정식 기록만 추가
+await recordFile(user.id, user.centerID, {
+    category: 'board',
+    originalName: file.originalName,
+    storedName: file.newKey,
+    size: file.size,
+    type: file.type,
+    url: file.newUrl
+});
+
+// 임시 파일 삭제 시 (게시글 저장 취소된 경우)
+await decreaseUsage(user.id, user.centerID, fileSize, 'board_temp');
+
+8. 프론트엔드 UX 개선
+8.1 드래그 앤 드롭 업로드 영역
+<div id="drop-zone" class="drop-zone">
+    <div class="drop-zone-content">
+        <i class="icon-upload"></i>
+        <p>이미지, 동영상, 음악, 문서 등을 여기에 드래그하세요</p>
+        <p class="text-muted">또는 클릭하여 파일 선택</p>
+    </div>
+    <input type="file" id="file-input" multiple hidden 
+           accept="image/*,audio/*,video/*,.pdf,.zip,.doc,.docx">
+</div>
+
+8.2 업로드 진행 상태 표시
+<div class="upload-progress-list">
+    <div class="upload-item">
+        <div class="file-info">
+            <i class="icon-image"></i>
+            <span>내사진.jpg</span>
+            <span class="file-size">1.2 MB</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: 65%"></div>
+        </div>
+        <span class="status">업로드 중... 65%</span>
+    </div>
+</div>
+
+8.3 파일 타입별 미리보기
+// 이미지: 썸네일
+<img src="{tempUrl}" alt="{filename}">
+
+// 오디오: 플레이어
+<audio controls src="{tempUrl}"></audio>
+
+// 비디오: 플레이어
+<video controls src="{tempUrl}"></video>
+
+// PDF: 아이콘 + 파일명
+<div class="pdf-preview">
+    <i class="icon-pdf"></i>
+    <span>{filename}</span>
+</div>
+
+9. 보안 고려사항
+9.1 파일 검증
+MIME 타입 검증
+파일 크기 제한 (이미지: 10MB, 오디오/비디오: 50MB, 문서: 20MB)
+악성 파일 필터링 (실행 파일 차단)
+9.2 접근 권한
+임시 파일: 업로드한 본인만 접근 가능
+정식 파일: 게시글 공개 범위에 따라 접근 제어
+9.3 URL Signed 처리 (선택사항)
+민감한 파일은 Presigned URL 생성 (15분 유효)
+10. 구현 우선순위
+Phase 1: 기본 인프라 (1-2주)
+ NCP Object Storage 폴더 구조 생성
+ board_temp_files 테이블 생성
+ 통합 업로드 API (/api/board/files/upload) 구현
+ multer → NCP 직접 업로드 로직 구현
+Phase 2: 영구화 로직 (1주)
+ 파일 영구화 API (/api/board/files/finalize) 구현
+ S3 CopyObject 구현
+ HTML 콘텐츠 URL 교체 로직
+Phase 3: TTL 및 정리 (1주)
+ Cron Job: 24시간 지난 임시 파일 삭제
+ 용량 관리 통합 (quotaChecker)
+ 에러 핸들링 및 롤백
+Phase 4: 프론트엔드 UX (1-2주)
+ 드래그 앤 드롭 UI 구현
+ 업로드 진행바
+ 파일 타입별 미리보기
+ CKEditor 통합
+11. 기대 효과
+11.1 사용자 경험
+✅ 노션처럼 다양한 파일을 쉽게 업로드
+✅ 드래그 앤 드롭으로 직관적인 UX
+✅ 실시간 미리보기로 작성 편의성 향상
+
+11.2 시스템 안정성
+✅ 서버 메모리 부담 감소 (NCP에 즉시 업로드)
+✅ 사용자별 폴더로 파일 관리 용이
+✅ TTL로 불필요한 임시 파일 자동 정리
+
+11.3 확장성
+✅ 다른 모듈(댓글, DM 등)에서도 동일한 업로드 시스템 재사용 가능
+✅ 추후 동영상 스트리밍, 이미지 리사이징 등 확장 용이
+
+작성일: 2026-01-21
+상태: 계획 단계 (구현 대기)

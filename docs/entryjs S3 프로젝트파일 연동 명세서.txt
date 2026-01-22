@@ -1,8 +1,8 @@
 EntryJS S3 프로젝트 파일 연동 명세서
 📋 시스템 개요
-프로젝트: educodingnplay EntryJS S3 ENT 파일 연동 시스템
+프로젝트: educodingnplay EntryJS NCP Object Storage ENT 파일 연동 시스템
 아키텍처: 3000번(메인) + 8070번(EntryJS) 분리형 하이브리드 시스템
-데이터 소스: Google Sheets + AWS S3 + MySQL
+데이터 소스: Google Sheets + NCP Object Storage + MySQL
 작성일: 2025년 8월 2일
 상태: 🟢 운영 중 (이미지 로드 이슈 해결 중)
 
@@ -36,8 +36,8 @@ EntryJS S3 프로젝트 파일 연동 명세서
 🗂️ 데이터 소스 구조
 Google Sheets 구조 (problems 시트)
 열필드명예시값설명A문제파일명cpe1-1a.entS3 ENT 파일명B시험지명python카테고리/과목명C문제번호p01문제 순서D개념파일URLconcept1.md추가 학습자료E정답파일URLanswer1.py정답 코드F해설파일URLexplanation1.md해설 파일GanswerTypecode답안 형식H정답{"type":"code","answer":"print()"}JSON 정답I인풋/아웃풋input: none, output: Hello테스트 케이스J난이도11-5 단계K객관식/주관식주관식문제 유형LTags기초,출력태그 정보
-AWS S3 구조
-s3://educodingnplaycontents/
+NCP Object Storage 구조
+ncp://educodingnplaycontents/
 ├── ent/                          # ENT 파일 저장소
 │   ├── cpe1-1a.ent              # 압축된 프로젝트 파일
 │   ├── cpe1-1b.ent
@@ -89,8 +89,8 @@ Apache Alias 설정 확인
 
 
 ========================
-8|server  | 🚀 S3 ENT 파일 로드 시작: https://educodingnplaycontents.s3.amazonaws.com/ent/cpe1-1a.ent
-8|server  | 🌐 S3 다운로드 시작: https://educodingnplaycontents.s3.amazonaws.com/ent/cpe1-1a.ent
+8|server  | 🚀 NCP ENT 파일 로드 시작: https://kr.object.ncloudstorage.com/educodingnplaycontents/ent/cpe1-1a.ent
+8|server  | 🌐 NCP 다운로드 시작: https://kr.object.ncloudstorage.com/educodingnplaycontents/ent/cpe1-1a.ent
 8|server  | ✅ S3 다운로드 완료: 287699 bytes (281.0 KB)
 8|server  | 🔧 ENT 파일 파싱 시작: /var/www/html/temp/ent_files/parse_1754372027862_eeot6jr0a/downloaded.ent
 8|server  | 📦 ENT 버퍼 크기: 287699 bytes
@@ -201,7 +201,7 @@ js/entry-minimal-dataapi.js - DataAPI 설정
 ecosystem.config.js - PM2 설정 (8070번)
 
 🔗 의존성 매트릭스
-구성요소의존성버전역할3000번 서버└─ entFileManagertar, node-fetch, fs/promiseslatestENT 파일 처리└─ Google Sheetsgoogleapis^108.0.0메타데이터 조회└─ AWS SDK@aws-sdk/client-s3^3.xS3 파일 다운로드8070번 서버└─ EntryJS@entrylabs/entry4.0.20워크스페이스 엔진└─ Entry-tool@entrylabs/tool2.0.8팝업 시스템└─ Legacy Video@entrylabs/legacy-video1.0.1비디오 지원클라이언트└─ marked.js-4.3.0마크다운 렌더링└─ highlight.js-11.9.0코드 하이라이팅
+구성요소의존성버전역할3000번 서버└─ entFileManagertar, node-fetch, fs/promiseslatestENT 파일 처리└─ Google Sheetsgoogleapis^108.0.0메타데이터 조회└─ AWS SDK@aws-sdk/client-s3^3.xNCP Object Storage 파일 다운로드8070번 서버└─ EntryJS@entrylabs/entry4.0.20워크스페이스 엔진└─ Entry-tool@entrylabs/tool2.0.8팝업 시스템└─ Legacy Video@entrylabs/legacy-video1.0.1비디오 지원클라이언트└─ marked.js-4.3.0마크다운 렌더링└─ highlight.js-11.9.0코드 하이라이팅
 
 🔧 핵심 메서드 명세
 3000번 서버 메서드

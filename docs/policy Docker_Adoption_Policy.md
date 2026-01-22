@@ -12,7 +12,7 @@
 
 ### 1.1 주요 이슈 (Issues)
 1.  **보안 취약점 (Security Vulnerability)**
-    *   Python 코드가 `child_process`를 통해 호스트 OS(EC2)에서 직접 실행됩니다.
+    *   Python 코드가 `child_process`를 통해 호스트 OS(NCP Server)에서 직접 실행됩니다.
     *   악의적인 코드(`rm -rf`, `fork bomb` 등) 공격 시 서버 전체가 마비될 위험이 있습니다.
 2.  **환경 파편화 (Environment Fragmentation)**
     *   개발 환경(Windows)과 운영 환경(Ubuntu)의 차이로 인해 `npm` 의존성 및 Python 라이브러리 버전 불일치 문제가 발생합니다.
@@ -25,7 +25,7 @@
 
 *   **Runtime**: Node.js 16+, Python 3.x
 *   **Backend Framework**: Express.js (Monolithic)
-*   **Database**: MySQL (User Data, AWS RDS), Redis (Session/Cache)
+*   **Database**: MySQL (User Data, NCP Cloud DB), Redis (Session/Cache)
 *   **Execution Model**:
     *   **Python**: `spawn` 프로세스 실행 (Host 직접 실행)
     *   **Jupyter**: 단일 `jupyter notebook` 서버 실행 + 사용자별 폴더 분기
@@ -49,7 +49,7 @@
 *   **전략**: "사용자별 컨테이너 생성(Per-User)" 대신 **"기존 단일 서버를 컨테이너로 감싸는 방식(Single Container)"** 채택.
 *   **이유**: 사용자별 컨테이너 동적 생성은 구현 난이도(포트 관리, 수명주기 관리)가 매우 높음.
 *   **장점 (Pros)**:
-    *   **Host Protection**: 사용자가 시스템을 파괴해도 컨테이너만 재시작하면 호스트(EC2)는 안전함.
+    *   **Host Protection**: 사용자가 시스템을 파괴해도 컨테이너만 재시작하면 호스트(Server)는 안전함.
     *   **구현 용이성**: 기존 파일 기반 분기 로직 재사용 가능.
 *   **단점 (Cons)**:
     *   여전히 사용자 간 완벽한 리소스 격리는 안 됨 (Phase 2에서 해결).
@@ -59,7 +59,7 @@
 ## 4. 구현 및 전환 방향성 (Roadmap)
 
 ### [Phase 1] 호스트 보안 및 환경 표준화 (즉시 실행)
-가장 시급한 **"서버가 죽지 않게 하는 것"**에 집중합니다. `Nginx` 없이 AWS ALB가 트래픽을 처리합니다.
+가장 시급한 **"서버가 죽지 않게 하는 것"**에 집중합니다. `Nginx` 없이 NCP Load Balancer가 트래픽을 처리합니다.
 
 1.  **Docker Compose 구성**:
     *   `app` (Node.js Main Server)

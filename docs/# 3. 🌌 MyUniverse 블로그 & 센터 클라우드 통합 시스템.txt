@@ -1,0 +1,747 @@
+🌌 MyUniverse 블로그 & 센터 클라우드 통합 시스템 설계서
+버전 3.0 (NCP 전환 완료 + 자동 호스팅)
+
+완성된 MyUniverse 구조:
+🌌 MyUniverse (마이유니버스)
+  "나만의 우주를 탐험하고, 별자리를 만들고, 이야기를 기록하는 곳"
+
+├─ 📅 Timeline (타임라인)
+│   → 모든 학습 활동을 시간 순으로 기록
+│
+├─ ✅ Problem Solving (문제 풀이)
+│   → Python/COS Pro 문제 해결 현황
+│
+├─ 🌌 Observatory (별자리 관측소)
+│   → CT 역량을 3D 별자리로 시각화
+│
+└─ ⭐ StarDiary (별일기)
+    → 나의 작품과 학습 여정을 세상과 공유
+    → https://doopyo.pong2.app
+
+스토리텔링:
+"우주(Universe)를 탐험하며 별(작품/글)을 모으고,
+그 별들이 모여 나만의 별자리(Constellation)가 되고,
+별일기(StarDiary)에 그 이야기를 기록합니다."
+
+
+
+작성일: 2026-01-21 | 기반: NCP Object Storage + NCP Server
+
+📊 현재 인프라 상태 (확인 완료)
+✅ 완료된 AWS → NCP 마이그레이션
+항목	AS-IS (AWS)	TO-BE (NCP)	상태
+Object Storage	AWS S3	NCP Object Storage	✅ 완료
+서버	AWS EC2	NCP Server (101.79.11.188)	✅ 완료
+도메인	AWS Route53	가비아 DNS	✅ 완료
+CDN	CloudFront	NCP Global Edge	✅ 완료
+DB	-	MySQL 8.0 (Docker)	✅ 완료
+NCP Object Storage 설정:
+
+Bucket: "educodingnplaycontents"
+Endpoint: "https://kr.object.ncloudstorage.com"
+CDN: "https://onag54aw13447.edge.naverncp.com"
+Region: "kr-standard"
+
+센터 용량 정책 (이미 구현됨):
+
+Free: 30 GB
+Basic: 100 GB
+Pro: 500 GB
+Enterprise: 2 TB
+🎯 1. 블로그 호스팅 전략 (핵심 답변)
+문제: userid.pong2.app을 Netlify에서 어떻게 자동 생성할까?
+❌ 불가능: Netlify는 단일 사이트 = 단일 배포만 지원
+→ 와일드카드 서브도메인(*.pong2.app)으로 동적 사용자 페이지를 제공하는 것은 Netlify의 한계
+
+✅ 권장 솔루션: NCP 기반 SSR (Server-Side Rendering)
+항목	Netlify (현재)	NCP SSR (권장)
+동적 라우팅	❌ 불가능	✅ 가능
+와일드카드 서브도메인	❌ 제한적	✅ 완전 지원
+빌드 비용	유료 (300분/월)	무료 (자체 서버)
+DB 접근	❌ 우회 필요	✅ 직접 연결
+센터 통합	❌ 별도 관리	✅ 단일 시스템
+🏗️ 2. 아키텍처 설계
+2.1 도메인 구조 (최종안)
+pong2.app                    → Netlify (기존 유지: 메인 페이지, 포털)
+api.pong2.app                → NCP Server (새로운 API 서버)
+
+# 학생 블로그 (SSR)
+doopyo.pong2.app             → NCP Server → DB 조회 → 동적 렌더링
+kim123.pong2.app             → NCP Server → DB 조회 → 동적 렌더링
+
+# 센터 클라우드 (SSR)
+best-coding.pong2.app        → NCP Server → 센터 보드 렌더링
+gangnam.pong2.app            → NCP Server → 센터 보드 렌더링
+
+2.2 기술 스택
+Layer	기술	역할
+Frontend (Static)	Netlify	메인 페이지, 포털, PongTube
+Frontend (Dynamic)	Express.js + EJS/Pug	블로그 SSR
+Backend API	Express.js (educosmo)	REST API
+Database	MySQL 8.0	사용자, 센터, 블로그 데이터
+Storage	NCP Object Storage	이미지, 파일
+CDN	NCP Global Edge	정적 파일 가속
+Process Manager	PM2	서버 프로세스 관리
+🚀 3. 구현 계획 (단계별)
+Phase 1: 인프라 및 DNS 설정 (1주)
+3.1.1 가비아 DNS 설정
+# 기존 (유지)
+pong2.app               A       Netlify IP
+www.pong2.app           CNAME   netlify
+
+# 신규 추가 (NCP 서버)
+api.pong2.app           A       101.79.11.188
+*.pong2.app             A       101.79.11.188  ← 와일드카드 (중요!)
+
+⚠️ 중요: 가비아에서 *.pong2.app 와일드카드 A 레코드 추가
+
+3.1.2 NCP 서버 Nginx 설정
+# /etc/nginx/sites-available/pong2-blogs
+server {
+    listen 80;
+    server_name ~^(?<userid>.+)\.pong2\.app$;  # 와일드카드 매칭
+
+    # SSL 설정 (Let's Encrypt)
+    listen 443 ssl http2;
+    ssl_certificate /etc/letsencrypt/live/pong2.app/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/pong2.app/privkey.pem;
+
+    location / {
+        proxy_pass http://localhost:3001;  # 블로그 전용 포트
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+3.1.3 SSL 인증서 발급 (와일드카드)
+# Certbot 설치
+sudo apt install certbot python3-certbot-nginx
+
+# 와일드카드 인증서 발급 (DNS 챌린지 필요)
+sudo certbot certonly --manual \
+  --preferred-challenges dns \
+  --server https://acme-v02.api.letsencrypt.org/directory \
+  -d *.pong2.app -d pong2.app
+
+# 가비아 DNS에 TXT 레코드 추가 (Certbot이 요청하는 값)
+# _acme-challenge.pong2.app  TXT  "생성된값"
+
+Phase 2: DB 스키마 설계 (1주)
+3.2.1 신규 테이블
+-- 학생/센터 블로그 공통 설정
+CREATE TABLE user_blogs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    subdomain VARCHAR(50) UNIQUE NOT NULL,  -- doopyo, kim123
+    title VARCHAR(200) DEFAULT '나의 우주',
+    description TEXT,
+    theme VARCHAR(50) DEFAULT 'galaxy',
+    custom_css TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id),
+    INDEX idx_subdomain (subdomain),
+    INDEX idx_user_active (user_id, is_active)
+);
+
+CREATE TABLE center_blogs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    center_id INT NOT NULL,
+    subdomain VARCHAR(50) UNIQUE NOT NULL,  -- best-coding, gangnam
+    display_name VARCHAR(100),
+    description TEXT,
+    logo_url VARCHAR(500),
+    theme VARCHAR(50) DEFAULT 'cloud',
+    custom_css TEXT,
+    show_student_gallery BOOLEAN DEFAULT TRUE,
+    is_public BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (center_id) REFERENCES Centers(id),
+    INDEX idx_subdomain (subdomain)
+);
+
+-- 블로그 게시글 (학생용: 자유 작성)
+CREATE TABLE blog_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    blog_id INT NOT NULL,
+    blog_type ENUM('user', 'center') NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) NOT NULL,
+    content_json JSON,  -- 노션 스타일 블록 데이터
+    excerpt TEXT,
+    thumbnail_url VARCHAR(500),
+    is_published BOOLEAN DEFAULT FALSE,
+    published_at DATETIME,
+    view_count INT DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_blog_published (blog_id, blog_type, is_published),
+    INDEX idx_slug (slug),
+    UNIQUE KEY unique_blog_slug (blog_id, blog_type, slug)
+);
+
+-- 센터 클라우드 카드 (Padlet 스타일)
+CREATE TABLE center_board_cards (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    center_id INT NOT NULL,
+    section VARCHAR(50) DEFAULT 'general',  -- 공지사항, 자료실, 과제
+    title VARCHAR(200) NOT NULL,
+    content TEXT,
+    file_url VARCHAR(500),
+    file_size BIGINT,
+    author_id INT NOT NULL,
+    layout_x INT DEFAULT 0,
+    layout_y INT DEFAULT 0,
+    pinned BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (center_id) REFERENCES Centers(id),
+    FOREIGN KEY (author_id) REFERENCES Users(id),
+    INDEX idx_center_section (center_id, section),
+    INDEX idx_pinned (pinned, created_at)
+);
+
+-- 블로그 저장소 사용량 (user_id별 blog/ 전용 용량)
+ALTER TABLE UserStorageUsage 
+ADD COLUMN blog_usage BIGINT DEFAULT 0 AFTER gallery_usage,
+ADD COLUMN blog_limit BIGINT DEFAULT 104857600;  -- 100 MB (free)
+
+Phase 3: 블로그 자동 생성 API (2주)
+3.3.1 블로그 생성 플로우
+MyUniverse 로그인
+    ↓
+[블로그 시작하기] 버튼 클릭
+    ↓
+POST /api/myuniverse/blogs/create
+    ↓
+1. user_blogs 테이블에 레코드 생성
+   - subdomain: 사용자 입력 (중복 체크)
+   - user_id: 현재 로그인 사용자
+   - theme: 'galaxy' (기본값)
+    ↓
+2. 응답: { "blogUrl": "https://doopyo.pong2.app" }
+    ↓
+프론트엔드: 새 탭으로 블로그 URL 오픈
+
+3.3.2 Express 라우터 구현
+// educosmo/routes/api/myUniverseRouter.js (신규)
+const express = require('express');
+const router = express.Router();
+const { requireDbUser } = require('../../middleware/auth');
+const blogService = require('../../lib_blog/blogService');
+
+// 블로그 생성
+router.post('/blogs/create', requireDbUser, async (req, res) => {
+  try {
+    const { subdomain, title, theme } = req.body;
+    const userId = req.user.id;
+
+    // 서브도메인 검증
+    if (!/^[a-z0-9-]{3,20}$/.test(subdomain)) {
+      return res.status(400).json({
+        success: false,
+        error: '서브도메인은 3-20자의 영문 소문자, 숫자, 하이픈만 가능합니다.'
+      });
+    }
+
+    // 중복 체크
+    const exists = await blogService.checkSubdomainExists(subdomain);
+    if (exists) {
+      return res.status(409).json({
+        success: false,
+        error: '이미 사용 중인 주소입니다.'
+      });
+    }
+
+    // 블로그 생성
+    const blog = await blogService.createUserBlog({
+      userId,
+      subdomain,
+      title: title || '나의 우주',
+      theme: theme || 'galaxy'
+    });
+
+    res.json({
+      success: true,
+      blogUrl: `https://${subdomain}.pong2.app`,
+      blogId: blog.id
+    });
+
+  } catch (error) {
+    console.error('❌ [MyUniverse] 블로그 생성 실패:', error);
+    res.status(500).json({
+      success: false,
+      error: '블로그 생성 중 오류가 발생했습니다.'
+    });
+  }
+});
+
+module.exports = router;
+
+3.3.3 blogService.js (신규)
+// educosmo/lib_blog/blogService.js
+const db = require('../database/mysql');
+
+class BlogService {
+  async checkSubdomainExists(subdomain) {
+    const [userBlogs] = await db.query(
+      'SELECT id FROM user_blogs WHERE subdomain = ?',
+      [subdomain]
+    );
+    const [centerBlogs] = await db.query(
+      'SELECT id FROM center_blogs WHERE subdomain = ?',
+      [subdomain]
+    );
+    return userBlogs.length > 0 || centerBlogs.length > 0;
+  }
+
+  async createUserBlog({ userId, subdomain, title, theme }) {
+    const [result] = await db.query(
+      `INSERT INTO user_blogs (user_id, subdomain, title, theme) 
+       VALUES (?, ?, ?, ?)`,
+      [userId, subdomain, title, theme]
+    );
+
+    return { id: result.insertId, subdomain };
+  }
+
+  async getUserBlog(subdomain) {
+    const [rows] = await db.query(
+      `SELECT ub.*, u.name as author_name, u.userID
+       FROM user_blogs ub
+       JOIN Users u ON ub.user_id = u.id
+       WHERE ub.subdomain = ? AND ub.is_active = 1`,
+      [subdomain]
+    );
+    return rows[0];
+  }
+
+  async getBlogPosts(blogId, limit = 10, offset = 0) {
+    const [rows] = await db.query(
+      `SELECT * FROM blog_posts
+       WHERE blog_id = ? AND blog_type = 'user' AND is_published = 1
+       ORDER BY published_at DESC
+       LIMIT ? OFFSET ?`,
+      [blogId, limit, offset]
+    );
+    return rows;
+  }
+
+  async getPortfolioProjects(userId, limit = 20) {
+    const [rows] = await db.query(
+      `SELECT * FROM ProjectSubmissions
+       WHERE user_id = ? AND is_deleted = 0
+       ORDER BY created_at DESC
+       LIMIT ?`,
+      [userId, limit]
+    );
+    return rows;
+  }
+}
+
+module.exports = new BlogService();
+
+Phase 4: SSR 블로그 렌더링 (2주)
+3.4.1 Express 블로그 서버 (신규 프로세스)
+// educosmo/server-blog.js (신규 파일)
+const express = require('express');
+const path = require('path');
+const blogService = require('./lib_blog/blogService');
+
+const app = express();
+const PORT = 3001;  // 블로그 전용 포트
+
+// 템플릿 엔진 설정
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views/blogs'));
+
+// 정적 파일
+app.use('/static', express.static(path.join(__dirname, 'public/blogs')));
+
+// 와일드카드 라우팅
+app.get('*', async (req, res) => {
+  try {
+    const subdomain = req.hostname.split('.')[0];  // doopyo.pong2.app → doopyo
+
+    // 블로그 존재 여부 확인
+    const blog = await blogService.getUserBlog(subdomain);
+    if (!blog) {
+      return res.status(404).render('404', { subdomain });
+    }
+
+    // 게시글 목록 조회
+    const posts = await blogService.getBlogPosts(blog.id);
+    
+    // 포트폴리오 조회
+    const portfolio = await blogService.getPortfolioProjects(blog.user_id);
+
+    // 렌더링
+    res.render('index', {
+      blog,
+      posts,
+      portfolio,
+      cdnUrl: 'https://onag54aw13447.edge.naverncp.com'
+    });
+
+  } catch (error) {
+    console.error('❌ [Blog SSR] 렌더링 오류:', error);
+    res.status(500).render('error', { error });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`✅ [Blog Server] 포트 ${PORT}에서 실행 중`);
+});
+
+3.4.2 PM2 설정 업데이트
+// educosmo/ecosystem.config.js
+module.exports = {
+  apps: [
+    // 기존 서버들...
+    {
+      name: 'server',
+      script: 'server.js',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000
+      }
+    },
+    // 신규: 블로그 SSR 서버
+    {
+      name: 'blog-server',
+      script: 'server-blog.js',
+      instances: 2,  // 클러스터 모드
+      exec_mode: 'cluster',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3001
+      }
+    },
+    // ... 기존 서버들 (scratch, entry, appinventor 등)
+  ]
+};
+
+3.4.3 EJS 템플릿 (노션 스타일)
+<!-- educosmo/views/blogs/index.ejs -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title><%= blog.title %> - MyUniverse</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="<%= blog.title %>">
+  <meta property="og:description" content="<%= blog.description %>">
+  <meta property="og:image" content="<%= cdnUrl %>/blog-og-image.jpg">
+  
+  <!-- 스타일 -->
+  <link rel="stylesheet" href="/static/css/galaxy-theme.css">
+</head>
+<body class="theme-<%= blog.theme %>">
+  
+  <!-- 헤더 -->
+  <header class="blog-header">
+    <div class="container">
+      <h1 class="blog-title"><%= blog.title %></h1>
+      <p class="blog-author">by <%= blog.author_name %></p>
+      <nav>
+        <a href="/">홈</a>
+        <a href="/posts">게시글</a>
+        <a href="/portfolio">포트폴리오</a>
+        <a href="/about">소개</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 최근 게시글 -->
+  <section class="recent-posts">
+    <div class="container">
+      <h2>✨ 최근 게시글</h2>
+      <% if (posts.length > 0) { %>
+        <div class="posts-grid">
+          <% posts.forEach(post => { %>
+            <article class="post-card">
+              <% if (post.thumbnail_url) { %>
+                <img src="<%= post.thumbnail_url %>" alt="<%= post.title %>">
+              <% } %>
+              <h3><%= post.title %></h3>
+              <p><%= post.excerpt %></p>
+              <time><%= new Date(post.published_at).toLocaleDateString('ko-KR') %></time>
+            </article>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <p class="empty-state">아직 작성한 게시글이 없습니다 ✍️</p>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- 포트폴리오 타임라인 -->
+  <section class="portfolio-timeline">
+    <div class="container">
+      <h2>🎨 포트폴리오</h2>
+      <% if (portfolio.length > 0) { %>
+        <div class="timeline">
+          <% portfolio.forEach(project => { %>
+            <div class="timeline-item">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <img src="<%= project.thumbnail_url %>" alt="<%= project.title %>">
+                <h4><%= project.title %></h4>
+                <span class="platform-badge <%= project.platform %>">
+                  <%= project.platform %>
+                </span>
+                <time><%= new Date(project.created_at).toLocaleDateString('ko-KR') %></time>
+                <a href="<%= project.s3_url %>" target="_blank">보기 →</a>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <p class="empty-state">아직 제출한 프로젝트가 없습니다 🚀</p>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- 푸터 -->
+  <footer>
+    <p>Powered by <a href="https://pong2.app">MyUniverse</a></p>
+  </footer>
+
+</body>
+</html>
+
+Phase 5: 센터 클라우드보드 (Padlet 스타일) (2주)
+3.5.1 센터 보드 라우팅
+// educosmo/server-blog.js에 추가
+app.get('/c/:subdomain', async (req, res) => {
+  const { subdomain } = req.params;
+  
+  const centerBlog = await blogService.getCenterBlog(subdomain);
+  if (!centerBlog) {
+    return res.status(404).render('404-center');
+  }
+
+  const cards = await blogService.getCenterCards(centerBlog.center_id);
+  const students = await blogService.getCenterStudents(centerBlog.center_id);
+  const storageUsage = await blogService.getCenterStorage(centerBlog.center_id);
+
+  res.render('center-board', {
+    center: centerBlog,
+    cards,
+    students,
+    storageUsage
+  });
+});
+
+3.5.2 센터 보드 템플릿
+<!-- educosmo/views/blogs/center-board.ejs -->
+<body class="center-board">
+  <!-- 상단 용량 게이지 -->
+  <div class="storage-gauge">
+    <div class="gauge-bar">
+      <div class="gauge-fill" style="width: <%= (storageUsage.used / storageUsage.limit * 100).toFixed(1) %>%"></div>
+    </div>
+    <span><%= (storageUsage.used / 1024**3).toFixed(2) %> GB / <%= (storageUsage.limit / 1024**3) %> GB</span>
+  </div>
+
+  <!-- Padlet 스타일 카드 그리드 -->
+  <div class="card-grid">
+    <% cards.forEach(card => { %>
+      <div class="card" data-section="<%= card.section %>">
+        <h4><%= card.title %></h4>
+        <p><%= card.content %></p>
+        <% if (card.file_url) { %>
+          <a href="<%= card.file_url %>" class="file-link">📎 <%= card.file_size / 1024 %> KB</a>
+        <% } %>
+        <div class="card-meta">
+          <span class="author"><%= card.author_name %></span>
+          <time><%= new Date(card.created_at).toLocaleDateString('ko-KR') %></time>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+
+  <!-- 사이드바: 학생 목록 -->
+  <aside class="students-sidebar">
+    <h3>👥 우리 반 친구들</h3>
+    <ul>
+      <% students.forEach(student => { %>
+        <li>
+          <a href="https://<%= student.subdomain %>.pong2.app" target="_blank">
+            <%= student.name %>
+          </a>
+        </li>
+      <% }); %>
+    </ul>
+  </aside>
+</body>
+
+📋 4. 질문별 최종 답변 (통합)
+1️⃣ 언제 호스팅이 시작되는지
+답변: 첫 작품 제출 시 자동 생성 (권장)
+
+// educosmo/routes/api/projectRouter.js (기존 파일 수정)
+router.post('/submit', requireDbUser, async (req, res) => {
+  // ... 프로젝트 저장 로직 ...
+
+  // 블로그 자동 생성 체크
+  const hasBlog = await blogService.checkUserHasBlog(req.user.id);
+  if (!hasBlog) {
+    const subdomain = req.user.userID.toLowerCase();  // userID를 서브도메인으로
+    await blogService.createUserBlog({
+      userId: req.user.id,
+      subdomain,
+      title: `${req.user.name}의 우주`,
+      theme: 'galaxy'
+    });
+    console.log(`✨ [Auto] 블로그 자동 생성: ${subdomain}.pong2.app`);
+  }
+
+  res.json({ success: true });
+});
+
+UX: MyUniverse 대시보드에 "✨ 블로그가 생성되었습니다! 확인하기 →" 알림 표시
+
+2️⃣ 템플릿 구조 (포트폴리오 자동 + 게시글 수동)
+답변: 네, 정확합니다!
+
+userid.pong2.app/
+├── / (홈)
+│   ├── 최근 게시글 (blog_posts, 수동 작성)
+│   └── 포트폴리오 타임라인 (ProjectSubmissions, 자동)
+├── /posts (게시글 목록)
+├── /posts/:slug (게시글 상세)
+├── /portfolio (포트폴리오 전체)
+└── /about (자기소개)
+
+3️⃣ Paid vs 무료 계정
+답변: 무료 계정 포함 (단계적 차별화)
+
+기능	Free (pong2)	Premium (센터 소속)
+블로그 호스팅	✅	✅
+저장 용량	500 MB	2~5 GB (센터 플랜)
+게시글 수	월 10개	무제한
+테마	1개 (Galaxy)	5개
+광고 제거	❌	✅
+커스텀 도메인	❌	✅ (Pro 이상)
+전략: 학생 개인은 무료, 센터가 Premium 결제 → 소속 학생 혜택
+
+4️⃣ 저장소 한도
+답변: 현재 정책 유지 + 블로그 전용 할당
+
+ALTER TABLE UserStorageUsage 
+ADD COLUMN blog_usage BIGINT DEFAULT 0,
+ADD COLUMN blog_limit BIGINT DEFAULT 104857600;  -- 100 MB (free)
+
+항목	Free	Premium (센터)
+블로그 파일	100 MB	500 MB
+프로젝트 (Entry/Scratch)	공유 (센터 할당)	공유
+총 개인 용량	500 MB	2~5 GB
+S3 경로:
+
+educodingnplaycontents/
+├── users/{userID}/blog/       ← 블로그 전용
+│   ├── posts/                  (게시글 이미지)
+│   ├── profile/                (프로필 사진)
+│   └── theme/                  (커스텀 CSS)
+
+5️⃣ 센터 vs 개인 블로그 차별화
+답변: 하이브리드 모델 (독립 + 통합)
+
+항목	개인 (userid.pong2.app)	센터 (center.pong2.app)
+호스팅	독립 (학생별)	센터별
+포트폴리오	본인 작품만	센터 전체 학생
+게시글	개인 일기/학습 로그	공지사항/자료실
+레이아웃	타임라인 (Notion)	카드 그리드 (Padlet)
+용량 표시	❌	✅ 상단 게이지 바
+학생 목록	❌	✅ 사이드바
+과제 제출	❌	✅ 카드로 제출
+연동: 센터 보드에서 학생 클릭 → iframe 또는 새 탭으로 개인 블로그 열기
+
+🛠️ 5. Netlify 대안 비교
+Option 1: NCP SSR (최종 권장)
+장점:
+
+✅ 완전한 동적 라우팅
+✅ DB 직접 접근 (빠른 속도)
+✅ 센터 통합 관리
+✅ 비용 절감 (자체 서버)
+단점:
+
+⚠️ 서버 부하 증가 (PM2 클러스터로 해결)
+⚠️ SEO 최적화 필요 (meta 태그, sitemap)
+Option 2: Netlify + 클라이언트 라우팅 (비권장)
+pong2.app/u/:userid  ← Netlify SPA
+↓
+API 호출 → educosmo → DB 조회 → 클라이언트 렌더링
+
+단점:
+
+❌ SEO 불리 (검색 노출 낮음)
+❌ 초기 로딩 느림 (API 왕복)
+❌ 서브도메인 불가능
+Option 3: Vercel/Cloudflare Pages (대안)
+Vercel: Edge Functions 지원, 하지만 유료 ($20/월)
+Cloudflare Pages: Workers로 SSR 가능, 학습 곡선 높음
+결론: NCP SSR이 가장 합리적
+
+📦 6. 배포 체크리스트
+6.1 DNS & SSL
+ 가비아에 *.pong2.app A 레코드 추가
+ Let's Encrypt 와일드카드 인증서 발급
+ Nginx 설정 파일 작성 및 테스트
+6.2 DB & 백엔드
+ 신규 테이블 생성 (user_blogs, center_blogs, blog_posts)
+ lib_blog/blogService.js 구현
+ server-blog.js 생성 및 PM2 등록
+ API 라우터 추가 (/api/myuniverse/blogs/*)
+6.3 프론트엔드 (MyUniverse)
+ "블로그 시작하기" 버튼 추가
+ 서브도메인 입력 폼 구현
+ 블로그 생성 API 호출 로직
+6.4 테스트
+ 로컬 환경 테스트 (http://doopyo.localhost:3001)
+ 실서버 DNS 전파 확인 (nslookup doopyo.pong2.app)
+ SSL 인증서 적용 확인
+ 포트폴리오 자동 연동 확인
+ 센터 보드 렌더링 확인
+🔄 7. 문서 업데이트 필요 (AWS → NCP)
+다음 문서를 수정해야 합니다:
+
+educosmo/docs/
+├── README.md                        ✅ S3 → NCP Object Storage
+├── S3_스토리지_API_명세서.txt         ✅ AWS SDK → NCP SDK
+├── old/플랫폼_통합저장소_정책명세서.md  ✅ 경로는 동일, 엔드포인트만 변경
+└── 신규: MyUniverse_블로그_호스팅_명세서.md  ← 이 문서 저장
+
+🚀 8. 예상 일정
+Phase	작업	기간	담당
+1	DNS + SSL + Nginx	3일	DevOps
+2	DB 스키마 + Migration	2일	Backend
+3	Blog Service + API	5일	Backend
+4	SSR 서버 + 템플릿	7일	Fullstack
+5	센터 보드	7일	Fullstack
+6	테스트 + 문서화	3일	QA
+총계		27일 (약 1개월)	
+📞 다음 단계
+즉시 시작 가능한 작업:
+
+가비아 DNS 설정 (5분)
+SSL 인증서 발급 (30분)
+DB 테이블 생성 (10분)
+코드 구현이 필요한 부분:
+
+server-blog.js (신규 파일)
+lib_blog/blogService.js (신규 파일)
+EJS 템플릿 파일들
+문서화:
+
+educosmo/docs/MyUniverse_블로그_호스팅_명세서.md 생성
+기존 AWS 관련 문서 업데이트
+구현을 시작하시겠습니까? 어느 부분부터 작업할지 알려주시면 상세 코드를 작성해드리겠습니다! 🚀
