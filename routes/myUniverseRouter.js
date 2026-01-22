@@ -454,7 +454,7 @@ router.get('/timeline', async (req, res) => {
                     id,
                     CONCAT('{"s3Url":"', IFNULL(s3_url,''), '", "thumbnail":"', IFNULL(thumbnail_url,''), '"}') COLLATE utf8mb4_unicode_ci as metadata
                 FROM ProjectSubmissions
-                WHERE user_id = ? AND is_deleted = 0 AND is_deleted = 0
+                WHERE user_id = ? AND is_deleted = 0
 
                 UNION ALL
 

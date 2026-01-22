@@ -684,7 +684,7 @@ router.get('/', requireTeacher, async (req, res) => {
                 ORDER BY created_at DESC
                 LIMIT 1
             `;
-            [subscription] = await queryDatabase(subscriptionQuery, [req.session.centerID]);
+            [subscription] = await db.queryDatabase(subscriptionQuery, [req.session.centerID]);
         }
 
         res.render('teacher', {
