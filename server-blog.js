@@ -183,6 +183,70 @@ app.get('/p/:slug', async (req, res) => {
     }
 });
 
+// ==========================================
+// Write Routes (Owner Only)
+// ==========================================
+
+// Helper: Check if current user is owner
+function isOwner(req, res, next) {
+    // req.user is populated by session (visitor info)
+    // req.blogOwner is the owner of the current blog context
+    if (req.session && req.session.user && req.blogOwner) {
+        // Check ID match (req.session.user.id vs req.blogOwner.id)
+        // Adjust based on your session structure: session.id or session.user.id
+        const visitorId = req.session.id || (req.session.user && req.session.user.id);
+
+        if (visitorId == req.blogOwner.id) {
+            return next();
+        }
+    }
+    res.status(403).send('Forbidden: Access denied');
+}
+
+// GET /write - Show Editor
+app.get('/write', isOwner, (req, res) => {
+    res.render('blog/write', {
+        blog: req.blog,
+        owner: req.blogOwner,
+        user: req.session
+    });
+});
+
+// POST /write - Save Post
+app.post('/write', isOwner, async (req, res) => {
+    try {
+        const { title, content, excerpt, thumbnail_url } = req.body;
+
+        if (!title || !content) {
+            return res.status(400).send('Title and Content are required');
+        }
+
+        // Generate Slug (simple)
+        const slug = Math.random().toString(36).substring(2, 10); // temporary random slug
+
+        await queryDatabase(`
+            INSERT INTO blog_posts 
+            (blog_id, blog_type, title, slug, content, excerpt, thumbnail_url, is_published, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
+        `, [
+            req.blog.id,
+            req.blogType,
+            title,
+            slug,
+            content,
+            excerpt || content.substring(0, 100),
+            thumbnail_url || null
+        ]);
+
+        res.json({ success: true, redirect: '/' });
+
+    } catch (error) {
+        console.error('Write post error:', error);
+        res.status(500).json({ error: 'Failed to save post' });
+    }
+});
+
+
 app.listen(PORT, () => {
     console.log(`🚀 MyUniverse Blog Server running on port ${PORT}`);
 });
