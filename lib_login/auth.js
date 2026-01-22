@@ -281,7 +281,7 @@ router.post('/login_process', async (req, res) => {
 
 // 회원가입 페이지 렌더링 (센터 소속 학생 가입)
 router.get('/register', async (req, res) => {
-    const title = '학생 가입';
+    const title = '회원 가입';
 
     const html = template.HTML(title, `
         <div style="margin-bottom: 20px;">
@@ -290,20 +290,17 @@ router.get('/register', async (req, res) => {
             </a>
         </div>
 
-        <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">학생 가입</h2>
-
-        <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 20px; font-size: 13px; color: #666;">
-            🎓 학원/학교에서 받은 <strong>센터 코드</strong>를 입력하세요
-        </div>
+        <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">회원 가입</h2>
 
         <form id="registerForm">
-            <input class="login" type="text" name="inviteCode" id="inviteCode" placeholder="* 센터 코드" required style="text-transform: uppercase;">
+            <input class="login" type="text" name="inviteCode" id="inviteCode" placeholder="센터 코드 (학원/학교에서 받은 센터 코드를 입력하세요) *" required style="text-transform: uppercase;">
             <input type="hidden" name="centerID" id="centerID">
 
-            <input class="login" type="text" name="userID" id="userID" placeholder="* 아이디" required>
-            <input class="login" type="password" name="password" id="password" placeholder="* 비밀번호 (8자 이상)" required minlength="8">
-            <input class="login" type="password" name="passwordConfirm" id="passwordConfirm" placeholder="* 비밀번호 확인" required>
-            <input class="login" type="text" name="name" id="name" placeholder="* 이름" required>
+            <input class="login" type="text" name="userID" id="userID" placeholder="아이디 *" required>
+            <input class="login" type="password" name="password" id="password" placeholder="비밀번호 (8자 이상) *" required minlength="8">
+            <input class="login" type="password" name="passwordConfirm" id="passwordConfirm" placeholder="비밀번호 확인 *" required>
+            <input class="login" type="text" name="name" id="name" placeholder="이름 *" required>
+            <input type="hidden" name="role" value="student">
             <input class="login" type="email" name="email" id="email" placeholder="이메일 (선택)">
             <input class="login" type="tel" name="phone" id="phone" placeholder="전화번호 (선택)">
 
