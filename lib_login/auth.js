@@ -70,21 +70,30 @@ router.get('/login', (req, res) => {
       ${alertHTML}
 
       <form id="loginForm">
-        <input class="login" type="text" name="userID" placeholder="아이디" autocomplete="username" required>
-        <input class="login" type="password" name="password" placeholder="비밀번호" autocomplete="current-password" required>
+        <input class="login" type="text" name="userID" id="loginUserID" placeholder="아이디" autocomplete="username" required>
+        <input class="login" type="password" name="password" id="loginPassword" placeholder="비밀번호" autocomplete="current-password" required>
         <input class="btn" type="submit" value="로그인">
       </form>
       <p class="register-link">
-        계정이 없으신가요? <a href="/auth/register">학생 가입</a>
-      </p>
-      <p class="register-link" style="margin-top: 10px; font-size: 0.9em;">
-        센터를 개설하시나요? <a href="/auth/register-center">센터 개설하기</a>
+        계정이 없으신가요? <a href="/auth/register">학생 가입</a> / <a href="/auth/register-center">센터 개설</a>
       </p>
 
       <script>
+          // URL 파라미터에서 사용자 정보 자동 입력
+          const urlParams = new URLSearchParams(window.location.search);
+          const userID = urlParams.get('userID');
+          const password = urlParams.get('password');
+
+          if (userID) {
+              document.getElementById('loginUserID').value = userID;
+          }
+          if (password) {
+              document.getElementById('loginPassword').value = password;
+          }
+
           // 로그인 중복 방지 플래그
           let isLoggingIn = false;
-          
+
           // 로그인 폼 제출 처리
           document.getElementById('loginForm').addEventListener('submit', function(event) {
               event.preventDefault();
@@ -309,6 +318,12 @@ router.get('/register', async (req, res) => {
             }
         </style>
 
+        <div style="margin-bottom: 20px;">
+            <a href="/auth/login" style="color: #666; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center;">
+                ← 로그인으로 돌아가기
+            </a>
+        </div>
+
         <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px;">학생 가입</h2>
 
         <!-- 탭 메뉴 -->
@@ -344,10 +359,6 @@ router.get('/register', async (req, res) => {
 
                 <input class="btn" type="submit" value="가입하기" style="width: 100%; padding: 10px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
             </form>
-
-            <p style="text-align: center; margin-top: 15px;">
-                <a href="/auth/register-center" style="color: #2196F3; text-decoration: none;">센터를 개설하시나요?</a>
-            </p>
         </div>
 
         <!-- 탭 2: 초대 코드 가입 -->
@@ -396,10 +407,6 @@ router.get('/register', async (req, res) => {
 
                 <input class="btn" type="submit" value="가입하기" style="width: 100%; padding: 10px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
             </form>
-
-            <p style="text-align: center; margin-top: 15px;">
-                <a href="/auth/register-center" style="color: #2196F3; text-decoration: none;">센터를 개설하시나요?</a>
-            </p>
         </div>
         </div>
 
@@ -533,7 +540,10 @@ router.get('/register', async (req, res) => {
                             submitBtn.textContent = '가입하기';
                         } else {
                             alert(result.message);
-                            window.location.href = '/auth/login';
+                            // 로그인 페이지로 이동하면서 사용자 정보 전달
+                            const userID = data.userID;
+                            const password = data.password;
+                            window.location.href = `/auth/login?userID=${encodeURIComponent(userID)}&password=${encodeURIComponent(password)}`;
                         }
                     } catch (error) {
                         console.error('Error:', error);
@@ -584,7 +594,10 @@ router.get('/register', async (req, res) => {
                             submitBtn.value = '가입하기';
                         } else {
                             alert(result.message);
-                            window.location.href = '/auth/login';
+                            // 로그인 페이지로 이동하면서 사용자 정보 전달
+                            const userID = data.userID;
+                            const password = data.password;
+                            window.location.href = `/auth/login?userID=${encodeURIComponent(userID)}&password=${encodeURIComponent(password)}`;
                         }
                     } catch (error) {
                         console.error('Error:', error);
