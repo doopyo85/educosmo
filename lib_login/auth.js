@@ -506,7 +506,7 @@ router.get('/register', async (req, res) => {
                             // 로그인 페이지로 이동하면서 사용자 정보 전달
                             const userID = data.userID;
                             const password = data.password;
-                            window.location.href = `/auth/login?userID=${encodeURIComponent(userID)}&password=${encodeURIComponent(password)}`;
+                            window.location.href = \`/auth/login?userID=\${encodeURIComponent(userID)}&password=\${encodeURIComponent(password)}\`;
                         }
                     } catch (error) {
                         console.error('Error:', error);
@@ -560,7 +560,7 @@ router.get('/register', async (req, res) => {
                             // 로그인 페이지로 이동하면서 사용자 정보 전달
                             const userID = data.userID;
                             const password = data.password;
-                            window.location.href = `/auth/login?userID=${encodeURIComponent(userID)}&password=${encodeURIComponent(password)}`;
+                            window.location.href = \`/auth/login?userID=\${encodeURIComponent(userID)}&password=\${encodeURIComponent(password)}\`;
                         }
                     } catch (error) {
                         console.error('Error:', error);
