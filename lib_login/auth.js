@@ -144,7 +144,7 @@ router.get('/login', (req, res) => {
                   submitButton.disabled = false;
               });
           });
-      </script>
+      <\/script>
     `;
     const html = template.HTML(title, body);
     res.send(html);
@@ -468,13 +468,9 @@ router.get('/register', async (req, res) => {
                         modal.style.display = 'none';
                     }
                 }
-            </script>
-        `);
-        res.send(html);
-    } catch (error) {
-        console.error('Error rendering register page:', error);
-        res.status(500).send('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-    }
+            <\/script>
+    `);
+    res.send(html);
 });
 
 // 회원가입 처리 (초대 코드 기반 학생 가입)
