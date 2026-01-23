@@ -1,0 +1,116 @@
+# 진로진학 정보 서비스 & 교사 블로그 구현 계획
+
+## 목표 (Goal)
+1.  **진로진학 (Career Info)**: 유료 회원(센터 학생/교사) 전용 내부 서비스로 구축합니다. (`/career` 라우트).
+2.  **교사 블로그 (Teacher Blog)**: 교사가 교안을 마크다운(MD) 형태로 작성하고 내부적으로 발행할 수 있는 기능을 신설합니다.
+3.  **접근 정책 재정립**:
+    *   **공개 (초대장/홍보)**: `pong2.app` (커뮤니티), 센터 블로그 (`center.pong2.app`), 학생 블로그 (`user.pong2.app`).
+    *   **비공개/내부 (유료 서비스)**: 진로진학 정보, 교사 블로그 (교안 공유).
+
+## 사용자 검토 필요 사항
+> [!IMPORTANT]
+> **접근 제어 (Access Control)**: 진로진학 및 교사 블로그는 **내부 라우트**(`app.codingnplay.co.kr/career` 등)로 서비스되며, 엄격한 권한 체크(유료 계정 여부)가 적용됩니다. 외부 주소(`pong2.app` 서브도메인)는 사용하지 않습니다.
+
+## 제안된 변경 사항
+
+### 1. 데이터베이스 스키마
+진로진학 데이터 및 교사 블로그를 위한 테이블을 추가합니다.
+
+#### `admissions.sql` (진로진학)
+```sql
+CREATE TABLE admissions_universities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    region VARCHAR(50),
+    logo_url VARCHAR(500)
+);
+
+CREATE TABLE admissions_departments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    university_id INT NOT NULL,
+    name VARCHAR(100) NOT NULL,         -- 예: 컴퓨터공학부
+    category VARCHAR(50),               -- 예: 공학, 인문
+    FOREIGN KEY (university_id) REFERENCES admissions_universities(id)
+);
+
+CREATE TABLE admissions_results (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    department_id INT NOT NULL,
+    year INT NOT NULL,                  -- 예: 2025
+    admission_type VARCHAR(50),         -- 예: 수시(지역균형), 정시(일반)
+    grade_cut_70 FLOAT,                 -- 70% 컷 등급 (예: 1.2)
+    competition_rate FLOAT,             -- 경쟁률 (예: 10.5)
+    FOREIGN KEY (department_id) REFERENCES admissions_departments(id)
+);
+
+CREATE TABLE career_resources (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    type VARCHAR(50),                   -- 예: 'GUIDE', 'POLICY', 'ANALYSIS'
+    file_url VARCHAR(500) NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### `teacher_blog.sql` (교사 블로그 - 신설)
+```sql
+CREATE TABLE teacher_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT NOT NULL,            -- 작성자 (교사)
+    title VARCHAR(200) NOT NULL,
+    content_md TEXT,                    -- 마크다운 원본
+    content_html TEXT,                  -- 렌더링된 HTML (선택적)
+    is_published BOOLEAN DEFAULT FALSE, -- 발행 여부 (내부 공개)
+    tags JSON,                          -- 태그 (예: ["파이썬", "초급"])
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES Users(id)
+);
+```
+
+### 2. 백엔드 API
+내부 라우트로 통합합니다.
+
+#### `routes/careerRouter.js`
+- `GET /career`: 메인 진로진학 대시보드 렌더링 (EJS).
+- `GET /api/career/universities`: 데이터 조회 API.
+
+#### `routes/teacherRouter.js` (기능 추가)
+- `GET /teacher/blog`: 교사 블로그 대시보드.
+- `GET /teacher/blog/write`: 글쓰기 에디터 (ToastUI 또는 Editor.js + MD 플러그인).
+- `POST /api/teacher/posts`: 교안 저장/발행.
+
+### 3. 프론트엔드 (SSR)
+메인 애플리케이션(`educosmo`)의 `views` 폴더 내에 구현합니다.
+
+#### `views/career/` (내부)
+- `index.ejs`: **대화형 진로 지도** 및 검색 화면.
+- `search.ejs`: **입결 테이블** 및 상세 조회.
+
+#### `views/teacher/blog/` (내부)
+- `editor.ejs`: 마크다운 에디터 페이지.
+- `list.ejs`: 내가 쓴 교안 목록.
+- `view.ejs`: 교안 상세 보기 (학생들에게 공유 시 사용 가능).
+
+### 4. 주요 기능 구현 (기존 계획 유지+수정)
+
+#### 🗺️ 대화형 진로 지도 (Interactive Career Map)
+- **위치**: `/career/map`
+- **기능**: 백지도 이미지를 활용한 시각적 탐색. 유료 회원만 접근 가능.
+
+#### 📝 교사 블로그 (교안 아카이브)
+- **위치**: `/teacher/blog`
+- **기능**:
+    - 마크다운 문법 지원 (코드 블록, 이미지 첨부 등).
+    - "내부 발행" 시 센터 내 학생 또는 동료 교사에게만 공개.
+
+## 검증 계획
+
+### 자동화 테스트
+- 파서(Parsers): PDF의 샘플 페이지가 JSON 객체로 올바르게 변환되는지 검증합니다.
+- API: 데이터 필터링 엔드포인트를 테스트합니다 (예: "컴퓨터공학부 컷이 2.0 이상인 대학 찾기").
+
+### 수동 검증
+- **시각적 확인**: `http://localhost:3000/career`에 접속하여 유료 계정으로 로그인 후 테마와 지도 UI를 확인합니다.
+- **데이터 확인**: DB의 무작위 행을 원본 PDF와 비교하여 정확성을 보장합니다.
