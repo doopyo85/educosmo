@@ -423,7 +423,7 @@
                                 <!-- 센터 ID (신규 추가) -->
                                 <div class="row mb-1 align-items-center">
                                     <label class="col-3 col-form-label fw-bold small text-end p-0 pe-2"
-                                        style="font-size: 12px;">센터 ID</label>
+                                        style="font-size: 12px; white-space: nowrap;">센터 ID</label>
                                     <div class="col-9">
                                         <input type="text" class="form-control form-control-sm" id="centerId" readonly
                                             style="font-size: 12px; height: 28px;">
@@ -432,7 +432,7 @@
                                 <!-- 센터명 -->
                                 <div class="row mb-1 align-items-center">
                                     <label class="col-3 col-form-label fw-bold small text-end p-0 pe-2"
-                                        style="font-size: 12px;">센터명</label>
+                                        style="font-size: 12px; white-space: nowrap;">센터명</label>
                                     <div class="col-9">
                                         <input type="text" class="form-control form-control-sm" id="centerName" readonly
                                             style="font-size: 12px; height: 28px;">
@@ -441,7 +441,7 @@
                                 <!-- 담당자 -->
                                 <div class="row mb-1 align-items-center">
                                     <label class="col-3 col-form-label fw-bold small text-end p-0 pe-2"
-                                        style="font-size: 12px;">담당자</label>
+                                        style="font-size: 12px; white-space: nowrap;">담당자</label>
                                     <div class="col-9">
                                         <input type="text" class="form-control form-control-sm" id="centerContactName"
                                             readonly style="font-size: 12px; height: 28px;">
@@ -450,7 +450,7 @@
                                 <!-- 담당자 이메일 -->
                                 <div class="row mb-0 align-items-center">
                                     <label class="col-3 col-form-label fw-bold small text-end p-0 pe-2"
-                                        style="font-size: 12px;">이메일</label>
+                                        style="font-size: 12px; white-space: nowrap;">이메일</label>
                                     <div class="col-9">
                                         <input type="email" class="form-control form-control-sm" id="centerContactEmail"
                                             readonly style="font-size: 12px; height: 28px;">
@@ -466,11 +466,12 @@
                             style="border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: none; transition: none; height: auto !important;">
                             <div class="card-header d-flex justify-content-between align-items-center"
                                 style="background: white; border-bottom: 1px solid #e5e7eb; padding: 6px 12px;">
-                                <h6 class="mb-0" style="color: #374151; font-weight: 600; font-size: 13px;">
+                                <h6 class="mb-0 text-truncate"
+                                    style="color: #374151; font-weight: 600; font-size: 13px;">
                                     <i class="bi bi-key me-2" style="color: #6366f1;"></i>초대 코드
                                 </h6>
-                                <button class="btn btn-sm" onclick="generateNewCenterCode()"
-                                    style="background: #6366f1; color: white; border: none; padding: 2px 8px; border-radius: 4px; font-size: 11px;">
+                                <button class="btn btn-sm text-nowrap" onclick="generateNewCenterCode()"
+                                    style="background: #6366f1; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 11px;">
                                     <i class="bi bi-plus-circle me-1"></i>발급
                                 </button>
                             </div>
@@ -540,36 +541,15 @@
                         </div>
                     </div>
                 </div>
-                readonly style="font-size: 11px; height: 24px;">
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="d-flex align-items-center">
-                <label class="form-label fw-bold small me-2 mb-0" style="min-width: 40px;">상태</label>
-                <input type="text" class="form-control form-control-sm p-1" id="centerSubscriptionStatus" readonly
-                    style="font-size: 11px; height: 24px;">
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="d-flex align-items-center">
-                <label class="form-label fw-bold small me-2 mb-0" style="min-width: 60px;">다음
-                    결제</label>
-                <input type="text" class="form-control form-control-sm p-1" id="centerNextBilling" readonly
-                    style="font-size: 11px; height: 24px;">
+            <div class="modal-footer" style="background: white; border-top: 1px solid #e5e7eb; padding: 8px 16px;">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"
+                    style="background: #f3f4f6; color: #374151; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px;">
+                    닫기
+                </button>
             </div>
         </div>
     </div>
-</div>
-</div>
-</div>
-<div class="modal-footer" style="background: white; border-top: 1px solid #e5e7eb; padding: 8px 16px;">
-    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"
-        style="background: #f3f4f6; color: #374151; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px;">
-        닫기
-    </button>
-</div>
-</div>
-</div>
 </div>
 
 
