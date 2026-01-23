@@ -529,13 +529,15 @@ async function generateNewCenterCode() {
 
         const centerID = sessionData.centerID;
 
+        // 초기값을 센터장 아이디(세션 userID)로 설정
         const res = await fetch(`/api/centers/${centerID}/invite-code`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
                 expiresInDays: 30,
-                maxUses: 100
+                maxUses: 100,
+                codePrefix: sessionData.userID // 센터장 아이디를 초대 코드 접두사로 사용
             })
         });
 

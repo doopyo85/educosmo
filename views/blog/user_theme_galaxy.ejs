@@ -187,10 +187,10 @@
                     <i class="fa-solid fa-house"></i> 홈 (Home)
                 </a>
 
-                <% // Check Owner for Write Button let isOwner=false; if (user && user.user) { // Internal access via
-                    /blog proxies session weirdly sometimes, check structure // Adjust based on your actual session
-                    structure logged in server-blog.js isOwner=(user.user.id==owner.id) || (user.id==owner.id); } else
-                    if (user && user.id) { isOwner=(user.id==owner.id); } %>
+                <% // Check Owner for Write Button let isOwner=false; // Internal access via /blog proxies session
+                    weirdly sometimes, check structure // Adjust based on your actual session structure logged in
+                    server-blog.js if (user && user.user) { isOwner=(user.user.id==owner.id) || (user.id==owner.id); }
+                    else if (user && user.id) { isOwner=(user.id==owner.id); } %>
 
                     <% if(isOwner) { %>
                         <div class="mt-3">

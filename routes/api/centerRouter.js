@@ -739,7 +739,7 @@ router.post('/:id/users/:userId/move', authenticateUser, checkAdminRole, async (
 router.post('/:id/invite-code', authenticateUser, checkResourcePermission('center:invite'), async (req, res) => {
   try {
     const { id: centerId } = req.params;
-    const { expiresInDays = 7, maxUses = 100 } = req.body;
+    const { expiresInDays = 7, maxUses = 100, codePrefix } = req.body;
     const user = req.user; // authMiddleware에서 주입됨
 
     // 권한 확인: Admin이 아닌 경우 본인 센터인지 확인
@@ -759,8 +759,17 @@ router.post('/:id/invite-code', authenticateUser, checkResourcePermission('cente
       });
     }
 
-    // 초대 코드 생성 (8자리 랜덤 코드)
-    const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+    // 초대 코드 생성 (센터장 아이디 + 랜덤 4자리)
+    let inviteCode;
+    if (codePrefix) {
+      // 센터장 아이디를 접두사로 사용하고 랜덤 4자리 추가
+      const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+      inviteCode = `${codePrefix.toUpperCase()}_${randomSuffix}`;
+    } else {
+      // 기본: 8자리 랜덤 코드
+      inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+    }
+
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 

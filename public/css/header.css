@@ -162,3 +162,15 @@
     border-color: #ef4444 !important;
 }
 
+/* 🔥 센터 정보 모달의 카드 hover 효과 제거 */
+#centerInfoModal .card {
+    transition: none !important;
+    transform: none !important;
+    cursor: default !important;
+}
+
+#centerInfoModal .card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
