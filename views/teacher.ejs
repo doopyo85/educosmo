@@ -184,8 +184,21 @@
                     });
                 }
 
-                // 초기 로드 후에도 한 번 실행 (500ms 대기)
-                setTimeout(reinitializeDropdown, 500);
+                // 🔥 초기 로드 시 teacher-main.js의 AJAX 로드를 기다림
+                // teacher-main.js는 즉시 loadPage를 호출하므로, 여러 번 재시도
+                let retryCount = 0;
+                const maxRetries = 10;
+
+                function retryInit() {
+                    retryCount++;
+                    reinitializeDropdown();
+
+                    if (retryCount < maxRetries) {
+                        setTimeout(retryInit, 200);
+                    }
+                }
+
+                setTimeout(retryInit, 300);
             });
         </script>
 </body>
