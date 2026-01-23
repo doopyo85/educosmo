@@ -1307,7 +1307,7 @@ class ProjectCardManager {
         document.body.appendChild(downloadLink);
 
         // 새 창에서 앱인벤터 열기
-        window.open('https://appinventor.mit.edu/', '_blank');
+        window.open('https://ai2.appinventor.mit.edu/?locale=ko_KR', '_blank');
 
         // 약간의 지연 후 다운로드 실행
         setTimeout(() => {
