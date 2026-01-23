@@ -461,8 +461,10 @@ async function loadInviteCodes(centerID) {
     const container = document.getElementById('inviteCodesContainer');
 
     try {
+        console.log(`[header.js] Loading invite codes for Center ID: ${centerID}`);
         const res = await fetch(`/api/centers/${centerID}/invite-codes`, { credentials: 'include' });
         const result = await res.json();
+        console.log('[header.js] Invite codes API response:', result);
 
         if (!result.success) {
             container.innerHTML = '<p class="text-danger text-center">초대 코드를 불러올 수 없습니다.</p>';
@@ -470,6 +472,7 @@ async function loadInviteCodes(centerID) {
         }
 
         const codes = result.inviteCodes || [];
+        console.log(`[header.js] Found ${codes.length} invite codes.`);
 
         if (codes.length === 0) {
             container.innerHTML = `
@@ -484,6 +487,9 @@ async function loadInviteCodes(centerID) {
 
         let html = '<div class="list-group">';
         codes.forEach(code => {
+            // 날짜 계산 디버깅
+            // console.log(`Code: ${code.code}, Expires: ${code.expires_at}, Max: ${code.max_uses}`);
+
             const isExpired = code.isExpired;
             const isMaxedOut = code.isMaxedOut;
             const isInvalid = isExpired || isMaxedOut;
@@ -554,6 +560,7 @@ async function generateNewCenterCode() {
         });
 
         const result = await res.json();
+        console.log('[header.js] Generate invite code result:', result);
 
         if (result.success) {
             alert(`새 초대 코드가 발급되었습니다: ${result.inviteCode.code}`);

@@ -407,10 +407,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" style="background: #fafafa; padding: 16px;">
-                <!-- 센터 기본 정보 + 초대 코드 (좌우 배치) -->
+                <!-- 센터 기본 정보 + 초대 코드 (좌우 배치 5:5) -->
                 <div class="row g-2 mb-2">
                     <!-- 왼쪽: 센터 기본 정보 -->
-                    <div class="col-md-7">
+                    <div class="col-md-6">
                         <div class="card h-100"
                             style="border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: none; transition: none; height: auto !important;">
                             <div class="card-header"
@@ -420,9 +420,9 @@
                                 </h6>
                             </div>
                             <div class="card-body" style="padding: 10px;">
-                                <!-- 센터 ID (신규 추가) -->
+                                <!-- 센터 ID -->
                                 <div class="row mb-1 align-items-center">
-                                    <label class="col-3 col-form-label fw-bold small text-end p-0 pe-2"
+                                    <label class="col-3 col-form-label fw-bold small p-0 pe-2"
                                         style="font-size: 12px; white-space: nowrap;">센터 ID</label>
                                     <div class="col-9">
                                         <input type="text" class="form-control form-control-sm" id="centerId" readonly
@@ -431,7 +431,7 @@
                                 </div>
                                 <!-- 센터명 -->
                                 <div class="row mb-1 align-items-center">
-                                    <label class="col-3 col-form-label fw-bold small text-end p-0 pe-2"
+                                    <label class="col-3 col-form-label fw-bold small p-0 pe-2"
                                         style="font-size: 12px; white-space: nowrap;">센터명</label>
                                     <div class="col-9">
                                         <input type="text" class="form-control form-control-sm" id="centerName" readonly
@@ -440,7 +440,7 @@
                                 </div>
                                 <!-- 담당자 -->
                                 <div class="row mb-1 align-items-center">
-                                    <label class="col-3 col-form-label fw-bold small text-end p-0 pe-2"
+                                    <label class="col-3 col-form-label fw-bold small p-0 pe-2"
                                         style="font-size: 12px; white-space: nowrap;">담당자</label>
                                     <div class="col-9">
                                         <input type="text" class="form-control form-control-sm" id="centerContactName"
@@ -449,7 +449,7 @@
                                 </div>
                                 <!-- 담당자 이메일 -->
                                 <div class="row mb-0 align-items-center">
-                                    <label class="col-3 col-form-label fw-bold small text-end p-0 pe-2"
+                                    <label class="col-3 col-form-label fw-bold small p-0 pe-2"
                                         style="font-size: 12px; white-space: nowrap;">이메일</label>
                                     <div class="col-9">
                                         <input type="email" class="form-control form-control-sm" id="centerContactEmail"
@@ -461,7 +461,7 @@
                     </div>
 
                     <!-- 오른쪽: 초대 코드 -->
-                    <div class="col-md-5">
+                    <div class="col-md-6">
                         <div class="card h-100"
                             style="border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: none; transition: none; height: auto !important;">
                             <div class="card-header d-flex justify-content-between align-items-center"
@@ -491,6 +491,7 @@
                 </div>
 
                 <!-- 구독 정보 (높이 최소화) -->
+                <!-- 구독 정보 (1행 4열 배치) -->
                 <div class="card"
                     style="border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: none; transition: none; height: auto !important;">
                     <div class="card-header"
@@ -501,10 +502,10 @@
                     </div>
                     <div class="card-body" style="padding: 8px 12px;">
                         <div class="row g-2 align-items-center">
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="d-flex align-items-center">
                                     <label class="form-label fw-bold small me-2 mb-0"
-                                        style="min-width: 60px;">플랜</label>
+                                        style="min-width: 40px; white-space: nowrap;">플랜</label>
                                     <div class="input-group input-group-sm flex-grow-1">
                                         <input type="text" class="form-control p-1" id="centerPlanType" readonly
                                             style="font-size: 11px; height: 24px;">
@@ -514,26 +515,26 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="d-flex align-items-center">
                                     <label class="form-label fw-bold small me-2 mb-0"
-                                        style="min-width: 60px;">스토리지</label>
+                                        style="min-width: 40px; white-space: nowrap;">스토리지</label>
                                     <input type="text" class="form-control form-control-sm p-1 flex-grow-1"
                                         id="centerStorageLimit" readonly style="font-size: 11px; height: 24px;">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="d-flex align-items-center">
                                     <label class="form-label fw-bold small me-2 mb-0"
-                                        style="min-width: 60px;">상태</label>
+                                        style="min-width: 30px; white-space: nowrap;">상태</label>
                                     <input type="text" class="form-control form-control-sm p-1 flex-grow-1"
                                         id="centerSubscriptionStatus" readonly style="font-size: 11px; height: 24px;">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="d-flex align-items-center">
-                                    <label class="form-label fw-bold small me-2 mb-0" style="min-width: 60px;">다음
-                                        결제</label>
+                                    <label class="form-label fw-bold small me-2 mb-0"
+                                        style="min-width: 40px; white-space: nowrap;">다음결제</label>
                                     <input type="text" class="form-control form-control-sm p-1 flex-grow-1"
                                         id="centerNextBilling" readonly style="font-size: 11px; height: 24px;">
                                 </div>
