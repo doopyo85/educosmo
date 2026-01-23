@@ -96,9 +96,25 @@
 ### Phase 3: 블로그 & 센터 클라우드 (진행 중)
 *   [✅] SSR 서버 구축
 *   [🟡] 학생 블로그 UI 구현
-*   [⬜] **교사 블로그 특화 기능 구현**
-    *   `.md`, `.py` 파일 파서(Parser) 개발
-    *   Admin API 연동 (문제은행 Insert 로직)
+*   [⬜] **교사 블로그 특화 기능 구현** (상세 기술 명세)
+    *   **DB Schema (`teacher_posts`)**:
+        ```sql
+        CREATE TABLE teacher_posts (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            teacher_id INT NOT NULL,
+            title VARCHAR(200) NOT NULL,
+            content_md TEXT,                    -- 마크다운 원본
+            content_html TEXT,                  -- 렌더링된 HTML
+            is_published BOOLEAN DEFAULT FALSE, -- 내부 발행 여부
+            tags JSON,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (teacher_id) REFERENCES Users(id)
+        );
+        ```
+    *   **Routes**:
+        *   `GET /teacher/blog`: 교사 블로그 대시보드
+        *   `GET /teacher/blog/write`: 글쓰기 에디터 (ToastUI/Editor.js + MD)
+        *   `POST /api/teacher/posts`: 교안 저장/발행
 
 ### Phase 4: B2B SaaS 기능 (80% 완료)
 

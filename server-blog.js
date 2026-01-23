@@ -280,30 +280,30 @@ async function getSidebarData(blogId, blogType) {
     }
 }
 
-// POST /upload/image - For Editor.js
-
+// POST /upload/image - For Tiptap & Editor.js
 app.post('/upload/image', isOwner, upload.single('image'), (req, res) => {
     if (req.file) {
-        // Editor.js expects this format
+        // Support both Tiptap and Editor.js formats
         res.json({
-            success: 1,
+            success: true, // Tiptap format
+            url: req.file.location, // Tiptap format
+            success: 1, // Editor.js format (legacy)
             file: {
-                url: req.file.location,
-                // specific fields if needed
+                url: req.file.location
             }
         });
     } else {
-        res.json({ success: 0, message: 'Upload failed' });
+        res.json({ success: false, error: 'Upload failed' });
     }
 });
 
-// GET /write - Show Editor
+// GET /write - Show Tiptap Editor
 app.get('/write', isOwner, async (req, res) => {
     const sidebarPosts = await getSidebarData(req.blog.id, req.blogType);
-    res.render('blog/write', {
+    res.render('blog/write_blocks', { // Use new Tiptap editor
         blog: req.blog,
         owner: req.blogOwner,
-        sidebarPosts: sidebarPosts, // Pass sidebar data
+        sidebarPosts: sidebarPosts,
         user: req.session
     });
 });

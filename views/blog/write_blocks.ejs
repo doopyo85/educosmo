@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>새 글 작성 - <%= blog.title %></title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Highlight.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
+
+    <!-- Tiptap Notion CSS -->
+    <link rel="stylesheet" href="/css/tiptap-notion.css">
+
+    <style>
+        body {
+            background-color: #191919;
+            color: #d3d3d3;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif;
+            overflow-y: scroll;
+        }
+
+        /* Layout */
+        .editor-layout {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Title Input */
+        .title-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 40px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            outline: none;
+            padding: 10px 0;
+        }
+
+        .title-input::placeholder {
+            color: #555;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background-color: #191919;
+            z-index: 100;
+            padding: 10px 0;
+        }
+
+        .btn-save {
+            background-color: #2eaadc;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-save:hover {
+            background-color: #2589b1;
+        }
+
+        .btn-save:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel {
+            color: #888;
+            text-decoration: none;
+            padding: 8px 16px;
+        }
+
+        .btn-cancel:hover {
+            color: #bbb;
+        }
+
+        /* Toolbar */
+        .editor-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-btn {
+            background-color: transparent;
+            border: 1px solid #333;
+            color: #d3d3d3;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background-color: #2a2a2a;
+            border-color: #2eaadc;
+        }
+
+        .toolbar-btn.is-active {
+            background-color: #2eaadc;
+            border-color: #2eaadc;
+            color: white;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            background-color: #333;
+            margin: 0 4px;
+        }
+
+        /* Save Status */
+        #saveStatus {
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        /* Image Upload Button */
+        #imageUploadInput {
+            display: none;
+        }
+
+        /* Editor Container */
+        #editor {
+            min-height: 500px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="editor-layout">
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <a href="javascript:history.back()" class="btn-cancel">← 뒤로가기</a>
+            <div class="d-flex align-items-center gap-2">
+                <span id="saveStatus" class="text-muted small"></span>
+                <button class="btn-save" id="publishBtn" onclick="savePost()">게시하기</button>
+            </div>
+        </div>
+
+        <!-- Title Input -->
+        <input type="text" id="postTitle" class="title-input" placeholder="제목 없음" autocomplete="off">
+
+        <!-- Toolbar -->
+        <div class="editor-toolbar">
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().toggleHeading({ level: 1 }).run()" title="제목 1">
+                H1
+            </button>
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().toggleHeading({ level: 2 }).run()" title="제목 2">
+                H2
+            </button>
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().toggleHeading({ level: 3 }).run()" title="제목 3">
+                H3
+            </button>
+
+            <div class="toolbar-separator"></div>
+
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().toggleBold().run()" title="굵게">
+                <strong>B</strong>
+            </button>
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().toggleItalic().run()" title="기울임">
+                <em>I</em>
+            </button>
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().toggleStrike().run()" title="취소선">
+                <s>S</s>
+            </button>
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().toggleCode().run()" title="인라인 코드">
+                &lt;/&gt;
+            </button>
+
+            <div class="toolbar-separator"></div>
+
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().toggleBulletList().run()" title="글머리 기호">
+                • 목록
+            </button>
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().toggleOrderedList().run()" title="번호 매기기">
+                1. 목록
+            </button>
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().toggleBlockquote().run()" title="인용">
+                " 인용
+            </button>
+
+            <div class="toolbar-separator"></div>
+
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().toggleCodeBlock().run()" title="코드 블록">
+                { } 코드
+            </button>
+            <button class="toolbar-btn" onclick="handleImageUpload()" title="이미지">
+                🖼️ 이미지
+            </button>
+            <button class="toolbar-btn" onclick="handleLinkInsert()" title="링크">
+                🔗 링크
+            </button>
+            <button class="toolbar-btn" onclick="editorInstance.insertTable()" title="테이블">
+                ⊞ 테이블
+            </button>
+
+            <div class="toolbar-separator"></div>
+
+            <button class="toolbar-btn" onclick="editorInstance.editor.chain().focus().setHorizontalRule().run()" title="구분선">
+                ─ 구분선
+            </button>
+        </div>
+
+        <!-- Hidden Image Upload Input -->
+        <input type="file" id="imageUploadInput" accept="image/*" onchange="uploadImage(this.files[0])">
+
+        <!-- Editor Container -->
+        <div id="editor"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { Editor } from 'https://cdn.jsdelivr.net/npm/@tiptap/core@2.1.13/+esm';
+        import StarterKit from 'https://cdn.jsdelivr.net/npm/@tiptap/starter-kit@2.1.13/+esm';
+        import Image from 'https://cdn.jsdelivr.net/npm/@tiptap/extension-image@2.1.13/+esm';
+        import Link from 'https://cdn.jsdelivr.net/npm/@tiptap/extension-link@2.1.13/+esm';
+        import Table from 'https://cdn.jsdelivr.net/npm/@tiptap/extension-table@2.1.13/+esm';
+        import TableRow from 'https://cdn.jsdelivr.net/npm/@tiptap/extension-table-row@2.1.13/+esm';
+        import TableCell from 'https://cdn.jsdelivr.net/npm/@tiptap/extension-table-cell@2.1.13/+esm';
+        import TableHeader from 'https://cdn.jsdelivr.net/npm/@tiptap/extension-table-header@2.1.13/+esm';
+        import Placeholder from 'https://cdn.jsdelivr.net/npm/@tiptap/extension-placeholder@2.1.13/+esm';
+
+        // Initialize Editor
+        const editor = new Editor({
+            element: document.querySelector('#editor'),
+            extensions: [
+                StarterKit.configure({
+                    heading: {
+                        levels: [1, 2, 3, 4]
+                    }
+                }),
+                Placeholder.configure({
+                    placeholder: '내용을 입력하세요... / 를 눌러 명령어 보기'
+                }),
+                Image.configure({
+                    inline: true,
+                    allowBase64: false,
+                    HTMLAttributes: {
+                        class: 'editor-image'
+                    }
+                }),
+                Link.configure({
+                    openOnClick: false,
+                    HTMLAttributes: {
+                        class: 'editor-link',
+                        target: '_blank',
+                        rel: 'noopener noreferrer'
+                    }
+                }),
+                Table.configure({
+                    resizable: true,
+                    HTMLAttributes: {
+                        class: 'editor-table'
+                    }
+                }),
+                TableRow,
+                TableHeader,
+                TableCell
+            ],
+            editorProps: {
+                attributes: {
+                    class: 'notion-editor-content'
+                }
+            },
+            onUpdate: ({ editor }) => {
+                handleEditorUpdate(editor);
+            }
+        });
+
+        // Global reference
+        window.editorInstance = {
+            editor: editor,
+            insertTable: () => {
+                editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+            }
+        };
+
+        // Auto-save functionality
+        let autosaveTimer = null;
+        function handleEditorUpdate(editor) {
+            if (autosaveTimer) {
+                clearTimeout(autosaveTimer);
+            }
+
+            autosaveTimer = setTimeout(() => {
+                saveDraft();
+            }, 3000);
+        }
+
+        function saveDraft() {
+            try {
+                const json = window.editorInstance.editor.getJSON();
+                const html = window.editorInstance.editor.getHTML();
+
+                localStorage.setItem('blog_draft_new', JSON.stringify({
+                    title: document.getElementById('postTitle').value,
+                    json,
+                    html,
+                    savedAt: new Date().toISOString()
+                }));
+
+                showSaveStatus('저장됨');
+            } catch (error) {
+                console.error('[Draft] Save failed:', error);
+            }
+        }
+
+        function showSaveStatus(message, isError = false) {
+            const statusElement = document.getElementById('saveStatus');
+            statusElement.textContent = message;
+            statusElement.className = `small ${isError ? 'text-danger' : 'text-success'}`;
+
+            setTimeout(() => {
+                statusElement.textContent = '';
+            }, 2000);
+        }
+
+        // Load draft on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const draft = localStorage.getItem('blog_draft_new');
+            if (draft) {
+                try {
+                    const { title, json, savedAt } = JSON.parse(draft);
+                    const savedDate = new Date(savedAt);
+                    const hoursDiff = (new Date() - savedDate) / 1000 / 60 / 60;
+
+                    if (hoursDiff < 24) {
+                        const restore = confirm(`${Math.floor(hoursDiff)}시간 전에 저장된 초안이 있습니다. 복구하시겠습니까?`);
+                        if (restore) {
+                            document.getElementById('postTitle').value = title || '';
+                            window.editorInstance.editor.commands.setContent(json);
+                        }
+                    }
+                } catch (error) {
+                    console.error('[Draft] Load failed:', error);
+                }
+            }
+        });
+
+        // Make functions global
+        window.handleImageUpload = handleImageUpload;
+        window.handleLinkInsert = handleLinkInsert;
+        window.uploadImage = uploadImage;
+        window.savePost = savePost;
+    </script>
+
+    <script>
+        // Image upload handler
+        function handleImageUpload() {
+            document.getElementById('imageUploadInput').click();
+        }
+
+        async function uploadImage(file) {
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const statusElement = document.getElementById('saveStatus');
+            statusElement.textContent = '이미지 업로드 중...';
+            statusElement.className = 'small text-info';
+
+            try {
+                const response = await fetch('/upload/image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.url) {
+                    // Insert image into editor
+                    window.editorInstance.editor.chain().focus().setImage({ src: result.url }).run();
+                    statusElement.textContent = '이미지 업로드 완료';
+                    statusElement.className = 'small text-success';
+                } else {
+                    throw new Error(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('[Image] Upload failed:', error);
+                alert('이미지 업로드에 실패했습니다.');
+                statusElement.textContent = '업로드 실패';
+                statusElement.className = 'small text-danger';
+            }
+
+            setTimeout(() => {
+                statusElement.textContent = '';
+            }, 2000);
+        }
+
+        // Link insert handler
+        function handleLinkInsert() {
+            const url = prompt('링크 URL을 입력하세요:');
+            if (url) {
+                window.editorInstance.editor.chain().focus().setLink({ href: url }).run();
+            }
+        }
+
+        // Save post
+        async function savePost() {
+            const title = document.getElementById('postTitle').value.trim();
+            const json = window.editorInstance.editor.getJSON();
+            const html = window.editorInstance.editor.getHTML();
+            const text = window.editorInstance.editor.getText();
+
+            if (!title) {
+                alert('제목을 입력해주세요.');
+                document.getElementById('postTitle').focus();
+                return;
+            }
+
+            if (!text.trim()) {
+                alert('내용을 입력해주세요.');
+                return;
+            }
+
+            const btn = document.getElementById('publishBtn');
+            const status = document.getElementById('saveStatus');
+
+            btn.disabled = true;
+            status.textContent = '게시 중...';
+            status.className = 'small text-info';
+
+            try {
+                // Extract first image for thumbnail
+                const firstImageBlock = json.content?.find(block => block.type === 'image');
+                const thumbnail_url = firstImageBlock?.attrs?.src || null;
+
+                // Extract excerpt (first 200 characters)
+                const excerpt = text.substring(0, 200);
+
+                const response = await fetch('write', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        content: html, // HTML for fallback/display
+                        content_json: JSON.stringify(json), // JSON for editor
+                        thumbnail_url,
+                        excerpt
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Clear draft
+                    localStorage.removeItem('blog_draft_new');
+
+                    // Redirect to home
+                    window.location.href = './';
+                } else {
+                    alert('게시 실패: ' + (result.error || 'Unknown error'));
+                    btn.disabled = false;
+                    status.textContent = '';
+                }
+            } catch (error) {
+                console.error('[Publish] Error:', error);
+                alert('오류가 발생했습니다.');
+                btn.disabled = false;
+                status.textContent = '';
+            }
+        }
+    </script>
+</body>
+
+</html>
