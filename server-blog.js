@@ -139,13 +139,23 @@ app.get('/', async (req, res) => {
         // Sidebar Data
         const sidebarPosts = await getSidebarData(req.blog.id, req.blogType);
 
+        // SEO 메타데이터
+        const seoData = {
+            title: `${req.blog.title} - ${req.blogOwner.name}의 코딩 블로그`,
+            description: req.blog.description || `${req.blogOwner.name}의 프로젝트와 학습 기록`,
+            ogImage: req.blogOwner.profile_image || 'https://pong2.app/images/default-og.png',
+            url: `https://${req.blog.subdomain}.pong2.app`,
+            type: 'website'
+        };
+
         res.render(template, {
             blog: req.blog,
             owner: req.blogOwner,
             posts: posts,
-            sidebarPosts: sidebarPosts, // Pass sidebar data
+            sidebarPosts: sidebarPosts,
             pagination: { page, totalPages },
-            user: req.session // Current logged in user (visitor)
+            user: req.session,
+            seoData: seoData
         });
 
     } catch (error) {
@@ -175,16 +185,34 @@ app.get('/p/:slug', async (req, res) => {
 
         const template = req.blogType === 'user' ? 'blog/post_detail_galaxy' : 'blog/post_detail_board';
 
-        // Check if template exists, fallback to home or generic
-        // For now rendering basic
+        // Sidebar Data
         const sidebarPosts = await getSidebarData(req.blog.id, req.blogType);
+
+        // 첫 번째 이미지 추출 (SEO용)
+        const extractFirstImage = (content) => {
+            if (!content) return null;
+            const match = content.match(/<img[^>]+src="([^">]+)"/);
+            return match ? match[1] : null;
+        };
+
+        // SEO 메타데이터
+        const seoData = {
+            title: `${post.title} - ${req.blog.title}`,
+            description: post.excerpt || post.title,
+            ogImage: post.thumbnail_url || extractFirstImage(post.content) || req.blogOwner.profile_image || 'https://pong2.app/images/default-og.png',
+            url: `https://${req.blog.subdomain}.pong2.app/p/${post.slug}`,
+            type: 'article',
+            publishedTime: post.created_at,
+            modifiedTime: post.updated_at
+        };
 
         res.render(template, {
             blog: req.blog,
             owner: req.blogOwner,
             post: post,
-            sidebarPosts: sidebarPosts, // Pass sidebar data
-            user: req.session
+            sidebarPosts: sidebarPosts,
+            user: req.session,
+            seoData: seoData
         });
 
     } catch (error) {
@@ -314,7 +342,7 @@ app.post('/write', isOwner, async (req, res) => {
         const { title, content, content_json, excerpt, thumbnail_url } = req.body;
 
         if (!title) {
-            return res.status(400).send('Title is required');
+            return res.status(400).json({ success: false, error: 'Title is required' });
         }
 
         // Generate Slug (simple)
@@ -322,15 +350,18 @@ app.post('/write', isOwner, async (req, res) => {
 
         // content might be empty if only using blocks, generate a backup or use empty string
         const htmlContent = content || '';
-        const jsonContent = content_json ? JSON.stringify(content_json) : null;
+
+        // content_json may already be a string, handle both cases
+        const jsonContent = typeof content_json === 'string' ? content_json : JSON.stringify(content_json);
 
         await queryDatabase(`
-            INSERT INTO blog_posts 
-            (blog_id, blog_type, title, slug, content, content_json, excerpt, thumbnail_url, is_published, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
+            INSERT INTO blog_posts
+            (blog_id, blog_type, author_id, title, slug, content, content_json, excerpt, thumbnail_url, is_published, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
         `, [
             req.blog.id,
             req.blogType,
+            req.session.dbId, // Add author_id
             title,
             slug,
             htmlContent,
@@ -348,6 +379,108 @@ app.post('/write', isOwner, async (req, res) => {
 });
 
 
-app.listen(PORT, () => {
+// ============================================
+// Socket.IO 설정 (실시간 협업)
+// ============================================
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: process.env.MAIN_APP_URL || 'http://localhost:3000',
+        credentials: true
+    },
+    transports: ['websocket', 'polling']
+});
+
+// Socket.IO 연결 핸들러
+io.on('connection', (socket) => {
+    console.log(`[Socket.IO] Client connected: ${socket.id}`);
+
+    // 센터 게시판 입장
+    socket.on('join-board', (boardId) => {
+        socket.join(`board-${boardId}`);
+        console.log(`[Socket.IO] ${socket.id} joined board-${boardId}`);
+
+        // 현재 접속자 수 브로드캐스트
+        const room = io.sockets.adapter.rooms.get(`board-${boardId}`);
+        const userCount = room ? room.size : 0;
+        io.to(`board-${boardId}`).emit('user-count', userCount);
+    });
+
+    // 카드 위치 업데이트
+    socket.on('card-moved', async (data) => {
+        const { cardId, x, y, boardId } = data;
+
+        try {
+            // DB 업데이트
+            await queryDatabase(`
+                UPDATE blog_posts
+                SET layout_meta = JSON_SET(
+                    COALESCE(layout_meta, '{}'),
+                    '$.x', ?,
+                    '$.y', ?
+                )
+                WHERE id = ?
+            `, [x, y, cardId]);
+
+            // 같은 보드의 다른 사용자에게 브로드캐스트
+            socket.to(`board-${boardId}`).emit('card-updated', data);
+        } catch (error) {
+            console.error('[Socket.IO] Card move error:', error);
+        }
+    });
+
+    // 카드 리사이즈
+    socket.on('card-resized', async (data) => {
+        const { cardId, width, height, boardId } = data;
+
+        try {
+            await queryDatabase(`
+                UPDATE blog_posts
+                SET layout_meta = JSON_SET(
+                    COALESCE(layout_meta, '{}'),
+                    '$.width', ?,
+                    '$.height', ?
+                )
+                WHERE id = ?
+            `, [width, height, cardId]);
+
+            socket.to(`board-${boardId}`).emit('card-updated', data);
+        } catch (error) {
+            console.error('[Socket.IO] Card resize error:', error);
+        }
+    });
+
+    // 새 카드 생성
+    socket.on('card-created', (data) => {
+        socket.to(`board-${data.boardId}`).emit('new-card', data);
+    });
+
+    // 카드 삭제
+    socket.on('card-deleted', (data) => {
+        socket.to(`board-${data.boardId}`).emit('card-removed', data);
+    });
+
+    // 게시판 나가기
+    socket.on('leave-board', (boardId) => {
+        socket.leave(`board-${boardId}`);
+        console.log(`[Socket.IO] ${socket.id} left board-${boardId}`);
+
+        // 현재 접속자 수 업데이트
+        const room = io.sockets.adapter.rooms.get(`board-${boardId}`);
+        const userCount = room ? room.size : 0;
+        io.to(`board-${boardId}`).emit('user-count', userCount);
+    });
+
+    // 연결 해제
+    socket.on('disconnect', () => {
+        console.log(`[Socket.IO] Client disconnected: ${socket.id}`);
+    });
+});
+
+server.listen(PORT, () => {
     console.log(`🚀 MyUniverse Blog Server running on port ${PORT}`);
+    console.log(`✅ Socket.IO enabled for real-time collaboration`);
 });

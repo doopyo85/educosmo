@@ -548,6 +548,164 @@ router.get('/blog', async (req, res) => {
 });
 
 // ============================================
+// Portfolio Tab - 자동 포트폴리오 구성
+// ============================================
+router.get('/portfolio', async (req, res) => {
+    if (!req.session.is_logined) {
+        return res.redirect('/auth/login');
+    }
+
+    try {
+        const userId = req.session.userID;
+
+        // 1. 사용자 ID 조회
+        const [user] = await db.queryDatabase('SELECT id, name, username FROM Users WHERE userID = ?', [userId]);
+
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+
+        // 2. 모든 프로젝트 조회 (최신순)
+        const projects = await db.queryDatabase(`
+            SELECT
+                id, project_name, platform, thumbnail_url,
+                created_at, metadata, save_type,
+                complexity_score, blocks_count
+            FROM ProjectSubmissions
+            WHERE user_id = ? AND is_deleted = 0
+            ORDER BY created_at DESC
+        `, [user.id]);
+
+        // 3. 플랫폼별 그룹화
+        const grouped = projects.reduce((acc, p) => {
+            if (!acc[p.platform]) {
+                acc[p.platform] = [];
+            }
+            acc[p.platform].push({
+                ...p,
+                created_at: new Date(p.created_at).toLocaleDateString(),
+                metadata: JSON.parse(p.metadata || '{}')
+            });
+            return acc;
+        }, {});
+
+        // 4. 통계 계산
+        const stats = {
+            totalProjects: projects.length,
+            platforms: Object.keys(grouped).length,
+            recentActivity: projects.filter(p => {
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return new Date(p.created_at) > weekAgo;
+            }).length,
+            totalBlocks: projects.reduce((sum, p) => sum + (p.blocks_count || 0), 0)
+        };
+
+        // 5. 블로그 정보 조회 (있으면)
+        const [blog] = await db.queryDatabase('SELECT subdomain FROM user_blogs WHERE user_id = ?', [user.id]);
+
+        res.render('my-universe/portfolio', {
+            user: user,
+            projects: grouped,
+            stats,
+            blog: blog || null,
+            activeTab: 'portfolio',
+            userID: req.session.userID,
+            userRole: req.session.role,
+            is_logined: req.session.is_logined,
+            centerID: req.session.centerID
+        });
+
+    } catch (error) {
+        console.error('Portfolio Route Error:', error);
+        res.status(500).send('Server Error');
+    }
+});
+
+// ============================================
+// EduPlan Tab - 교사 교안 관리 대시보드
+// ============================================
+router.get('/eduplan', async (req, res) => {
+    if (!req.session.is_logined) {
+        return res.redirect('/auth/login');
+    }
+
+    // 교사 권한 확인
+    const role = req.session.role;
+    if (role !== 'teacher' && role !== 'manager' && role !== 'admin') {
+        return res.status(403).send('교사 권한이 필요합니다.');
+    }
+
+    try {
+        const userId = req.session.userID;
+
+        // 1. 사용자 ID 조회
+        const [user] = await db.queryDatabase('SELECT id, name, username FROM Users WHERE userID = ?', [userId]);
+
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+
+        // 2. teacher_blogs 조회 (없으면 생성)
+        let [teacherBlog] = await db.queryDatabase(
+            'SELECT * FROM teacher_blogs WHERE user_id = ?',
+            [user.id]
+        );
+
+        if (!teacherBlog) {
+            // 자동 생성
+            const subdomain = `teacher-${req.session.username}`.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            const result = await db.queryDatabase(
+                `INSERT INTO teacher_blogs (user_id, subdomain, title)
+                VALUES (?, ?, ?)`,
+                [user.id, subdomain, `${user.name || user.username}의 교안 저장소`]
+            );
+
+            teacherBlog = {
+                id: result.insertId,
+                subdomain,
+                title: `${user.name || user.username}의 교안 저장소`
+            };
+        }
+
+        // 3. 교안 목록 조회
+        const posts = await db.queryDatabase(
+            `SELECT id, title, slug, file_type, excerpt, is_published,
+                    published_to_platform, platform_published_at, created_at, updated_at
+            FROM blog_posts
+            WHERE blog_id = ? AND blog_type = 'teacher'
+            ORDER BY created_at DESC`,
+            [teacherBlog.id]
+        );
+
+        // 4. 통계 계산
+        const stats = {
+            totalPosts: posts.length,
+            publishedCount: posts.filter(p => p.published_to_platform).length,
+            draftCount: posts.filter(p => !p.is_published).length,
+            mdFiles: posts.filter(p => p.file_type === 'md').length,
+            pyFiles: posts.filter(p => p.file_type === 'py').length
+        };
+
+        res.render('my-universe/eduplan', {
+            user,
+            teacherBlog,
+            posts,
+            stats,
+            activeTab: 'eduplan',
+            userID: req.session.userID,
+            userRole: req.session.role,
+            is_logined: req.session.is_logined,
+            centerID: req.session.centerID
+        });
+
+    } catch (error) {
+        console.error('EduPlan Route Error:', error);
+        res.status(500).send('Server Error');
+    }
+});
+
+// ============================================
 // Observatory Tab
 // ============================================
 router.get('/observatory', (req, res) => {

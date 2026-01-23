@@ -1,0 +1,103 @@
+/* Career Page Styles */
+
+/* Layout & Container */
+.career-container {
+    padding: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Toggle Buttons */
+.view-toggle-btn {
+    min-width: 120px;
+    font-weight: 500;
+}
+
+/* Map View Components */
+.map-container {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    min-height: 550px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #dee2e6;
+    position: relative;
+    overflow: hidden;
+}
+
+.korea-map-svg {
+    max-height: 500px;
+    width: auto;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+.map-region {
+    fill: #dfe6e9; /* Default Region Color */
+    stroke: #ffffff;
+    stroke-width: 1;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.map-region:hover {
+    fill: #74b9ff; /* Hover Color */
+    transform: translateY(-2px);
+}
+
+.map-region.active {
+    fill: #0984e3; /* Active Color */
+}
+
+/* University List Item */
+.univ-item {
+    transition: background-color 0.2s;
+    border-left: 4px solid transparent;
+}
+
+.univ-item:hover {
+    background-color: #f1f2f6;
+    border-left-color: #0d6efd;
+}
+
+.univ-list-container {
+    max-height: 600px; 
+    overflow-y: auto;
+}
+
+/* Scrollbar Customization */
+.univ-list-container::-webkit-scrollbar {
+    width: 6px;
+}
+.univ-list-container::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}
+.univ-list-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1; 
+    border-radius: 3px;
+}
+.univ-list-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8; 
+}
+
+/* Matrix Table */
+.matrix-container {
+    overflow-x: auto;
+}
+
+#matrix-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+#matrix-table td {
+    vertical-align: middle;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .map-container {
+        min-height: 400px;
+    }
+}

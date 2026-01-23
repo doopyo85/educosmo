@@ -607,6 +607,8 @@ app.use('/api/board', require('./routes/api/boardApiRouter'));
 app.use('/api', require('./routes/api/observatoryRouter')); // 🔥 Observatory API
 // app.use('/api/pong2', require('./routes/api/pong2Router')); // 🔥 Moved to apiRouter.js
 app.use('/api/myuniverse', require('./routes/api/myUniverseApiRouter')); // 🔥 New Blog Management API
+app.use('/api/teacher', require('./routes/api/teacherBlogApiRouter')); // 🔥 Teacher Blog API
+app.use('/api/center', require('./routes/api/centerBoardApiRouter')); // 🔥 Center Board API (Phase 3)
 
 // 🔥 Phase 2: 센터 관리 및 권한 관리 API 라우터
 app.use('/api/centers', authenticateUser, require('./routes/api/centerRouter'));
@@ -658,7 +660,8 @@ const routes = {
   'template': require('./routes/templateRouter'),
   'gallery': require('./routes/galleryRouter'),  // 🔥 갤러리 공유 시스템
   's3': require('./routes/s3Router'),  // 🔥 통합 S3 브라우저
-  'subscription': require('./routes/subscriptionRouter')  // 🔥 센터 구독 관리
+  'subscription': require('./routes/subscriptionRouter'),  // 🔥 센터 구독 관리
+  'career': require('./routes/careerRouter')  // 🔥 진로진학 (Mock Mode)
 };
 
 // 🔥 Python 문제은행 API 라우터

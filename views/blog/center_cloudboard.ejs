@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= blog.title %> - CloudBoard</title>
+
+    <!-- SEO Meta Tags -->
+    <% if (locals.seoData) { %>
+        <meta name="description" content="<%= seoData.description %>">
+        <meta property="og:title" content="<%= seoData.title %>">
+        <meta property="og:description" content="<%= seoData.description %>">
+        <meta property="og:type" content="<%= seoData.type || 'website' %>">
+        <meta property="og:url" content="<%= seoData.url %>">
+        <% if (seoData.ogImage) { %>
+            <meta property="og:image" content="<%= seoData.ogImage %>">
+        <% } %>
+    <% } %>
+
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .board-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .user-count {
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .user-count::before {
+            content: '👥';
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .storage-info {
+            font-size: 13px;
+            color: #666;
+            padding: 6px 12px;
+            background: #f0f0f0;
+            border-radius: 15px;
+        }
+
+        .btn-add-card {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add-card:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        /* Main Canvas */
+        .cloudboard-container {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 300px;
+            bottom: 0;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        #cloudboard {
+            position: relative;
+            min-width: 3000px;
+            min-height: 2000px;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Card Styles */
+        .card-item {
+            position: absolute;
+            width: 300px;
+            min-height: 200px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            cursor: move;
+            transition: box-shadow 0.3s;
+            overflow: hidden;
+        }
+
+        .card-item:hover {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+
+        .card-item.dragging {
+            opacity: 0.7;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        .card-header {
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #333;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header:hover {
+            background: #e9ecef;
+        }
+
+        .card-type-badge {
+            padding: 3px 8px;
+            font-size: 11px;
+            border-radius: 10px;
+            background: #667eea;
+            color: white;
+        }
+
+        .card-type-badge.homework {
+            background: #f59e0b;
+        }
+
+        .card-body {
+            padding: 15px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .card-footer {
+            padding: 10px 15px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .card-author {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .card-delete-btn {
+            padding: 4px 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .card-delete-btn:hover {
+            background: #c82333;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 300px;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-left: 1px solid #e0e0e0;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .member-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .member-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .recent-posts {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .recent-post-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .recent-post-item:hover {
+            background: #e9ecef;
+        }
+
+        .recent-post-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .recent-post-date {
+            font-size: 11px;
+            color: #999;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="board-title"><%= blog.title %></div>
+            <div class="user-count" id="userCount">1명 접속 중</div>
+        </div>
+        <div class="header-right">
+            <div class="storage-info" id="storageInfo">
+                <span id="usedStorage">0GB</span> / 30GB
+            </div>
+            <button class="btn-add-card" onclick="openCreateModal()">
+                + 카드 추가
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Canvas -->
+    <div class="cloudboard-container">
+        <div id="cloudboard" data-board-id="<%= blog.center_id %>">
+            <!-- Cards will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-title">멤버</div>
+            <div class="member-list" id="memberList">
+                <!-- Dynamic members -->
+                <div class="member-item">
+                    <div class="member-avatar">
+                        <%= user.name ? user.name.charAt(0) : 'U' %>
+                    </div>
+                    <span><%= user.name || user.userID %> (나)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-title">최근 활동</div>
+            <div class="recent-posts" id="recentPosts">
+                <% if (sidebarPosts && sidebarPosts.length > 0) { %>
+                    <% sidebarPosts.slice(0, 10).forEach(post => { %>
+                        <div class="recent-post-item" onclick="location.href='/p/<%= post.slug %>'">
+                            <div class="recent-post-title"><%= post.title %></div>
+                            <div class="recent-post-date"><%= new Date(post.created_at).toLocaleDateString() %></div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="recent-post-item" style="cursor: default;">
+                        <div class="recent-post-title">활동 없음</div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Card Modal -->
+    <div class="modal" id="createCardModal">
+        <div class="modal-content">
+            <div class="modal-header">새 카드 만들기</div>
+            <form id="createCardForm">
+                <div class="form-group">
+                    <label class="form-label">제목</label>
+                    <input type="text" class="form-input" name="title" required placeholder="카드 제목을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">내용</label>
+                    <textarea class="form-textarea" name="content" placeholder="카드 내용을 입력하세요"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">유형</label>
+                    <select class="form-select" name="postType">
+                        <option value="card">일반 카드</option>
+                        <% if (user.role === 'teacher' || user.role === 'manager' || user.role === 'admin') { %>
+                            <option value="homework">과제</option>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeCreateModal()">취소</button>
+                    <button type="submit" class="btn-primary">생성</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Socket.IO & Interactive Script -->
+    <script src="/js/cloudboard/interactive.js"></script>
+
+    <script>
+        const centerId = <%= blog.center_id %>;
+
+        // Load initial cards
+        async function loadCards() {
+            try {
+                const response = await fetch(`/api/center/cards/${centerId}?centerId=${centerId}`);
+                const data = await response.json();
+
+                if (data.cards) {
+                    data.cards.forEach(card => {
+                        addCardToBoard(card);
+                    });
+                }
+            } catch (error) {
+                console.error('Cards load error:', error);
+            }
+        }
+
+        // Add card to board
+        function addCardToBoard(card) {
+            const board = document.getElementById('cloudboard');
+
+            const cardElement = document.createElement('div');
+            cardElement.className = 'card-item';
+            cardElement.dataset.cardId = card.id;
+            cardElement.dataset.x = card.layout.x || 0;
+            cardElement.dataset.y = card.layout.y || 0;
+
+            const typeClass = card.post_type === 'homework' ? 'homework' : '';
+            const typeBadge = card.post_type === 'homework'
+                ? '<span class="card-type-badge homework">과제</span>'
+                : '';
+
+            cardElement.innerHTML = `
+                <div class="card-header">
+                    <span>${card.title}</span>
+                    ${typeBadge}
+                </div>
+                <div class="card-body">${card.content || ''}</div>
+                <div class="card-footer">
+                    <div class="card-author">
+                        <div class="member-avatar">${card.author_name.charAt(0)}</div>
+                        <span>${card.author_name}</span>
+                    </div>
+                    <button class="card-delete-btn" onclick="deleteCard(${card.id})">삭제</button>
+                </div>
+            `;
+
+            board.appendChild(cardElement);
+
+            // Apply position
+            cardElement.style.position = 'absolute';
+            cardElement.style.left = `${card.layout.x}px`;
+            cardElement.style.top = `${card.layout.y}px`;
+        }
+
+        // Modal functions
+        function openCreateModal() {
+            document.getElementById('createCardModal').classList.add('active');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createCardModal').classList.remove('active');
+            document.getElementById('createCardForm').reset();
+        }
+
+        // Create card
+        document.getElementById('createCardForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = {
+                centerId: centerId,
+                title: formData.get('title'),
+                content: formData.get('content'),
+                postType: formData.get('postType'),
+                x: 100 + Math.random() * 200,
+                y: 100 + Math.random() * 200
+            };
+
+            try {
+                const response = await fetch('/api/center/create-card', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    closeCreateModal();
+                    // Reload cards or emit socket event
+                    location.reload();
+                } else {
+                    alert('카드 생성 실패: ' + (result.error || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                console.error('Card creation error:', error);
+                alert('카드 생성 중 오류가 발생했습니다.');
+            }
+        });
+
+        // Delete card
+        async function deleteCard(cardId) {
+            if (!confirm('이 카드를 삭제하시겠습니까?')) return;
+
+            try {
+                const response = await fetch(`/api/center/card/${cardId}?centerId=${centerId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('삭제 실패: ' + (result.error || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                console.error('Card deletion error:', error);
+                alert('카드 삭제 중 오류가 발생했습니다.');
+            }
+        }
+
+        // Load cards on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadCards();
+        });
+
+        // Close modal on outside click
+        document.getElementById('createCardModal').addEventListener('click', (e) => {
+            if (e.target.id === 'createCardModal') {
+                closeCreateModal();
+            }
+        });
+    </script>
+</body>
+</html>

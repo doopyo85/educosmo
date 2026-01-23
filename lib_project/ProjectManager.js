@@ -85,6 +85,19 @@ class ProjectManager {
             // 8. 학습 로그 기록
             await this.logLearningActivity(userId, centerId, platform, submissionId, saveType);
 
+            // 9. 🔥 자동 블로그 글 생성 (final 저장 시만)
+            if (saveType === 'final' && submissionId) {
+                try {
+                    const { BlogContentGenerator } = require('../lib_blog/contentGenerator');
+                    const generator = new BlogContentGenerator();
+                    await generator.generateProjectPost(submissionId);
+                    console.log(`✨ 블로그 자동 생성 완료: submission_id = ${submissionId}`);
+                } catch (blogError) {
+                    // 블로그 생성 실패해도 프로젝트 저장은 성공 처리
+                    console.error(`⚠️ 블로그 자동 생성 실패 (무시):`, blogError);
+                }
+            }
+
             console.log(`=== PROJECT SAVE COMPLETE ===\n`);
 
             return {
