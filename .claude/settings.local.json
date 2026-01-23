@@ -41,7 +41,8 @@
       "Bash(node --check:*)",
       "Bash(awk:*)",
       "Bash(python3 -c \"\nwith open\\(''lib_login/auth.js'', ''r'', encoding=''utf-8''\\) as f:\n    lines = f.readlines\\(\\)\n    backticks = 0\n    for i in range\\(270, min\\(480, len\\(lines\\)\\)\\):\n        count = lines[i].count\\(''\\\\`''\\)\n        if count > 0:\n            backticks += count\n            print\\(f''{i+1}: backticks={count}, total={backticks}: {lines[i][:80].rstrip\\(\\)}''\\)\n\")",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(pm2 list:*)"
     ]
   }
 }

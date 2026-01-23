@@ -384,6 +384,9 @@ async function loadCenterInfo() {
         const center = centerResult.center;
 
         // 센터 기본 정보 표시
+        const centerIdField = document.getElementById('centerId');
+        if (centerIdField) centerIdField.value = center.id || centerID; // 센터 ID 표시
+
         document.getElementById('centerName').value = center.center_name || '';
         document.getElementById('centerContactName').value = center.contact_name || '';
         document.getElementById('centerContactEmail').value = center.contact_email || '';
