@@ -148,6 +148,24 @@
         <!-- Scripts -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- 🔥 Bootstrap 로드 후 드롭다운 재초기화 -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Bootstrap이 완전히 로드된 후 프로필 드롭다운 재초기화
+                setTimeout(function() {
+                    const profileDropdown = document.getElementById('profileDropdown');
+                    if (profileDropdown && typeof bootstrap !== 'undefined') {
+                        // 기존 인스턴스 제거
+                        const existingInstance = bootstrap.Dropdown.getInstance(profileDropdown);
+                        if (existingInstance) {
+                            existingInstance.dispose();
+                        }
+                        // 새 인스턴스 생성
+                        new bootstrap.Dropdown(profileDropdown);
+                    }
+                }, 100);
+            });
+        </script>
         <script src="/js/teacher/teacher-main.js"></script>
 </body>
 

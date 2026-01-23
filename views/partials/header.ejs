@@ -559,61 +559,6 @@
 <script defer src="/header.js"></script>
 <script defer src="/js/board-notification.js"></script>
 
-<!-- 🔥 프로필 드롭다운 수동 제어 스크립트 -->
-<script>
-// 즉시 실행 함수로 변경하여 페이지 로드와 관계없이 실행
-(function initProfileDropdown() {
-    // DOMContentLoaded 이후 또는 이미 로드된 경우 즉시 실행
-    function setupDropdown() {
-        const profileDropdown = document.getElementById('profileDropdown');
-        const dropdownMenu = document.querySelector('#profileDropdown + .dropdown-menu');
-
-        if (!profileDropdown || !dropdownMenu) {
-            // 요소가 아직 없으면 100ms 후 재시도
-            setTimeout(setupDropdown, 100);
-            return;
-        }
-
-        // 기존 이벤트 리스너 제거 방지용 플래그
-        if (profileDropdown.dataset.dropdownInitialized) {
-            return;
-        }
-        profileDropdown.dataset.dropdownInitialized = 'true';
-
-        // 클릭 이벤트 강제 바인딩 (Bootstrap보다 우선순위 높게)
-        profileDropdown.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const isExpanded = this.getAttribute('aria-expanded') === 'true';
-
-            if (isExpanded) {
-                dropdownMenu.classList.remove('show');
-                this.setAttribute('aria-expanded', 'false');
-            } else {
-                dropdownMenu.classList.add('show');
-                this.setAttribute('aria-expanded', 'true');
-            }
-        }, true); // capture phase에서 먼저 처리
-
-        // 외부 클릭 시 드롭다운 닫기
-        document.addEventListener('click', function(e) {
-            if (!profileDropdown.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                dropdownMenu.classList.remove('show');
-                profileDropdown.setAttribute('aria-expanded', 'false');
-            }
-        });
-    }
-
-    // 문서 로드 상태에 따라 실행
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupDropdown);
-    } else {
-        setupDropdown();
-    }
-})();
-</script>
-
 <% if (locals.userID !=='nuri' ) { %>
     <!-- 🦝 너구리톡 위젯 -->
     <%- include('nuguri_widget') %>
