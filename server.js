@@ -660,8 +660,7 @@ const routes = {
   'template': require('./routes/templateRouter'),
   'gallery': require('./routes/galleryRouter'),  // 🔥 갤러리 공유 시스템
   's3': require('./routes/s3Router'),  // 🔥 통합 S3 브라우저
-  'subscription': require('./routes/subscriptionRouter'),  // 🔥 센터 구독 관리
-  'career': require('./routes/careerRouter')  // 🔥 진로진학 (Mock Mode)
+  'subscription': require('./routes/subscriptionRouter')  // 🔥 센터 구독 관리
 };
 
 // 🔥 Python 문제은행 API 라우터

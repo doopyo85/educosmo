@@ -5,6 +5,29 @@ const bcrypt = require('bcrypt');
 const { getSheetData } = require('../lib_google/sheetService'); // 🔥 Google Sheet Service Import
 
 // ============================================
+// Mock Data Definitions (For Career Page)
+// ============================================
+const MOCK_UNIVERSITIES = [
+    { id: 1, name: '서울대학교', region: '서울' },
+    { id: 2, name: '연세대학교', region: '서울' },
+    { id: 3, name: '고려대학교', region: '서울' },
+    { id: 4, name: '성균관대학교', region: '서울' },
+    { id: 5, name: '서강대학교', region: '서울' },
+    { id: 6, name: '한양대학교', region: '서울' },
+    { id: 7, name: '카이스트', region: '대전' },
+    { id: 8, name: '포항공과대학교', region: '경북' },
+    { id: 9, name: '부산대학교', region: '부산' },
+    { id: 10, name: '경북대학교', region: '대구' },
+];
+
+const MOCK_RESULTS_MATRIX = [
+    { grade_range: '1.0~1.1', universities: { '서울대학교': ['의예과', '컴퓨터공학부'], '연세대학교': ['의예과'] } },
+    { grade_range: '1.1~1.2', universities: { '서울대학교': ['전기정보공학부'], '고려대학교': ['의과대학'] } },
+    { grade_range: '1.3~1.5', universities: { '한양대학교': ['미래자동차공학과'], '성균관대학교': ['반도체시스템공학'] } },
+    { grade_range: '1.5~2.0', universities: { '서강대학교': ['경영학부'], '중앙대학교': ['소프트웨어학부'] } },
+];
+
+// ============================================
 // 미들웨어: 교사 권한 확인
 // ============================================
 const requireTeacher = (req, res, next) => {
@@ -202,24 +225,51 @@ router.get('/career-info', requireTeacher, (req, res) => {
     res.redirect('/teacher/career-info/university');
 });
 
-// 대학정보
-router.get('/career-info/university', requireTeacher, (req, res) => {
-    res.render('teacher/career_info_university', {
-        userID: req.session.userID,
-        role: req.session.role,
-        centerID: req.session.centerID,
-        currentView: 'university'
-    });
+// 대학정보 (Map View)
+router.get('/career-info/university', requireTeacher, async (req, res) => {
+    try {
+        // Try to fetch regions/universities from DB
+        let universities = [];
+        let isMock = false;
+        try {
+            universities = await db.queryDatabase('SELECT id, name, region FROM admissions_universities LIMIT 20');
+            if (!universities || universities.length === 0) throw new Error("DB Empty");
+        } catch (e) {
+            console.warn('DB Fetch failed, using mock data:', e.message);
+            universities = MOCK_UNIVERSITIES;
+            isMock = true;
+        }
+
+        res.render('teacher/career_info_university', {
+            userID: req.session.userID,
+            role: req.session.role,
+            centerID: req.session.centerID,
+            currentView: 'university',
+            universities,
+            isMock,
+            regions: ['서울', '경기', '부산', '대구', '인천', '광주', '대전']
+        });
+    } catch (error) {
+        console.error('University info error:', error);
+        res.status(500).send('Server Error');
+    }
 });
 
-// 입결라인
+// 입결라인 (Matrix View)
 router.get('/career-info/cutlines', requireTeacher, (req, res) => {
     res.render('teacher/career_info_cutlines', {
         userID: req.session.userID,
         role: req.session.role,
         centerID: req.session.centerID,
-        currentView: 'cutlines'
+        currentView: 'cutlines',
+        isMock: true // Currently always mock for matrix
     });
+});
+
+// 🔥 Matrix Data API (Helper for Cutlines View)
+router.get('/career-info/api/results/matrix', requireTeacher, async (req, res) => {
+    // Return Mock Data directly for now
+    res.json({ success: true, isMock: true, data: MOCK_RESULTS_MATRIX });
 });
 
 // 블로그
