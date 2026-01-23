@@ -174,3 +174,14 @@
     box-shadow: none !important;
 }
 
+/* 🔥 프로필 드롭다운 z-index 수정 (헤더보다 위) */
+.navbar .dropdown-menu {
+    z-index: 10000 !important; /* 헤더(9999)보다 높게 설정 */
+}
+
+/* 🔥 프로필 드롭다운이 열릴 때 클릭 가능하도록 설정 */
+.navbar .nav-item.dropdown {
+    position: relative;
+    z-index: 10001 !important; /* 드롭다운 메뉴보다도 높게 */
+}
+
