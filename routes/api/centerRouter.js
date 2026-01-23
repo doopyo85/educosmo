@@ -802,6 +802,7 @@ router.post('/:id/invite-code', authenticateUser, checkResourcePermission('cente
 });
 
 
+/*
 router.get('/:id/invite-codes', authenticateUser, checkResourcePermission('center:invite'), async (req, res) => {
   try {
     const { id: centerId } = req.params;
@@ -845,14 +846,8 @@ router.get('/:id/invite-codes', authenticateUser, checkResourcePermission('cente
     });
 
   } catch (error) {
-    console.error('초대 코드 목록 조회 오류:', error);
-    res.status(500).json({
-      success: false,
-      message: '초대 코드 목록 조회에 실패했습니다.',
-      error: error.message
-    });
-  }
 });
+*/
 
 /**
  * GET /api/centers/:id/invite-codes
@@ -871,6 +866,7 @@ router.get('/:id/invite-codes', authenticateUser, checkResourcePermission('cente
       });
     }
 
+    console.log(`[API] Fetching invite codes for center ${centerId}`);
     const inviteCodes = await queryDatabase(
       `SELECT ic.*, u.username as created_by_username
        FROM center_invite_codes ic

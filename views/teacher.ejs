@@ -149,7 +149,7 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="/js/teacher/teacher-main.js"></script>
-        <!-- 🔥 Bootstrap 무시하고 직접 드롭다운 제어 -->
+        <!-- 🔥 Bootstrap 무시하고 직접 드롭다운 제어 (프로필만) -->
         <script>
             (function() {
                 // 즉시 실행 - DOM 로드 기다리지 않음
@@ -170,15 +170,13 @@
                     }
                     profileDropdown.dataset.customDropdownSetup = 'true';
 
-                    // Bootstrap 드롭다운 완전히 비활성화
-                    profileDropdown.removeAttribute('data-bs-toggle');
-                    profileDropdown.setAttribute('data-bs-toggle-disabled', 'dropdown');
+                    // 🔥 Bootstrap 이벤트만 차단, 속성은 유지 (다른 드롭다운 영향 방지)
+                    // data-bs-toggle은 제거하지 않음
 
-                    // 직접 클릭 이벤트 처리
+                    // 직접 클릭 이벤트 처리 (capture phase에서 먼저 처리)
                     profileDropdown.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        e.stopImmediatePropagation(); // 다른 모든 이벤트 차단
 
                         const isOpen = dropdownMenu.classList.contains('show');
 
@@ -191,7 +189,7 @@
                             dropdownMenu.classList.add('show');
                             profileDropdown.setAttribute('aria-expanded', 'true');
                         }
-                    });
+                    }, true); // capture phase에서 먼저 처리하여 Bootstrap 이벤트 차단
 
                     // 외부 클릭 시 닫기
                     document.addEventListener('click', function(e) {
