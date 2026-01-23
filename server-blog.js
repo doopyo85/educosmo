@@ -200,10 +200,32 @@ app.get('/p/:slug', async (req, res) => {
 
 // Helper: Check if current user is owner
 // Helper: Check permission (Owner or Center Admin)
+// Helper: Check permission (Owner or Center Admin)
 function isOwner(req, res, next) {
+    let visitorId = null;
+
+    // Resolve visitorId from session (Robust check)
+    if (req.session) {
+        if (req.session.user && req.session.user.id) {
+            visitorId = req.session.user.id;
+        } else if (req.session.id) {
+            // Sometimes directly on session (legacy?)
+            visitorId = req.session.id; // Be careful not to confuse with sessionID
+            // Try to prefer user.id if available in future
+        }
+        // Fallback or specific structure check from EJS logic
+        if (!visitorId && req.session.user && req.session.user.user && req.session.user.user.id) {
+            visitorId = req.session.user.user.id;
+        }
+    }
+
     // 1. User Blog Owner Check
-    if (req.blogType === 'user' && req.session && req.session.user && req.blogOwner) {
-        const visitorId = req.session.id || (req.session.user && req.session.user.id);
+    if (req.blogType === 'user') {
+        if (!visitorId || !req.blogOwner) {
+            return res.status(403).send('Forbidden: Not logged in or blog owner not found');
+        }
+
+        // Loose equality check (string vs number)
         if (visitorId == req.blogOwner.id) {
             return next();
         }
