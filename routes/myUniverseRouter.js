@@ -679,6 +679,51 @@ router.get('/student/:id', async (req, res) => {
 });
 
 // ============================================
+// Teacher View: Student Blog (Redirect)
+// ============================================
+router.get('/student/:id/blog', async (req, res) => {
+    try {
+        const studentId = req.params.id;
+        const teacherRole = req.session.role;
+        const teacherCenterId = req.session.centerID;
+
+        // Teacher/Admin check
+        if (!['teacher', 'manager', 'admin'].includes(teacherRole)) {
+            return res.status(403).send('권한이 없습니다.');
+        }
+
+        const [student] = await db.queryDatabase(
+            'SELECT * FROM Users WHERE id = ? AND role = "student"',
+            [studentId]
+        );
+
+        if (!student) {
+            return res.status(404).send('학생을 찾을 수 없습니다.');
+        }
+
+        // Center check
+        if (teacherRole !== 'admin' && student.centerID !== teacherCenterId) {
+            return res.status(403).send('다른 센터 학생입니다.');
+        }
+
+        // Check if user has a blog
+        const [blog] = await db.queryDatabase('SELECT subdomain FROM user_blogs WHERE user_id = ?', [student.id]);
+
+        if (blog) {
+            // [MODIFIED] Use internal proxy path to avoid cross-domain issues
+            return res.redirect(`/blog/${blog.subdomain}`);
+        }
+
+        // If no blog, just show empty or redirect back
+        res.send(`<script>alert('학생이 아직 블로그를 개설하지 않았습니다.'); history.back();</script>`);
+
+    } catch (error) {
+        console.error('Student Blog Error:', error);
+        res.status(500).send('Error accessing student blog');
+    }
+});
+
+// ============================================
 // Teacher View: Student Gallery
 // ============================================
 router.get('/student/:id/gallery', async (req, res) => {

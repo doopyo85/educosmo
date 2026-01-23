@@ -581,13 +581,33 @@ router.get('/get-user-type', (req, res) => {
   }
 });
 
-router.get('/get-user-session', (req, res) => {
+router.get('/get-user-session', async (req, res) => {
   if (req.session && req.session.is_logined) {
+    let centerID = req.session.centerID;
+
+    // 세션에 centerID가 없으면 DB에서 조회하여 세션에 추가
+    if (!centerID && req.session.userID) {
+      try {
+        const [user] = await db.queryDatabase(
+          'SELECT centerID FROM Users WHERE userID = ?',
+          [req.session.userID]
+        );
+
+        if (user && user.centerID) {
+          centerID = user.centerID;
+          req.session.centerID = centerID; // 세션에 저장
+          console.log(`[SESSION] centerID를 DB에서 조회하여 세션에 추가: ${centerID}`);
+        }
+      } catch (error) {
+        console.error('[SESSION] centerID 조회 실패:', error);
+      }
+    }
+
     res.json({
       userID: req.session.userID,
       role: req.session.role,
       is_logined: true,
-      centerID: req.session.centerID
+      centerID: centerID
     });
   } else {
     res.status(200).json({ is_logined: false, role: 'guest' });

@@ -356,12 +356,21 @@ async function loadCenterInfo() {
         const sessionRes = await fetch('/api/get-user-session', { credentials: 'include' });
         const sessionData = await sessionRes.json();
 
-        if (!sessionData.centerID) {
-            alert('센터 정보를 찾을 수 없습니다.');
-            return;
-        }
+        // centerID가 세션에 없으면 DB에서 직접 조회
+        let centerID = sessionData.centerID;
 
-        const centerID = sessionData.centerID;
+        if (!centerID) {
+            // DB에서 사용자 정보를 조회하여 centerID 가져오기
+            const userRes = await fetch('/api/my-profile-detail', { credentials: 'include' });
+            const userData = await userRes.json();
+
+            if (!userData.success || !userData.student || !userData.student.centerID) {
+                alert('센터 정보를 찾을 수 없습니다.');
+                return;
+            }
+
+            centerID = userData.student.centerID;
+        }
 
         // 센터 정보 조회
         const centerRes = await fetch(`/api/centers/${centerID}`, { credentials: 'include' });
