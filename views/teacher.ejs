@@ -45,20 +45,6 @@
 
                 <!-- 센터 블로그 (Center Blog) -->
                 <!-- 센터 블로그 (Center Blog) -->
-                <div class="board-nav-group mb-2">
-                    <div class="board-category-item text-dark fw-bold" style="cursor: default; background: none;">
-                        <i class="bi bi-broadcast me-2"></i> 커뮤니티
-                    </div>
-                    <div class="d-flex flex-column gap-1">
-                        <% if (locals.centerID) { %>
-                            <a href="/center-blog/<%= centerID %>" target="_blank" class="board-category-item ps-5 py-2"
-                                style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                                센터 블로그
-                                <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.7em;"></i>
-                            </a>
-                            <% } %>
-                    </div>
-                </div>
 
                 <!-- 수업 자료 (Submenu) -->
                 <div class="board-nav-group mb-2">
@@ -69,10 +55,6 @@
                         <a href="/teacher/class-materials/lessons" class="board-category-item ps-5 py-2"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             교안 및 영상
-                        </a>
-                        <a href="/teacher/class-materials/downloads" class="board-category-item ps-5 py-2"
-                            style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                            다운로드 폴더
                         </a>
                     </div>
                 </div>
@@ -90,10 +72,6 @@
                         <a href="/teacher/career-info/cutlines" class="board-category-item ps-5 py-2"
                             style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
                             입결라인
-                        </a>
-                        <a href="/teacher/career-info/blog" class="board-category-item ps-5 py-2"
-                            style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
-                            블로그
                         </a>
                     </div>
                 </div>
