@@ -444,6 +444,9 @@ async function loadCenterInfo() {
         // 초대 코드 목록 로드
         loadInviteCodes(centerID);
 
+        // centerID를 전역 변수에 저장 (코드 발급 시 사용)
+        window.currentCenterID = centerID;
+
     } catch (error) {
         console.error('센터 정보 로드 실패:', error);
         alert('센터 정보를 불러오는 중 오류가 발생했습니다.');
@@ -519,15 +522,21 @@ async function loadInviteCodes(centerID) {
 // 새 센터 코드 발급
 async function generateNewCenterCode() {
     try {
+        // 전역 변수에서 centerID 가져오기 (loadCenterInfo에서 설정)
+        let centerID = window.currentCenterID;
+
+        // 세션 정보 가져오기
         const sessionRes = await fetch('/api/get-user-session', { credentials: 'include' });
         const sessionData = await sessionRes.json();
 
-        if (!sessionData.centerID) {
-            alert('센터 정보를 찾을 수 없습니다.');
-            return;
-        }
+        if (!centerID) {
+            centerID = sessionData.centerID;
 
-        const centerID = sessionData.centerID;
+            if (!centerID) {
+                alert('센터 정보를 찾을 수 없습니다.');
+                return;
+            }
+        }
 
         // 초기값을 센터장 아이디(세션 userID)로 설정
         const res = await fetch(`/api/centers/${centerID}/invite-code`, {

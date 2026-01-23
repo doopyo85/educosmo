@@ -399,55 +399,61 @@
     style="z-index: 10000;">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content" style="border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-            <div class="modal-header" style="background: white; border-bottom: 1px solid #e5e7eb;">
-                <h5 class="modal-title" id="centerInfoModalLabel" style="color: #1f2937; font-weight: 600;">
+            <div class="modal-header" style="background: white; border-bottom: 1px solid #e5e7eb; padding: 12px 16px;">
+                <h5 class="modal-title" id="centerInfoModalLabel" style="color: #1f2937; font-weight: 600; font-size: 16px;">
                     <i class="bi bi-building me-2" style="color: #6366f1;"></i>센터 정보 관리
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" style="background: #fafafa; padding: 24px;">
-                <!-- 센터 기본 정보 + 초대 코드 -->
-                <div class="card mb-3" style="border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: none; transition: none;">
-                    <div class="card-header" style="background: white; border-bottom: 1px solid #e5e7eb; padding: 12px 16px;">
-                        <h6 class="mb-0" style="color: #374151; font-weight: 600; font-size: 14px;">
-                            <i class="bi bi-info-circle me-2" style="color: #6366f1;"></i>센터 정보 및 초대 코드
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <!-- 센터 기본 정보 -->
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold small">센터명</label>
-                                <input type="text" class="form-control form-control-sm" id="centerName" readonly>
+            <div class="modal-body" style="background: #fafafa; padding: 16px;">
+                <!-- 센터 기본 정보 + 초대 코드 (좌우 배치) -->
+                <div class="row g-2 mb-2">
+                    <!-- 왼쪽: 센터 기본 정보 -->
+                    <div class="col-md-7">
+                        <div class="card h-100" style="border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: none; transition: none;">
+                            <div class="card-header" style="background: white; border-bottom: 1px solid #e5e7eb; padding: 8px 12px;">
+                                <h6 class="mb-0" style="color: #374151; font-weight: 600; font-size: 13px;">
+                                    <i class="bi bi-info-circle me-2" style="color: #6366f1;"></i>센터 기본 정보
+                                </h6>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold small">담당자</label>
-                                <input type="text" class="form-control form-control-sm" id="centerContactName" readonly>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold small">담당자 이메일</label>
-                                <input type="email" class="form-control form-control-sm" id="centerContactEmail" readonly>
-                            </div>
-                        </div>
-
-                        <hr class="my-3">
-
-                        <!-- 초대 코드 섹션 -->
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0" style="color: #374151; font-weight: 600; font-size: 13px;">
-                                <i class="bi bi-key me-2" style="color: #6366f1;"></i>센터 초대 코드
-                            </h6>
-                            <button class="btn btn-sm" onclick="generateNewCenterCode()"
-                                    style="background: #6366f1; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
-                                <i class="bi bi-plus-circle me-1"></i>새 코드 발급
-                            </button>
-                        </div>
-                        <div id="inviteCodesContainer">
-                            <div class="text-center text-muted py-2">
-                                <div class="spinner-border spinner-border-sm" role="status">
-                                    <span class="visually-hidden">로딩 중...</span>
+                            <div class="card-body" style="padding: 12px;">
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold small mb-1">센터명</label>
+                                    <input type="text" class="form-control form-control-sm" id="centerName" readonly>
                                 </div>
-                                <p class="mb-0 mt-2 small">초대 코드를 불러오는 중...</p>
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold small mb-1">담당자</label>
+                                    <input type="text" class="form-control form-control-sm" id="centerContactName" readonly>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label fw-bold small mb-1">담당자 이메일</label>
+                                    <input type="email" class="form-control form-control-sm" id="centerContactEmail" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 오른쪽: 초대 코드 -->
+                    <div class="col-md-5">
+                        <div class="card h-100" style="border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: none; transition: none;">
+                            <div class="card-header d-flex justify-content-between align-items-center" style="background: white; border-bottom: 1px solid #e5e7eb; padding: 8px 12px;">
+                                <h6 class="mb-0" style="color: #374151; font-weight: 600; font-size: 13px;">
+                                    <i class="bi bi-key me-2" style="color: #6366f1;"></i>초대 코드
+                                </h6>
+                                <button class="btn btn-sm" onclick="generateNewCenterCode()"
+                                        style="background: #6366f1; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 11px;">
+                                    <i class="bi bi-plus-circle me-1"></i>발급
+                                </button>
+                            </div>
+                            <div class="card-body" style="padding: 12px;">
+                                <div id="inviteCodesContainer" style="max-height: 140px; overflow-y: auto;">
+                                    <div class="text-center text-muted py-2">
+                                        <div class="spinner-border spinner-border-sm" role="status">
+                                            <span class="visually-hidden">로딩 중...</span>
+                                        </div>
+                                        <p class="mb-0 mt-2 small">로딩 중...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -455,41 +461,41 @@
 
                 <!-- 구독 정보 -->
                 <div class="card" style="border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: none; transition: none;">
-                    <div class="card-header" style="background: white; border-bottom: 1px solid #e5e7eb; padding: 12px 16px;">
-                        <h6 class="mb-0" style="color: #374151; font-weight: 600; font-size: 14px;">
+                    <div class="card-header" style="background: white; border-bottom: 1px solid #e5e7eb; padding: 8px 12px;">
+                        <h6 class="mb-0" style="color: #374151; font-weight: 600; font-size: 13px;">
                             <i class="bi bi-credit-card me-2" style="color: #6366f1;"></i>구독 정보
                         </h6>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
+                    <div class="card-body" style="padding: 12px;">
+                        <div class="row g-2">
                             <div class="col-md-3">
-                                <label class="form-label fw-bold small">플랜 타입</label>
+                                <label class="form-label fw-bold small mb-1">플랜 타입</label>
                                 <div class="input-group input-group-sm">
-                                    <input type="text" class="form-control" id="centerPlanType" readonly>
-                                    <span class="input-group-text" id="centerStatusBadge">
-                                        <span class="badge bg-success">활성</span>
+                                    <input type="text" class="form-control" id="centerPlanType" readonly style="font-size: 12px;">
+                                    <span class="input-group-text p-1" id="centerStatusBadge">
+                                        <span class="badge bg-success" style="font-size: 10px;">활성</span>
                                     </span>
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label fw-bold small">스토리지 용량</label>
-                                <input type="text" class="form-control form-control-sm" id="centerStorageLimit" readonly>
+                                <label class="form-label fw-bold small mb-1">스토리지</label>
+                                <input type="text" class="form-control form-control-sm" id="centerStorageLimit" readonly style="font-size: 12px;">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label fw-bold small">구독 상태</label>
-                                <input type="text" class="form-control form-control-sm" id="centerSubscriptionStatus" readonly>
+                                <label class="form-label fw-bold small mb-1">구독 상태</label>
+                                <input type="text" class="form-control form-control-sm" id="centerSubscriptionStatus" readonly style="font-size: 12px;">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label fw-bold small">다음 결제일</label>
-                                <input type="text" class="form-control form-control-sm" id="centerNextBilling" readonly>
+                                <label class="form-label fw-bold small mb-1">다음 결제일</label>
+                                <input type="text" class="form-control form-control-sm" id="centerNextBilling" readonly style="font-size: 12px;">
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer" style="background: white; border-top: 1px solid #e5e7eb;">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                        style="background: #f3f4f6; color: #374151; border: none; padding: 8px 16px; border-radius: 6px;">
+            <div class="modal-footer" style="background: white; border-top: 1px solid #e5e7eb; padding: 8px 16px;">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"
+                        style="background: #f3f4f6; color: #374151; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px;">
                     닫기
                 </button>
             </div>
