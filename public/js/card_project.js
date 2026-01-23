@@ -1179,18 +1179,18 @@ class ProjectCardManager {
         if (this.config.projectType === 'scratch' && project.basic) {
             card.addEventListener('click', (e) => {
                 // 이미 버튼 클릭으로 처리되지 않은 경우에만 실행
-                if (!e.target.classList.contains('load-project') &&
-                    !e.target.classList.contains('project-ppt-btn') &&
-                    !e.target.classList.contains('entry-legacy-btn') &&
-                    !e.target.classList.contains('scratch-basic-btn')) {
+                if (!e.target.closest('.load-project') &&
+                    !e.target.closest('.project-ppt-btn') &&
+                    !e.target.closest('.entry-legacy-btn') &&
+                    !e.target.closest('.scratch-basic-btn')) {
                     this.loadProjectInScratchGUI(project.basic);
                 }
             });
         } else if (this.config.projectType === 'appinventor' && project.basic) {
             card.addEventListener('click', (e) => {
                 // 이미 버튼 클릭으로 처리되지 않은 경우에만 실행
-                if (!e.target.classList.contains('load-project') &&
-                    !e.target.classList.contains('project-ppt-btn')) {
+                if (!e.target.closest('.load-project') &&
+                    !e.target.closest('.project-ppt-btn')) {
                     this.loadProjectInAppInventor(project.basic);
                 }
             });

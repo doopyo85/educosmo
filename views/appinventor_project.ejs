@@ -205,11 +205,12 @@
                         // 이벤트 리스너 재설정
                         setupEventListeners() {
                             document.addEventListener('click', (e) => {
-                                if (e.target.classList.contains('load-project')) {
+                                const btn = e.target.closest('.load-project');
+                                if (btn) {
                                     e.preventDefault();
                                     e.stopPropagation();
 
-                                    const projectUrl = e.target.getAttribute('data-url');
+                                    const projectUrl = btn.getAttribute('data-url');
                                     if (!projectUrl) return;
 
                                     this.loadProjectInAppInventor(projectUrl);
