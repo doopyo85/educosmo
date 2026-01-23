@@ -332,6 +332,30 @@ app.use('/blog', (req, res, next) => {
   next();
 });
 
+// 0-1. 🔥 내부 접근 경로 지원: /center-blog/{centerid} -> {centerid}.pong2.app 로 프록시 (센터용)
+app.use('/center-blog', (req, res, next) => {
+  const match = req.url.match(/^\/([^\/]+)(.*)/);
+  if (match) {
+    const subdomain = match[1];
+    const restPath = match[2] || '/';
+
+    console.log(`Proxying internal center-blog request: /center-blog/${subdomain}${restPath} -> http://localhost:3001 (Host: ${subdomain}.pong2.app)`);
+
+    return createProxyMiddleware({
+      target: 'http://localhost:3001',
+      changeOrigin: true,
+      pathRewrite: {
+        [`^/center-blog/${subdomain}`]: '',
+        [`^/${subdomain}`]: ''
+      },
+      onProxyReq: (proxyReq) => {
+        proxyReq.setHeader('Host', `${subdomain}.pong2.app`);
+      }
+    })(req, res, next);
+  }
+  next();
+});
+
 app.use((req, res, next) => {
   const host = req.get('host') || '';
 
