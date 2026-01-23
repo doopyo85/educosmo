@@ -155,9 +155,10 @@
                 // 즉시 실행 - DOM 로드 기다리지 않음
                 function setupCustomDropdown() {
                     const profileDropdown = document.getElementById('profileDropdown');
-                    const dropdownMenu = document.querySelector('.navbar .dropdown-menu');
+                    // 🔥 정확한 셀렉터: profileDropdown의 바로 다음 형제 요소인 dropdown-menu
+                    const dropdownMenu = profileDropdown ? profileDropdown.nextElementSibling : null;
 
-                    if (!profileDropdown || !dropdownMenu) {
+                    if (!profileDropdown || !dropdownMenu || !dropdownMenu.classList.contains('dropdown-menu')) {
                         // 요소가 없으면 50ms 후 재시도
                         setTimeout(setupCustomDropdown, 50);
                         return;
@@ -200,7 +201,7 @@
                         }
                     });
 
-                    console.log('Custom dropdown setup complete');
+                    console.log('Custom dropdown setup complete for profile');
                 }
 
                 // 즉시 실행

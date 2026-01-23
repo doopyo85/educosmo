@@ -801,10 +801,7 @@ router.post('/:id/invite-code', authenticateUser, checkResourcePermission('cente
   }
 });
 
-/**
- * GET /api/centers/:id/invite-codes
- * 센터 초대 코드 목록 조회 (admin, manager, teacher 가능)
- */
+
 router.get('/:id/invite-codes', authenticateUser, checkResourcePermission('center:invite'), async (req, res) => {
   try {
     const { id: centerId } = req.params;
