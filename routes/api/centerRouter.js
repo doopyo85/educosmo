@@ -803,6 +803,62 @@ router.post('/:id/invite-code', authenticateUser, checkResourcePermission('cente
 
 /**
  * GET /api/centers/:id/invite-codes
+ * 센터 초대 코드 목록 조회 (admin, manager, teacher 가능)
+ */
+router.get('/:id/invite-codes', authenticateUser, checkResourcePermission('center:invite'), async (req, res) => {
+  try {
+    const { id: centerId } = req.params;
+    const user = req.user;
+
+    // 권한 확인: Admin이 아닌 경우 본인 센터인지 확인
+    if (user.role !== 'admin' && user.centerID !== parseInt(centerId)) {
+      return res.status(403).json({
+        success: false,
+        message: '본인의 센터에 대해서만 초대 코드를 조회할 수 있습니다.'
+      });
+    }
+
+    // 만료된 코드 처리 (선택사항: 만료된지 30일 지난건 자동 삭제 등)
+    // 여기서는 조회 시 만료 여부를 계산하여 전달
+
+    const codes = await queryDatabase(
+      `SELECT * FROM center_invite_codes 
+       WHERE center_id = ? 
+       ORDER BY created_at DESC`,
+      [centerId]
+    );
+
+    // 가공: 만료 여부 플래그 추가
+    const now = new Date();
+    const processedCodes = codes.map(code => {
+      const expiresAt = new Date(code.expires_at);
+      const isExpired = expiresAt < now;
+      const isMaxedOut = code.current_uses >= code.max_uses;
+
+      return {
+        ...code,
+        isExpired,
+        isMaxedOut
+      };
+    });
+
+    res.json({
+      success: true,
+      inviteCodes: processedCodes
+    });
+
+  } catch (error) {
+    console.error('초대 코드 목록 조회 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '초대 코드 목록 조회에 실패했습니다.',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/centers/:id/invite-codes
  * 센터의 초대 코드 목록 조회 (admin, manager, teacher 가능)
  */
 router.get('/:id/invite-codes', authenticateUser, checkResourcePermission('center:invite'), async (req, res) => {

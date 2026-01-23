@@ -149,57 +149,63 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="/js/teacher/teacher-main.js"></script>
-        <!-- 🔥 teacher-main.js의 AJAX 로드 완료 후 드롭다운 재초기화 -->
+        <!-- 🔥 Bootstrap 무시하고 직접 드롭다운 제어 -->
         <script>
-            // MutationObserver로 DOM 변경 감지
-            const observer = new MutationObserver(function(mutations) {
-                // content-container가 변경되면 드롭다운 재초기화
-                mutations.forEach(function(mutation) {
-                    if (mutation.target.id === 'content-container' && mutation.addedNodes.length > 0) {
-                        reinitializeDropdown();
-                    }
-                });
-            });
+            (function() {
+                // 즉시 실행 - DOM 로드 기다리지 않음
+                function setupCustomDropdown() {
+                    const profileDropdown = document.getElementById('profileDropdown');
+                    const dropdownMenu = document.querySelector('.navbar .dropdown-menu');
 
-            function reinitializeDropdown() {
-                const profileDropdown = document.getElementById('profileDropdown');
-                if (profileDropdown && typeof bootstrap !== 'undefined') {
-                    // 기존 인스턴스 제거
-                    const existingInstance = bootstrap.Dropdown.getInstance(profileDropdown);
-                    if (existingInstance) {
-                        existingInstance.dispose();
+                    if (!profileDropdown || !dropdownMenu) {
+                        // 요소가 없으면 50ms 후 재시도
+                        setTimeout(setupCustomDropdown, 50);
+                        return;
                     }
-                    // 새 인스턴스 생성
-                    new bootstrap.Dropdown(profileDropdown);
-                }
-            }
 
-            // DOM이 준비되면 observer 시작
-            document.addEventListener('DOMContentLoaded', function() {
-                const container = document.getElementById('content-container');
-                if (container) {
-                    observer.observe(container, {
-                        childList: true,
-                        subtree: false
+                    // 이미 설정되었으면 중복 방지
+                    if (profileDropdown.dataset.customDropdownSetup) {
+                        return;
+                    }
+                    profileDropdown.dataset.customDropdownSetup = 'true';
+
+                    // Bootstrap 드롭다운 완전히 비활성화
+                    profileDropdown.removeAttribute('data-bs-toggle');
+                    profileDropdown.setAttribute('data-bs-toggle-disabled', 'dropdown');
+
+                    // 직접 클릭 이벤트 처리
+                    profileDropdown.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation(); // 다른 모든 이벤트 차단
+
+                        const isOpen = dropdownMenu.classList.contains('show');
+
+                        if (isOpen) {
+                            // 닫기
+                            dropdownMenu.classList.remove('show');
+                            profileDropdown.setAttribute('aria-expanded', 'false');
+                        } else {
+                            // 열기
+                            dropdownMenu.classList.add('show');
+                            profileDropdown.setAttribute('aria-expanded', 'true');
+                        }
                     });
+
+                    // 외부 클릭 시 닫기
+                    document.addEventListener('click', function(e) {
+                        if (!profileDropdown.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                            dropdownMenu.classList.remove('show');
+                            profileDropdown.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+
+                    console.log('Custom dropdown setup complete');
                 }
 
-                // 🔥 초기 로드 시 teacher-main.js의 AJAX 로드를 기다림
-                // teacher-main.js는 즉시 loadPage를 호출하므로, 여러 번 재시도
-                let retryCount = 0;
-                const maxRetries = 10;
-
-                function retryInit() {
-                    retryCount++;
-                    reinitializeDropdown();
-
-                    if (retryCount < maxRetries) {
-                        setTimeout(retryInit, 200);
-                    }
-                }
-
-                setTimeout(retryInit, 300);
-            });
+                // 즉시 실행
+                setupCustomDropdown();
+            })();
         </script>
 </body>
 
