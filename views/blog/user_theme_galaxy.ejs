@@ -68,26 +68,46 @@
 
         .profile-section {
             display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 30px;
+            padding: 16px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .profile-header {
+            display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 30px;
-            padding: 10px;
-            border-radius: 6px;
             cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
             transition: background 0.2s;
         }
 
-        .profile-section:hover {
+        .profile-header:hover {
             background-color: var(--hover-color);
         }
 
         .profile-img {
-            width: 30px;
-            height: 30px;
-            border-radius: 4px;
-            background-color: #444;
-            /* Fallback */
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 0;
         }
 
         .blog-title {
@@ -97,6 +117,20 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+
+        .blog-owner {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .profile-description {
+            font-size: 12px;
+            color: #999;
+            line-height: 1.5;
+            padding: 8px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .nav-item {
@@ -151,29 +185,50 @@
 
         .post-item {
             display: block;
-            padding: 12px 0;
-            border-bottom: 1px solid #2a2a2a;
+            padding: 16px;
+            margin-bottom: 8px;
+            border-radius: 6px;
             text-decoration: none;
             color: var(--text-color);
-            transition: padding-left 0.2s;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            background-color: rgba(255, 255, 255, 0.02);
         }
 
         .post-item:hover {
-            padding-left: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
             color: white;
+            transform: translateX(4px);
         }
 
         .post-title {
             font-size: 16px;
             font-weight: 500;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .post-icon {
+            font-size: 14px;
+            color: #888;
         }
 
         .post-meta {
             font-size: 12px;
             color: #666;
             display: flex;
-            gap: 15px;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .post-excerpt {
+            font-size: 13px;
+            color: #888;
+            margin-top: 6px;
+            line-height: 1.5;
         }
 
         /* Responsive */
@@ -193,17 +248,23 @@
     <div class="layout">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="profile-section" onclick="location.href='./'">
-                <% if(owner && owner.profile_image) { %>
-                    <img src="<%= owner.profile_image %>" class="profile-img" alt="Profile">
+            <div class="profile-section">
+                <div class="profile-header" onclick="location.href='./'">
+                    <% if(owner && owner.profile_image) { %>
+                        <img src="<%= owner.profile_image %>" class="profile-img" alt="<%= owner.name %>">
                     <% } else { %>
-                        <div class="profile-img d-flex align-items-center justify-content-center">
-                            <i class="fa-solid fa-user text-white"></i>
+                        <div class="profile-img">
+                            <%= owner.name ? owner.name.charAt(0).toUpperCase() : 'U' %>
                         </div>
-                        <% } %>
-                            <div class="blog-title">
-                                <%= blog.title %>
-                            </div>
+                    <% } %>
+                    <div class="profile-info">
+                        <div class="blog-title"><%= blog.title %></div>
+                        <div class="blog-owner"><%= owner.name %>'s blog</div>
+                    </div>
+                </div>
+                <% if(blog.description) { %>
+                    <div class="profile-description"><%= blog.description %></div>
+                <% } %>
             </div>
 
             <nav>
@@ -242,31 +303,40 @@
 
             <div class="post-list">
                 <% if (posts.length===0) { %>
-                    <p class="text-muted">아직 작성된 글이 없습니다. 📝</p>
-                    <% } else { %>
-                        <% posts.forEach(post=> { %>
-                            <a href="p/<%= post.slug %>" class="post-item">
-                                <div class="post-title">
-                                    <% if(post.thumbnail_url) { %>
-                                        <i class="fa-regular fa-image me-2"></i>
-                                        <% } else { %>
-                                            <i class="fa-regular fa-file-lines me-2"></i>
-                                            <% } %>
-                                                <%= post.title %>
-                                </div>
-                                <div class="post-meta">
-                                    <span>
-                                        <%= new Date(post.created_at).toLocaleDateString() %>
-                                    </span>
-                                    <% if(post.excerpt) { %>
-                                        <span>
-                                            <%= post.excerpt.substring(0, 30) %>...
-                                        </span>
-                                        <% } %>
-                                </div>
+                    <div style="padding: 60px 20px; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+                        <p class="text-muted">아직 작성된 글이 없습니다.</p>
+                        <% if(isOwner) { %>
+                            <a href="write" class="btn btn-sm btn-outline-light mt-3">
+                                <i class="fa-solid fa-pen-to-square me-2"></i>첫 글 작성하기
                             </a>
-                            <% }); %>
+                        <% } %>
+                    </div>
+                <% } else { %>
+                    <% posts.forEach(post => { %>
+                        <a href="p/<%= post.slug %>" class="post-item">
+                            <div class="post-title">
+                                <% if(post.thumbnail_url) { %>
+                                    <i class="fa-regular fa-image post-icon"></i>
+                                <% } else if(post.file_type === 'code') { %>
+                                    <i class="fa-solid fa-code post-icon"></i>
+                                <% } else { %>
+                                    <i class="fa-regular fa-file-lines post-icon"></i>
                                 <% } %>
+                                <span><%= post.title %></span>
+                            </div>
+                            <div class="post-meta">
+                                <span><i class="fa-regular fa-calendar me-1"></i><%= new Date(post.created_at).toLocaleDateString('ko-KR') %></span>
+                                <% if(post.view_count > 0) { %>
+                                    <span><i class="fa-regular fa-eye me-1"></i><%= post.view_count %></span>
+                                <% } %>
+                            </div>
+                            <% if(post.excerpt) { %>
+                                <div class="post-excerpt"><%= post.excerpt.substring(0, 120) %><%= post.excerpt.length > 120 ? '...' : '' %></div>
+                            <% } %>
+                        </a>
+                    <% }); %>
+                <% } %>
 
                                     <!-- Pagination -->
                                     <% if (pagination.totalPages> 1) { %>

@@ -144,6 +144,74 @@
         #editor {
             min-height: 500px;
         }
+
+        /* Slash Command Menu */
+        .slash-menu {
+            position: absolute;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            min-width: 280px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .slash-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .slash-menu-item:hover,
+        .slash-menu-item.selected {
+            background-color: #2eaadc;
+        }
+
+        .slash-menu-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .slash-menu-content {
+            flex: 1;
+        }
+
+        .slash-menu-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .slash-menu-desc {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .slash-menu-category {
+            font-size: 11px;
+            color: #888;
+            font-weight: 600;
+            padding: 8px 12px 4px;
+            margin-top: 8px;
+        }
+
+        .slash-menu-category:first-child {
+            margin-top: 0;
+        }
     </style>
 </head>
 
@@ -241,6 +309,234 @@
         import TableHeader from 'https://cdn.jsdelivr.net/npm/@tiptap/extension-table-header@2.1.13/+esm';
         import Placeholder from 'https://cdn.jsdelivr.net/npm/@tiptap/extension-placeholder@2.1.13/+esm';
 
+        // Slash Command Menu Data
+        const slashCommands = [
+            {
+                category: 'BASIC BLOCKS',
+                items: [
+                    { title: 'Text', desc: '일반 텍스트를 입력하세요', icon: '📄', command: 'paragraph' },
+                    { title: 'Heading 1', desc: '큰 제목', icon: 'H1', command: 'heading1' },
+                    { title: 'Heading 2', desc: '중간 제목', icon: 'H2', command: 'heading2' },
+                    { title: 'Heading 3', desc: '작은 제목', icon: 'H3', command: 'heading3' },
+                ]
+            },
+            {
+                category: 'LISTS',
+                items: [
+                    { title: 'Bulleted List', desc: '글머리 기호 목록', icon: '•', command: 'bulletList' },
+                    { title: 'Numbered List', desc: '번호 매기기 목록', icon: '1.', command: 'orderedList' },
+                ]
+            },
+            {
+                category: 'MEDIA',
+                items: [
+                    { title: 'Image', desc: '이미지 업로드', icon: '🖼️', command: 'image' },
+                    { title: 'Code Block', desc: '코드 블록 삽입', icon: '{ }', command: 'codeBlock' },
+                    { title: 'Table', desc: '표 삽입', icon: '⊞', command: 'table' },
+                ]
+            },
+            {
+                category: 'ADVANCED',
+                items: [
+                    { title: 'Quote', desc: '인용문 블록', icon: '"', command: 'blockquote' },
+                    { title: 'Divider', desc: '구분선 삽입', icon: '─', command: 'divider' },
+                ]
+            }
+        ];
+
+        // Slash Menu Component
+        class SlashMenu {
+            constructor(editor) {
+                this.editor = editor;
+                this.element = null;
+                this.selectedIndex = 0;
+                this.isVisible = false;
+                this.filteredCommands = [];
+                this.searchQuery = '';
+            }
+
+            show(query = '') {
+                this.searchQuery = query.toLowerCase();
+                this.filterCommands();
+
+                if (this.filteredCommands.length === 0) {
+                    this.hide();
+                    return;
+                }
+
+                if (!this.element) {
+                    this.createElement();
+                }
+
+                this.updatePosition();
+                this.render();
+                this.element.style.display = 'block';
+                this.isVisible = true;
+                this.selectedIndex = 0;
+            }
+
+            hide() {
+                if (this.element) {
+                    this.element.style.display = 'none';
+                }
+                this.isVisible = false;
+                this.searchQuery = '';
+            }
+
+            createElement() {
+                this.element = document.createElement('div');
+                this.element.className = 'slash-menu';
+                document.body.appendChild(this.element);
+
+                this.element.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                });
+            }
+
+            filterCommands() {
+                this.filteredCommands = [];
+                slashCommands.forEach(category => {
+                    const filtered = category.items.filter(item =>
+                        item.title.toLowerCase().includes(this.searchQuery) ||
+                        item.desc.toLowerCase().includes(this.searchQuery) ||
+                        item.command.toLowerCase().includes(this.searchQuery)
+                    );
+                    if (filtered.length > 0) {
+                        this.filteredCommands.push({ category: category.category, items: filtered });
+                    }
+                });
+            }
+
+            render() {
+                if (!this.element) return;
+
+                let html = '';
+                this.filteredCommands.forEach((category, catIndex) => {
+                    html += `<div class="slash-menu-category">${category.category}</div>`;
+                    category.items.forEach((item, itemIndex) => {
+                        const globalIndex = this.getGlobalIndex(catIndex, itemIndex);
+                        const isSelected = globalIndex === this.selectedIndex;
+                        html += `
+                            <div class="slash-menu-item ${isSelected ? 'selected' : ''}" data-command="${item.command}">
+                                <div class="slash-menu-icon">${item.icon}</div>
+                                <div class="slash-menu-content">
+                                    <div class="slash-menu-title">${item.title}</div>
+                                    <div class="slash-menu-desc">${item.desc}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                });
+
+                this.element.innerHTML = html;
+
+                // Add click handlers
+                this.element.querySelectorAll('.slash-menu-item').forEach((el, index) => {
+                    el.addEventListener('click', () => {
+                        this.executeCommand(el.dataset.command);
+                    });
+                });
+            }
+
+            getGlobalIndex(catIndex, itemIndex) {
+                let index = 0;
+                for (let i = 0; i < catIndex; i++) {
+                    index += this.filteredCommands[i].items.length;
+                }
+                return index + itemIndex;
+            }
+
+            getTotalItems() {
+                return this.filteredCommands.reduce((sum, cat) => sum + cat.items.length, 0);
+            }
+
+            updatePosition() {
+                const { selection } = this.editor.state;
+                const { from } = selection;
+                const coords = this.editor.view.coordsAtPos(from);
+
+                this.element.style.top = `${coords.bottom + window.scrollY + 5}px`;
+                this.element.style.left = `${coords.left + window.scrollX}px`;
+            }
+
+            navigateDown() {
+                const total = this.getTotalItems();
+                this.selectedIndex = (this.selectedIndex + 1) % total;
+                this.render();
+            }
+
+            navigateUp() {
+                const total = this.getTotalItems();
+                this.selectedIndex = (this.selectedIndex - 1 + total) % total;
+                this.render();
+            }
+
+            executeSelected() {
+                let currentIndex = 0;
+                for (const category of this.filteredCommands) {
+                    for (const item of category.items) {
+                        if (currentIndex === this.selectedIndex) {
+                            this.executeCommand(item.command);
+                            return;
+                        }
+                        currentIndex++;
+                    }
+                }
+            }
+
+            executeCommand(command) {
+                const { state, dispatch, view } = this.editor;
+                const { from, to } = state.selection;
+
+                // Delete the slash and query text
+                const tr = state.tr.delete(from - this.searchQuery.length - 1, to);
+                dispatch(tr);
+
+                // Execute command
+                setTimeout(() => {
+                    switch(command) {
+                        case 'paragraph':
+                            this.editor.chain().focus().setParagraph().run();
+                            break;
+                        case 'heading1':
+                            this.editor.chain().focus().setHeading({ level: 1 }).run();
+                            break;
+                        case 'heading2':
+                            this.editor.chain().focus().setHeading({ level: 2 }).run();
+                            break;
+                        case 'heading3':
+                            this.editor.chain().focus().setHeading({ level: 3 }).run();
+                            break;
+                        case 'bulletList':
+                            this.editor.chain().focus().toggleBulletList().run();
+                            break;
+                        case 'orderedList':
+                            this.editor.chain().focus().toggleOrderedList().run();
+                            break;
+                        case 'codeBlock':
+                            this.editor.chain().focus().toggleCodeBlock().run();
+                            break;
+                        case 'blockquote':
+                            this.editor.chain().focus().toggleBlockquote().run();
+                            break;
+                        case 'divider':
+                            this.editor.chain().focus().setHorizontalRule().run();
+                            break;
+                        case 'table':
+                            this.editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+                            break;
+                        case 'image':
+                            handleImageUpload();
+                            break;
+                    }
+                    this.hide();
+                }, 10);
+            }
+        }
+
+        // Initialize Slash Menu
+        let slashMenu = null;
+
         // Initialize Editor
         const editor = new Editor({
             element: document.querySelector('#editor'),
@@ -281,12 +577,64 @@
             editorProps: {
                 attributes: {
                     class: 'notion-editor-content'
+                },
+                handleKeyDown: (view, event) => {
+                    if (!slashMenu || !slashMenu.isVisible) return false;
+
+                    if (event.key === 'ArrowDown') {
+                        event.preventDefault();
+                        slashMenu.navigateDown();
+                        return true;
+                    }
+
+                    if (event.key === 'ArrowUp') {
+                        event.preventDefault();
+                        slashMenu.navigateUp();
+                        return true;
+                    }
+
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        slashMenu.executeSelected();
+                        return true;
+                    }
+
+                    if (event.key === 'Escape') {
+                        slashMenu.hide();
+                        return true;
+                    }
+
+                    return false;
                 }
             },
             onUpdate: ({ editor }) => {
                 handleEditorUpdate(editor);
+                handleSlashCommand(editor);
             }
         });
+
+        // Initialize slash menu after editor is ready
+        slashMenu = new SlashMenu(editor);
+
+        // Handle slash command detection
+        function handleSlashCommand(editor) {
+            const { state } = editor;
+            const { selection } = state;
+            const { $from } = selection;
+
+            // Get text before cursor
+            const textBefore = $from.parent.textContent.substring(0, $from.parentOffset);
+
+            // Check for slash command
+            const match = textBefore.match(/\/(\w*)$/);
+
+            if (match) {
+                const query = match[1];
+                slashMenu.show(query);
+            } else {
+                slashMenu.hide();
+            }
+        }
 
         // Global reference
         window.editorInstance = {
