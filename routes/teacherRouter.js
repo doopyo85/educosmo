@@ -228,11 +228,10 @@ router.get('/career-info', requireTeacher, (req, res) => {
 // 대학정보 (Map View)
 router.get('/career-info/university', requireTeacher, async (req, res) => {
     try {
-        // Try to fetch regions/universities from DB
         let universities = [];
         let isMock = false;
         try {
-            universities = await db.queryDatabase('SELECT id, name, region FROM admissions_universities LIMIT 20');
+            universities = await db.queryDatabase('SELECT id, name, region FROM admissions_universities LIMIT 100');
             if (!universities || universities.length === 0) throw new Error("DB Empty");
         } catch (e) {
             console.warn('DB Fetch failed, using mock data:', e.message);
@@ -240,14 +239,14 @@ router.get('/career-info/university', requireTeacher, async (req, res) => {
             isMock = true;
         }
 
-        res.render('teacher/career_info_university', {
+        res.render('career/index', {
             userID: req.session.userID,
             role: req.session.role,
             centerID: req.session.centerID,
-            currentView: 'university',
+            currentView: 'map', // Explicitly set view mode
             universities,
             isMock,
-            regions: ['서울', '경기', '부산', '대구', '인천', '광주', '대전']
+            regions: ['서울', '경기/인천', '부산/경남', '대구/경북', '광주/전남', '대전/충청', '강원', '제주']
         });
     } catch (error) {
         console.error('University info error:', error);
@@ -257,12 +256,14 @@ router.get('/career-info/university', requireTeacher, async (req, res) => {
 
 // 입결라인 (Matrix View)
 router.get('/career-info/cutlines', requireTeacher, (req, res) => {
-    res.render('teacher/career_info_cutlines', {
+    res.render('career/index', {
         userID: req.session.userID,
         role: req.session.role,
         centerID: req.session.centerID,
-        currentView: 'cutlines',
-        isMock: true // Currently always mock for matrix
+        currentView: 'matrix', // Explicitly set view mode
+        universities: MOCK_UNIVERSITIES, // Pass mock for matrix view context if needed
+        isMock: true,
+        regions: ['서울', '경기', '부산', '대구', '대전']
     });
 });
 

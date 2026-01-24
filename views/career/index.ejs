@@ -68,7 +68,7 @@
 
                 <div class="board-nav-group mb-2">
                     <div class="d-flex flex-column gap-1">
-                        <a href="/career" class="board-category-item ps-4 py-2 active"
+                        <a href="/teacher/career-info/university" class="board-category-item ps-4 py-2 active"
                             style="border-radius: 0 20px 20px 0;">
                             <i class="bi bi-mortarboard me-2"></i> 대학/학과 정보
                         </a>
@@ -107,11 +107,13 @@
 
                                 <!-- View Toggle -->
                                 <div class="btn-group" role="group" aria-label="View Toggle">
-                                    <button type="button" class="btn btn-outline-primary active view-toggle-btn"
+                                    <button type="button"
+                                        class="btn btn-outline-primary <%= (typeof currentView === 'undefined' || currentView === 'map' || currentView === 'university') ? 'active' : '' %> view-toggle-btn"
                                         id="btn-map-view">
                                         <i class="bi bi-map me-1"></i> 지도 뷰
                                     </button>
-                                    <button type="button" class="btn btn-outline-primary view-toggle-btn"
+                                    <button type="button"
+                                        class="btn btn-outline-primary <%= (currentView === 'matrix' || currentView === 'cutlines') ? 'active' : '' %> view-toggle-btn"
                                         id="btn-matrix-view">
                                         <i class="bi bi-table me-1"></i> 매트릭스 뷰
                                     </button>
@@ -119,7 +121,8 @@
                             </div>
 
                             <!-- 1. Map View Section -->
-                            <div id="view-map" class="row">
+                            <div id="view-map"
+                                class="row <%= (currentView === 'matrix' || currentView === 'cutlines') ? 'd-none' : '' %>">
                                 <!-- Left: Interactive Map Area -->
                                 <div class="col-lg-5 mb-4 mb-lg-0">
                                     <div class="card h-100 shadow-sm border-0">
@@ -190,7 +193,8 @@
                             </div>
 
                             <!-- 2. Matrix View Section (Hidden by default) -->
-                            <div id="view-matrix" class="d-none">
+                            <div id="view-matrix"
+                                class="<%= (currentView === 'matrix' || currentView === 'cutlines') ? '' : 'd-none' %>">
                                 <div class="card shadow-sm border-0">
                                     <div class="card-header bg-white py-3">
                                         <h6 class="fw-bold m-0"><i class="bi bi-grid-3x3 me-2"></i>성적 구간별 지원 가능 대학
@@ -292,7 +296,7 @@
                     if (matrixLoaded) return;
 
                     try {
-                        const response = await fetch('/career/api/results/matrix');
+                        const response = await fetch('/teacher/career-info/api/results/matrix');
                         const json = await response.json();
 
                         if (json.success) {
@@ -305,6 +309,11 @@
                         <tr><td colspan="2" class="text-danger">데이터를 불러오는데 실패했습니다.</td></tr>
                     `;
                     }
+                }
+
+                // Auto-load matrix data if initial view is matrix
+                if (!document.getElementById('view-matrix').classList.contains('d-none')) {
+                    loadMatrixData();
                 }
 
                 function renderMatrix(data) {
