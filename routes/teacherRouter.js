@@ -273,13 +273,23 @@ router.get('/career-info/api/results/matrix', requireTeacher, async (req, res) =
     res.json({ success: true, isMock: true, data: MOCK_RESULTS_MATRIX });
 });
 
-// 블로그
-router.get('/career-info/blog', requireTeacher, (req, res) => {
-    res.render('teacher/career_info_blog', {
+// 입시정보
+router.get('/career-info/admission-info', requireTeacher, (req, res) => {
+    res.render('teacher/career_info_admission', {
         userID: req.session.userID,
         role: req.session.role,
         centerID: req.session.centerID,
-        currentView: 'blog'
+        currentView: 'admission-info'
+    });
+});
+
+// 연간일정
+router.get('/career-info/schedule', requireTeacher, (req, res) => {
+    res.render('teacher/career_info_schedule', {
+        userID: req.session.userID,
+        role: req.session.role,
+        centerID: req.session.centerID,
+        currentView: 'schedule'
     });
 });
 

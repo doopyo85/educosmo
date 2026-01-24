@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>연간일정 - 코딩앤플레이</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/board-layout.css">
+    <link rel="stylesheet" href="/css/career.css">
+    <style>
+        .timeline-item {
+            border-left: 3px solid #0d6efd;
+            padding-left: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+        }
+        .timeline-item.competition::before {
+            background-color: #198754;
+        }
+        .timeline-item.competition {
+            border-left-color: #198754;
+        }
+        .filter-btn.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .event-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .month-divider {
+            background: linear-gradient(to right, #0d6efd 50%, transparent 50%);
+            background-size: 20px 2px;
+            height: 2px;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../partials/header') %>
+
+    <div class="board-layout-container">
+        <%- include('partials/sidebar', { currentView: 'schedule' }) %>
+
+        <div class="board-main-content">
+            <div class="career-container">
+                <!-- 헤더 -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold m-0 text-dark">
+                        <i class="bi bi-calendar-event me-2 text-primary"></i>연간일정
+                    </h4>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-calendar3 me-1"></i>2026년
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 필터 버튼 -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <span class="text-muted me-2">필터:</span>
+                            <button class="btn btn-sm btn-outline-primary filter-btn active" data-filter="all">
+                                <i class="bi bi-funnel me-1"></i>전체보기
+                            </button>
+                            <button class="btn btn-sm btn-outline-success filter-btn" data-filter="competition">
+                                <i class="bi bi-trophy me-1"></i>대회정보
+                            </button>
+                            <button class="btn btn-sm btn-outline-info filter-btn" data-filter="admission">
+                                <i class="bi bi-mortarboard me-1"></i>입시일정
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 타임라인 -->
+                <div id="timeline-container">
+                    <!-- 3월 -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-primary mb-3">
+                            <i class="bi bi-calendar3 me-2"></i>3월
+                        </h5>
+
+                        <div class="timeline-item competition" data-type="competition">
+                            <div class="event-card card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0">
+                                            <span class="badge bg-success me-2">대회</span>
+                                            한국정보올림피아드 1차 대회
+                                        </h6>
+                                        <small class="text-muted">03.15</small>
+                                    </div>
+                                    <p class="text-muted small mb-2">초등/중등/고등부 지역 예선</p>
+                                    <div class="d-flex gap-2">
+                                        <span class="badge bg-light text-dark">초등</span>
+                                        <span class="badge bg-light text-dark">중등</span>
+                                        <span class="badge bg-light text-dark">고등</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item" data-type="admission">
+                            <div class="event-card card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0">
+                                            <span class="badge bg-info me-2">입시</span>
+                                            수시 학생부 작성 시작
+                                        </h6>
+                                        <small class="text-muted">03.01</small>
+                                    </div>
+                                    <p class="text-muted small mb-0">고3 학생부 종합전형 준비 시작</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="month-divider"></div>
+
+                    <!-- 5월 -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-primary mb-3">
+                            <i class="bi bi-calendar3 me-2"></i>5월
+                        </h5>
+
+                        <div class="timeline-item competition" data-type="competition">
+                            <div class="event-card card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0">
+                                            <span class="badge bg-success me-2">대회</span>
+                                            한국정보올림피아드 2차 대회
+                                        </h6>
+                                        <small class="text-muted">05.10</small>
+                                    </div>
+                                    <p class="text-muted small mb-2">전국 본선</p>
+                                    <div class="d-flex gap-2">
+                                        <span class="badge bg-light text-dark">초등</span>
+                                        <span class="badge bg-light text-dark">중등</span>
+                                        <span class="badge bg-light text-dark">고등</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="month-divider"></div>
+
+                    <!-- 7월 -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-primary mb-3">
+                            <i class="bi bi-calendar3 me-2"></i>7월
+                        </h5>
+
+                        <div class="timeline-item competition" data-type="competition">
+                            <div class="event-card card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0">
+                                            <span class="badge bg-success me-2">대회</span>
+                                            국제정보올림피아드 (IOI)
+                                        </h6>
+                                        <small class="text-muted">07.중순</small>
+                                    </div>
+                                    <p class="text-muted small mb-2">국가대표 파견</p>
+                                    <div class="d-flex gap-2">
+                                        <span class="badge bg-light text-dark">국제대회</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="month-divider"></div>
+
+                    <!-- 9월 -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-primary mb-3">
+                            <i class="bi bi-calendar3 me-2"></i>9월
+                        </h5>
+
+                        <div class="timeline-item" data-type="admission">
+                            <div class="event-card card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0">
+                                            <span class="badge bg-info me-2">입시</span>
+                                            수시 원서접수 기간
+                                        </h6>
+                                        <small class="text-muted">09.09 ~ 09.13</small>
+                                    </div>
+                                    <p class="text-muted small mb-0">대학별 수시 원서 접수</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item" data-type="admission">
+                            <div class="event-card card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0">
+                                            <span class="badge bg-info me-2">입시</span>
+                                            수능 원서접수
+                                        </h6>
+                                        <small class="text-muted">09.03 ~ 09.07</small>
+                                    </div>
+                                    <p class="text-muted small mb-0">2027학년도 수능 원서접수</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="month-divider"></div>
+
+                    <!-- 11월 -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-primary mb-3">
+                            <i class="bi bi-calendar3 me-2"></i>11월
+                        </h5>
+
+                        <div class="timeline-item" data-type="admission">
+                            <div class="event-card card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0">
+                                            <span class="badge bg-info me-2">입시</span>
+                                            대학수학능력시험
+                                        </h6>
+                                        <small class="text-muted">11.14</small>
+                                    </div>
+                                    <p class="text-muted small mb-0">2027학년도 수능 시행</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="month-divider"></div>
+
+                    <!-- 12월 -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-primary mb-3">
+                            <i class="bi bi-calendar3 me-2"></i>12월
+                        </h5>
+
+                        <div class="timeline-item" data-type="admission">
+                            <div class="event-card card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0">
+                                            <span class="badge bg-info me-2">입시</span>
+                                            수능 성적 발표
+                                        </h6>
+                                        <small class="text-muted">12.06</small>
+                                    </div>
+                                    <p class="text-muted small mb-0">2027학년도 수능 성적표 배부</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item" data-type="admission">
+                            <div class="event-card card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0">
+                                            <span class="badge bg-info me-2">입시</span>
+                                            정시 원서접수
+                                        </h6>
+                                        <small class="text-muted">12.26 ~ 01.02</small>
+                                    </div>
+                                    <p class="text-muted small mb-0">정시 가/나/다군 원서 접수</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 안내 메시지 -->
+                <div class="alert alert-info d-flex align-items-center mt-4" role="alert">
+                    <i class="bi bi-info-circle-fill flex-shrink-0 me-2"></i>
+                    <div>
+                        <strong>알림:</strong> 일정은 변경될 수 있으니 반드시 공식 홈페이지를 확인하세요.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const timelineItems = document.querySelectorAll('.timeline-item');
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // 활성화 상태 업데이트
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const filter = btn.dataset.filter;
+
+                    // 필터링 로직
+                    timelineItems.forEach(item => {
+                        if (filter === 'all') {
+                            item.style.display = 'block';
+                        } else {
+                            if (item.dataset.type === filter) {
+                                item.style.display = 'block';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        }
+                    });
+
+                    // 월 구분선 표시/숨김 처리
+                    updateMonthDividers();
+                });
+            });
+
+            function updateMonthDividers() {
+                const months = document.querySelectorAll('.career-container > div > .mb-4');
+                months.forEach(month => {
+                    const visibleItems = month.querySelectorAll('.timeline-item[style="display: block;"], .timeline-item:not([style*="display: none"])');
+                    // 각 월별 섹션의 가시성 확인 로직은 필요시 추가
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

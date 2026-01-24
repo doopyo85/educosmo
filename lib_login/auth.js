@@ -527,7 +527,9 @@ router.post('/register', async (req, res) => {
             INSERT INTO Users (userID, password, email, name, role, centerID, account_type)
             VALUES (?, ?, ?, ?, 'student', ?, 'center_student')
         `;
-        const userValues = [userID, hashedPassword, email || null, name, centerID];
+        // email이 빈 문자열이면 null로 변환
+        const emailValue = (email && email.trim() !== '') ? email : null;
+        const userValues = [userID, hashedPassword, emailValue, name, centerID];
 
         await queryDatabase(insertUserQuery, userValues);
 

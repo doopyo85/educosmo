@@ -269,7 +269,8 @@
         <div class="board-layout-container">
             <!-- 🔥 왼쪽 네비게이션 (항상 고정) -->
             <!-- 🔥 왼쪽 네비게이션 (항상 고정) -->
-            <%- include('../partials/board_sidebar', { currentCategory: currentCategory }) %>
+            <%- include('../partials/board_sidebar', { currentCategory: typeof currentCategory !=='undefined' ?
+                currentCategory : 'all' }) %>
 
                 <!-- 🔥 메인 콘텐츠 (고정 너비) -->
                 <div class="board-main-content">
