@@ -129,6 +129,15 @@ app.get('/', async (req, res) => {
         const limit = 10;
         const offset = (page - 1) * limit;
 
+        // [DEBUG] Session check
+        console.log(`[Blog Home] Subdomain: ${req.blog.subdomain}, UserID in Session: ${req.session?.userID} (DB ID: ${req.session?.dbId || req.session?.user?.id})`);
+        console.log(`[Blog Home] Blog Owner ID: ${req.blogOwner?.id}`);
+        console.log(`[Blog Home] Visitor Session:`, JSON.stringify({
+            id: req.session?.id,
+            user: req.session?.user,
+            is_logined: req.session?.is_logined
+        }, null, 2));
+
         // Fetch Posts
         const posts = await queryDatabase(`
             SELECT id, title, slug, excerpt, thumbnail_url, view_count, created_at, file_type, published_to_platform
