@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Basic Meta Tags -->
-    <title><%= seoData?.title || blog.title %></title>
+    <title>
+        <%= seoData?.title || blog.title %>
+    </title>
     <meta name="description" content="<%= seoData?.description || blog.description || '' %>">
     <meta name="keywords" content="코딩, 프로그래밍, 블로그, <%= owner.name %>, MyUniverse">
     <meta name="author" content="<%= owner.name %>">
@@ -209,17 +211,10 @@
                     <i class="fa-solid fa-house"></i> 홈 (Home)
                 </a>
 
-                <%
-                    // Check Owner for Write Button
-                    let isOwner = false;
-                    // Internal access via /blog proxies session
-                    // Adjust based on your actual session structure logged in server-blog.js
-                    if (user && user.user) {
-                        isOwner = (user.user.id == owner.id) || (user.id == owner.id);
-                    } else if (user && user.id) {
-                        isOwner = (user.id == owner.id);
-                    }
-                %>
+                <% // Check Owner for Write Button let isOwner=false; // console.log('Session User:', user); // Debug if
+                    needed // Robust check matching server logic let visitorId=null; if (user) { if (user.user &&
+                    user.user.id) visitorId=user.user.id; else if (user.id) visitorId=user.id; } if (visitorId && owner
+                    && visitorId==owner.id) { isOwner=true; } %>
 
                     <% if(isOwner) { %>
                         <div class="mt-3">

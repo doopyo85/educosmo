@@ -45,7 +45,8 @@
       "Bash(pm2 list:*)",
       "Bash(npm uninstall:*)",
       "Bash(ls:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(if exist nul del nul)"
     ]
   }
 }
