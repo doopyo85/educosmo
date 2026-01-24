@@ -434,6 +434,36 @@ async function loadCenterInfo() {
                 // 다음 결제일
                 document.getElementById('centerNextBilling').value = sub.next_billing_date ?
                     new Date(sub.next_billing_date).toLocaleDateString('ko-KR') : '-';
+
+                // 구독 상태에 따른 액션 버튼 생성
+                const actionsContainer = document.getElementById('subscriptionActions');
+                actionsContainer.innerHTML = '';
+
+                if (sub.status === 'trial') {
+                    // Trial: 플랜 선택하기 버튼
+                    actionsContainer.innerHTML = `
+                        <button class="btn btn-sm btn-primary flex-grow-1" onclick="changePlan()" style="font-size: 11px;">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>플랜 선택하기
+                        </button>
+                    `;
+                } else if (sub.status === 'active') {
+                    // Active: 플랜 변경, 구독 취소 버튼
+                    actionsContainer.innerHTML = `
+                        <button class="btn btn-sm btn-outline-primary flex-grow-1" onclick="changePlan()" style="font-size: 11px;">
+                            <i class="bi bi-arrow-repeat me-1"></i>플랜 변경
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger flex-grow-1" onclick="cancelSubscription()" style="font-size: 11px;">
+                            <i class="bi bi-x-circle me-1"></i>구독 취소
+                        </button>
+                    `;
+                } else if (sub.status === 'suspended' || sub.status === 'cancelled') {
+                    // Suspended/Cancelled: 구독 재개하기 버튼
+                    actionsContainer.innerHTML = `
+                        <button class="btn btn-sm btn-success flex-grow-1" onclick="resumeSubscription()" style="font-size: 11px;">
+                            <i class="bi bi-arrow-clockwise me-1"></i>구독 재개하기
+                        </button>
+                    `;
+                }
             } else {
                 document.getElementById('centerSubscriptionStatus').value = '정보 없음';
                 document.getElementById('centerNextBilling').value = '-';
@@ -619,4 +649,59 @@ function formatBytes(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+// 구독 관리 페이지로 이동
+function goToSubscriptionManage() {
+    window.open('/subscription/manage', '_blank');
+}
+
+// 플랜 변경 페이지로 이동
+function changePlan() {
+    window.open('/subscription/plans', '_blank');
+}
+
+// 구독 취소
+async function cancelSubscription() {
+    if (!confirm('정말 구독을 취소하시겠습니까?\n\n취소 시 다음 결제일까지 서비스를 이용할 수 있으며, 이후 서비스가 중단됩니다.')) {
+        return;
+    }
+
+    try {
+        const res = await fetch('/subscription/cancel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+            alert('구독이 취소되었습니다.\n다음 결제일까지 서비스를 계속 이용하실 수 있습니다.');
+            // 센터 정보 모달 새로고침
+            if (window.currentCenterID) {
+                loadCenterInfo();
+            }
+        } else {
+            alert('구독 취소에 실패했습니다: ' + result.message);
+        }
+    } catch (error) {
+        console.error('구독 취소 실패:', error);
+        alert('구독 취소 중 오류가 발생했습니다.');
+    }
+}
+
+// 구독 재개
+async function resumeSubscription() {
+    if (!confirm('구독을 재개하시겠습니까?')) {
+        return;
+    }
+
+    try {
+        // 플랜 선택 페이지로 이동
+        window.open('/subscription/plans', '_blank');
+    } catch (error) {
+        console.error('구독 재개 실패:', error);
+        alert('구독 재개 중 오류가 발생했습니다.');
+    }
 }
