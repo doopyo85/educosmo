@@ -1,0 +1,588 @@
+================================================================================
+MESSENGER-SYSTEM (너구리톡) 레이아웃 가이드
+================================================================================
+작성일: 2026-01-24
+버전: 1.0
+시스템: Messenger-System (너구리톡 - Nuguri Talk)
+
+================================================================================
+📋 시스템 개요
+================================================================================
+
+Messenger-System은 실시간 채팅과 태스크 관리를 위한 모바일 특화 레이아웃입니다.
+추후 모바일 앱으로 확장될 예정으로, 독립적인 메신저 UI 구조를 유지합니다.
+
+주요 특징:
+  ✅ 모바일 우선(Mobile-First) 설계
+  ✅ CSS Grid 2열 레이아웃 (채팅 + 태스크)
+  ✅ 실시간 메시지 업데이트
+  ✅ 반응형 디자인 (데스크톱 → 모바일 스택)
+  ✅ 독립 페이지 (사이드바 없음)
+  ✅ PWA(Progressive Web App) 확장 가능
+
+다른 시스템과의 차이점:
+  - Component-System: 학습 도구 중심
+  - Card-Layout-System: 프로젝트 선택 중심
+  - Board-System: 관리자 대시보드 중심
+  - Messenger-System: 실시간 커뮤니케이션 중심 ⭐
+
+================================================================================
+🎯 라우트 및 파일 구조
+================================================================================
+
+라우트:
+  /board → 너구리톡 메인 페이지
+
+파일 구조:
+views/
+  └─ board.ejs                       🆕 너구리톡 독립 페이지
+     - 독립적인 HTML 구조
+     - board-base-layout 사용 안 함
+     - 모바일 메신저 특화
+
+public/css/
+  └─ nuguri.css                      🆕 너구리톡 전용 CSS
+     - CSS Grid 2열 레이아웃
+     - 메시지 말풍선 스타일
+     - 태스크 카드 스타일
+     - 모바일 반응형
+
+public/js/
+  ├─ board.js                        🔥 채팅 기능 (메시지 전송/수신)
+  └─ tasks.js                        🔥 태스크 관리 (진행률 표시)
+
+server.js (라우트):
+  app.get('/board', async (req, res) => {
+    const posts = await db.all('SELECT * FROM posts ORDER BY created_at DESC');
+    res.render('board', { posts, user: req.session.user });
+  });
+
+================================================================================
+📐 레이아웃 구조
+================================================================================
+
+┌────────────────────────────────────────────────────────────────────────┐
+│                         HEADER (공통 헤더)                            │
+├───────────────────────────────┬────────────────────────────────────────┤
+│                               │                                        │
+│     📌 채팅 영역 (50%)        │     📌 태스크 영역 (50%)              │
+│                               │                                        │
+│  ┌─────────────────────────┐  │  ┌──────────────────────────────────┐│
+│  │ 메시지 목록             │  │  │  너구리 이미지 + 말풍선          ││
+│  │ (스크롤 가능)           │  │  └──────────────────────────────────┘│
+│  │                         │  │                                        │
+│  │ 👤 사용자: 메시지...    │  │  📋 현재 진행 중인 업무               │
+│  │ 👤 사용자: 메시지...    │  │                                        │
+│  │                         │  │  ┌──────────────────────────────────┐│
+│  └─────────────────────────┘  │  │ 업무명: 홈페이지 리뉴얼          ││
+│                               │  │ 코멘트: 디자인 검토 중           ││
+│  ┌─────────────────────────┐  │  │ 진행률: [████████░░] 80%         ││
+│  │ 💬 입력창 + 전송 버튼   │  │  └──────────────────────────────────┘│
+│  └─────────────────────────┘  │                                        │
+│                               │  ┌──────────────────────────────────┐│
+│                               │  │ 업무명: 데이터베이스 최적화      ││
+│                               │  │ 코멘트: 인덱스 추가 완료         ││
+│                               │  │ 진행률: [██████░░░░] 60%         ││
+│                               │  └──────────────────────────────────┘│
+└───────────────────────────────┴────────────────────────────────────────┘
+
+모바일 레이아웃 (992px 이하):
+┌────────────────────────────────────┐
+│          HEADER (공통 헤더)        │
+├────────────────────────────────────┤
+│     📌 채팅 영역 (전체 너비)       │
+│  ┌──────────────────────────────┐  │
+│  │ 메시지 목록                  │  │
+│  └──────────────────────────────┘  │
+│  ┌──────────────────────────────┐  │
+│  │ 💬 입력창 + 전송 버튼        │  │
+│  └──────────────────────────────┘  │
+├────────────────────────────────────┤
+│     📌 태스크 영역 (전체 너비)     │
+│  ┌──────────────────────────────┐  │
+│  │ 너구리 이미지 + 말풍선       │  │
+│  └──────────────────────────────┘  │
+│  ┌──────────────────────────────┐  │
+│  │ 업무 카드 1                  │  │
+│  └──────────────────────────────┘  │
+│  ┌──────────────────────────────┐  │
+│  │ 업무 카드 2                  │  │
+│  └──────────────────────────────┘  │
+└────────────────────────────────────┘
+
+================================================================================
+🎨 CSS Grid 레이아웃 (nuguri.css)
+================================================================================
+
+데스크톱 (992px 이상):
+```css
+.container .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;  /* 50% + 50% */
+  gap: 20px;
+}
+```
+
+모바일 (992px 이하):
+```css
+@media (max-width: 992px) {
+  .container .row {
+    grid-template-columns: 1fr;  /* 세로 스택 */
+  }
+}
+```
+
+주요 컨테이너:
+  .direct-message     → 채팅 컨테이너 (왼쪽)
+  .task-container     → 태스크 컨테이너 (오른쪽)
+
+================================================================================
+💬 채팅 영역 상세 구조
+================================================================================
+
+HTML 구조:
+```html
+<div class="col-lg-6 col-md-6">
+  <main class="direct-message">
+    <!-- 📌 메시지 목록 (스크롤 가능) -->
+    <div class="messages" id="chat-box">
+      <div class="message-container">
+        <div class="profile-wrapper">
+          <img src="/resource/co.ico" class="favicon">
+        </div>
+        <div class="message-content">
+          <div class="message-header">
+            <span class="message-author">사용자명</span>
+            <span class="message-time">2026-01-24 14:30</span>
+          </div>
+          <div class="message-bubble">
+            <p>메시지 내용</p>
+            <a href="/board/delete/123" class="delete-btn">
+              <i class="bi bi-x"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 📌 입력창 -->
+    <div class="new">
+      <textarea class="new-input" id="chat-input"
+                placeholder="한마디를 입력하세요 (최대 50자)"
+                maxlength="50"></textarea>
+      <button type="submit" class="material-button" id="send-btn">
+        <i class="fa fa-comment"></i>
+        <span class="screen-reader-text">보내기</span>
+      </button>
+    </div>
+  </main>
+</div>
+```
+
+CSS 주요 클래스:
+  .direct-message      → 채팅 메인 컨테이너 (80vh 고정 높이)
+  .messages            → 메시지 목록 (스크롤 가능, 70vh max-height)
+  .message-container   → 개별 메시지 컨테이너
+  .message-bubble      → 말풍선 스타일
+  .new-input           → 입력창 (border-radius: 20px)
+  .material-button     → 전송 버튼 (녹색 배경)
+
+스크롤 동작:
+  - .messages 영역만 스크롤
+  - 입력창은 하단 고정
+  - overflow-y: auto
+
+================================================================================
+📋 태스크 영역 상세 구조
+================================================================================
+
+HTML 구조:
+```html
+<div class="col-lg-6 col-md-6">
+  <div class="task-container">
+    <!-- 📌 너구리 이미지 + 말풍선 -->
+    <div class="text-center position-relative">
+      <img src="/resource/sleep_nuguri.webp" alt="너구리" class="naguri-img">
+      <div class="speech-bubble">자는 중...</div>
+    </div>
+
+    <!-- 📌 태스크 목록 -->
+    <h4 class="mt-3">현재 진행 중인 업무</h4>
+    <div id="task-list">
+      <!-- JavaScript로 동적 로딩 -->
+    </div>
+  </div>
+</div>
+```
+
+너구리 이미지 랜덤 선택 (EJS):
+```ejs
+<%
+const images = [
+  { src: "sleep_nuguri.webp", text: "자는 중..." },
+  { src: "coffee_nuguri.webp", text: "커피 마시는 중..." },
+  { src: "coding_nuguri.webp", text: "코딩 하는 중..." }
+];
+const randomImage = images[Math.floor(Math.random() * images.length)];
+%>
+```
+
+CSS 주요 클래스:
+  .task-container      → 태스크 메인 컨테이너
+  .naguri-img          → 너구리 이미지 (250px, border-radius: 15px)
+  .speech-bubble       → 말풍선 (절대 위치, 꼬리 포함)
+  .task-card           → 업무 카드 (흰 배경, 그림자)
+  .progress-bar        → 진행률 바 (녹색)
+
+================================================================================
+🔄 JavaScript 기능
+================================================================================
+
+1. board.js (채팅 기능)
+```javascript
+// 메시지 전송
+document.getElementById('send-btn').addEventListener('click', async () => {
+  const input = document.getElementById('chat-input');
+  const message = input.value.trim();
+
+  if (message) {
+    await fetch('/board/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: message })
+    });
+
+    location.reload();  // 새 메시지 로드
+  }
+});
+
+// Enter 키 전송
+document.getElementById('chat-input').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById('send-btn').click();
+  }
+});
+```
+
+2. tasks.js (태스크 관리)
+```javascript
+// Google Sheets에서 태스크 로드
+async function loadTasks() {
+  const response = await fetch('/api/tasks');
+  const tasks = await response.json();
+
+  const taskList = document.getElementById('task-list');
+  taskList.innerHTML = tasks.map(task => `
+    <div class="task-card">
+      <div class="card-title">${task.name}</div>
+      <div class="card-comment">${task.comment}</div>
+      <div class="progress">
+        <div class="progress-bar" style="width: ${task.progress}%">
+          ${task.progress}%
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', loadTasks);
+```
+
+================================================================================
+📱 모바일 최적화 전략
+================================================================================
+
+반응형 브레이크포인트:
+  - 데스크톱: 992px 이상 → 2열 그리드
+  - 태블릿/모바일: 992px 이하 → 1열 스택
+
+모바일 터치 최적화:
+```css
+/* 터치 영역 확대 */
+.material-button {
+  min-height: 44px;  /* iOS 권장 최소 터치 크기 */
+  min-width: 44px;
+}
+
+.delete-btn {
+  padding: 8px;  /* 터치 영역 확대 */
+}
+
+/* 스크롤 최적화 */
+.messages {
+  -webkit-overflow-scrolling: touch;  /* iOS 부드러운 스크롤 */
+}
+```
+
+PWA 확장 준비:
+  1. manifest.json 생성
+  2. Service Worker 등록
+  3. 오프라인 캐싱
+  4. 푸시 알림 설정
+  5. 모바일 앱처럼 설치 가능
+
+================================================================================
+🎨 디자인 시스템
+================================================================================
+
+색상 팔레트:
+  - 배경: #F5F5F5 (연한 회색)
+  - 카드: #FFFFFF (흰색)
+  - 말풍선: #f0f0f0 (기본), #E8EAF6 (보낸 메시지)
+  - 전송 버튼: green (녹색)
+  - 진행률 바: #4CAF50 (녹색)
+
+타이포그래피:
+  - 제목(h1): fw-bold
+  - 부제목(h5): .chat-subtitle
+  - 업무명: 1.2rem, bold
+  - 코멘트: 0.9rem, gray
+  - 날짜: 12px, gray
+
+간격:
+  - 카드 간격: 15px
+  - 그리드 간격: 20px
+  - 컨테이너 패딩: 20px
+  - 입력창 패딩: 10px
+
+그림자:
+  - 카드: 0 4px 10px rgba(0,0,0,0.1)
+  - 업무 카드: 0 4px 8px rgba(0,0,0,0.1)
+  - 너구리 이미지: 2px 4px 10px rgba(0,0,0,0.1)
+  - 말풍선: 1px 2px 5px rgba(0,0,0,0.2)
+
+================================================================================
+🔒 독립성 보장
+================================================================================
+
+nuguri.css 스코핑:
+  ❌ 금지: 전역 body, html 스타일
+  ✅ 허용: .direct-message, .task-container 내부만
+  ✅ 허용: 모바일 미디어 쿼리 (격리됨)
+
+다른 시스템과의 격리:
+  - board.ejs는 독립 페이지 (board-base-layout 사용 안 함)
+  - nuguri.css는 다른 페이지에 영향 없음
+  - board.js, tasks.js는 /board 라우트에서만 로드
+
+CSS 우선순위:
+  1. nuguri.css (Messenger-System 전용)
+  2. styles.css (공통 기본 스타일)
+  3. header.css (공통 헤더)
+
+================================================================================
+📊 성능 최적화
+================================================================================
+
+CSS Grid 성능:
+  ✅ GPU 가속 활용
+  ✅ Flexbox보다 빠른 레이아웃 계산
+  ✅ 반응형 전환 부드러움
+
+스크롤 성능:
+  - overflow-y: auto (불필요한 스크롤바 숨김)
+  - max-height: 70vh (고정 높이로 레이아웃 안정화)
+  - padding-right: 10px (스크롤바 여백)
+
+이미지 최적화:
+  - WebP 포맷 (sleep_nuguri.webp, coffee_nuguri.webp, coding_nuguri.webp)
+  - Lazy Loading 가능 (추후 추가)
+  - 이미지 크기: 250px (적절한 해상도)
+
+JavaScript 최적화:
+  - DOMContentLoaded 이후 초기화
+  - 이벤트 위임 (동적 요소)
+  - Fetch API (비동기 통신)
+
+================================================================================
+🚀 추가 기능 로드맵
+================================================================================
+
+Phase 1: 현재 (기본 채팅 + 태스크)
+  ✅ 실시간 메시지 표시
+  ✅ 태스크 진행률 표시
+  ✅ 모바일 반응형
+  ✅ 독립 레이아웃
+
+Phase 2: 실시간 업데이트
+  ⏳ WebSocket 연결
+  ⏳ 메시지 실시간 푸시
+  ⏳ 타이핑 인디케이터
+  ⏳ 읽음 표시
+
+Phase 3: 모바일 앱 전환
+  ⏳ PWA manifest.json
+  ⏳ Service Worker
+  ⏳ 오프라인 모드
+  ⏳ 푸시 알림
+  ⏳ 홈 화면 추가
+
+Phase 4: 고급 기능
+  ⏳ 이미지/파일 첨부
+  ⏳ 이모지 반응
+  ⏳ 메시지 검색
+  ⏳ 스레드(답글)
+  ⏳ 사용자 프로필
+
+================================================================================
+🛠️ 디버깅 가이드
+================================================================================
+
+일반적인 문제:
+
+1. 메시지가 표시 안 됨
+   - DB 연결 확인: SELECT * FROM posts;
+   - EJS 변수 확인: <%= posts %>
+   - 콘솔 에러 확인: F12 → Console
+
+2. 입력창이 작동 안 됨
+   - board.js 로드 확인: <script src="/js/board.js">
+   - 이벤트 리스너 확인: console.log('send-btn clicked')
+   - 라우트 확인: POST /board/add
+
+3. 태스크가 로드 안 됨
+   - tasks.js 로드 확인
+   - API 응답 확인: /api/tasks
+   - Google Sheets 연동 확인
+
+4. 모바일에서 레이아웃 깨짐
+   - 뷰포트 메타태그: <meta name="viewport" ...>
+   - 미디어 쿼리 확인: @media (max-width: 992px)
+   - 브라우저 DevTools 모바일 뷰
+
+5. CSS가 적용 안 됨
+   - 파일 경로: /css/nuguri.css
+   - 캐시 클리어: Ctrl+F5
+   - CSS 우선순위: !important 사용 금지
+
+================================================================================
+📝 코드 예제
+================================================================================
+
+완전한 board.ejs 구조:
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일해라 너구리</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/nuguri.css">
+    <link rel="stylesheet" href="/css/header.css">
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <div class="container-fluid text-center mt-4">
+        <h1 class="fw-bold">일해라 너구리</h1>
+        <h5 class="chat-subtitle">필요한 것을 여기에 남기면, 너구리가 만듭니다.</h5>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- 채팅 영역 -->
+            <div class="col-lg-6 col-md-6">
+                <!-- 채팅 UI -->
+            </div>
+
+            <!-- 태스크 영역 -->
+            <div class="col-lg-6 col-md-6">
+                <!-- 태스크 UI -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/header.js"></script>
+    <script src="/tasks.js"></script>
+    <script src="/js/board.js"></script>
+</body>
+</html>
+```
+
+================================================================================
+⚠️ 주의사항
+================================================================================
+
+수정 금지 항목:
+  ❌ 다른 시스템 CSS (component-system, card-layout, board-system)
+  ❌ 공통 헤더 구조 (header.ejs, header.css)
+  ❌ 전역 styles.css의 기본 스타일
+
+수정 시 주의:
+  ⚠️ nuguri.css에 전역 스타일 추가 금지
+  ⚠️ board.ejs는 독립 페이지로 유지
+  ⚠️ 모바일 테스트 필수 (Chrome DevTools)
+
+테스트 체크리스트:
+  ✅ 데스크톱에서 2열 그리드 확인
+  ✅ 모바일에서 세로 스택 확인
+  ✅ 메시지 전송 확인
+  ✅ 태스크 로드 확인
+  ✅ 스크롤 동작 확인
+  ✅ 다른 페이지(index.ejs, teacher.ejs)에 영향 없는지 확인
+
+================================================================================
+📚 참고 자료
+================================================================================
+
+관련 문서:
+  - docs/layout-systems/README.txt (4가지 시스템 비교)
+  - docs/layout-systems/board-system.txt (Board-System 가이드)
+  - docs/layout-systems/MIGRATION-SUMMARY.txt (마이그레이션 요약)
+
+외부 라이브러리:
+  - Bootstrap 5.3.3 (Grid, Carousel)
+  - Bootstrap Icons 1.11.3 (아이콘)
+  - Font Awesome (전송 버튼 아이콘)
+
+CSS 참고:
+  - CSS Grid Layout: https://css-tricks.com/snippets/css/complete-guide-grid/
+  - Flexbox: https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+  - Media Queries: https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries
+
+================================================================================
+✅ 체크리스트
+================================================================================
+
+Messenger-System 완성 확인:
+  ✅ board.ejs 독립 페이지 구조
+  ✅ nuguri.css CSS Grid 레이아웃
+  ✅ board.js 채팅 기능
+  ✅ tasks.js 태스크 관리
+  ✅ 모바일 반응형 (992px 브레이크포인트)
+  ✅ 다른 시스템과 격리
+  ✅ PWA 확장 준비
+
+문서화 완성:
+  ✅ README.txt에 Messenger-System 추가
+  ✅ messenger-system.txt 상세 가이드 작성
+  ✅ 모바일 최적화 전략 문서화
+  ✅ 추가 기능 로드맵 작성
+
+================================================================================
+🎉 결론
+================================================================================
+
+Messenger-System(너구리톡)은 모바일 메신저로 확장 가능한 독립 레이아웃입니다.
+
+주요 장점:
+  1. 모바일 우선 설계로 사용자 경험 최적화
+  2. CSS Grid 레이아웃으로 성능 향상
+  3. 다른 시스템과 완전히 격리되어 안전
+  4. PWA로 확장 가능한 구조
+  5. 실시간 채팅 + 태스크 관리 통합
+
+다음 단계:
+  1. WebSocket 연동 (실시간 업데이트)
+  2. PWA manifest.json 생성
+  3. Service Worker 등록
+  4. 푸시 알림 설정
+  5. 모바일 앱 배포
+
+================================================================================
+작성자: Claude Sonnet 4.5
+작성일: 2026-01-24
+프로젝트: Educosmo Messenger-System Documentation
+================================================================================
