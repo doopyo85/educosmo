@@ -759,7 +759,7 @@ router.post('/:id/invite-code', authenticateUser, checkResourcePermission('cente
       });
     }
 
-    // 초대 코드 생성 (센터장 아이디 + 랜덤 4자리)
+    // 초대 코드 생성 (최대 20자)
     let inviteCode;
     if (codePrefix) {
       // 센터장 아이디를 접두사로 사용하고 랜덤 4자리 추가
@@ -773,10 +773,21 @@ router.post('/:id/invite-code', authenticateUser, checkResourcePermission('cente
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
+    // created_by를 위해 사용자의 DB id를 조회
+    const [creatorUser] = await queryDatabase('SELECT id FROM Users WHERE userID = ?', [req.session.userID]);
+    const createdById = creatorUser ? creatorUser.id : null;
+
+    if (!createdById) {
+      return res.status(400).json({
+        success: false,
+        message: '사용자 정보를 찾을 수 없습니다.'
+      });
+    }
+
     const result = await queryDatabase(
       `INSERT INTO center_invite_codes (center_id, code, expires_at, max_uses, created_by, created_at)
        VALUES (?, ?, ?, ?, ?, NOW())`,
-      [centerId, inviteCode, expiresAt.toISOString().slice(0, 19).replace('T', ' '), maxUses, req.session.userID]
+      [centerId, inviteCode, expiresAt.toISOString().slice(0, 19).replace('T', ' '), maxUses, createdById]
     );
 
     res.json({
@@ -868,9 +879,9 @@ router.get('/:id/invite-codes', authenticateUser, checkResourcePermission('cente
 
     console.log(`[API] Fetching invite codes for center ${centerId}`);
     const inviteCodes = await queryDatabase(
-      `SELECT ic.*, u.username as created_by_username
+      `SELECT ic.*, u.userID as created_by_username, u.name as created_by_name
        FROM center_invite_codes ic
-       LEFT JOIN Users u ON ic.created_by = u.userID
+       LEFT JOIN Users u ON ic.created_by = u.id
        WHERE ic.center_id = ?
        ORDER BY ic.created_at DESC`,
       [centerId]
