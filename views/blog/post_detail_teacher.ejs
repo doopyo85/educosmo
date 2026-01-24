@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= seoData.title %>
+    </title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #fff;
+        }
+
+        .post-header {
+            background: #f8f9fa;
+            padding: 3rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .content-area {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .content-area img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .content-area pre {
+            background: #282c34;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .admin-panel {
+            background: #f1f3f5;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-mortarboard-fill text-primary me-2"></i>EduPlan
+            </a>
+        </div>
+    </header>
+
+    <!-- Post Header -->
+    <section class="post-header text-center">
+        <div class="container">
+            <span class="badge bg-secondary mb-2">
+                <%= (post.file_type || 'POST' ).toUpperCase() %>
+            </span>
+            <h1 class="fw-bold mb-3">
+                <%= post.title %>
+            </h1>
+            <div class="text-muted">
+                <span>
+                    <%= new Date(post.created_at).toLocaleDateString() %>
+                </span>
+                <span class="mx-2">|</span>
+                <span><i class="bi bi-eye me-1"></i>
+                    <%= post.view_count %>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Panel (Owner Only) -->
+    <% if (user && user.is_logined && owner && user.user.id==owner.id) { %>
+        <div class="container mt-4">
+            <div class="admin-panel border">
+                <h6 class="fw-bold mb-3"><i class="bi bi-gear-fill me-2"></i>교사용 관리 패널</h6>
+                <div class="d-flex gap-2">
+                    <a href="/write?edit=<%= post.id %>" class="btn btn-outline-secondary btn-sm">수정</a>
+                    <% if (post.file_type==='py' ) { %>
+                        <% if (post.published_to_platform) { %>
+                            <button class="btn btn-success btn-sm" disabled><i class="bi bi-check-circle me-1"></i>문제은행
+                                등록됨</button>
+                            <button onclick="unpublishPlatform('<%= post.id %>')"
+                                class="btn btn-outline-danger btn-sm">등록 취소</button>
+                            <% } else { %>
+                                <button onclick="publishToPlatform('<%= post.id %>')" class="btn btn-primary btn-sm"><i
+                                        class="bi bi-cloud-upload me-1"></i>문제은행 등록</button>
+                                <% } %>
+                                    <% } %>
+                                        <button onclick="deletePost('<%= post.id %>')"
+                                            class="btn btn-outline-danger btn-sm ms-auto">삭제</button>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+            <!-- Content -->
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 content-area">
+                        <%- post.content %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scripts -->
+            <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+            <script>hljs.highlightAll();</script>
+            <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+            <script>
+                async function publishToPlatform(id) {
+                    if (!confirm('이 Python 문제를 문제은행에 등록하시겠습니까?')) return;
+                    try {
+                        await axios.post(`/api/teacher/post/${id}/publish-to-platform`);
+                        alert('등록되었습니다.');
+                        location.reload();
+                    } catch (e) {
+                        alert(e.response?.data?.error || '오류가 발생했습니다.');
+                    }
+                }
+
+                async function unpublishPlatform(id) {
+                    if (!confirm('문제은행 등록을 취소하시겠습니까?')) return;
+                    try {
+                        await axios.delete(`/api/teacher/post/${id}/unpublish-from-platform`);
+                        alert('등록이 취소되었습니다.');
+                        location.reload();
+                    } catch (e) {
+                        alert(e.response?.data?.error || '오류가 발생했습니다.');
+                    }
+                }
+
+                async function deletePost(id) {
+                    if (!confirm('정말 삭제하시겠습니까?')) return;
+                    try {
+                        await axios.delete(`/api/teacher/post/${id}`);
+                        location.href = '/';
+                    } catch (e) {
+                        alert(e.response?.data?.error || '오류가 발생했습니다.');
+                    }
+                }
+            </script>
+</body>
+
+</html>

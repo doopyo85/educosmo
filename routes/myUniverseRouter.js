@@ -532,6 +532,12 @@ router.get('/blog', async (req, res) => {
             return res.redirect(`/blog/${blog.subdomain}`);
         }
 
+        // [NEW] Check if teacher blog exists
+        const [teacherBlog] = await db.queryDatabase('SELECT subdomain FROM teacher_blogs WHERE user_id = ?', [user.id]);
+        if (teacherBlog) {
+            return res.redirect(`/blog/${teacherBlog.subdomain}`);
+        }
+
         // Render Create Page
         res.render('my-universe/index', {
             activeTab: 'blog_create',

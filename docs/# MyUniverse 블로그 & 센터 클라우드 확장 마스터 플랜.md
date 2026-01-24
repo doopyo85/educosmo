@@ -113,7 +113,7 @@
         ```
     *   **Routes**:
         *   `GET /teacher/blog`: 교사 블로그 대시보드
-        *   `GET /teacher/blog/write`: 글쓰기 에디터 (ToastUI/Editor.js + MD)
+        *   `GET /teacher/blog/write`: 글쓰기 에디터 (Tiptap Block Editor + JSON/HTML)
         *   `POST /api/teacher/posts`: 교안 저장/발행
 
 ### Phase 4: B2B SaaS 기능 (✅ 완료)

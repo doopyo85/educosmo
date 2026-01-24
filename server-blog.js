@@ -76,7 +76,7 @@ app.use(async (req, res, next) => {
     }
 
     try {
-        // 1. Check User Blogs
+        // 1. Check User Blogs (Student)
         let [userBlog] = await queryDatabase('SELECT * FROM user_blogs WHERE subdomain = ?', [subdomain]);
         if (userBlog) {
             req.blog = userBlog;
@@ -88,7 +88,20 @@ app.use(async (req, res, next) => {
             return next();
         }
 
-        // 2. Check Center Blogs
+        // 2. Check Teacher Blogs (Before Center or After User)
+        // If not found in user_blogs, check if it's a teacher blog with the same subdomain (username)
+        let [teacherBlog] = await queryDatabase('SELECT * FROM teacher_blogs WHERE subdomain = ?', [subdomain]);
+        if (teacherBlog) {
+            req.blog = teacherBlog;
+            req.blogType = 'teacher';
+
+            // Get Owner Info (Teacher)
+            const [owner] = await queryDatabase('SELECT id, name, profile_image FROM Users WHERE id = ?', [teacherBlog.user_id]);
+            req.blogOwner = owner;
+            return next();
+        }
+
+        // 3. Check Center Blogs
         let [centerBlog] = await queryDatabase('SELECT * FROM center_blogs WHERE subdomain = ?', [subdomain]);
         if (centerBlog) {
             req.blog = centerBlog;
@@ -96,7 +109,7 @@ app.use(async (req, res, next) => {
             return next();
         }
 
-        // 3. Not Found - Mark for 404
+        // 4. Not Found - Mark for 404
         req.isBlogNotFound = true;
         next();
 
@@ -118,7 +131,7 @@ app.get('/', async (req, res) => {
 
         // Fetch Posts
         const posts = await queryDatabase(`
-            SELECT id, title, slug, excerpt, thumbnail_url, view_count, created_at 
+            SELECT id, title, slug, excerpt, thumbnail_url, view_count, created_at, file_type, published_to_platform
             FROM blog_posts 
             WHERE blog_id = ? AND blog_type = ? AND is_published = TRUE
             ORDER BY created_at DESC 
@@ -134,7 +147,9 @@ app.get('/', async (req, res) => {
         const totalPosts = countResult.total;
         const totalPages = Math.ceil(totalPosts / limit);
 
-        const template = req.blogType === 'user' ? 'blog/user_theme_galaxy' : 'blog/center_theme_board';
+        let template = 'blog/user_theme_galaxy';
+        if (req.blogType === 'center') template = 'blog/center_theme_board';
+        if (req.blogType === 'teacher') template = 'blog/teacher_theme_simple';
 
         // Sidebar Data
         const sidebarPosts = await getSidebarData(req.blog.id, req.blogType);
@@ -183,7 +198,9 @@ app.get('/p/:slug', async (req, res) => {
         // Increment View Count
         await queryDatabase('UPDATE blog_posts SET view_count = view_count + 1 WHERE id = ?', [post.id]);
 
-        const template = req.blogType === 'user' ? 'blog/post_detail_galaxy' : 'blog/post_detail_board';
+        let template = 'blog/post_detail_galaxy';
+        if (req.blogType === 'center') template = 'blog/post_detail_board';
+        if (req.blogType === 'teacher') template = 'blog/post_detail_teacher';
 
         // Sidebar Data
         const sidebarPosts = await getSidebarData(req.blog.id, req.blogType);
@@ -226,9 +243,7 @@ app.get('/p/:slug', async (req, res) => {
 // Write Routes (Owner Only)
 // ==========================================
 
-// Helper: Check if current user is owner
-// Helper: Check permission (Owner or Center Admin)
-// Helper: Check permission (Owner or Center Admin)
+// Helper: Check permission (Owner)
 function isOwner(req, res, next) {
     let visitorId = null;
 
@@ -237,11 +252,9 @@ function isOwner(req, res, next) {
         if (req.session.user && req.session.user.id) {
             visitorId = req.session.user.id;
         } else if (req.session.id) {
-            // Sometimes directly on session (legacy?)
-            visitorId = req.session.id; // Be careful not to confuse with sessionID
-            // Try to prefer user.id if available in future
+            visitorId = req.session.id;
         }
-        // Fallback or specific structure check from EJS logic
+        // Fallback
         if (!visitorId && req.session.user && req.session.user.user && req.session.user.user.id) {
             visitorId = req.session.user.user.id;
         }
@@ -252,14 +265,22 @@ function isOwner(req, res, next) {
         if (!visitorId || !req.blogOwner) {
             return res.status(403).send('Forbidden: Not logged in or blog owner not found');
         }
-
-        // Loose equality check (string vs number)
         if (visitorId == req.blogOwner.id) {
             return next();
         }
     }
 
-    // 2. Center Blog Admin/Teacher Check
+    // 2. Teacher Blog Owner Check
+    if (req.blogType === 'teacher') {
+        if (!visitorId || !req.blogOwner) {
+            return res.status(403).send('Forbidden: Not logged in or blog owner not found');
+        }
+        if (visitorId == req.blogOwner.id) {
+            return next();
+        }
+    }
+
+    // 3. Center Blog Admin/Teacher Check
     if (req.blogType === 'center' && req.session && req.session.is_logined) {
         // Check if user belongs to this center
         if (req.session.centerID == req.blog.center_id) {
@@ -437,6 +458,7 @@ io.on('connection', (socket) => {
         const { cardId, width, height, boardId } = data;
 
         try {
+            // DB 업데이트
             await queryDatabase(`
                 UPDATE blog_posts
                 SET layout_meta = JSON_SET(
@@ -447,6 +469,7 @@ io.on('connection', (socket) => {
                 WHERE id = ?
             `, [width, height, cardId]);
 
+            // 같은 보드의 다른 사용자에게 브로드캐스트
             socket.to(`board-${boardId}`).emit('card-updated', data);
         } catch (error) {
             console.error('[Socket.IO] Card resize error:', error);

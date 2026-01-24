@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= seoData.title %>
+    </title>
+    <meta name="description" content="<%= seoData.description %>">
+    <meta property="og:image" content="<%= seoData.ogImage %>">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .hero-section {
+            background: white;
+            border-bottom: 1px solid #ddd;
+            padding: 3rem 0;
+        }
+
+        .profile-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #eee;
+        }
+
+        .post-card {
+            transition: transform 0.2s;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .post-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-badge {
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #eee;
+            color: #555;
+        }
+
+        .file-badge.py {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        .file-badge.md {
+            background: #f3e5f5;
+            color: #4a148c;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-mortarboard-fill text-primary me-2"></i>EduPlan
+            </a>
+            <% if (user && user.is_logined) { %>
+                <div class="d-flex align-items-center">
+                    <% if (owner && user.user.id==owner.id) { %>
+                        <a href="/write" class="btn btn-sm btn-primary me-2"><i
+                                class="bi bi-pencil-fill me-1"></i>글쓰기</a>
+                        <% } %>
+                </div>
+                <% } %>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <img src="<%= owner.profile_image || '/images/default-profile.png' %>" class="profile-img mb-3">
+            <h2 class="fw-bold mb-1">
+                <%= blog.title %>
+            </h2>
+            <p class="text-muted">
+                <%= blog.description || '선생님의 수업 자료 저장소입니다.' %>
+            </p>
+        </div>
+    </section>
+
+    <!-- Content -->
+    <div class="container py-5">
+        <div class="row g-4">
+            <% if (posts.length===0) { %>
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted"><i class="bi bi-folder2-open display-4 d-block mb-3"></i>아직 등록된 수업 자료가 없습니다.
+                    </p>
+                </div>
+                <% } else { %>
+                    <% posts.forEach(post=> { %>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card post-card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="file-badge <%= post.file_type || 'text' %>">
+                                            <%= (post.file_type || 'POST' ).toUpperCase() %>
+                                        </span>
+                                        <small class="text-muted">
+                                            <%= new Date(post.created_at).toLocaleDateString() %>
+                                        </small>
+                                    </div>
+                                    <h5 class="card-title fw-bold">
+                                        <a href="/p/<%= post.slug %>"
+                                            class="text-decoration-none text-dark stretched-link">
+                                            <%= post.title %>
+                                        </a>
+                                    </h5>
+                                    <p class="card-text text-muted text-truncate">
+                                        <%= post.excerpt %>
+                                    </p>
+                                </div>
+                                <div
+                                    class="card-footer bg-white border-0 d-flex justify-content-between align-items-center">
+                                    <small class="text-muted"><i class="bi bi-eye me-1"></i>
+                                        <%= post.view_count %>
+                                    </small>
+                                    <% if (post.published_to_platform) { %>
+                                        <small class="text-success"><i class="bi bi-check-circle-fill me-1"></i>문제은행
+                                            등록됨</small>
+                                        <% } %>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                            <% } %>
+        </div>
+
+        <!-- Pagination -->
+        <% if (pagination.totalPages> 1) { %>
+            <nav class="mt-5">
+                <ul class="pagination justify-content-center">
+                    <% for(let i=1; i<=pagination.totalPages; i++) { %>
+                        <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
+                            <a class="page-link" href="?page=<%= i %>">
+                                <%= i %>
+                            </a>
+                        </li>
+                        <% } %>
+                </ul>
+            </nav>
+            <% } %>
+    </div>
+
+</body>
+
+</html>
