@@ -1,0 +1,222 @@
+/* =============================================
+   📌 /board 페이지 전용 CSS
+   ============================================= */
+/* 📌 기본 레이아웃 스타일 */
+body.board-page {
+  background: #F5F5F5;
+}
+
+/* =============================================
+   📌 채팅 컨테이너 스타일
+   ============================================= */
+.direct-message {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 📌 메시지 목록 (스크롤 가능하도록 설정) */
+.messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 70vh;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* =============================================
+   📌 메시지 및 말풍선 스타일
+   ============================================= */
+.message-container {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.profile-wrapper {
+  margin-right: 8px;
+}
+
+.favicon {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+}
+
+.message-content {
+  flex-grow: 1;
+  min-width: 0;
+  max-width: calc(100% - 50px);
+}
+
+.message-bubble {
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  word-wrap: break-word;
+  min-width: 150px;
+}
+
+.message-container.to .message-bubble {
+  background: #E8EAF6;
+  color: black;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.message-time {
+  font-size: 12px;
+  color: gray;
+  text-align: right;
+  margin-left: 10px;
+}
+
+.delete-btn {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+  color: darkred;
+}
+
+/* =============================================
+   📌 입력창 스타일
+   ============================================= */
+.new {
+  background: white;
+  padding: 10px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+}
+
+.new-input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: #F5F5F5;
+  border-radius: 20px;
+  font-size: 16px;
+  outline: none;
+}
+
+.material-button {
+  background: green;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-left: 8px;
+  font-size: 16px;
+}
+
+/* =============================================
+   📌 업무 카드 스타일
+   ============================================= */
+.task-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.task-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.card-comment {
+  font-size: 0.9rem;
+  color: gray;
+  margin-bottom: 10px;
+}
+
+.progress {
+  height: 10px;
+  background: #e0e0e0;
+  border-radius: 5px;
+}
+
+.progress-bar {
+  background: #4CAF50;
+  height: 100%;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  color: white;
+  text-align: center;
+}
+
+/* =============================================
+   📌 너구리 이미지 및 말풍선 스타일
+   ============================================= */
+.naguri-img {
+  width: 250px;
+  height: auto;
+  border-radius: 15px;
+  display: block;
+  margin: 0 auto;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.speech-bubble {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.speech-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.7) transparent transparent transparent;
+}
