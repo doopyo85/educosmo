@@ -60,32 +60,8 @@
     <%- include('../partials/header') %>
 
         <div class="board-layout-container">
-            <!-- Sidebar (Simplified for Career Page) -->
-            <div class="board-sidebar">
-                <div class="board-sidebar-header">
-                    <i class="bi bi-compass"></i> 진로진학
-                </div>
-
-                <div class="board-nav-group mb-2">
-                    <div class="d-flex flex-column gap-1">
-                        <a href="/teacher/career-info/university" class="board-category-item ps-4 py-2 active"
-                            style="border-radius: 0 20px 20px 0;">
-                            <i class="bi bi-mortarboard me-2"></i> 대학/학과 정보
-                        </a>
-                        <a href="#" class="board-category-item ps-4 py-2"
-                            style="border-radius: 0 20px 20px 0; opacity: 0.6;">
-                            <i class="bi bi-graph-up me-2"></i> 입시 분석 (준비중)
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Link back to Teacher/Main Dashboard -->
-                <div class="mt-auto p-3">
-                    <a href="/teacher" class="btn btn-outline-secondary w-100 btn-sm">
-                        <i class="bi bi-arrow-left me-1"></i> 교사 페이지로
-                    </a>
-                </div>
-            </div>
+            <!-- Sidebar (공통 사이드바) -->
+            <%- include('../teacher/partials/sidebar', { currentView: currentView === 'map' ? 'university' : 'cutlines' }) %>
 
             <!-- Main Content -->
             <div class="board-main-content">
