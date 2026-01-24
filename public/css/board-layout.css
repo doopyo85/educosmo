@@ -4,7 +4,7 @@
 
 /* 전체 게시판 컨테이너 */
 .board-layout-container {
-    max-width: 1400px;
+    max-width: 100%;
     margin: 20px auto;
     display: flex;
     gap: 20px;
@@ -18,26 +18,28 @@
     min-width: 250px;
     flex-shrink: 0;
     position: sticky;
-    top: 90px; /* 헤더 높이(70px) + 여백(20px) */
+    top: 90px;
+    /* 헤더 높이(70px) + 여백(20px) */
     height: fit-content;
     max-height: calc(100vh - 110px);
     overflow-y: auto;
     background-color: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 메인 콘텐츠 영역 (최대 너비로 고정) */
 .board-main-content {
     flex: 1;
     min-width: 600px;
-    max-width: calc(100% - 270px); /* 사이드바(250px) + gap(20px) */
+    max-width: calc(100% - 270px);
+    /* 사이드바(250px) + gap(20px) */
     width: 100%;
     background-color: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 🔥 오른쪽 버튼 그룹 (상단 고정으로 수정) */
@@ -46,7 +48,8 @@
     min-width: 100px;
     flex-shrink: 0;
     position: sticky;
-    top: 90px; /* 헤더 높이(70px) + 여백(20px) (사이드바와 동일) */
+    top: 90px;
+    /* 헤더 높이(70px) + 여백(20px) (사이드바와 동일) */
     height: fit-content;
     max-height: calc(100vh - 110px);
     overflow-y: auto;
@@ -104,7 +107,7 @@
     text-decoration: none;
     font-size: 13px;
     font-weight: 500;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     transition: all 0.2s ease;
     white-space: nowrap;
     justify-content: center;
@@ -135,7 +138,7 @@
         max-width: 100%;
         margin: 10px;
     }
-    
+
     .board-main-content {
         min-width: auto;
         max-width: none;
@@ -147,13 +150,13 @@
         flex-direction: column;
         gap: 15px;
     }
-    
+
     .board-sidebar {
         width: 100%;
         position: static;
         max-height: none;
     }
-    
+
     .board-action-buttons {
         position: fixed;
         right: 15px;
@@ -165,11 +168,11 @@
         width: auto;
         z-index: 1000;
     }
-    
+
     .board-floating-btn .btn-text {
         display: none;
     }
-    
+
     .board-floating-btn {
         min-width: 50px;
         padding: 10px;
@@ -182,11 +185,11 @@
         margin: 5px;
         padding: 0 5px;
     }
-    
+
     .board-sidebar {
         order: 2;
     }
-    
+
     .board-main-content {
         order: 1;
     }
@@ -197,7 +200,7 @@
     .board-sidebar.collapsed {
         display: none;
     }
-    
+
     .sidebar-toggle-btn {
         display: block;
         background-color: #495057;
