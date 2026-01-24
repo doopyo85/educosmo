@@ -116,7 +116,15 @@
         *   `GET /teacher/blog/write`: 글쓰기 에디터 (ToastUI/Editor.js + MD)
         *   `POST /api/teacher/posts`: 교안 저장/발행
 
-### Phase 4: B2B SaaS 기능 (80% 완료)
+### Phase 4: B2B SaaS 기능 (✅ 완료)
+*   [✅] 센터 구독 관리 시스템
+    *   구독 결제 UI (`/subscription/plans`, `/subscription/checkout`)
+    *   구독 관리 대시보드 (`/subscription/manage`)
+    *   Trial 만료 처리 자동화 (Cron Job)
+    *   **센터정보 모달 구독 관리 통합** (2026-01-24)
+        *   Manager 계정의 프로필 > 센터정보에서 구독 상태 확인 및 관리
+        *   상태별 동적 액션 버튼 (플랜 변경, 구독 취소, 구독 재개)
+    *   관련 문서: `docs/Phase4_구독관리대시보드_구현완료.md`
 
 ---
 
