@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게시판 - 코딩앤플레이</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/board-layout.css">
     <style>
@@ -14,21 +16,21 @@
             background-color: #f8f9fa;
             font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         }
-        
+
         /* 콘텐츠 헤더 */
         .content-header {
             padding: 20px 25px;
             border-bottom: 2px solid #e9ecef;
             background-color: #fff;
         }
-        
+
         .content-title {
             font-size: 24px;
             font-weight: bold;
             color: #495057;
             margin: 0;
         }
-        
+
         /* 콘텐츠 컨트롤 */
         .content-controls {
             padding: 15px 25px;
@@ -38,19 +40,19 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .sort-dropdown {
             border: 1px solid #ced4da;
             padding: 6px 12px;
             border-radius: 4px;
             background-color: white;
         }
-        
+
         /* 🔥 게시글 목록 - 한 줄 형태로 수정 */
         .post-list {
             background-color: white;
         }
-        
+
         .post-item {
             padding: 12px 25px;
             border-bottom: 1px solid #f1f3f4;
@@ -60,21 +62,21 @@
             align-items: center;
             gap: 15px;
         }
-        
+
         .post-item:hover {
             background-color: #f8f9fa;
         }
-        
+
         .post-item.notice {
             background-color: #fff3cd;
             border-left: 4px solid #ffc107;
         }
-        
+
         .post-item.pinned {
             background-color: #f0f7ff;
             border-left: 4px solid #0066cc;
         }
-        
+
         /* 🔥 카테고리 뱃지 */
         .post-category {
             background-color: #e9ecef;
@@ -87,28 +89,29 @@
             text-align: center;
             flex-shrink: 0;
         }
-        
+
         .post-category.notice {
             background-color: #dc3545;
             color: white;
         }
-        
+
         .post-category.education {
             background-color: #28a745;
             color: white;
         }
-        
+
         .post-category.free {
             background-color: #17a2b8;
             color: white;
         }
-        
+
         /* 🔥 제목 영역 */
         .post-title-section {
             flex: 1;
-            min-width: 0; /* 텍스트 오버플로우를 위해 필요 */
+            min-width: 0;
+            /* 텍스트 오버플로우를 위해 필요 */
         }
-        
+
         .post-title {
             font-size: 15px;
             color: #495057;
@@ -122,11 +125,11 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
+
         .post-title:hover {
             color: #0066cc;
         }
-        
+
         /* 🔥 상태 뱃지들 */
         .post-badges {
             display: flex;
@@ -134,7 +137,7 @@
             align-items: center;
             flex-shrink: 0;
         }
-        
+
         .badge-new {
             background-color: #dc3545;
             color: white;
@@ -143,7 +146,7 @@
             border-radius: 3px;
             font-weight: bold;
         }
-        
+
         .badge-pinned {
             background-color: #ffc107;
             color: #000;
@@ -152,7 +155,7 @@
             border-radius: 3px;
             font-weight: bold;
         }
-        
+
         .badge-notice {
             background-color: #dc3545;
             color: white;
@@ -161,7 +164,7 @@
             border-radius: 3px;
             font-weight: bold;
         }
-        
+
         /* 🔥 메타 정보 (작성자, 시간, 조회수) */
         .post-meta-info {
             display: flex;
@@ -171,41 +174,41 @@
             color: #6c757d;
             flex-shrink: 0;
         }
-        
+
         .meta-author {
             font-weight: 500;
             min-width: 60px;
             text-align: center;
         }
-        
+
         .meta-views {
             min-width: 40px;
             text-align: center;
             font-weight: 500;
         }
-        
+
         .meta-time {
             min-width: 50px;
             text-align: center;
         }
-        
+
         .attachment-icon {
             color: #6c757d;
             font-size: 12px;
         }
-        
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: #6c757d;
         }
-        
+
         .empty-state i {
             font-size: 48px;
             margin-bottom: 16px;
             opacity: 0.5;
         }
-        
+
         /* 반응형 */
         @media (max-width: 768px) {
             .content-controls {
@@ -213,29 +216,29 @@
                 gap: 10px;
                 align-items: stretch;
             }
-            
+
             .post-item {
                 padding: 10px 20px;
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 8px;
             }
-            
+
             .post-title-section {
                 width: 100%;
             }
-            
+
             .post-title {
                 white-space: normal;
                 overflow: visible;
                 text-overflow: initial;
             }
-            
+
             .post-meta-info {
                 justify-content: space-between;
                 width: 100%;
             }
-            
+
             .meta-author,
             .meta-views,
             .meta-time {
@@ -243,14 +246,14 @@
                 text-align: left;
             }
         }
-        
+
         @media (max-width: 576px) {
             .post-category {
                 min-width: 50px;
                 font-size: 10px;
                 padding: 3px 6px;
             }
-            
+
             .post-meta-info {
                 font-size: 11px;
                 gap: 8px;
@@ -258,187 +261,169 @@
         }
     </style>
 </head>
+
 <body>
     <%- include('../partials/header') %>
-    
-    <!-- 🔥 통합 레이아웃 컨테이너 -->
-    <div class="board-layout-container">
-        <!-- 🔥 왼쪽 네비게이션 (항상 고정) -->
-        <div class="board-sidebar">
-            <div class="board-sidebar-header">
-                <i class="bi bi-grid-3x3-gap"></i> 게시판
-            </div>
-            
-            <a href="/board" class="board-category-item active">
-                <i class="bi bi-house"></i> 전체 게시판
-            </a>
-            
-            <a href="/board/notice" class="board-category-item">
-                <i class="bi bi-megaphone"></i> 업데이트 노트
-            </a>
-            
-            <a href="/board/education" class="board-category-item">
-                <i class="bi bi-book"></i> 교육정보
-            </a>
-            
-            <a href="/board/free" class="board-category-item">
-                <i class="bi bi-chat-dots"></i> 자유게시판
-            </a>
-        </div>
-            
-        <!-- 🔥 메인 콘텐츠 (고정 너비) -->
-        <div class="board-main-content">
-            <!-- 콘텐츠 헤더 -->
-            <div class="content-header">
-                <h1 class="content-title" id="contentTitle">전체 게시판</h1>
-            </div>
-            
-            <!-- 콘텐츠 컨트롤 -->
-            <div class="content-controls">
-                <div class="d-flex align-items-center">
-                    <span class="me-2">정렬:</span>
-                    <select class="sort-dropdown" id="sortSelect" onchange="sortPosts()">
-                        <option value="latest">최신순</option>
-                        <option value="views">조회순</option>
-                        <option value="comments">댓글순</option>
-                    </select>
-                </div>
-                <!-- 🔥 글쓰기 버튼 제거 (오른쪽 스티키 버튼으로 대체) -->
-            </div>
-            
-            <!-- 게시글 목록 -->
-            <div class="post-list" id="postList">
-                <!-- 로딩 중 -->
-                <div class="text-center p-4" id="loadingSpinner">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">로딩 중...</span>
+
+        <!-- 🔥 통합 레이아웃 컨테이너 -->
+        <div class="board-layout-container">
+            <!-- 🔥 왼쪽 네비게이션 (항상 고정) -->
+            <!-- 🔥 왼쪽 네비게이션 (항상 고정) -->
+            <%- include('../partials/board_sidebar', { currentCategory: currentCategory }) %>
+
+                <!-- 🔥 메인 콘텐츠 (고정 너비) -->
+                <div class="board-main-content">
+                    <!-- 콘텐츠 헤더 -->
+                    <div class="content-header">
+                        <h1 class="content-title" id="contentTitle">전체 게시판</h1>
+                    </div>
+
+                    <!-- 콘텐츠 컨트롤 -->
+                    <div class="content-controls">
+                        <div class="d-flex align-items-center">
+                            <span class="me-2">정렬:</span>
+                            <select class="sort-dropdown" id="sortSelect" onchange="sortPosts()">
+                                <option value="latest">최신순</option>
+                                <option value="views">조회순</option>
+                                <option value="comments">댓글순</option>
+                            </select>
+                        </div>
+                        <!-- 🔥 글쓰기 버튼 제거 (오른쪽 스티키 버튼으로 대체) -->
+                    </div>
+
+                    <!-- 게시글 목록 -->
+                    <div class="post-list" id="postList">
+                        <!-- 로딩 중 -->
+                        <div class="text-center p-4" id="loadingSpinner">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">로딩 중...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+
+                <!-- 🔥 오른쪽 액션 버튼 그룹 (글쓰기만) -->
+                <div class="board-action-buttons">
+                    <a href="/board/write" class="board-floating-btn" title="글쓰기">
+                        <i class="bi bi-pencil-square"></i>
+                        <span class="btn-text">글쓰기</span>
+                    </a>
+                </div>
         </div>
-        
-        <!-- 🔥 오른쪽 액션 버튼 그룹 (글쓰기만) -->
-        <div class="board-action-buttons">
-            <a href="/board/write" class="board-floating-btn" title="글쓰기">
-                <i class="bi bi-pencil-square"></i>
-                <span class="btn-text">글쓰기</span>
-            </a>
-        </div>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        let currentCategory = 'all';
-        let currentSort = 'latest';
-        let allPosts = [];
-        
-        // 페이지 로드 시 초기화
-        document.addEventListener('DOMContentLoaded', function() {
-            loadPosts();
-        });
-        
-        // 카테고리 선택
-        function selectCategory(category) {
-            currentCategory = category;
-            
-            // 사이드바 활성화 상태 업데이트
-            document.querySelectorAll('.board-category-item').forEach(item => {
-                item.classList.remove('active');
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            let currentCategory = 'all';
+            let currentSort = 'latest';
+            let allPosts = [];
+
+            // 페이지 로드 시 초기화
+            document.addEventListener('DOMContentLoaded', function () {
+                loadPosts();
             });
-            
-            // 클릭된 카테고리 활성화
-            const categoryLinks = {
-                'all': 'a[href="/board"]',
-                'notice': 'a[href="/board/notice"]', 
-                'education': 'a[href="/board/education"]',
-                'free': 'a[href="/board/free"]'
-            };
-            
-            if (categoryLinks[category]) {
-                document.querySelector(categoryLinks[category]).classList.add('active');
-            }
-            
-            // 제목 업데이트
-            const titles = {
-                'all': '전체 게시판',
-                'notice': '업데이트 노트',
-                'education': '교육정보', 
-                'free': '자유게시판'
-            };
-            document.getElementById('contentTitle').textContent = titles[category];
-            
-            // 게시글 다시 로드
-            loadPosts();
-        }
-        
-        // 게시글 목록 로드
-        async function loadPosts() {
-            const postList = document.getElementById('postList');
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            
-            // 로딩 스피너 표시
-            if (loadingSpinner) {
-                loadingSpinner.style.display = 'block';
-            }
-            
-            postList.innerHTML = '<div class="text-center p-4" id="loadingSpinner"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">로딩 중...</span></div></div>';
-            
-            try {
-                let url = '/api/board/posts';
-                if (currentCategory !== 'all') {
-                    url += `?category=${currentCategory}`;
+
+            // 카테고리 선택
+            function selectCategory(category) {
+                currentCategory = category;
+
+                // 사이드바 활성화 상태 업데이트
+                document.querySelectorAll('.board-category-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // 클릭된 카테고리 활성화
+                const categoryLinks = {
+                    'all': 'a[href="/board"]',
+                    'notice': 'a[href="/board/notice"]',
+                    'education': 'a[href="/board/education"]',
+                    'free': 'a[href="/board/free"]'
+                };
+
+                if (categoryLinks[category]) {
+                    document.querySelector(categoryLinks[category]).classList.add('active');
                 }
-                
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                allPosts = data.posts || [];
-                renderPosts();
-            } catch (error) {
-                console.error('게시글 로드 오류:', error);
-                postList.innerHTML = `
+
+                // 제목 업데이트
+                const titles = {
+                    'all': '전체 게시판',
+                    'notice': '업데이트 노트',
+                    'education': '교육정보',
+                    'free': '자유게시판'
+                };
+                document.getElementById('contentTitle').textContent = titles[category];
+
+                // 게시글 다시 로드
+                loadPosts();
+            }
+
+            // 게시글 목록 로드
+            async function loadPosts() {
+                const postList = document.getElementById('postList');
+                const loadingSpinner = document.getElementById('loadingSpinner');
+
+                // 로딩 스피너 표시
+                if (loadingSpinner) {
+                    loadingSpinner.style.display = 'block';
+                }
+
+                postList.innerHTML = '<div class="text-center p-4" id="loadingSpinner"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">로딩 중...</span></div></div>';
+
+                try {
+                    let url = '/api/board/posts';
+                    if (currentCategory !== 'all') {
+                        url += `?category=${currentCategory}`;
+                    }
+
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    allPosts = data.posts || [];
+                    renderPosts();
+                } catch (error) {
+                    console.error('게시글 로드 오류:', error);
+                    postList.innerHTML = `
                     <div class="empty-state">
                         <i class="bi bi-exclamation-triangle"></i>
                         <h5>오류가 발생했습니다</h5>
                         <p>게시글을 불러오는 중 문제가 발생했습니다.</p>
                     </div>
                 `;
+                }
             }
-        }
-        
-        // 🔥 게시글 렌더링 - 한 줄 형태로 수정
-        function renderPosts() {
-            const postList = document.getElementById('postList');
-            
-            if (allPosts.length === 0) {
-                postList.innerHTML = `
+
+            // 🔥 게시글 렌더링 - 한 줄 형태로 수정
+            function renderPosts() {
+                const postList = document.getElementById('postList');
+
+                if (allPosts.length === 0) {
+                    postList.innerHTML = `
                     <div class="empty-state">
                         <i class="bi bi-inbox"></i>
                         <h5>게시글이 없습니다</h5>
                         <p>첫 번째 게시글을 작성해보세요!</p>
                     </div>
                 `;
-                return;
-            }
-            
-            // 정렬 적용
-            let sortedPosts = [...allPosts];
-            switch (currentSort) {
-                case 'views':
-                    sortedPosts.sort((a, b) => (b.views || 0) - (a.views || 0));
-                    break;
-                case 'comments':
-                    sortedPosts.sort((a, b) => (b.comment_count || 0) - (a.comment_count || 0));
-                    break;
-                default: // latest
-                    sortedPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            }
-            
-            const postsHtml = sortedPosts.map(post => {
-                const categoryInfo = getCategoryInfo(post.category_slug);
-                const isNew = isPostNew(post.created_at);
-                
-                return `
+                    return;
+                }
+
+                // 정렬 적용
+                let sortedPosts = [...allPosts];
+                switch (currentSort) {
+                    case 'views':
+                        sortedPosts.sort((a, b) => (b.views || 0) - (a.views || 0));
+                        break;
+                    case 'comments':
+                        sortedPosts.sort((a, b) => (b.comment_count || 0) - (a.comment_count || 0));
+                        break;
+                    default: // latest
+                        sortedPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                }
+
+                const postsHtml = sortedPosts.map(post => {
+                    const categoryInfo = getCategoryInfo(post.category_slug);
+                    const isNew = isPostNew(post.created_at);
+
+                    return `
                     <div class="post-item ${post.is_notice ? 'notice' : ''} ${post.is_pinned ? 'pinned' : ''}" 
                          onclick="viewPost('${post.category_slug}', ${post.id})">
                         
@@ -470,107 +455,108 @@
                         </div>
                     </div>
                 `;
-            }).join('');
-            
-            postList.innerHTML = postsHtml;
-        }
-        
-        // 카테고리 정보 가져오기
-        function getCategoryInfo(slug) {
-            const categories = {
-                'notice': { name: '업데이트', icon: 'bi-megaphone' },
-                'education': { name: '교육', icon: 'bi-book' },
-                'free': { name: '자유', icon: 'bi-chat-dots' }
-            };
-            return categories[slug] || { name: '기타', icon: 'bi-file-text' };
-        }
-        
-        // 새 게시글 판별 (24시간 이내)
-        function isPostNew(createdAt) {
-            const now = new Date();
-            const postDate = new Date(createdAt);
-            return (now - postDate) < 24 * 60 * 60 * 1000;
-        }
-        
-        // 🔥 조회수 포맷 (1k, 1.2k 형태)
-        function formatViews(views) {
-            if (views >= 1000000) {
-                return (views / 1000000).toFixed(1).replace('.0', '') + 'M';
+                }).join('');
+
+                postList.innerHTML = postsHtml;
             }
-            if (views >= 1000) {
-                return (views / 1000).toFixed(1).replace('.0', '') + 'k';
+
+            // 카테고리 정보 가져오기
+            function getCategoryInfo(slug) {
+                const categories = {
+                    'notice': { name: '업데이트', icon: 'bi-megaphone' },
+                    'education': { name: '교육', icon: 'bi-book' },
+                    'free': { name: '자유', icon: 'bi-chat-dots' }
+                };
+                return categories[slug] || { name: '기타', icon: 'bi-file-text' };
             }
-            return views.toString();
-        }
-        
-        // 🔥 시간 포맷 (HH:MM 또는 MM-DD 형태)
-        function formatTime(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const diff = now - date;
-            
-            // 오늘이면 시간으로 표시
-            if (diff < 24 * 60 * 60 * 1000) {
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                return `${hours}:${minutes}`;
+
+            // 새 게시글 판별 (24시간 이내)
+            function isPostNew(createdAt) {
+                const now = new Date();
+                const postDate = new Date(createdAt);
+                return (now - postDate) < 24 * 60 * 60 * 1000;
             }
-            
-            // 이번 년도면 월-일로 표시
-            if (date.getFullYear() === now.getFullYear()) {
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${month}-${day}`;
-            }
-            
-            // 다른 년도면 년도 포함
-            return date.toLocaleDateString('ko-KR', { 
-                year: '2-digit', 
-                month: '2-digit', 
-                day: '2-digit' 
-            });
-        }
-        
-        // 정렬 변경
-        function sortPosts() {
-            currentSort = document.getElementById('sortSelect').value;
-            renderPosts();
-        }
-        
-        // 게시글 보기
-        function viewPost(category, id) {
-            window.location.href = `/board/${category}/${id}`;
-        }
-        
-        // 글쓰기
-        function writePost() {
-            if (currentCategory === 'all') {
-                window.location.href = '/board/write';
-            } else {
-                window.location.href = `/board/write?category=${currentCategory}`;
-            }
-        }
-        
-        // 카테고리 네비게이션 클릭 이벤트
-        document.querySelectorAll('.board-category-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                const href = this.getAttribute('href');
-                
-                if (href === '/board') {
-                    selectCategory('all');
-                } else if (href === '/board/notice') {
-                    selectCategory('notice');
-                } else if (href === '/board/education') {
-                    selectCategory('education');
-                } else if (href === '/board/free') {
-                    selectCategory('free');
+
+            // 🔥 조회수 포맷 (1k, 1.2k 형태)
+            function formatViews(views) {
+                if (views >= 1000000) {
+                    return (views / 1000000).toFixed(1).replace('.0', '') + 'M';
                 }
+                if (views >= 1000) {
+                    return (views / 1000).toFixed(1).replace('.0', '') + 'k';
+                }
+                return views.toString();
+            }
+
+            // 🔥 시간 포맷 (HH:MM 또는 MM-DD 형태)
+            function formatTime(dateString) {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diff = now - date;
+
+                // 오늘이면 시간으로 표시
+                if (diff < 24 * 60 * 60 * 1000) {
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    return `${hours}:${minutes}`;
+                }
+
+                // 이번 년도면 월-일로 표시
+                if (date.getFullYear() === now.getFullYear()) {
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${month}-${day}`;
+                }
+
+                // 다른 년도면 년도 포함
+                return date.toLocaleDateString('ko-KR', {
+                    year: '2-digit',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+            }
+
+            // 정렬 변경
+            function sortPosts() {
+                currentSort = document.getElementById('sortSelect').value;
+                renderPosts();
+            }
+
+            // 게시글 보기
+            function viewPost(category, id) {
+                window.location.href = `/board/${category}/${id}`;
+            }
+
+            // 글쓰기
+            function writePost() {
+                if (currentCategory === 'all') {
+                    window.location.href = '/board/write';
+                } else {
+                    window.location.href = `/board/write?category=${currentCategory}`;
+                }
+            }
+
+            // 카테고리 네비게이션 클릭 이벤트
+            document.querySelectorAll('.board-category-item').forEach(item => {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    const href = this.getAttribute('href');
+
+                    if (href === '/board') {
+                        selectCategory('all');
+                    } else if (href === '/board/notice') {
+                        selectCategory('notice');
+                    } else if (href === '/board/education') {
+                        selectCategory('education');
+                    } else if (href === '/board/free') {
+                        selectCategory('free');
+                    }
+                });
             });
-        });
-    </script>
-    
-    <%- include('../partials/footer') %>
+        </script>
+
+        <%- include('../partials/footer') %>
 </body>
+
 </html>

@@ -1,0 +1,31 @@
+<div class="board-sidebar">
+    <div class="board-sidebar-header">
+        <i class="bi bi-grid-3x3-gap"></i> 게시판
+    </div>
+
+    <!-- 게시판 메뉴 (Submenu) -->
+    <div class="board-nav-group mb-2">
+        <div class="d-flex flex-column gap-1">
+            <a href="/board"
+                class="board-category-item ps-4 py-2 <%= (!currentCategory || currentCategory === 'all') ? 'active' : '' %>"
+                style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                <i class="bi bi-house me-2"></i> 전체 게시판
+            </a>
+            <a href="/board/notice"
+                class="board-category-item ps-4 py-2 <%= currentCategory === 'notice' ? 'active' : '' %>"
+                style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                <i class="bi bi-megaphone me-2"></i> 업데이트 노트
+            </a>
+            <a href="/board/education"
+                class="board-category-item ps-4 py-2 <%= currentCategory === 'education' ? 'active' : '' %>"
+                style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                <i class="bi bi-book me-2"></i> 교육정보
+            </a>
+            <a href="/board/free"
+                class="board-category-item ps-4 py-2 <%= currentCategory === 'free' ? 'active' : '' %>"
+                style="border-radius: 0 20px 20px 0; font-size: 0.9rem;">
+                <i class="bi bi-chat-dots me-2"></i> 자유게시판
+            </a>
+        </div>
+    </div>
+</div>
