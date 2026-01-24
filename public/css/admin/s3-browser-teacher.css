@@ -1,0 +1,194 @@
+/*
+ * S3 Browser Teacher Override Styles
+ * Teacher/Manager용 S3 파일 브라우저 스타일 오버라이드
+ * 인라인 CSS에서 분리됨 (views/common/s3-browser.ejs)
+ */
+
+/* 전역 컨테이너 최대 확장 */
+body {
+    padding: 0 !important;
+}
+
+#s3-browser {
+    width: 100%;
+}
+
+/* 1. Use board-layout structure - 전체 화면 확장 */
+/* Standard layout style - inherited from board-layout.css */
+
+/* 2. S3 Wrapper - transparent wrapper */
+.s3-browser-wrapper {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 3. Breadcrumb & Platform Filter - hide */
+.breadcrumb-container,
+.platform-filter {
+    display: none !important;
+}
+
+/* 4. S3 Browser Content - 전체 화면 세로 확장 */
+.s3-browser-content {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 20px !important;
+    align-items: stretch !important;
+    height: calc(100vh - 200px) !important;
+    min-height: 600px !important;
+}
+
+/* 5. Folder Tree -> board-sidebar 세로 전체 확장 */
+.folder-tree-container {
+    width: 250px !important;
+    min-width: 250px !important;
+    flex-shrink: 0 !important;
+    height: 100% !important;
+    overflow-y: hidden !important;
+    background-color: #fff !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Folder Tree Header */
+.folder-tree-header {
+    background-color: #495057 !important;
+    color: white !important;
+    padding: 15px !important;
+    font-weight: bold !important;
+    border-radius: 8px 8px 0 0 !important;
+    border-bottom: none !important;
+    flex-shrink: 0 !important;
+}
+
+/* Folder Tree Content - 스크롤 가능 */
+.folder-tree {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.folder-tree-header h4 {
+    color: white !important;
+    font-size: 1rem !important;
+    font-weight: bold !important;
+    margin: 0 !important;
+}
+
+/* folder-item -> board-category-item 정확히 복제 */
+.folder-item {
+    padding: 12px 20px !important;
+    border-bottom: 1px solid #f1f3f4 !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s !important;
+    color: #6c757d !important;
+    text-decoration: none !important;
+    display: block !important;
+    gap: 0 !important;
+    border-radius: 0 !important;
+}
+
+.folder-item:hover {
+    background-color: #f8f9fa !important;
+    color: #495057 !important;
+    text-decoration: none !important;
+}
+
+.folder-item.active {
+    background-color: #e3f2fd !important;
+    color: #1976d2 !important;
+    font-weight: 500 !important;
+}
+
+.folder-icon {
+    margin-right: 8px !important;
+    width: 16px !important;
+}
+
+/* 6. File List -> 세로 전체 확장 */
+.file-list-container {
+    flex: 1 !important;
+    min-width: 600px !important;
+    background-color: #fff !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* File List Toolbar */
+.file-list-toolbar {
+    flex-shrink: 0 !important;
+}
+
+/* File List View - 스크롤 영역 */
+.file-list-view {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* Page header - 전체 화면 확장 */
+.s3-browser-header {
+    max-width: none !important;
+    width: calc(100vw - 40px) !important;
+    margin: 0 auto 20px !important;
+    padding: 0 20px !important;
+    background: transparent !important;
+    border: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Windows 탐색기 스타일 트리 구조 */
+.tree-node {
+    margin-bottom: 0 !important;
+}
+
+.folder-item-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+.tree-toggle {
+    flex-shrink: 0 !important;
+    margin-right: 4px !important;
+}
+
+.folder-item {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+}
+
+.folder-item .folder-icon {
+    flex-shrink: 0 !important;
+}
+
+.folder-item .tree-label {
+    flex: 1 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 13px !important;
+}
+
+/* userName 스타일 */
+.tree-label .user-badge {
+    display: inline !important;
+    font-weight: 600 !important;
+    color: #1976d2 !important;
+    margin-right: 4px !important;
+    font-size: 12px !important;
+}

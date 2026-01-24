@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'Educosmo' %></title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Board System 공통 CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/board-layout.css">
+
+    <!-- 페이지별 추가 CSS -->
+    <% if (typeof additionalCSS !== 'undefined' && additionalCSS && additionalCSS.length > 0) { %>
+        <% additionalCSS.forEach(function(css) { %>
+            <link rel="stylesheet" href="<%= css %>">
+        <% }); %>
+    <% } %>
+</head>
+<body>
+    <!-- 공통 헤더 -->
+    <%- include('../partials/header') %>
+
+    <!-- Board Layout Container -->
+    <div class="board-layout-container">
+
+        <!-- Sidebar (조건부 렌더링) -->
+        <% if (typeof sidebarType !== 'undefined' && sidebarType === 'teacher') { %>
+            <%- include('../teacher/partials/sidebar', {currentView: typeof currentView !== 'undefined' ? currentView : 'dashboard'}) %>
+        <% } else if (typeof sidebarType !== 'undefined' && sidebarType === 'board') { %>
+            <%- include('../partials/board_sidebar') %>
+        <% } %>
+
+        <!-- Main Content -->
+        <div class="board-main-content">
+            <%- body %>
+        </div>
+
+        <!-- Action Buttons (선택적) -->
+        <% if (typeof actionButtons !== 'undefined') { %>
+            <div class="board-action-buttons">
+                <%- actionButtons %>
+            </div>
+        <% } %>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery (일부 페이지에서 사용) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- 페이지별 추가 JS -->
+    <% if (typeof additionalJS !== 'undefined' && additionalJS && additionalJS.length > 0) { %>
+        <% additionalJS.forEach(function(js) { %>
+            <script src="<%= js %>"></script>
+        <% }); %>
+    <% } %>
+</body>
+</html>

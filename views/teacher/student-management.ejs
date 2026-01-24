@@ -1,495 +1,425 @@
-<!DOCTYPE html>
-<html lang="ko">
-<% if (typeof ajax==='undefined' || !ajax) { %>
-    <%- include('../partials/header') %>
-        <% } %>
-            <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<%
+// Layout Data 설정
+var layoutData = {
+    title: '학생 관리',
+    sidebarType: 'teacher',
+    currentView: typeof currentView !== 'undefined' ? currentView : 'progress',
+    additionalCSS: [
+        '/css/teacher.css',
+        '/css/teacher/student-management.css?v=6'
+    ],
+    additionalJS: [
+        '/js/teacher/student-management.js?v=8'
+    ],
+    body: renderBody()
+};
 
-            <body>
-                <!-- 학생 관리 페이지 (Button Toggle Layout) -->
-                <link rel="stylesheet" href="/css/board-layout.css">
-                <link rel="stylesheet" href="/css/teacher/student-management.css?v=6">
-                <style>
-                    /* Thinner Calendar Header */
-                    .attendance-calendar {
-                        grid-template-rows: 40px !important;
-                        grid-auto-rows: minmax(calc((100vh - 350px) / 6), 1fr) !important;
-                        min-height: calc(100vh - 250px);
-                    }
+function renderBody() {
+%>
+<!-- Inline Styles (Page-Specific) -->
+<style>
+    /* Thinner Calendar Header */
+    .attendance-calendar {
+        grid-template-rows: 40px !important;
+        grid-auto-rows: minmax(calc((100vh - 350px) / 6), 1fr) !important;
+        min-height: calc(100vh - 250px);
+    }
 
-                    .calendar-header {
-                        padding: 0 !important;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        height: 100%;
-                        /* Larger Month Title (Affects header row text, actually user meant the date label likely? No user said 'Calendar Year/Month font size') */
-                    }
+    .calendar-header {
+        padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
 
-                    /* User Request: Calendar Year/Month Label Size */
-                    #currentMonthLabel {
-                        font-size: 2.2rem !important;
-                        min-width: 150px !important;
-                        /* Adjust width for larger text */
-                    }
+    /* User Request: Calendar Year/Month Label Size */
+    #currentMonthLabel {
+        font-size: 2.2rem !important;
+        min-width: 150px !important;
+    }
 
-                    /* User Request: Move Day Row Higher */
-                    .calendar-header {
-                        align-items: flex-start !important;
-                        /* Move text to top */
-                        padding-top: 5px !important;
-                    }
+    /* User Request: Move Day Row Higher */
+    .calendar-header {
+        align-items: flex-start !important;
+        padding-top: 5px !important;
+    }
 
-                    /* Holiday Styles */
-                    .holiday-text {
-                        color: #dc3545 !important;
-                    }
+    /* Holiday Styles */
+    .holiday-text {
+        color: #dc3545 !important;
+    }
 
-                    .holiday-badge {
-                        display: inline-block;
-                        font-size: 0.7rem;
-                        color: #e03131;
-                        margin-left: 4px;
-                        font-weight: normal;
-                    }
+    .holiday-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        color: #e03131;
+        margin-left: 4px;
+        font-weight: normal;
+    }
 
-                    /* User Request: Reduce Title Spacing */
-                    .page-header-bar {
-                        padding-bottom: 5px !important;
-                        margin-bottom: 0 !important;
-                    }
+    /* User Request: Reduce Title Spacing */
+    .page-header-bar {
+        padding-bottom: 5px !important;
+        margin-bottom: 0 !important;
+    }
 
-                    .page-description {
-                        margin-top: 4px !important;
-                        margin-bottom: 0 !important;
-                    }
-                </style>
+    .page-description {
+        margin-top: 4px !important;
+        margin-bottom: 0 !important;
+    }
+</style>
 
-                <% if (typeof ajax==='undefined' || !ajax) { %>
-                    <div class="board-layout-container">
-                        <!-- 🔥 왼쪽 네비게이션 (Board Style) -->
-                        <%- include('partials/sidebar', { currentView: typeof currentView !== 'undefined' ? currentView : '' }) %>
+<!-- 학생 관리 메인 뷰 -->
+<div id="student-management-view" style="padding: 24px;">
+    <%
+    let pageTitle = '학습 진도';
+    let pageSubtitle = '학생 관리 > 학습 진도';
 
-                        <!-- 🔥 메인 콘텐츠 -->
-                        <div class="board-main-content"
-                            style="<%= (typeof currentView !== 'undefined' && (currentView === 'class-materials' || currentView === 'career-info')) ? 'display: none;' : '' %>">
-                            <% } %>
-                                <!-- 1. 학생 관리 뷰 -->
-                                <div id="student-management-view" style="padding: 24px;">
-                                    <% let pageTitle='학습 진도' ; let pageSubtitle='학생 관리 > 학습 진도' ; if (typeof currentView
-                                        !=='undefined' ) { if (currentView==='list' ) { pageTitle='학생 목록' ;
-                                        pageSubtitle='학생 관리 > 학생 목록' ; } else if (currentView==='attendance' ) {
-                                        pageTitle='출석부' ; pageSubtitle='학생 관리 > 출석부' ; } else if
-                                        (currentView==='class-materials' ) { pageTitle='수업 자료' ;
-                                        pageSubtitle='교사 전용 > 수업 자료' ; } else if (currentView==='career-info' ) {
-                                        pageTitle='진로 진학' ; pageSubtitle='교사 전용 > 진로 진학' ; } } %>
-                                        <!-- Header Bar -->
-                                        <!-- Header Bar -->
-                                        <div class="page-header-bar mb-0 pb-3">
-                                            <!-- Left Group: Title -->
-                                            <div class="d-flex align-items-end gap-5">
-                                                <div class="brand-section">
-                                                    <div class="d-flex flex-column">
-                                                        <small class="text-muted fw-bold mb-1" id="page-subtitle"
-                                                            style="font-size: 0.85rem;">
-                                                            <%= pageSubtitle %>
-                                                        </small>
-                                                        <h3 class="page-title mb-0" id="page-main-title">
-                                                            <%= pageTitle %>
-                                                        </h3>
-                                                    </div>
+    if (typeof currentView !== 'undefined') {
+        if (currentView === 'list') {
+            pageTitle = '학생 목록';
+            pageSubtitle = '학생 관리 > 학생 목록';
+        } else if (currentView === 'attendance') {
+            pageTitle = '출석부';
+            pageSubtitle = '학생 관리 > 출석부';
+        } else if (currentView === 'class-materials') {
+            pageTitle = '수업 자료';
+            pageSubtitle = '교사 전용 > 수업 자료';
+        } else if (currentView === 'career-info') {
+            pageTitle = '진로 진학';
+            pageSubtitle = '교사 전용 > 진로 진학';
+        }
+    }
+    %>
 
+    <!-- Header Bar -->
+    <div class="page-header-bar mb-0 pb-3">
+        <!-- Left Group: Title -->
+        <div class="d-flex align-items-end gap-5">
+            <div class="brand-section">
+                <div class="d-flex flex-column">
+                    <small class="text-muted fw-bold mb-1" id="page-subtitle" style="font-size: 0.85rem;">
+                        <%= pageSubtitle %>
+                    </small>
+                    <h3 class="page-title mb-0" id="page-main-title">
+                        <%= pageTitle %>
+                    </h3>
+                </div>
 
-                                                    <div class="page-description mt-2">
-                                                        우리 센터 학생들의 목록과 학습 진도를 관리할 수 있습니다.
-                                                    </div>
-                                                </div>
-                                            </div>
+                <div class="page-description mt-2">
+                    우리 센터 학생들의 목록과 학습 진도를 관리할 수 있습니다.
+                </div>
+            </div>
+        </div>
 
-                                            <!-- Center Group: Attendance Controls -->
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <div class="attendance-controls align-items-center <%= typeof currentView !== 'undefined' && currentView === 'attendance' ? 'd-flex' : 'd-none' %>"
-                                                    id="attendanceControls">
-                                                    <button class="btn btn-outline-secondary btn-sm"
-                                                        onclick="StudentManagement.prevMonth()">
-                                                        <i class="bi bi-chevron-left"></i>
-                                                    </button>
-                                                    <span class="fw-bold mx-3" id="currentMonthLabel"
-                                                        style="font-size: 1.1rem; min-width: 80px; text-align: center;">2024.
-                                                        12</span>
-                                                    <button class="btn btn-outline-secondary btn-sm"
-                                                        onclick="StudentManagement.nextMonth()">
-                                                        <i class="bi bi-chevron-right"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
+        <!-- Center Group: Attendance Controls -->
+        <div class="d-flex justify-content-center align-items-center">
+            <div class="attendance-controls align-items-center <%= typeof currentView !== 'undefined' && currentView === 'attendance' ? 'd-flex' : 'd-none' %>" id="attendanceControls">
+                <button class="btn btn-outline-secondary btn-sm" onclick="StudentManagement.prevMonth()">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <span class="fw-bold mx-3" id="currentMonthLabel" style="font-size: 1.1rem; min-width: 80px; text-align: center;">2024. 12</span>
+                <button class="btn btn-outline-secondary btn-sm" onclick="StudentManagement.nextMonth()">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
 
-                                            <!-- Right Group: Controls -->
-                                            <div class="header-controls d-flex align-items-end justify-content-end">
-                                                <!-- Add Button (List Only) -->
-                                                <button class="btn btn-primary rounded-pill btn-sm px-3 me-3"
-                                                    id="addStudentBtn"
-                                                    style="<%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'display: none;' %>">
-                                                    <i class="bi bi-person-plus me-1"></i> 추가
-                                                </button>
+        <!-- Right Group: Controls -->
+        <div class="header-controls d-flex align-items-end justify-content-end">
+            <!-- Add Button (List Only) -->
+            <button class="btn btn-primary rounded-pill btn-sm px-3 me-3" id="addStudentBtn" style="<%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'display: none;' %>">
+                <i class="bi bi-person-plus me-1"></i> 추가
+            </button>
 
-                                                <!-- Vertical Stack: Center Select (Top) & Search (Bottom) -->
-                                                <div class="d-flex flex-column align-items-end gap-2">
-                                                    <!-- 🔥 Admin Center Selector -->
-                                                    <% if (role==='admin' && typeof centers !=='undefined' &&
-                                                        centers.length> 0)
-                                                        { %>
-                                                        <div class="me-1">
-                                                            <select id="centerSelect"
-                                                                class="form-select form-select-sm text-start"
-                                                                style="width: 200px; border-color: #ff9f1c;"
-                                                                onchange="changeAdminCenter(this.value)">
-                                                                <option value="">전체 센터 보기</option>
-                                                                <% centers.forEach(function(center) { %>
-                                                                    <option value="<%= center.id %>" <%=typeof centerID
-                                                                        !=='undefined' && center.id==centerID
-                                                                        ? 'selected' : '' %>>
-                                                                        <%= center.name %>
-                                                                    </option>
-                                                                    <% }); %>
-                                                            </select>
-                                                            <script>
-                                                                function changeAdminCenter(val) {
-                                                                    try {
-                                                                        const currentUrl = new window.URL(window.location.href);
-                                                                        if (val) {
-                                                                            currentUrl.searchParams.set('centerID', val);
-                                                                        } else {
-                                                                            currentUrl.searchParams.delete('centerID');
-                                                                        }
-                                                                        window.location.href = currentUrl.toString();
-                                                                    } catch (e) {
-                                                                        console.error('URL Update Error:', e);
-                                                                        alert('페이지 이동 중 오류가 발생했습니다.');
-                                                                    }
-                                                                }
-                                                            </script>
-                                                        </div>
-                                                        <% } %>
-
-                                                            <!-- Search Inputs -->
-                                                            <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'progress' ? '' : 'd-none' %>"
-                                                                id="progressSearchWrapper">
-                                                                <i class="bi bi-search search-icon"></i>
-                                                                <input type="text" id="progressSearch"
-                                                                    class="form-control"
-                                                                    placeholder="학생 이름/아이디 검색..." />
-                                                            </div>
-
-                                                            <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'd-none' %>"
-                                                                id="studentSearchWrapper">
-                                                                <i class="bi bi-search search-icon"></i>
-                                                                <input type="text" id="studentSearch"
-                                                                    class="form-control"
-                                                                    placeholder="학생 이름/아이디 검색..." />
-                                                            </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Main Content (Tables) -->
-                                        <div class="tab-content" id="studentTabContent">
-
-                                            <!-- 학습 진도 탭 (Default Visible) -->
-                                            <div class="tab-pane fade <%= typeof currentView !== 'undefined' && currentView === 'progress' ? 'show active' : '' %>"
-                                                id="student-progress" role="tabpanel">
-                                                <div class="content-card">
-                                                    <div class="table-responsive" id="progressTableWrapper">
-                                                        <table class="premium-table">
-                                                            <colgroup>
-                                                                <col style="width: 3%;"> <!-- No -->
-                                                                <col style="width: 6%;"> <!-- Profile (Higher) -->
-                                                                <col style="width: 6%;"> <!-- CT (Higher) -->
-                                                                <col style="width: 10%;"> <!-- Name (Lower) -->
-                                                                <col style="width: 11%;"> <!-- ID (Lower) -->
-
-                                                                <!-- Platforms (Total 40%) -->
-                                                                <col style="width: 8%;"> <!-- Scratch -->
-                                                                <col style="width: 8%;"> <!-- Entry -->
-                                                                <col style="width: 8%;"> <!-- AppInv -->
-                                                                <col style="width: 8%;"> <!-- Python -->
-                                                                <col style="width: 8%;"> <!-- Data -->
-
-                                                                <!-- Right (Total 20%) -->
-                                                                <col style="width: 10%;"> <!-- Storage (Size + Mgmt) -->
-                                                                <col style="width: 10%;"> <!-- Last Learning -->
-                                                            </colgroup>
-                                                            <thead>
-                                                                <tr>
-                                                                    <th rowspan="2">No.</th>
-                                                                    <th rowspan="2">프로필</th>
-                                                                    <th rowspan="2" data-sort="ct_level">CT <i
-                                                                            class="bi bi-caret-down-fill sort-icon"></i>
-                                                                    </th>
-                                                                    <th rowspan="2" data-sort="name">이름 <i
-                                                                            class="bi bi-caret-down-fill sort-icon"></i>
-                                                                    </th>
-                                                                    <th rowspan="2" data-sort="username">아이디 <i
-                                                                            class="bi bi-caret-down-fill sort-icon"></i>
-                                                                    </th>
-
-                                                                    <th colspan="5" class="text-center border-bottom">
-                                                                        플랫폼별 진도율
-                                                                    </th>
-
-                                                                    <th rowspan="2" data-sort="storage_usage">스토리지 <i
-                                                                            class="bi bi-caret-down-fill sort-icon"></i>
-                                                                    </th>
-                                                                    <th rowspan="2" data-sort="last_learning_at">최근학습 <i
-                                                                            class="bi bi-caret-down-fill sort-icon"></i>
-                                                                    </th>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th class="text-center small text-muted">스크래치</th>
-                                                                    <th class="text-center small text-muted">엔트리</th>
-                                                                    <th class="text-center small text-muted">앱인벤터</th>
-                                                                    <th class="text-center small text-muted">파이썬</th>
-                                                                    <th class="text-center small text-muted">데이터</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="progressTableBody">
-                                                                <!-- 동적으로 로드 -->
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- 학생 목록 탭 -->
-                                            <div class="tab-pane fade <%= typeof currentView !== 'undefined' && currentView === 'list' ? 'show active' : '' %>"
-                                                id="student-list" role="tabpanel">
-                                                <div class="content-card">
-                                                    <div class="table-responsive">
-                                                        <table class="premium-table">
-                                                            <colgroup>
-                                                                <col style="width: 5%;"> <!-- No -->
-                                                                <col style="width: 5%;"> <!-- Profile -->
-                                                                <col style="width: 10%;"> <!-- Name -->
-                                                                <col style="width: 10%;"> <!-- ID -->
-                                                                <col style="width: 20%;"> <!-- Email -->
-                                                                <col style="width: 15%;"> <!-- Join Date -->
-                                                                <col style="width: 15%;"> <!-- Last Access -->
-                                                                <col style="width: 10%;"> <!-- Management -->
-                                                            </colgroup>
-                                                            <thead class="single-line-header">
-                                                                <tr>
-                                                                    <th>No.</th>
-                                                                    <th>프로필</th>
-                                                                    <th data-sort="name">이름 <i
-                                                                            class="bi bi-caret-down-fill sort-icon"></i>
-                                                                    </th>
-                                                                    <th data-sort="username">아이디 <i
-                                                                            class="bi bi-caret-down-fill sort-icon"></i>
-                                                                    </th>
-                                                                    <th>이메일</th>
-                                                                    <th data-sort="created_at">가입일 <i
-                                                                            class="bi bi-caret-down-fill sort-icon"></i>
-                                                                    </th>
-                                                                    <th data-sort="last_access">최근접속 <i
-                                                                            class="bi bi-caret-down-fill sort-icon"></i>
-                                                                    </th>
-                                                                    <th>관리</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="studentTableBody">
-                                                                <!-- 동적으로 로드 -->
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- 출석부 탭 -->
-                                            <div class="tab-pane fade <%= typeof currentView !== 'undefined' && currentView === 'attendance' ? 'show active' : '' %>"
-                                                id="student-attendance" role="tabpanel">
-                                                <div class="content-card" style="min-height: 600px;">
-                                                    <div id="attendance-calendar" class="attendance-calendar p-3">
-                                                        <!-- JS renders calendar here -->
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                </div>
-
-                                <div id="coming-soon-view"
-                                    style="<%= (typeof currentView !== 'undefined' && (currentView === 'class-materials' || currentView === 'career-info')) ? 'display: flex;' : 'display: none;' %> height: 100%; min-height: 600px; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-                                    <i class="bi bi-cone-striped fs-1 text-muted mb-3"></i>
-                                    <h4 class="text-muted">준비중입니다. 곧 만나실 수 있으실거에요 ^~^/. 기대해주세요</h4>
-                                </div>
-                                <% if (typeof ajax==='undefined' || !ajax) { %>
-                        </div>
-                    </div>
-                    <% } %>
-
-                        <!-- 학생 추가/수정 모달 -->
-                        <div class="modal fade" id="studentModal" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="modalTitle">학생 추가</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form id="studentForm">
-                                            <input type="hidden" id="studentId">
-
-                                            <div class="mb-3">
-                                                <label class="form-label">아이디 <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="userID" required>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label">이름 <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="name" required>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label">이메일</label>
-                                                <input type="email" class="form-control" id="email">
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label">비밀번호 <small class="text-muted">(수정 시 공란이면 변경 안
-                                                        함)</small></label>
-                                                <input type="password" class="form-control" id="password">
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label">전화번호</label>
-                                                <input type="tel" class="form-control" id="phone">
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label">생년월일</label>
-                                                <input type="date" class="form-control" id="birthdate">
-                                            </div>
-                                        </form>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">취소</button>
-                                        <button type="button" class="btn btn-primary" id="saveStudentBtn">저장</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 🔥 S3 파일 브라우저 모달 -->
-                        <div class="modal fade" id="s3BrowserModal" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-fullscreen">
-                                <div class="modal-content">
-                                    <div class="modal-body p-0">
-                                        <iframe id="s3BrowserFrame" src=""
-                                            style="width: 100%; height: 100%; border: none;" frameborder="0">
-                                        </iframe>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 🔥 Timeline (Portfolio) Browser Modal -->
-                        <div class="modal fade" id="timelineBrowserModal" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-fullscreen">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title fw-bold" id="timelineBrowserTitle">학습 타임라인</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body p-0" style="background: #f8f9fa;">
-                                        <iframe id="timelineBrowserFrame" src=""
-                                            style="width: 100%; height: 100%; border: none;" frameborder="0">
-                                        </iframe>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 🔥 S3 모달 초기화 스크립트 -->
-                        <script>
-                            // 학생 S3 폴더 열기 함수
-                            function openStudentS3Folder(userID) {
-                                const iframe = document.getElementById('s3BrowserFrame');
-                                // S3 브라우저에 학생 폴더 경로 전달
-                                iframe.src = `/s3/browser?initialPath=users/${encodeURIComponent(userID)}/`;
-                                const modal = new bootstrap.Modal(document.getElementById('s3BrowserModal'));
-                                modal.show();
+            <!-- Vertical Stack: Center Select (Top) & Search (Bottom) -->
+            <div class="d-flex flex-column align-items-end gap-2">
+                <!-- 🔥 Admin Center Selector -->
+                <% if (role === 'admin' && typeof centers !== 'undefined' && centers.length > 0) { %>
+                <div class="me-1">
+                    <select id="centerSelect" class="form-select form-select-sm text-start" style="width: 200px; border-color: #ff9f1c;" onchange="changeAdminCenter(this.value)">
+                        <option value="">전체 센터 보기</option>
+                        <% centers.forEach(function(center) { %>
+                        <option value="<%= center.id %>" <%= typeof centerID !== 'undefined' && center.id == centerID ? 'selected' : '' %>>
+                            <%= center.name %>
+                        </option>
+                        <% }); %>
+                    </select>
+                    <script>
+                        function changeAdminCenter(val) {
+                            try {
+                                const currentUrl = new window.URL(window.location.href);
+                                if (val) {
+                                    currentUrl.searchParams.set('centerID', val);
+                                } else {
+                                    currentUrl.searchParams.delete('centerID');
+                                }
+                                window.location.href = currentUrl.toString();
+                            } catch (e) {
+                                console.error('URL Update Error:', e);
+                                alert('페이지 이동 중 오류가 발생했습니다.');
                             }
+                        }
+                    </script>
+                </div>
+                <% } %>
 
-                            // 모달이 닫힐 때 iframe src 초기화 (메모리 절약)
-                            document.getElementById('s3BrowserModal').addEventListener('hidden.bs.modal', function () {
-                                const iframe = document.getElementById('s3BrowserFrame');
-                                iframe.src = '';
-                            });
-                        </script>
+                <!-- Search Inputs -->
+                <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'progress' ? '' : 'd-none' %>" id="progressSearchWrapper">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" id="progressSearch" class="form-control" placeholder="학생 이름/아이디 검색..." />
+                </div>
 
-                        <!-- Global Popover Container -->
-                        <div id="global-platform-popover"></div>
+                <div class="search-wrapper <%= typeof currentView !== 'undefined' && currentView === 'list' ? '' : 'd-none' %>" id="studentSearchWrapper">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" id="studentSearch" class="form-control" placeholder="학생 이름/아이디 검색..." />
+                </div>
+            </div>
+        </div>
+    </div>
 
-                        <!-- 학생 관리 전용 스크립트 -->
-                        <script src="/js/teacher/student-management.js?v=8"></script>
-                        <% if (typeof currentView==='undefined' || currentView !=='progress' ) { %>
-                            <%- include('../partials/footer') %>
-                                <% } %>
-                                    <script
-                                        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-                                    <!-- Daily Attendance Modal -->
-                                    <div class="modal fade" id="dailyAttendanceModal" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered modal-lg">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title fw-bold" id="dailyModalTitle">출석 현황</h5>
-                                                    <button type="button" class="btn-close"
-                                                        data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="table-responsive">
-                                                        <table class="table table-hover align-middle mb-0">
-                                                            <thead class="table-light">
-                                                                <tr>
-                                                                    <th>프로필</th>
-                                                                    <th>이름</th>
-                                                                    <th>등원 시간</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="dailyModalBody"></tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+    <!-- Main Content (Tables) -->
+    <div class="tab-content" id="studentTabContent">
 
-                                    <!-- Student Detail Modal -->
-                                    <div class="modal fade" id="studentDetailModal" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title fw-bold" id="studentDetailTitle">학생 상세 정보
-                                                    </h5>
-                                                    <button type="button" class="btn-close"
-                                                        data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="text-center mb-4">
-                                                        <img src="/resource/profiles/default.webp"
-                                                            id="studentDetailImage" class="rounded-circle mb-2"
-                                                            style="width: 80px; height: 80px; object-fit: cover;">
-                                                        <h4 id="studentDetailName" class="fw-bold mb-0"></h4>
-                                                        <p id="studentDetailId" class="text-muted"></p>
-                                                    </div>
-                                                    <h6 class="fw-bold border-bottom pb-2 mb-3">이번 달 출석 기록</h6>
-                                                    <div id="studentDetailList" class="d-flex flex-column gap-2"
-                                                        style="max-height: 300px; overflow-y: auto;"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-            </body>
+        <!-- 학습 진도 탭 (Default Visible) -->
+        <div class="tab-pane fade <%= typeof currentView !== 'undefined' && currentView === 'progress' ? 'show active' : '' %>" id="student-progress" role="tabpanel">
+            <div class="content-card">
+                <div class="table-responsive" id="progressTableWrapper">
+                    <table class="premium-table">
+                        <colgroup>
+                            <col style="width: 3%;"> <!-- No -->
+                            <col style="width: 6%;"> <!-- Profile -->
+                            <col style="width: 6%;"> <!-- CT -->
+                            <col style="width: 10%;"> <!-- Name -->
+                            <col style="width: 11%;"> <!-- ID -->
+                            <col style="width: 8%;"> <!-- Scratch -->
+                            <col style="width: 8%;"> <!-- Entry -->
+                            <col style="width: 8%;"> <!-- AppInv -->
+                            <col style="width: 8%;"> <!-- Python -->
+                            <col style="width: 8%;"> <!-- Data -->
+                            <col style="width: 10%;"> <!-- Storage -->
+                            <col style="width: 10%;"> <!-- Last Learning -->
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th rowspan="2">No.</th>
+                                <th rowspan="2">프로필</th>
+                                <th rowspan="2" data-sort="ct_level">CT <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th rowspan="2" data-sort="name">이름 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th rowspan="2" data-sort="username">아이디 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th colspan="5" class="text-center border-bottom">플랫폼별 진도율</th>
+                                <th rowspan="2" data-sort="storage_usage">스토리지 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th rowspan="2" data-sort="last_learning_at">최근학습 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                            </tr>
+                            <tr>
+                                <th class="text-center small text-muted">스크래치</th>
+                                <th class="text-center small text-muted">엔트리</th>
+                                <th class="text-center small text-muted">앱인벤터</th>
+                                <th class="text-center small text-muted">파이썬</th>
+                                <th class="text-center small text-muted">데이터</th>
+                            </tr>
+                        </thead>
+                        <tbody id="progressTableBody">
+                            <!-- 동적으로 로드 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-</html>
+        <!-- 학생 목록 탭 -->
+        <div class="tab-pane fade <%= typeof currentView !== 'undefined' && currentView === 'list' ? 'show active' : '' %>" id="student-list" role="tabpanel">
+            <div class="content-card">
+                <div class="table-responsive">
+                    <table class="premium-table">
+                        <colgroup>
+                            <col style="width: 5%;"> <!-- No -->
+                            <col style="width: 5%;"> <!-- Profile -->
+                            <col style="width: 10%;"> <!-- Name -->
+                            <col style="width: 10%;"> <!-- ID -->
+                            <col style="width: 20%;"> <!-- Email -->
+                            <col style="width: 15%;"> <!-- Join Date -->
+                            <col style="width: 15%;"> <!-- Last Access -->
+                            <col style="width: 10%;"> <!-- Management -->
+                        </colgroup>
+                        <thead class="single-line-header">
+                            <tr>
+                                <th>No.</th>
+                                <th>프로필</th>
+                                <th data-sort="name">이름 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th data-sort="username">아이디 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th>이메일</th>
+                                <th data-sort="created_at">가입일 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th data-sort="last_access">최근접속 <i class="bi bi-caret-down-fill sort-icon"></i></th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            <!-- 동적으로 로드 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 출석부 탭 -->
+        <div class="tab-pane fade <%= typeof currentView !== 'undefined' && currentView === 'attendance' ? 'show active' : '' %>" id="student-attendance" role="tabpanel">
+            <div class="content-card" style="min-height: 600px;">
+                <div id="attendance-calendar" class="attendance-calendar p-3">
+                    <!-- JS renders calendar here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Coming Soon View -->
+<div id="coming-soon-view" style="<%= (typeof currentView !== 'undefined' && (currentView === 'class-materials' || currentView === 'career-info')) ? 'display: flex;' : 'display: none;' %> height: 100%; min-height: 600px; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+    <i class="bi bi-cone-striped fs-1 text-muted mb-3"></i>
+    <h4 class="text-muted">준비중입니다. 곧 만나실 수 있으실거에요 ^~^/. 기대해주세요</h4>
+</div>
+
+<!-- 학생 추가/수정 모달 -->
+<div class="modal fade" id="studentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">학생 추가</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="studentForm">
+                    <input type="hidden" id="studentId">
+                    <div class="mb-3">
+                        <label class="form-label">아이디 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="userID" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">이름 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">이메일</label>
+                        <input type="email" class="form-control" id="email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">비밀번호 <small class="text-muted">(수정 시 공란이면 변경 안 함)</small></label>
+                        <input type="password" class="form-control" id="password">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">전화번호</label>
+                        <input type="tel" class="form-control" id="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">생년월일</label>
+                        <input type="date" class="form-control" id="birthdate">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" id="saveStudentBtn">저장</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- S3 파일 브라우저 모달 -->
+<div class="modal fade" id="s3BrowserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <iframe id="s3BrowserFrame" src="" style="width: 100%; height: 100%; border: none;" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timeline (Portfolio) Browser Modal -->
+<div class="modal fade" id="timelineBrowserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="timelineBrowserTitle">학습 타임라인</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" style="background: #f8f9fa;">
+                <iframe id="timelineBrowserFrame" src="" style="width: 100%; height: 100%; border: none;" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- S3 모달 초기화 스크립트 -->
+<script>
+    // 학생 S3 폴더 열기 함수
+    function openStudentS3Folder(userID) {
+        const iframe = document.getElementById('s3BrowserFrame');
+        iframe.src = `/s3/browser?initialPath=users/${encodeURIComponent(userID)}/`;
+        const modal = new bootstrap.Modal(document.getElementById('s3BrowserModal'));
+        modal.show();
+    }
+
+    // 모달이 닫힐 때 iframe src 초기화 (메모리 절약)
+    document.getElementById('s3BrowserModal').addEventListener('hidden.bs.modal', function () {
+        const iframe = document.getElementById('s3BrowserFrame');
+        iframe.src = '';
+    });
+</script>
+
+<!-- Global Popover Container -->
+<div id="global-platform-popover"></div>
+
+<!-- Daily Attendance Modal -->
+<div class="modal fade" id="dailyAttendanceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="dailyModalTitle">출석 현황</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>프로필</th>
+                                <th>이름</th>
+                                <th>등원 시간</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailyModalBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student Detail Modal -->
+<div class="modal fade" id="studentDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="studentDetailTitle">학생 상세 정보</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <img src="/resource/profiles/default.webp" id="studentDetailImage" class="rounded-circle mb-2" style="width: 80px; height: 80px; object-fit: cover;">
+                    <h4 id="studentDetailName" class="fw-bold mb-0"></h4>
+                    <p id="studentDetailId" class="text-muted"></p>
+                </div>
+                <h6 class="fw-bold border-bottom pb-2 mb-3">이번 달 출석 기록</h6>
+                <div id="studentDetailList" class="d-flex flex-column gap-2" style="max-height: 300px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%
+}
+%>
+
+<%- include('../layouts/board-base-layout', layoutData) %>

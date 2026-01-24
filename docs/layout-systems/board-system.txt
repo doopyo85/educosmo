@@ -1,0 +1,913 @@
+================================================================================
+BOARD-SYSTEM 세부 문서
+================================================================================
+시스템 이름: Board-System (보드 레이아웃 시스템)
+적용 대상: Teacher, Board, S3 Browser
+버전: 1.0
+
+================================================================================
+시스템 개요
+================================================================================
+
+Board-System은 고정 사이드바와 메인 콘텐츠 영역으로 구성된 대시보드 레이아웃입니다.
+교사용 관리 페이지, 게시판, 파일 관리 등의 페이지에서 사용됩니다.
+
+주요 특징:
+  ✓ Sticky 사이드바 네비게이션 (250px 고정)
+  ✓ 유연한 메인 콘텐츠 영역 (flex: 1)
+  ✓ 선택적 액션 버튼 컬럼 (100px 고정)
+  ✓ 반응형 레이아웃 (모바일, 태블릿, 데스크톱)
+  ✓ 통일된 레이아웃 템플릿 (board-base-layout.ejs)
+
+================================================================================
+적용 라우트
+================================================================================
+
+Teacher Pages:
+  /teacher/*                              → 교사 대시보드
+  /teacher/student-management/progress    → 학생 진도 관리
+  /teacher/student-management/list        → 학생 목록
+  /teacher/student-management/attendance  → 출석 관리
+  /teacher/class-materials/lessons        → 수업 자료
+  /teacher/career-info/university         → 대학 정보
+  /teacher/career-info/cutlines           → 입시 커트라인
+  /teacher/career-info/admission-info     → 입시 정보
+  /teacher/career-info/schedule           → 입시 일정
+
+Board Pages:
+  /board                   → 누구리 보드 (채팅 + 태스크)
+  /board/board_index       → 게시판 목록
+
+File Management:
+  /s3/student-files        → 학생 파일 관리 (S3 브라우저)
+
+================================================================================
+파일 구조
+================================================================================
+
+Layout Template:
+  /views/layouts/board-base-layout.ejs   ← 🆕 Board 시스템 공통 레이아웃
+
+View Files (Teacher):
+  /views/teacher.ejs                      ← Teacher 대시보드 래퍼
+  /views/teacher/student-management.ejs   ← 학생 관리 페이지
+  /views/teacher/class-materials.ejs      ← 수업 자료 페이지
+  /views/teacher/career-info.ejs          ← 진로 정보 페이지
+  /views/teacher/student-files.ejs        ← S3 파일 브라우저 래퍼
+
+View Files (Board):
+  /views/board.ejs                        ← 누구리 보드
+  /views/board/board_index.ejs            ← 게시판 목록
+
+Partials (Sidebar):
+  /views/teacher/partials/sidebar.ejs     ← Teacher 사이드바
+  /views/partials/board_sidebar.ejs       ← Board 사이드바
+
+CSS Files (Core):
+  /public/css/board-layout.css            ← Board 레이아웃 핵심 CSS
+  /public/css/teacher.css                 ← Teacher 페이지 스타일
+  /public/css/nuguri.css                  ← 누구리 보드 스타일 (board.css 리네임)
+
+CSS Files (Specific):
+  /public/css/teacher/student-management.css  ← 학생 관리 페이지
+  /public/css/admin/s3-browser.css        ← S3 브라우저
+  /public/css/admin/s3-browser-teacher.css ← 🆕 Teacher용 S3 브라우저 (인라인 CSS 분리)
+
+JavaScript Files:
+  /public/js/teacher/student-management.js
+  /public/js/admin/s3-browser.js
+  /public/js/nuguri-board.js
+
+================================================================================
+HTML 레이아웃 구조
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                           Header (70px)                          │
+│  (공통 헤더 - 모든 시스템 공유)                                 │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓ 20px gap (sticky top: 90px)
+┌─────────────────────────────────────────────────────────────────┐
+│                    board-layout-container                        │
+│  ┌───────────┬───────────────────────────────┬──────────────┐  │
+│  │  Sidebar  │      Main Content             │ Action Btns  │  │
+│  │  (250px)  │      (flex: 1)                │ (100px)      │  │
+│  │           │                               │              │  │
+│  │  ┌─────┐  │  ┌─────────────────────────┐  │  ┌────────┐  │  │
+│  │  │Menu1│  │  │   Content Header        │  │  │ Button1│  │  │
+│  │  │Menu2│  │  │                         │  │  │ Button2│  │  │
+│  │  │Menu3│  │  │   Page Content          │  │  └────────┘  │  │
+│  │  └─────┘  │  │                         │  │              │  │
+│  │           │  │                         │  │              │  │
+│  │  Sticky   │  │   Scrollable            │  │   Sticky     │  │
+│  │  Position │  │                         │  │   Position   │  │
+│  │           │  │                         │  │              │  │
+│  │           │  └─────────────────────────┘  │              │  │
+│  └───────────┴───────────────────────────────┴──────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+
+레이아웃 특징:
+- Flexbox 기반 3-column 레이아웃
+- Sidebar와 Action Buttons는 sticky positioning (스크롤 시 고정)
+- Main Content만 스크롤 가능
+- 20px gap 간격
+
+================================================================================
+board-base-layout.ejs 템플릿
+================================================================================
+
+공통 레이아웃 템플릿입니다. 모든 Board-System 페이지에서 사용합니다.
+
+파일 위치: /views/layouts/board-base-layout.ejs
+
+구조:
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Educosmo' %></title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Board System 공통 CSS -->
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/board-layout.css">
+
+  <!-- 페이지별 추가 CSS -->
+  <% if (additionalCSS && additionalCSS.length > 0) { %>
+    <% additionalCSS.forEach(function(css) { %>
+      <link rel="stylesheet" href="<%= css %>">
+    <% }); %>
+  <% } %>
+</head>
+<body>
+  <!-- 공통 헤더 -->
+  <%- include('../partials/header') %>
+
+  <!-- Board Layout Container -->
+  <div class="board-layout-container">
+
+    <!-- Sidebar (조건부 렌더링) -->
+    <% if (sidebarType === 'teacher') { %>
+      <%- include('../teacher/partials/sidebar', {currentView: currentView || 'dashboard'}) %>
+    <% } else if (sidebarType === 'board') { %>
+      <%- include('../partials/board_sidebar') %>
+    <% } %>
+
+    <!-- Main Content -->
+    <div class="board-main-content">
+      <%- body %>
+    </div>
+
+    <!-- Action Buttons (선택적) -->
+    <% if (typeof actionButtons !== 'undefined') { %>
+      <div class="board-action-buttons">
+        <%- actionButtons %>
+      </div>
+    <% } %>
+
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- 페이지별 추가 JS -->
+  <% if (additionalJS && additionalJS.length > 0) { %>
+    <% additionalJS.forEach(function(js) { %>
+      <script src="<%= js %>"></script>
+    <% }); %>
+  <% } %>
+</body>
+</html>
+
+파라미터:
+- title: 페이지 제목 (String)
+- sidebarType: 사이드바 종류 ('teacher' | 'board' | 'none')
+- currentView: 사이드바 하이라이트용 (String, 예: 'progress', 'list')
+- additionalCSS: 추가 CSS 파일 배열 (Array)
+- additionalJS: 추가 JS 파일 배열 (Array)
+- body: 메인 콘텐츠 HTML (String)
+- actionButtons: 액션 버튼 HTML (String, 선택적)
+
+================================================================================
+페이지 작성 방법
+================================================================================
+
+board-base-layout.ejs를 사용하여 페이지를 작성하는 방법입니다.
+
+예시 1: Teacher 페이지
+<!-- /views/teacher/student-management.ejs -->
+<%
+  var layoutData = {
+    title: '학생 진도 관리',
+    sidebarType: 'teacher',
+    currentView: 'progress',
+    additionalCSS: ['/css/teacher.css', '/css/teacher/student-management.css'],
+    additionalJS: ['/js/teacher/student-management.js'],
+    body: renderBody()
+  };
+
+  function renderBody() {
+%>
+    <!-- 메인 콘텐츠 작성 -->
+    <div class="content-header">
+      <h1>학생 진도 관리</h1>
+    </div>
+
+    <div class="student-progress-container">
+      <!-- 학생 진도 테이블 등 -->
+    </div>
+<%
+  }
+%>
+<%- include('../layouts/board-base-layout', layoutData) %>
+
+예시 2: Board 페이지
+<!-- /views/board/board_index.ejs -->
+<%
+  var layoutData = {
+    title: '게시판',
+    sidebarType: 'board',
+    additionalCSS: ['/css/board.css'],
+    body: renderBody()
+  };
+
+  function renderBody() {
+%>
+    <div class="board-list">
+      <!-- 게시글 목록 -->
+    </div>
+<%
+  }
+%>
+<%- include('../layouts/board-base-layout', layoutData) %>
+
+예시 3: 사이드바 없는 페이지
+<%
+  var layoutData = {
+    title: '누구리 보드',
+    sidebarType: 'none',
+    additionalCSS: ['/css/nuguri.css'],
+    additionalJS: ['/js/nuguri-board.js'],
+    body: renderBody()
+  };
+
+  function renderBody() {
+%>
+    <div class="nuguri-container">
+      <!-- 누구리 채팅 + 태스크 -->
+    </div>
+<%
+  }
+%>
+<%- include('../layouts/board-base-layout', layoutData) %>
+
+================================================================================
+board-layout.css 구조
+================================================================================
+
+Board-System의 핵심 레이아웃 CSS입니다.
+
+파일 위치: /public/css/board-layout.css (230줄)
+
+주요 CSS 클래스:
+
+/* 메인 컨테이너 */
+.board-layout-container {
+  display: flex;
+  gap: 20px;
+  padding: 0 20px;
+  max-width: 1920px;
+  margin: 0 auto;
+  position: sticky;
+  top: 90px;  /* header(70px) + margin(20px) */
+}
+
+/* 사이드바 (고정 너비, sticky) */
+.board-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  position: sticky;
+  top: 90px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+}
+
+/* 메인 콘텐츠 (유연한 너비) */
+.board-main-content {
+  flex: 1;
+  min-width: 600px;
+  background: white;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 액션 버튼 (고정 너비, sticky) */
+.board-action-buttons {
+  width: 100px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 90px;
+  max-height: calc(100vh - 110px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.board-action-buttons .action-btn {
+  width: 100%;
+  height: 60px;
+  border: none;
+  border-radius: 8px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.board-action-buttons .action-btn:hover {
+  background: #0056b3;
+}
+
+반응형 Breakpoints:
+
+@media (max-width: 1200px) {
+  .board-main-content {
+    min-width: 500px;
+  }
+}
+
+@media (max-width: 992px) {
+  .board-layout-container {
+    flex-direction: column;
+  }
+
+  .board-sidebar,
+  .board-main-content,
+  .board-action-buttons {
+    width: 100%;
+    position: static;
+  }
+
+  .board-action-buttons {
+    flex-direction: row;
+    height: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .board-layout-container {
+    padding: 0 10px;
+  }
+
+  .board-main-content {
+    padding: 20px;
+    min-width: 0;
+  }
+}
+
+================================================================================
+사이드바 구조
+================================================================================
+
+Board-System은 2가지 사이드바를 지원합니다.
+
+1. Teacher Sidebar (/views/teacher/partials/sidebar.ejs)
+
+구조:
+<div class="board-sidebar teacher-sidebar">
+  <div class="sidebar-header">
+    <i class="fas fa-chalkboard-teacher"></i>
+    <h3>교사 전용 메뉴</h3>
+  </div>
+
+  <div class="sidebar-group">
+    <h4 class="group-title">학생 관리</h4>
+    <a href="/teacher/student-management/progress"
+       class="sidebar-item <%= currentView === 'progress' ? 'active' : '' %>">
+      <i class="fas fa-chart-line"></i>
+      <span>진도 관리</span>
+    </a>
+    <a href="/teacher/student-management/list"
+       class="sidebar-item <%= currentView === 'list' ? 'active' : '' %>">
+      <i class="fas fa-users"></i>
+      <span>학생 목록</span>
+    </a>
+    <a href="/teacher/student-management/attendance"
+       class="sidebar-item <%= currentView === 'attendance' ? 'active' : '' %>">
+      <i class="fas fa-calendar-check"></i>
+      <span>출석 관리</span>
+    </a>
+  </div>
+
+  <div class="sidebar-group">
+    <h4 class="group-title">수업 자료</h4>
+    <a href="/teacher/class-materials/lessons"
+       class="sidebar-item <%= currentView === 'lessons' ? 'active' : '' %>">
+      <i class="fas fa-book"></i>
+      <span>수업 자료</span>
+    </a>
+  </div>
+
+  <div class="sidebar-group">
+    <h4 class="group-title">진로 진학</h4>
+    <a href="/teacher/career-info/university"
+       class="sidebar-item <%= currentView === 'university' ? 'active' : '' %>">
+      <i class="fas fa-university"></i>
+      <span>대학 정보</span>
+    </a>
+    <a href="/teacher/career-info/cutlines"
+       class="sidebar-item <%= currentView === 'cutlines' ? 'active' : '' %>">
+      <i class="fas fa-chart-bar"></i>
+      <span>입시 커트라인</span>
+    </a>
+    <a href="/teacher/career-info/admission-info"
+       class="sidebar-item <%= currentView === 'admission-info' ? 'active' : '' %>">
+      <i class="fas fa-info-circle"></i>
+      <span>입시 정보</span>
+    </a>
+    <a href="/teacher/career-info/schedule"
+       class="sidebar-item <%= currentView === 'schedule' ? 'active' : '' %>">
+      <i class="fas fa-calendar-alt"></i>
+      <span>입시 일정</span>
+    </a>
+  </div>
+</div>
+
+currentView 파라미터로 활성 메뉴 하이라이트:
+- 'progress' → 진도 관리 활성화
+- 'list' → 학생 목록 활성화
+- 'attendance' → 출석 관리 활성화
+- 등...
+
+2. Board Sidebar (/views/partials/board_sidebar.ejs)
+
+구조:
+<div class="board-sidebar">
+  <div class="sidebar-header">
+    <i class="fas fa-comments"></i>
+    <h3>게시판</h3>
+  </div>
+
+  <div class="sidebar-group">
+    <a href="/board/board_index?category=notice" class="sidebar-item">
+      <i class="fas fa-bullhorn"></i>
+      <span>공지사항</span>
+    </a>
+    <a href="/board/board_index?category=free" class="sidebar-item">
+      <i class="fas fa-comment-dots"></i>
+      <span>자유게시판</span>
+    </a>
+    <a href="/board/board_index?category=qna" class="sidebar-item">
+      <i class="fas fa-question-circle"></i>
+      <span>질문답변</span>
+    </a>
+    <a href="/board/board_index?category=gallery" class="sidebar-item">
+      <i class="fas fa-images"></i>
+      <span>갤러리</span>
+    </a>
+  </div>
+</div>
+
+================================================================================
+Teacher 페이지 스타일 (teacher.css)
+================================================================================
+
+파일 위치: /public/css/teacher.css (154줄)
+
+주요 스타일:
+
+/* Content Header */
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.content-header h1 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+/* Premium Table (학생 관리 테이블) */
+.premium-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.premium-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.premium-table th {
+  padding: 15px;
+  font-weight: 600;
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.premium-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.premium-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.loading-state .spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e9ecef;
+  border-top-color: #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-state img {
+  width: 200px;
+  opacity: 0.5;
+  margin-bottom: 20px;
+}
+
+.empty-state p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+================================================================================
+S3 Browser 통합
+================================================================================
+
+S3 Browser는 학생 파일을 관리하는 Windows Explorer 스타일 파일 브라우저입니다.
+
+이전 구조 (인라인 CSS):
+<!-- /views/common/s3-browser.ejs -->
+<% if (role === 'teacher') { %>
+  <style>
+    /* 200줄 인라인 CSS */
+    .board-layout-container { ... }
+    .board-main-content { ... }
+  </style>
+<% } %>
+
+🆕 변경 후 구조 (외부 CSS):
+<!-- /views/teacher/student-files.ejs -->
+<%
+  var layoutData = {
+    title: '학생 파일 관리',
+    sidebarType: 'teacher',
+    currentView: 'student-files',
+    additionalCSS: [
+      '/css/admin/s3-browser.css',
+      '/css/admin/s3-browser-teacher.css'  ← 인라인 CSS 분리
+    ],
+    additionalJS: ['/js/admin/s3-browser.js'],
+    body: renderBody()
+  };
+
+  function renderBody() {
+%>
+    <div id="s3-browser"></div>
+<%
+  }
+%>
+<%- include('../layouts/board-base-layout', layoutData) %>
+
+변경 사항:
+1. 인라인 CSS 제거
+2. /public/css/admin/s3-browser-teacher.css 생성 (인라인 CSS 이동)
+3. Teacher 사이드바 추가
+4. board-base-layout 사용
+
+================================================================================
+누구리 보드 페이지
+================================================================================
+
+누구리 보드는 채팅 + 태스크 관리 페이지입니다.
+
+이전 구조 (Custom Layout):
+<!-- /views/board.ejs -->
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-lg-6">
+      <!-- Chat -->
+    </div>
+    <div class="col-lg-6">
+      <!-- Tasks -->
+    </div>
+  </div>
+</div>
+
+🆕 변경 후 구조 (board-base-layout):
+<!-- /views/board.ejs -->
+<%
+  var layoutData = {
+    title: '누구리 보드',
+    sidebarType: 'none',  ← 사이드바 없음
+    additionalCSS: ['/css/nuguri.css'],  ← board.css 리네임
+    additionalJS: ['/js/nuguri-board.js'],
+    body: renderBody()
+  };
+
+  function renderBody() {
+%>
+    <div class="nuguri-board-container">
+      <div class="nuguri-chat-section">
+        <!-- 채팅 영역 -->
+      </div>
+      <div class="nuguri-tasks-section">
+        <!-- 태스크 영역 -->
+      </div>
+    </div>
+<%
+  }
+%>
+<%- include('layouts/board-base-layout', layoutData) %>
+
+CSS 수정 (nuguri.css):
+/* 기존 Bootstrap row/col 제거, Grid로 변경 */
+.nuguri-board-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 992px) {
+  .nuguri-board-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+변경 사항:
+1. Bootstrap 그리드 → CSS Grid
+2. board.css → nuguri.css 리네임
+3. board-base-layout 사용
+4. 통일된 레이아웃 구조
+
+================================================================================
+반응형 디자인
+================================================================================
+
+Board-System의 반응형 전략:
+
+Desktop (≥ 1200px):
+  ┌─────────────────────────────────────────────────┐
+  │  [Sidebar 250px] [Main Content flex:1] [Actions] │
+  └─────────────────────────────────────────────────┘
+  - 3-column 레이아웃
+  - Sidebar와 Actions는 sticky
+
+Tablet (≥ 992px, < 1200px):
+  ┌─────────────────────────────────────────────────┐
+  │  [Sidebar 250px] [Main Content flex:1]          │
+  └─────────────────────────────────────────────────┘
+  - Actions 숨김 (또는 메인 콘텐츠 내 이동)
+  - 2-column 레이아웃
+
+Mobile (< 992px):
+  ┌──────────────┐
+  │  Sidebar     │
+  ├──────────────┤
+  │ Main Content │
+  ├──────────────┤
+  │   Actions    │
+  └──────────────┘
+  - 세로 스택 레이아웃
+  - Sticky 해제 (정적 배치)
+
+Small Mobile (< 768px):
+  - 패딩 축소 (20px → 10px)
+  - 폰트 크기 축소
+  - 테이블 스크롤 가능
+
+================================================================================
+수정 시 주의사항
+================================================================================
+
+⚠️ 절대 수정 금지:
+  - board-layout.css의 기본 구조 (.board-layout-container, .board-sidebar, .board-main-content)
+  - board-base-layout.ejs의 파라미터 인터페이스
+  - Teacher/Board 사이드바 partial 경로
+
+⚠️ 수정 시 테스트 필수:
+  - 모든 Teacher 페이지 (진도, 목록, 출석, 자료, 진로)
+  - Board 페이지 (누구리, 게시판)
+  - S3 Browser (파일 관리)
+  - 반응형 레이아웃 (모바일, 태블릿, 데스크톱)
+  - Sticky positioning (스크롤 시 고정)
+
+⚠️ 다른 시스템에 영향:
+  - styles.css 수정 시 Component/Card-Layout 확인
+  - header.css 수정 시 모든 시스템 확인
+
+⚠️ 성능 고려:
+  - Sticky positioning은 GPU 가속 사용 (성능 우수)
+  - 긴 목록은 가상 스크롤 고려
+  - 이미지는 Lazy Loading
+
+================================================================================
+새 페이지 추가 방법
+================================================================================
+
+1. EJS 파일 생성
+   /views/teacher/my-new-page.ejs
+
+2. Layout Data 설정
+   <%
+     var layoutData = {
+       title: '새 페이지',
+       sidebarType: 'teacher',
+       currentView: 'my-new-page',
+       additionalCSS: ['/css/teacher.css', '/css/teacher/my-new-page.css'],
+       additionalJS: ['/js/teacher/my-new-page.js'],
+       body: renderBody()
+     };
+   %>
+
+3. Body 렌더링 함수 작성
+   <%
+     function renderBody() {
+   %>
+       <div class="content-header">
+         <h1>새 페이지</h1>
+       </div>
+       <div class="my-content">
+         <!-- 콘텐츠 -->
+       </div>
+   <%
+     }
+   %>
+
+4. Layout Include
+   <%- include('../layouts/board-base-layout', layoutData) %>
+
+5. CSS 파일 생성 (선택)
+   /public/css/teacher/my-new-page.css
+
+6. JavaScript 파일 생성 (선택)
+   /public/js/teacher/my-new-page.js
+
+7. 사이드바에 메뉴 추가
+   /views/teacher/partials/sidebar.ejs에 링크 추가:
+
+   <a href="/teacher/my-new-page"
+      class="sidebar-item <%= currentView === 'my-new-page' ? 'active' : '' %>">
+     <i class="fas fa-icon"></i>
+     <span>새 페이지</span>
+   </a>
+
+8. 라우트 추가 (server.js 또는 routes/teacher.js)
+   app.get('/teacher/my-new-page', (req, res) => {
+     res.render('teacher/my-new-page', {
+       user: req.user
+     });
+   });
+
+================================================================================
+디버깅 팁
+================================================================================
+
+1. Sidebar가 표시되지 않음
+   → sidebarType 확인 ('teacher' 또는 'board')
+   → sidebar.ejs 파일 경로 확인
+
+2. Sticky positioning 작동 안 함
+   → board-layout.css가 로드되었는지 확인
+   → top: 90px 값 확인 (header 높이 + 여백)
+
+3. 반응형 레이아웃 깨짐
+   → Breakpoints 확인 (992px, 768px)
+   → min-width 제거 (모바일에서)
+
+4. CSS 우선순위 문제
+   → board-layout.css < teacher.css < 페이지별 CSS 순서 확인
+   → !important 사용 최소화
+
+5. Action Buttons 표시 안 됨
+   → actionButtons 파라미터 전달 확인
+   → board-layout.css의 .board-action-buttons 확인
+
+================================================================================
+성능 최적화
+================================================================================
+
+1. Sticky Positioning
+   - GPU 가속 사용 (transform, will-change 속성)
+   - Reflow 최소화
+
+2. 긴 목록 최적화
+   - 가상 스크롤 (Virtual Scroll) 고려
+   - 페이지네이션 또는 무한 스크롤
+
+3. 이미지 최적화
+   - Lazy Loading
+   - WebP 포맷
+   - 적절한 크기 (retina 대응)
+
+4. CSS 최적화
+   - 사용하지 않는 CSS 제거
+   - Critical CSS 인라인 (선택)
+
+5. JavaScript 최적화
+   - 이벤트 위임 (Event Delegation)
+   - Debounce/Throttle (스크롤, 리사이즈)
+
+================================================================================
+접근성 (Accessibility)
+================================================================================
+
+1. 시맨틱 HTML
+   <nav class="board-sidebar" aria-label="Teacher Navigation">
+   <main class="board-main-content">
+
+2. ARIA 레이블
+   <a href="..." aria-current="page" class="sidebar-item active">
+
+3. 키보드 네비게이션
+   - Tab으로 사이드바 메뉴 이동
+   - Enter로 링크 활성화
+
+4. 포커스 스타일
+   .sidebar-item:focus {
+     outline: 2px solid #007bff;
+     outline-offset: 2px;
+   }
+
+5. 색상 대비
+   - WCAG AA 기준 (4.5:1)
+   - 활성 메뉴: 충분한 대비
+
+================================================================================
+마이그레이션 체크리스트
+================================================================================
+
+Teacher 페이지:
+  ✅ student-management/progress
+  ✅ student-management/list
+  ✅ student-management/attendance
+  ✅ class-materials/lessons
+  ✅ career-info/university
+  ✅ career-info/cutlines
+  ✅ career-info/admission-info
+  ✅ career-info/schedule
+  ✅ student-files (S3 Browser)
+
+Board 페이지:
+  ✅ board.ejs (누구리)
+  ✅ board/board_index.ejs
+
+CSS 정리:
+  ✅ board.css → nuguri.css 리네임
+  ✅ S3 인라인 CSS → s3-browser-teacher.css 분리
+
+================================================================================
+문서 변경 이력
+================================================================================
+
+2026-01-24 v1.0 - 초기 문서 작성
+  - Board-System 아키텍처 정리
+  - board-base-layout.ejs 템플릿 설계
+  - 사이드바 구조 및 페이지 작성 가이드 작성
+  - S3 Browser 및 누구리 보드 마이그레이션 계획 문서화
+
+================================================================================
