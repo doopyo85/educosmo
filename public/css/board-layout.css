@@ -28,10 +28,12 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* 메인 콘텐츠 영역 (유연한 너비) */
+/* 메인 콘텐츠 영역 (최대 너비로 고정) */
 .board-main-content {
     flex: 1;
     min-width: 600px;
+    max-width: calc(100% - 270px); /* 사이드바(250px) + gap(20px) */
+    width: 100%;
     background-color: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
