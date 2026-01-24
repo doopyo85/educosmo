@@ -470,7 +470,7 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ error: '이름을 입력해주세요.' });
         }
 
-        if (!inviteCode || inviteCode.trim().length !== 8) {
+        if (!inviteCode || inviteCode.trim().length < 4) {
             return res.status(400).json({ error: '유효하지 않은 초대 코드입니다.' });
         }
 
@@ -498,11 +498,11 @@ router.post('/register', async (req, res) => {
 
         // 초대 코드 재검증 (최종 확인)
         const codeQuery = `
-            SELECT id, centerID, max_uses, used_count, expires_at
-            FROM center_invite_codes
-            WHERE code = ? AND is_active = 1 AND centerID = ?
+            SELECT ic.id, ic.center_id, ic.max_uses, ic.current_uses, ic.expires_at
+            FROM center_invite_codes ic
+            WHERE ic.code = ? AND ic.center_id = ?
         `;
-        const codeResult = await queryDatabase(codeQuery, [inviteCode, centerID]);
+        const codeResult = await queryDatabase(codeQuery, [inviteCode.trim().toUpperCase(), centerID]);
 
         if (codeResult.length === 0) {
             return res.status(404).json({ error: '유효하지 않은 초대 코드입니다.' });
@@ -515,7 +515,7 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ error: '만료된 초대 코드입니다.' });
         }
 
-        if (inviteCodeData.max_uses && inviteCodeData.used_count >= inviteCodeData.max_uses) {
+        if (inviteCodeData.max_uses && inviteCodeData.current_uses >= inviteCodeData.max_uses) {
             return res.status(400).json({ error: '사용 가능 횟수를 초과한 초대 코드입니다.' });
         }
 
@@ -534,7 +534,7 @@ router.post('/register', async (req, res) => {
         // 초대 코드 사용 횟수 증가
         const updateCodeQuery = `
             UPDATE center_invite_codes
-            SET used_count = used_count + 1
+            SET current_uses = current_uses + 1
             WHERE id = ?
         `;
         await queryDatabase(updateCodeQuery, [inviteCodeData.id]);
@@ -626,13 +626,36 @@ router.post('/api/verify-invite-code', async (req, res) => {
             return res.status(400).json({ error: '유효하지 않은 센터 코드입니다.' });
         }
 
-        // 센터 코드로 센터 조회 (join_code 사용)
-        const centerQuery = `
-            SELECT id, center_name, status
-            FROM Centers
-            WHERE join_code = ? AND status = 'ACTIVE'
+        // 초대 코드로 센터 조회 (center_invite_codes 테이블 사용)
+        const codeQuery = `
+            SELECT ic.*, c.id as center_id, c.center_name, c.status
+            FROM center_invite_codes ic
+            INNER JOIN Centers c ON ic.center_id = c.id
+            WHERE ic.code = ? AND c.status = 'ACTIVE'
         `;
-        const centerResult = await queryDatabase(centerQuery, [inviteCode.trim().toUpperCase()]);
+        const codeResult = await queryDatabase(codeQuery, [inviteCode.trim().toUpperCase()]);
+
+        if (codeResult.length === 0) {
+            return res.status(404).json({ error: '존재하지 않는 초대 코드입니다.' });
+        }
+
+        const inviteCodeData = codeResult[0];
+
+        // 초대 코드 유효성 검증
+        const now = new Date();
+        if (new Date(inviteCodeData.expires_at) < now) {
+            return res.status(400).json({ error: '만료된 초대 코드입니다.' });
+        }
+
+        if (inviteCodeData.current_uses >= inviteCodeData.max_uses) {
+            return res.status(400).json({ error: '초대 코드 사용 가능 횟수를 초과했습니다.' });
+        }
+
+        const centerResult = [{
+            id: inviteCodeData.center_id,
+            center_name: inviteCodeData.center_name,
+            status: inviteCodeData.status
+        }];
 
         if (centerResult.length === 0) {
             return res.status(404).json({ error: '존재하지 않는 센터 코드입니다.' });
