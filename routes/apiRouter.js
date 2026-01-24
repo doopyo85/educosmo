@@ -458,15 +458,34 @@ router.get('/connectome-data', authenticateUser, async (req, res) => {
     const userId = req.session.userID;
 
     // 1. Fetch Nodes with User Progress
-    const nodes = await db.queryDatabase(`
-      SELECT 
-        n.id, n.name, n.category as type, 
-        n.pos_x as position_x, n.pos_y as position_y, n.pos_z as position_z,
-        COALESCE(uc.activation_level, 0) as activation,
-        COALESCE(uc.total_exp, 0) as exp
-      FROM CT_Nodes n
-      LEFT JOIN User_Connectome uc ON n.id = uc.ct_node_id AND uc.user_id = ?
-    `, [userId]);
+    let nodes = [];
+    try {
+      // Check if User_Connectome exists first or handle error gracefully
+      nodes = await db.queryDatabase(`
+          SELECT 
+            n.id, n.name, n.category as type, 
+            n.pos_x as position_x, n.pos_y as position_y, n.pos_z as position_z,
+            COALESCE(uc.activation_level, 0) as activation,
+            COALESCE(uc.total_exp, 0) as exp
+          FROM CT_Nodes n
+          LEFT JOIN User_Connectome uc ON n.id = uc.ct_node_id AND uc.user_id = ?
+        `, [userId]);
+    } catch (e) {
+      console.warn('Connectome Table Warning:', e.message);
+      // Fallback: Just return nodes without user progress if table missing
+      if (e.message.includes("User_Connectome' doesn't exist")) {
+        nodes = await db.queryDatabase(`
+              SELECT 
+                n.id, n.name, n.category as type, 
+                n.pos_x as position_x, n.pos_y as position_y, n.pos_z as position_z,
+                0 as activation,
+                0 as exp
+              FROM CT_Nodes n
+            `);
+      } else {
+        throw e;
+      }
+    }
 
     // 2. Fetch Edges
     const edges = await db.queryDatabase(`

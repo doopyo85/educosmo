@@ -277,7 +277,7 @@ router.get('/homework/:id/submissions', requireCenterMember, async (req, res) =>
 
     // 제출한 학생들의 프로젝트 조회
     const submissions = await queryDatabase(
-      `SELECT ps.*, u.username, u.name
+      `SELECT ps.*, u.userID as username, u.name
       FROM ProjectSubmissions ps
       JOIN Users u ON ps.user_id = u.id
       WHERE JSON_EXTRACT(ps.metadata, '$.missionId') = ?

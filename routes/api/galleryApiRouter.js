@@ -196,12 +196,16 @@ router.get('/projects', optionalAuth, async (req, res) => {
         // 공개 범위 필터링
         if (sessionUser) {
             // 로그인 사용자: public + 같은 센터(class) + 본인 작품
+            // CAUTION: sessionCenterId could be null if not set. Use 0 or handle null in DB logic if strict.
+            // Using COALESCE logic in query or ensuring param is safe.
+            const safeCenterId = sessionCenterId || 0; // Prevent undefined in params array
+
             whereConditions.push(`(
                 gp.visibility = 'public' 
                 OR (gp.visibility = 'class' AND u.centerID = ?)
                 OR u.userID = ?
             )`);
-            params.push(sessionCenterId, sessionUser);
+            params.push(safeCenterId, sessionUser);
         } else {
             // 비로그인: public만
             whereConditions.push(`gp.visibility = 'public'`);
