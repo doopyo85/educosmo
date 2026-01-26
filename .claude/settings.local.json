@@ -46,7 +46,8 @@
       "Bash(npm uninstall:*)",
       "Bash(ls:*)",
       "Bash(del nul)",
-      "Bash(if exist nul del nul)"
+      "Bash(if exist nul del nul)",
+      "Bash(git checkout:*)"
     ]
   }
 }
