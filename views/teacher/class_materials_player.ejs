@@ -3,10 +3,8 @@
 <%- include('../partials/header') %>
 
 <body>
-<!-- 페이지 전용 스타일 -->
+    <!-- Page-specific styles -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;700&display=swap');
-
         :root {
             /* Library Theme Vars - Scoped to avoid messing with layout */
             --lib-bg-color: #f5f5f0;
@@ -563,105 +561,106 @@
         }
     </style>
 
+    <%- include('../partials/header') %>
+
         <div class="board-layout-container">
-            <!-- ?�� ?�쪽 ?�비게이??(Shared Sidebar) -->
+            <!-- 🔥 왼쪽 네비게이션 (Shared Sidebar) -->
             <%- include('partials/sidebar', { currentView: 'lessons' }) %>
 
-                <!-- ?�� 메인 콘텐�?(Library Content) -->
-                <div class="board-main-content p-0">
+            <!-- 🔥 메인 콘텐츠 (Library Content) -->
+            <div class="board-main-content p-0">
 
-                    <div class="library-wrapper">
+                <div class="library-wrapper">
 
-                        <!-- Header -->
-                        <header class="library-header pb-3 pt-2">
-                            <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
-                                <div>
-                                    <small class="text-muted fw-bold d-block mb-1">교사 ?�용 > ?�업 ?�료</small>
-                                    <h2 class="library-title mb-2">?�업 ?�료??/h2>
-                                    <p class="text-muted mb-0">?�업교안�?교육?�상???�인?????�습?�다.</p>
-                                </div>
-
-                                <!-- Tabs (Moved to Right) -->
-                                <div class="library-tabs mb-0" role="tablist">
-                                    <% lessonTabs.forEach((tab, index)=> { %>
-                                        <button class="library-tab-btn <%= index === 0 ? 'active' : '' %>"
-                                            id="<%= tab.id %>-tab" data-bs-toggle="pill" data-bs-target="#<%= tab.id %>"
-                                            type="button" role="tab">
-                                            <%= tab.title %>
-                                        </button>
-                                        <% }); %>
-                                </div>
+                    <!-- Header -->
+                    <header class="library-header pb-3 pt-2">
+                        <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
+                            <div>
+                                <small class="text-muted fw-bold d-block mb-1">교사 전용 > 수업 자료</small>
+                                <h2 class="library-title mb-2">수업 자료실</h2>
+                                <p class="text-muted mb-0">수업교안과 교육영상을 확인할 수 있습니다.</p>
                             </div>
-                        </header>
 
-                        <!-- Content Shelves -->
-                        <div class="tab-content bookshelf-container">
-                            <% lessonTabs.forEach((tab, index)=> { %>
-                                <div class="tab-pane fade <%= index === 0 ? 'show active' : '' %>" id="<%= tab.id %>"
-                                    role="tabpanel">
-
-                                    <% if (tab.groups.length===0) { %>
-                                        <div class="empty-shelf">
-                                            <i class="bi bi-journal-x fs-1 opacity-25"></i>
-                                            <p class="mt-3">?�록??교재가 ?�습?�다.</p>
-                                        </div>
-                                        <% } else { %>
-                                            <div class="shelf-row">
-                                                <% tab.groups.forEach((group)=> {
-                                                    // Get thumbnail logic
-                                                    let coverImg = null;
-                                                    const defaultCover = '/resource/guide/default_book_cover.png';
-
-                                                    if (group.sessions[0] && group.sessions[0].thumbnail &&
-                                                    group.sessions[0].thumbnail !== defaultCover) {
-                                                    coverImg = group.sessions[0].thumbnail;
-                                                    }
-
-                                                    // Check for valid image extension or URL structure
-                                                    // If 'logo-1.png' (generic logo) is used as fallback in data,
-// usually (Fixed syntax error)
-                                                    // treat as valid unless user wants special handling.
-                                                    // In provided data: 'logo-1.png' is common.
-
-                                                    const hasImage = !!coverImg;
-                                                    %>
-                                                    <div class="book-item" onclick="openBookModal(this)"
-                                                        data-title="<%= group.title %>"
-                                                        data-sessions='<%= JSON.stringify(group.sessions) %>'>
-
-                                                        <% if (hasImage) { %>
-                                                            <div class="book-cover">
-                                                                <img src="<%= coverImg %>" alt="<%= group.title %>"
-                                                                    loading="lazy" referrerpolicy="no-referrer">
-                                                            </div>
-                                                            <% } else { // Generate random soft color for text cover
-                                                                const colors=['#e3f2fd', '#f3e5f5' , '#e8f5e9'
-                                                                , '#fff3e0' , '#ffebee' , '#e0f7fa' ]; const
-                                                                randColor=colors[Math.floor(Math.random() *
-                                                                colors.length)]; %>
-                                                                <div class="book-cover text-only"
-                                                                    style="background-color: <%= randColor %>;">
-                                                                    <div class="tit">
-                                                                        <%= group.title %>
-                                                                    </div>
-                                                                </div>
-                                                                <% } %>
-
-                                                                    <div class="book-label">
-                                                                        <%= group.title %>
-                                                                    </div>
-                                                    </div>
-                                                    <% }); %>
-                                            </div>
-                                            <% } %>
-
-                                </div>
-                                <% }); %>
+                            <!-- Tabs (Moved to Right) -->
+                            <div class="library-tabs mb-0" role="tablist">
+                                <% lessonTabs.forEach((tab, index)=> { %>
+                                    <button class="library-tab-btn <%= index === 0 ? 'active' : '' %>"
+                                        id="<%= tab.id %>-tab" data-bs-toggle="pill" data-bs-target="#<%= tab.id %>"
+                                        type="button" role="tab">
+                                        <%= tab.title %>
+                                    </button>
+                                    <% }); %>
+                            </div>
                         </div>
+                    </header>
 
+                    <!-- Content Shelves -->
+                    <div class="tab-content bookshelf-container">
+                        <% lessonTabs.forEach((tab, index)=> { %>
+                            <div class="tab-pane fade <%= index === 0 ? 'show active' : '' %>" id="<%= tab.id %>"
+                                role="tabpanel">
+
+                                <% if (tab.groups.length===0) { %>
+                                    <div class="empty-shelf">
+                                        <i class="bi bi-journal-x fs-1 opacity-25"></i>
+                                        <p class="mt-3">등록된 교재가 없습니다.</p>
+                                    </div>
+                                    <% } else { %>
+                                        <div class="shelf-row">
+                                            <% tab.groups.forEach((group)=> {
+                                                // Get thumbnail logic
+                                                let coverImg = null;
+                                                const defaultCover = '/resource/guide/default_book_cover.png';
+
+                                                if (group.sessions[0] && group.sessions[0].thumbnail &&
+                                                group.sessions[0].thumbnail !== defaultCover) {
+                                                coverImg = group.sessions[0].thumbnail;
+                                                }
+
+                                                // Check for valid image extension or URL structure
+                                                // If 'logo-1.png' (generic logo) is used as fallback in data, usually
+                                                // treat as valid unless user wants special handling.
+                                                // In provided data: 'logo-1.png' is common.
+
+                                                const hasImage = !!coverImg;
+                                                %>
+                                                <div class="book-item" onclick="openBookModal(this)"
+                                                    data-title="<%= group.title %>"
+                                                    data-sessions='<%= JSON.stringify(group.sessions) %>'>
+
+                                                    <% if (hasImage) { %>
+                                                        <div class="book-cover">
+                                                            <img src="<%= coverImg %>" alt="<%= group.title %>"
+                                                                loading="lazy" referrerpolicy="no-referrer">
+                                                        </div>
+                                                        <% } else { // Generate random soft color for text cover const
+                                                            colors=['#e3f2fd', '#f3e5f5' , '#e8f5e9' , '#fff3e0'
+                                                            , '#ffebee' , '#e0f7fa' ]; const
+                                                            randColor=colors[Math.floor(Math.random() * colors.length)];
+                                                            %>
+                                                            <div class="book-cover text-only"
+                                                                style="background-color: <%= randColor %>;">
+                                                                <div class="tit">
+                                                                    <%= group.title %>
+                                                                </div>
+                                                            </div>
+                                                            <% } %>
+
+                                                                <div class="book-label">
+                                                                    <%= group.title %>
+                                                                </div>
+                                                </div>
+                                                <% }); %>
+                                        </div>
+                                        <% } %>
+
+                            </div>
+                            <% }); %>
                     </div>
 
                 </div>
+
+            </div>
         </div>
 
         <!-- Book Detail Modal -->
@@ -669,7 +668,7 @@
             <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content book-modal-content">
                     <div class="modal-header book-modal-header">
-                        <h5 class="modal-title book-modal-title" id="bookModalTitle">교재 ?�세</h5>
+                        <h5 class="modal-title book-modal-title" id="bookModalTitle">교재 상세</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-0">
@@ -702,7 +701,7 @@
                                     <div id="videoIframeContainer"></div>
                                     <!-- Custom Fullscreen Button -->
                                     <button class="btn-vid-fs" id="btnVideoFs" onclick="toggleVideoFullscreen(event)"
-                                        title="?�체?�면" style="display:none;">
+                                        title="전체화면" style="display:none;">
                                         <i class="bi bi-arrows-fullscreen"></i>
                                     </button>
                                 </div>
@@ -716,7 +715,7 @@
                                         목록</button>
                                     <button class="player-tab-btn" onclick="switchPlayerTab('tab-material')">교안
                                         보기</button>
-                                    <button class="player-tab-btn" onclick="switchPlayerTab('tab-notes')">?�트</button>
+                                    <button class="player-tab-btn" onclick="switchPlayerTab('tab-notes')">노트</button>
                                 </div>
 
                                 <!-- Tab Content: List -->
@@ -729,16 +728,16 @@
                                 <!-- Tab Content: Material -->
                                 <div id="tab-material" class="player-tab-content hiding-scrollbar">
                                     <div id="materialContainer" class="material-container">
-                                        <p class="text-muted mt-5">?�록??교안 ?��?지가 ?�습?�다.</p>
+                                        <p class="text-muted mt-5">등록된 교안 이미지가 없습니다.</p>
                                     </div>
                                 </div>
 
                                 <!-- Tab Content: Notes -->
                                 <div id="tab-notes" class="player-tab-content">
                                     <div class="notes-container">
-                                        <p class="text-muted mb-2"><i class="bi bi-pencil-square me-1"></i> 강의 ?�트 (?�?�되지
-                                            ?�음)</p>
-                                        <textarea class="notes-area" placeholder="중요???�용??메모?�세??.."></textarea>
+                                        <p class="text-muted mb-2"><i class="bi bi-pencil-square me-1"></i> 강의 노트 (저장되지
+                                            않음)</p>
+                                        <textarea class="notes-area" placeholder="중요한 내용을 메모하세요..."></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -764,7 +763,7 @@
                 currentBookSessions = JSON.parse(el.getAttribute('data-sessions') || '[]');
 
                 if (currentBookSessions.length === 0) {
-                    alert('?�록??강의가 ?�습?�다.');
+                    alert('등록된 강의가 없습니다.');
                     return;
                 }
 
@@ -795,7 +794,7 @@
                     videoContainer.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; fullscreen" allowfullscreen style="border:0;"></iframe>`;
                     btnFs.style.display = 'flex'; // Show fullscreen button
                 } else {
-                    videoContainer.innerHTML = `<div class="d-flex align-items-center justify-content-center h-100 text-muted"><i class="bi bi-play-circle fs-1 me-2 opacity-50"></i><br>?�록???�상???�습?�다.</div>`;
+                    videoContainer.innerHTML = `<div class="d-flex align-items-center justify-content-center h-100 text-muted"><i class="bi bi-play-circle fs-1 me-2 opacity-50"></i><br>등록된 영상이 없습니다.</div>`;
                     btnFs.style.display = 'none';
                 }
 
@@ -835,7 +834,7 @@
                             <span class="pl-title">${session.name}</span>
                             ${topicText}
                         </div>
-                        <span style="font-size: 0.8rem; color: #ced4da;">${idx + 1}�?/span>
+                        <span style="font-size: 0.8rem; color: #ced4da;">${idx + 1}강</span>
                     `;
                     listContainer.appendChild(div);
                 });
@@ -846,7 +845,7 @@
                 const session = currentBookSessions[currentSessionIndex];
 
                 if (!session || !session.images || session.images.length === 0) {
-                    container.innerHTML = '<p class="text-muted mt-5">?�록??교안 ?��?지가 ?�습?�다.</p>';
+                    container.innerHTML = '<p class="text-muted mt-5">등록된 교안 이미지가 없습니다.</p>';
                 } else {
                     const html = session.images.map(img => `
                         <img src="${img}" class="material-img" loading="lazy" referrerpolicy="no-referrer">
