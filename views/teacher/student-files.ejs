@@ -1,116 +1,125 @@
-<%
-// Layout Data 설정
-var layoutData = {
-    title: '학생 파일 관리 - Teacher',
-    sidebarType: 'teacher',
-    currentView: 'student-files',
-    additionalCSS: [
-        '/css/admin/s3-browser.css',
-        '/css/admin/s3-browser-teacher.css'
-    ],
-    additionalJS: [
-        '/js/components/S3Explorer.js'
-    ],
-    body: renderBody()
-};
+<!DOCTYPE html>
+<html lang="ko">
 
-function renderBody() {
-%>
-<!-- 인라인 스타일 (페이지 전용) -->
-<style>
-    body {
-        background: #f8f9fa;
-    }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학생 파일 관리 - Teacher</title>
 
-    .page-header {
-        background: #fff;
-        padding: 20px;
-        margin-bottom: 20px;
-        border-bottom: 1px solid #dee2e6;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-</style>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 
-<!-- 페이지 헤더 -->
-<div class="page-header">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h2>👥 학생 파일 관리</h2>
-            <p class="text-muted mb-0">소속 학생들의 저장 파일을 조회할 수 있습니다.</p>
+    <!-- S3 Browser CSS -->
+    <link rel="stylesheet" href="/css/admin/s3-browser.css">
+
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .page-header {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .container-fluid {
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 헤더 -->
+    <%- include('../partials/header') %>
+
+        <div class="container-fluid">
+            <!-- 페이지 헤더 -->
+            <div class="page-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2>👥 학생 파일 관리</h2>
+                        <p class="text-muted mb-0">소속 학생들의 저장 파일을 조회할 수 있습니다.</p>
+                    </div>
+                    <div>
+                        <span class="badge bg-success">
+                            <%= role %>
+                        </span>
+                        <span class="badge bg-secondary">센터 ID: <%= centerID %></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 안내 메시지 -->
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <strong>💡 사용 안내:</strong>
+                <ul class="mb-0 mt-2">
+                    <li>왼쪽 폴더 트리에서 학생 폴더를 클릭하세요</li>
+                    <li>플랫폼 폴더(scratch, entry 등)를 클릭하여 진입하세요</li>
+                    <li>draft 또는 final 폴더 안에 파일이 저장되어 있습니다</li>
+                    <li>파일 다운로드 및 미리보기가 가능합니다 (업로드/삭제는 불가)</li>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- S3 브라우저 -->
+            <div id="s3-browser"></div>
         </div>
-        <div>
-            <span class="badge bg-success">
-                <%= role %>
-            </span>
-            <span class="badge bg-secondary">센터 ID: <%= centerID %></span>
-        </div>
-    </div>
-</div>
 
-<!-- 안내 메시지 -->
-<div class="alert alert-info alert-dismissible fade show" role="alert">
-    <strong>💡 사용 안내:</strong>
-    <ul class="mb-0 mt-2">
-        <li>왼쪽 폴더 트리에서 학생 폴더를 클릭하세요</li>
-        <li>플랫폼 폴더(scratch, entry 등)를 클릭하여 진입하세요</li>
-        <li>draft 또는 final 폴더 안에 파일이 저장되어 있습니다</li>
-        <li>파일 다운로드 및 미리보기가 가능합니다 (업로드/삭제는 불가)</li>
-    </ul>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- S3 브라우저 -->
-<div id="s3-browser"></div>
+        <!-- S3 Explorer Component -->
+        <script src="/js/components/S3Explorer.js"></script>
 
-<!-- 초기화 스크립트 -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        console.log('🚀 Teacher S3 Browser 초기화 시작...');
+        <!-- 초기화 스크립트 -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log('🚀 Teacher S3 Browser 초기화 시작...');
 
-        // Teacher용 S3 Explorer 생성
-        window.s3Explorer = new S3Explorer({
-            containerId: 's3-browser',
-            apiEndpoint: '/api/s3/browse',
-            scope: 'center',                 // 센터 소속 학생만
-            rootPath: 'users/',              // users/에서 시작
-            userID: '<%= userID %>',         // 🔥 userID 전달
-            userRole: '<%= role %>',         // 🔥 userRole 전달
-            centerID: '<%= centerID %>',     // 🔥 centerID 전달
-            allowedPlatforms: ['scratch', 'entry', 'gallery', 'portfolio'],
-            enableUpload: false,             // 업로드 불가
-            enableDelete: false,             // 삭제 불가
-            enablePreview: true,             // 미리보기 활성화
+                // Teacher용 S3 Explorer 생성
+                window.s3Explorer = new S3Explorer({
+                    containerId: 's3-browser',
+                    apiEndpoint: '/api/s3/browse',
+                    scope: 'center',                 // 센터 소속 학생만
+                    rootPath: 'users/',              // users/에서 시작
+                    userID: '<%= userID %>',         // 🔥 userID 전달
+                    userRole: '<%= role %>',         // 🔥 userRole 전달
+                    centerID: '<%= centerID %>',     // 🔥 centerID 전달
+                    allowedPlatforms: ['scratch', 'entry', 'gallery', 'portfolio'],
+                    enableUpload: false,             // 업로드 불가
+                    enableDelete: false,             // 삭제 불가
+                    enablePreview: true,             // 미리보기 활성화
 
-            onError: function (error) {
-                console.error('❌ 오류 발생:', error);
-                showNotification('오류가 발생했습니다: ' + error.message, 'danger');
+                    onError: function (error) {
+                        console.error('❌ 오류 발생:', error);
+                        showNotification('오류가 발생했습니다: ' + error.message, 'danger');
+                    }
+                });
+
+                console.log('✅ Teacher S3 Browser 초기화 완료');
+            });
+
+            /**
+             * 알림 표시
+             */
+            function showNotification(message, type = 'info') {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+                alertDiv.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;';
+                alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+                document.body.appendChild(alertDiv);
+
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
             }
-        });
+        </script>
+</body>
 
-        console.log('✅ Teacher S3 Browser 초기화 완료');
-    });
-
-    /**
-     * 알림 표시
-     */
-    function showNotification(message, type = 'info') {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;';
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.body.appendChild(alertDiv);
-
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
-    }
-</script>
-
-<%
-}
-%>
-
-<%- include('../layouts/board-base-layout', layoutData) %>
+</html>
